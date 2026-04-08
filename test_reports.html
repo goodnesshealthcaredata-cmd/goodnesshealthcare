@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover" />
+  <title>Goodness Healthcare | Patient Reports Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #EBF4F6;
+      color: #1A2C3E;
+      overflow-x: hidden;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #E0ECF0;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #088395, #09637E);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #09637E;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 99, 126, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #7AB2B2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar-container {
+      width: 280px;
+      max-width: 80vw;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 100px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+
+    .progress-bar-fill {
+      height: 4px;
+      background: linear-gradient(90deg, #7AB2B2, #088395);
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 100px;
+    }
+
+    /* Main Layout */
+    .app-container {
+      min-height: 100vh;
+    }
+
+    /* Top Navigation */
+    .top-nav {
+      background: linear-gradient(135deg, #09637E 0%, #088395 100%);
+      padding: 20px 32px;
+      box-shadow: 0 4px 20px rgba(9, 99, 126, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+    }
+
+    .page-title h1 {
+      font-size: clamp(24px, 5vw, 32px);
+      font-weight: 800;
+      color: white;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .page-title p {
+      font-size: clamp(13px, 3vw, 14px);
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 400;
+    }
+
+    /* Content Container */
+    .content-container {
+      padding: clamp(20px, 4vw, 32px);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Tabs */
+    .tabs-container {
+      background: white;
+      border-radius: 20px;
+      padding: 8px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(9, 99, 126, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .tabs-container:hover {
+      box-shadow: 0 8px 24px rgba(9, 99, 126, 0.12);
+    }
+
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px;
+      border-bottom: 2px solid #EBF4F6;
+      flex-wrap: wrap;
+    }
+
+    .tab-button {
+      padding: 14px 24px;
+      background: none;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: #6B7A8A;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .tab-button i {
+      font-size: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .tab-button:hover {
+      color: #088395;
+      background: rgba(8, 131, 149, 0.05);
+    }
+
+    .tab-button:hover i {
+      transform: translateY(-2px);
+    }
+
+    .tab-button.active {
+      color: #088395;
+      background: linear-gradient(135deg, rgba(8, 131, 149, 0.08), rgba(122, 178, 178, 0.05));
+    }
+
+    .tab-button.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #088395, #7AB2B2);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Filter Section */
+    .filter-card {
+      background: white;
+      border-radius: 20px;
+      padding: clamp(20px, 4vw, 24px);
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(9, 99, 126, 0.08);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(122, 178, 178, 0.2);
+    }
+
+    .filter-card:hover {
+      box-shadow: 0 8px 24px rgba(9, 99, 126, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .filter-group {
+      flex: 1;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #09637E;
+      margin-bottom: 8px;
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #E0ECF0;
+      border-radius: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: #088395;
+      box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #088395, #09637E);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(8, 131, 149, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(8, 131, 149, 0.3);
+      background: linear-gradient(135deg, #09637E, #088395);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid #E0ECF0;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #09637E;
+    }
+
+    .btn-secondary:hover {
+      border-color: #088395;
+      color: #088395;
+      background: rgba(8, 131, 149, 0.05);
+      transform: translateY(-2px);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(9, 99, 126, 0.08);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(122, 178, 178, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #088395, #7AB2B2);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 28px rgba(9, 99, 126, 0.15);
+    }
+
+    .stat-info h3 {
+      font-size: clamp(28px, 5vw, 32px);
+      font-weight: 800;
+      color: #09637E;
+      margin-bottom: 4px;
+    }
+
+    .stat-info p {
+      font-size: 14px;
+      color: #6B7A8A;
+      font-weight: 500;
+    }
+
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, rgba(8, 131, 149, 0.1), rgba(122, 178, 178, 0.05));
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #088395;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+      transform: scale(1.05) rotate(5deg);
+    }
+
+    /* Reports Grid */
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 24px;
+    }
+
+    .report-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(122, 178, 178, 0.2);
+      animation: fadeInUp 0.5s ease-out;
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .report-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #088395, #7AB2B2);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .report-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .report-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 28px rgba(9, 99, 126, 0.12);
+      border-color: rgba(8, 131, 149, 0.3);
+    }
+
+    .report-header {
+      margin-bottom: 16px;
+    }
+
+    .report-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #09637E;
+      margin-bottom: 8px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .report-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: #6B7A8A;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .report-sender {
+      font-size: 12px;
+      color: #7AB2B2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* FIXED: Report Footer - Mobile Responsive Layout */
+    .report-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 2px solid #EBF4F6;
+      margin-top: 12px;
+      gap: 12px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    /* FIXED: File Info Container */
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0; /* Allows flex item to shrink below content size */
+      overflow: hidden;
+      max-width: calc(100% - 100px); /* Leaves space for button */
+    }
+
+    .file-info i {
+      color: #EF4444;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    /* FIXED: Filename with truncation */
+    .filename {
+      font-size: 13px;
+      color: #4A5B6E;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* FIXED: View Button */
+    .btn-view {
+      background: linear-gradient(135deg, #088395, #09637E);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .btn-view:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(8, 131, 149, 0.4);
+    }
+
+    .search-highlight {
+      background: rgba(8, 131, 149, 0.15);
+      color: #09637E;
+      padding: 2px 4px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(9, 99, 126, 0.08);
+    }
+
+    .empty-state i {
+      font-size: 64px;
+      color: #7AB2B2;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      color: #09637E;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: #6B7A8A;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      animation: fadeInUp 0.3s ease;
+    }
+
+    .modal-content {
+      position: relative;
+      margin: 40px auto;
+      width: 90%;
+      height: 85%;
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10001;
+      transition: 0.3s;
+      background: rgba(0, 0, 0, 0.6);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .close-modal:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: rotate(90deg);
+    }
+
+    .modal-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .reports-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+
+      .tabs-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .tab-button {
+        flex: 1;
+        justify-content: center;
+        min-width: 150px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .top-nav {
+        padding: 16px 20px;
+      }
+      
+      .content-container {
+        padding: 16px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .reports-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .tabs-nav {
+        flex-direction: column;
+        gap: 4px;
+      }
+      
+      .tab-button {
+        justify-content: center;
+        width: 100%;
+      }
+
+      .filter-grid {
+        gap: 12px;
+      }
+
+      .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .filter-card {
+        padding: 16px;
+      }
+
+      /* FIXED: Mobile layout for report footer */
+      .report-footer {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+      }
+
+      /* FIXED: File info takes remaining space */
+      .file-info {
+        max-width: calc(100% - 90px);
+        flex: 1;
+      }
+
+      /* FIXED: Ensure filename truncates properly on mobile */
+      .filename {
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* FIXED: Button remains visible and properly sized */
+      .btn-view {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+
+      .modal-content {
+        width: 95%;
+        height: 80%;
+        margin: 20px auto;
+      }
+
+      .close-modal {
+        top: 10px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        font-size: 30px;
+      }
+    }
+
+    /* FIXED: Extra small devices (phones under 480px) */
+    @media (max-width: 480px) {
+      .page-title h1 {
+        font-size: 20px;
+      }
+      
+      .page-title p {
+        font-size: 12px;
+      }
+
+      .stat-card {
+        padding: 16px;
+      }
+
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+      }
+
+      .report-card {
+        padding: 16px;
+      }
+
+      .report-title {
+        font-size: 15px;
+      }
+
+      /* FIXED: Further optimize for very small screens */
+      .report-footer {
+        gap: 8px;
+      }
+
+      .file-info {
+        max-width: calc(100% - 85px);
+        gap: 6px;
+      }
+
+      .file-info i {
+        font-size: 18px;
+      }
+
+      .filename {
+        font-size: 12px;
+      }
+
+      .btn-view {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+
+      .btn-view i {
+        font-size: 11px;
+      }
+    }
+
+    /* Touch Device Optimizations */
+    @media (hover: none) and (pointer: coarse) {
+      .btn-primary, .btn-secondary, .tab-button, .btn-view {
+        min-height: 48px;
+      }
+
+      .filter-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <h2 style="color: white; margin-bottom: 8px; font-weight: 700;">Loading Reports</h2>
+    <p id="loadingStatus" style="color: rgba(255,255,255,0.9);">Initializing...</p>
+    <div class="progress-bar-container">
+      <div id="progressBar" class="progress-bar-fill"></div>
+    </div>
+    <p id="timeEstimate" style="color: rgba(255,255,255,0.7); font-size: 13px;">Estimating time...</p>
+  </div>
+
+  <!-- PDF Modal -->
+  <div id="pdfModal" class="modal">
+    <span class="close-modal">&times;</span>
+    <div class="modal-content">
+      <iframe id="pdfFrame" class="modal-iframe" src="about:blank"></iframe>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Top Navigation -->
+    <div class="top-nav">
+      <div class="page-title">
+        <h1>Patient Reports Dashboard</h1>
+        <p>Last 15 days reports from diagnostic laboratories</p>
+      </div>
+    </div>
+
+    <div class="content-container">
+      <!-- Tabs -->
+      <div class="tabs-container">
+        <div class="tabs-nav">
+          <button class="tab-button active" data-tab="dr-ajay-shah">
+            <i class="fas fa-user-md"></i>
+            Dr. Ajay Shah
+          </button>
+          <button class="tab-button" data-tab="dr-jariwala">
+            <i class="fas fa-flask"></i>
+            Dr. Jariwala Laboratory
+          </button>
+        </div>
+      </div>
+
+      <!-- Dr. Ajay Shah Tab -->
+      <div id="dr-ajay-shah" class="tab-content active">
+        <!-- Filter Card -->
+        <div class="filter-card">
+          <div class="filter-grid">
+            <div class="filter-group">
+              <label class="filter-label">Search Reports</label>
+              <input type="text" id="searchInputAjay" class="filter-input" placeholder="Search by subject or filename...">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Filter by Date</label>
+              <input type="date" id="datePickerAjay" class="filter-input">
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button id="reloadAjay" class="btn-primary">
+                <i class="fas fa-sync-alt"></i> Reload
+              </button>
+              <button id="clearFiltersAjay" class="btn-secondary">
+                <i class="fas fa-times"></i> Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3 id="totalReportsAjay">-</h3>
+              <p>Total Reports</p>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-file-pdf"></i>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3 id="lastUpdatedAjay">-</h3>
+              <p>Last Updated</p>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Container -->
+        <div id="reportContainerAjay" class="reports-grid"></div>
+        
+        <!-- Empty State -->
+        <div id="noResultsAjay" class="empty-state" style="display: none;">
+          <i class="fas fa-folder-open"></i>
+          <h3>No reports found</h3>
+          <p>Try adjusting your search or filter criteria</p>
+        </div>
+      </div>
+
+      <!-- Dr. Jariwala Tab -->
+      <div id="dr-jariwala" class="tab-content">
+        <!-- Filter Card -->
+        <div class="filter-card">
+          <div class="filter-grid">
+            <div class="filter-group">
+              <label class="filter-label">Search Reports</label>
+              <input type="text" id="searchInputJariwala" class="filter-input" placeholder="Search by subject or filename...">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Filter by Date</label>
+              <input type="date" id="datePickerJariwala" class="filter-input">
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button id="reloadJariwala" class="btn-primary">
+                <i class="fas fa-sync-alt"></i> Reload
+              </button>
+              <button id="clearFiltersJariwala" class="btn-secondary">
+                <i class="fas fa-times"></i> Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3 id="totalReportsJariwala">-</h3>
+              <p>Total Reports</p>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-file-pdf"></i>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3 id="lastUpdatedJariwala">-</h3>
+              <p>Last Updated</p>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Container -->
+        <div id="reportContainerJariwala" class="reports-grid"></div>
+        
+        <!-- Empty State -->
+        <div id="noResultsJariwala" class="empty-state" style="display: none;">
+          <i class="fas fa-folder-open"></i>
+          <h3>No reports found</h3>
+          <p>Try adjusting your search or filter criteria</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Web App URLs
+    const WEB_APP_URLS = {
+      'dr-ajay-shah': 'https://script.google.com/macros/s/AKfycbzJAa7e9lEIl-nUPnSZ-yQa2qeXUVISEyfJHlNBE-cvrzY5vRyG4Eory7bikNnnc2OD/exec',
+      'dr-jariwala': 'https://script.google.com/macros/s/AKfycby8rNXc3hl6zbd3ZaAwuSDNqh-t1Uf93XIqbId2-ZMrIx3NzI-yrkpQ404H-FBlSASsqw/exec'
+    };
+    
+    // Store data for each tab
+    const tabData = {
+      'dr-ajay-shah': {
+        allReports: [],
+        filteredReports: [],
+        currentSearch: '',
+        currentDate: '',
+        isLoading: false
+      },
+      'dr-jariwala': {
+        allReports: [],
+        filteredReports: [],
+        currentSearch: '',
+        currentDate: '',
+        isLoading: false
+      }
+    };
+    
+    let activeTab = 'dr-ajay-shah';
+    let startTime = null;
+
+    // Format date
+    function formatDate(dateString) {
+      if (!dateString) return 'Date not available';
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Invalid date';
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) + ' at ' + 
+               date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      } catch (error) {
+        return 'Date not available';
+      }
+    }
+    
+    function getDateOnly(dateString) {
+      if (!dateString) return null;
+      try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return null;
+        return date.toISOString().split('T')[0];
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function getEmbeddableUrl(fileUrl) {
+      if (!fileUrl) return null;
+      if (fileUrl.includes('drive.google.com')) {
+        let fileId = null;
+        const fileIdMatch = fileUrl.match(/\/file\/d\/([^\/]+)/);
+        if (fileIdMatch) fileId = fileIdMatch[1];
+        const openIdMatch = fileUrl.match(/[?&]id=([^&]+)/);
+        if (openIdMatch) fileId = openIdMatch[1];
+        if (fileId) return `https://drive.google.com/file/d/${fileId}/preview`;
+      }
+      return fileUrl;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function highlightText(text, searchTerm) {
+      if (!searchTerm || !text) return text;
+      try {
+        const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<span class="search-highlight">$1</span>');
+      } catch (error) {
+        return text;
+      }
+    }
+
+    function showPDF(fileUrl, fileName) {
+      const modal = document.getElementById('pdfModal');
+      const pdfFrame = document.getElementById('pdfFrame');
+      const embeddableUrl = getEmbeddableUrl(fileUrl);
+      if (embeddableUrl) {
+        pdfFrame.src = embeddableUrl;
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      } else {
+        window.open(fileUrl, '_blank');
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('pdfModal');
+      const pdfFrame = document.getElementById('pdfFrame');
+      modal.style.display = 'none';
+      pdfFrame.src = 'about:blank';
+      document.body.style.overflow = 'auto';
+    }
+
+    function filterReports(tabId) {
+      const data = tabData[tabId];
+      if (!data.allReports.length) return;
+      
+      let filtered = [...data.allReports];
+      
+      if (data.currentSearch) {
+        const searchLower = data.currentSearch.toLowerCase();
+        filtered = filtered.filter(report => {
+          const subject = (report.subject || '').toLowerCase();
+          const filename = (report.fileName || '').toLowerCase();
+          return subject.includes(searchLower) || filename.includes(searchLower);
+        });
+      }
+      
+      if (data.currentDate) {
+        filtered = filtered.filter(report => getDateOnly(report.date) === data.currentDate);
+      }
+      
+      data.filteredReports = filtered;
+      displayReports(tabId);
+    }
+    
+    function applyFilters(tabId) {
+      const data = tabData[tabId];
+      if (tabId === 'dr-ajay-shah') {
+        data.currentSearch = document.getElementById('searchInputAjay').value;
+        data.currentDate = document.getElementById('datePickerAjay').value;
+      } else {
+        data.currentSearch = document.getElementById('searchInputJariwala').value;
+        data.currentDate = document.getElementById('datePickerJariwala').value;
+      }
+      filterReports(tabId);
+    }
+    
+    function clearFilters(tabId) {
+      if (tabId === 'dr-ajay-shah') {
+        document.getElementById('searchInputAjay').value = '';
+        document.getElementById('datePickerAjay').value = '';
+        tabData[tabId].currentSearch = '';
+        tabData[tabId].currentDate = '';
+      } else {
+        document.getElementById('searchInputJariwala').value = '';
+        document.getElementById('datePickerJariwala').value = '';
+        tabData[tabId].currentSearch = '';
+        tabData[tabId].currentDate = '';
+      }
+      filterReports(tabId);
+    }
+    
+    async function reloadTab(tabId) {
+      const data = tabData[tabId];
+      if (data.isLoading) return;
+      
+      data.isLoading = true;
+      const reloadBtn = document.getElementById(tabId === 'dr-ajay-shah' ? 'reloadAjay' : 'reloadJariwala');
+      if (reloadBtn) reloadBtn.style.opacity = '0.7';
+      
+      if (tabId === activeTab) {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = 'flex';
+        startTime = Date.now();
+      }
+      
+      try {
+        data.allReports = [];
+        data.filteredReports = [];
+        await fetchReports(tabId, WEB_APP_URLS[tabId], true);
+        clearFilters(tabId);
+      } catch (error) {
+        console.error(`Error reloading ${tabId}:`, error);
+      } finally {
+        data.isLoading = false;
+        if (reloadBtn) reloadBtn.style.opacity = '1';
+        if (tabId === activeTab) {
+          setTimeout(() => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+          }, 500);
+        }
+      }
+    }
+
+    function displayReports(tabId) {
+      const container = document.getElementById(`reportContainer${tabId === 'dr-ajay-shah' ? 'Ajay' : 'Jariwala'}`);
+      const noResults = document.getElementById(`noResults${tabId === 'dr-ajay-shah' ? 'Ajay' : 'Jariwala'}`);
+      const data = tabData[tabId];
+      const reports = data.filteredReports;
+      
+      if (!container) return;
+      container.innerHTML = "";
+
+      document.getElementById(`totalReports${tabId === 'dr-ajay-shah' ? 'Ajay' : 'Jariwala'}`).textContent = reports.length;
+      document.getElementById(`lastUpdated${tabId === 'dr-ajay-shah' ? 'Ajay' : 'Jariwala'}`).textContent = new Date().toLocaleString();
+
+      if (!reports || reports.length === 0) {
+        if (noResults) noResults.style.display = 'block';
+        return;
+      } else {
+        if (noResults) noResults.style.display = 'none';
+      }
+
+      reports.forEach((report) => {
+        const card = document.createElement('div');
+        card.className = 'report-card';
+        
+        const formattedDateTime = formatDate(report.date);
+        const filename = report.fileName || 'report.pdf';
+        const subject = report.subject || 'No subject';
+        
+        let displaySubject = escapeHtml(subject);
+        let displayFilename = escapeHtml(filename);
+        
+        if (data.currentSearch) {
+          displaySubject = highlightText(displaySubject, data.currentSearch);
+          displayFilename = highlightText(displayFilename, data.currentSearch);
+        }
+        
+        card.innerHTML = `
+          <div class="report-header">
+            <div class="report-title">${displaySubject}</div>
+            <div class="report-meta">
+              <i class="fas fa-calendar-alt"></i>
+              <span>${formattedDateTime}</span>
+            </div>
+            ${report.sender ? `<div class="report-sender"><i class="fas fa-envelope"></i>${escapeHtml(report.sender)}</div>` : ''}
+          </div>
+          <div class="report-footer">
+            <div class="file-info">
+              <i class="fas fa-file-pdf"></i>
+              <span class="filename" title="${escapeHtml(filename)}">${displayFilename}</span>
+            </div>
+            <button class="btn-view" onclick="showPDF('${escapeHtml(report.fileUrl)}', '${escapeHtml(filename)}')">
+              <i class="fas fa-eye"></i> View
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function fetchReports(tabId, url, isReload = false) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const data = await response.json();
+        let reports = [];
+        if (Array.isArray(data)) reports = data;
+        else if (data.files && Array.isArray(data.files)) reports = data.files;
+        else if (data.success && data.files) reports = data.files;
+        
+        tabData[tabId].allReports = reports;
+        tabData[tabId].filteredReports = [...reports];
+        
+        if (tabData[tabId].currentSearch || tabData[tabId].currentDate) {
+          filterReports(tabId);
+        } else {
+          displayReports(tabId);
+        }
+        return true;
+      } catch (error) {
+        console.error(`Error fetching reports for ${tabId}:`, error);
+        if (!isReload) {
+          const container = document.getElementById(`reportContainer${tabId === 'dr-ajay-shah' ? 'Ajay' : 'Jariwala'}`);
+          if (container) {
+            container.innerHTML = `<div class="error-message" style="background:#FEE2E2; padding:20px; border-radius:12px; color:#DC2626; text-align:center;">Failed to load reports. Please try again later.</div>`;
+          }
+        }
+        return false;
+      }
+    }
+
+    async function loadAllTabs() {
+      startTime = Date.now();
+      let loaded = 0;
+      const total = 2;
+      
+      await fetchReports('dr-ajay-shah', WEB_APP_URLS['dr-ajay-shah']);
+      loaded++;
+      
+      await fetchReports('dr-jariwala', WEB_APP_URLS['dr-jariwala']);
+      loaded++;
+      
+      setTimeout(() => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }, 500);
+    }
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabId) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        if (content.id === tabId) content.classList.add('active');
+        else content.classList.remove('active');
+      });
+    }
+
+    // Event Listeners
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
+    });
+
+    // Search and filters
+    const searchAjay = document.getElementById('searchInputAjay');
+    const dateAjay = document.getElementById('datePickerAjay');
+    const clearAjay = document.getElementById('clearFiltersAjay');
+    const reloadAjay = document.getElementById('reloadAjay');
+    
+    if (searchAjay) {
+      let timeout;
+      searchAjay.addEventListener('input', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => applyFilters('dr-ajay-shah'), 300);
+      });
+    }
+    if (dateAjay) dateAjay.addEventListener('change', () => applyFilters('dr-ajay-shah'));
+    if (clearAjay) clearAjay.addEventListener('click', () => clearFilters('dr-ajay-shah'));
+    if (reloadAjay) reloadAjay.addEventListener('click', () => reloadTab('dr-ajay-shah'));
+    
+    const searchJariwala = document.getElementById('searchInputJariwala');
+    const dateJariwala = document.getElementById('datePickerJariwala');
+    const clearJariwala = document.getElementById('clearFiltersJariwala');
+    const reloadJariwala = document.getElementById('reloadJariwala');
+    
+    if (searchJariwala) {
+      let timeout;
+      searchJariwala.addEventListener('input', () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => applyFilters('dr-jariwala'), 300);
+      });
+    }
+    if (dateJariwala) dateJariwala.addEventListener('change', () => applyFilters('dr-jariwala'));
+    if (clearJariwala) clearJariwala.addEventListener('click', () => clearFilters('dr-jariwala'));
+    if (reloadJariwala) reloadJariwala.addEventListener('click', () => reloadTab('dr-jariwala'));
+    
+    document.querySelector('.close-modal')?.addEventListener('click', closeModal);
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('pdfModal');
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+    
+    // Initialize
+    loadAllTabs();
+  </script>
+</body>
+</html>
