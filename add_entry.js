@@ -1081,8 +1081,8 @@ function generateReportReceivedList() {
   const allChecked = allTests.every(t => checkedTests[t] === true);
   const selectAllDiv = document.createElement("div");
   selectAllDiv.className = "report-test-item";
-  selectAllDiv.style.cssText = "border-bottom:2px solid var(--slate-200);margin-bottom:8px;padding-bottom:12px;";
-  selectAllDiv.innerHTML = `<input type="checkbox" id="select_all_reports" ${allChecked ? "checked" : ""}><label for="select_all_reports" style="font-weight:700;color:var(--slate-800);">Select All Reports</label>`;
+  selectAllDiv.style.cssText = "border-bottom:2px solid rgba(122, 178, 178, 0.2);margin-bottom:8px;padding-bottom:12px;";
+  selectAllDiv.innerHTML = `<input type="checkbox" id="select_all_reports" ${allChecked ? "checked" : ""}><label for="select_all_reports" style="font-weight:700;color:var(--primary);">Select All Reports</label>`;
 
   const selectAllCb = selectAllDiv.querySelector("#select_all_reports");
   selectAllCb.addEventListener("change", () => {
@@ -1562,7 +1562,7 @@ async function fetchServerList() {
   } catch (e) { console.error("fetchServerList:", e); }
 }
 
-/* ========================= In-progress cards with date filtering ========================= */
+/* ========================= In-progress cards with date filtering and colored progress bars ========================= */
 function renderInProgress() {
   const listEl = F.inProgressList();
   const emptyEl = F.inProgressEmpty();
@@ -1594,6 +1594,16 @@ function renderInProgress() {
     const pct = getCompletionPercentage(entry);
     const currentStage = getCurrentStage(entry);
     const displayDate = entry.date ? entry.date.split('T')[0] : "-";
+    
+    // Determine color based on percentage
+    let progressColor;
+    if (pct < 30) {
+      progressColor = "#ef4444"; // Red for < 30%
+    } else if (pct < 70) {
+      progressColor = "#f59e0b"; // Orange for 30-69%
+    } else {
+      progressColor = "#10b981"; // Green for 70-100%
+    }
 
     const row = document.createElement("div");
     row.className = "card-item";
@@ -1604,7 +1614,7 @@ function renderInProgress() {
       </div>
       <div class="card-stage">Progress: <strong>${pct}% Complete</strong> - Current Stage: ${currentStage}</div>
       <div class="progress-bar-wrapper" style="margin:10px 0;">
-        <div class="progress-bar-fill" style="width:${pct}%;height:8px;background:var(--brand-grad);"></div>
+        <div class="progress-bar-fill" style="width:${pct}%;height:8px;background:${progressColor};border-radius:4px;"></div>
       </div>
       <div class="card-actions">
         <button class="btn ghost sm" data-edit="${entry.id}">Edit</button>
