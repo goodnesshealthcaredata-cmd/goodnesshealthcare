@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Goodness Healthcare | Lab Test Optimizer</title>
+<title>Goodness Healthcare | Lab Test Optimizer - Premium Edition</title>
 
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
@@ -23,7 +23,6 @@
     background: #EBF4F6;
     color: #1A2C33;
     line-height: 1.5;
-    padding: 0 0 40px 0;
   }
 
   /* Top Navigation - Teal Primary */
@@ -405,6 +404,18 @@
   button, .suggestions div, .selected-tests span {
     cursor: pointer;
   }
+
+  /* Optimization engine badge */
+  .engine-badge {
+    display: inline-block;
+    background: #088395;
+    color: white;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-left: 12px;
+    vertical-align: middle;
+  }
 </style>
 </head>
 <body>
@@ -460,7 +471,240 @@
   </div>
 
   <script>
-    // ---------------- DATA ----------------
+    // ============================================
+    // LAB TEST OPTIMIZATION ENGINE
+    // ============================================
+    
+    /**
+     * LAB TEST OPTIMIZER CLASS
+     * Smart algorithm to select most cost-effective combination
+     * of lab test packages and individual tests across multiple labs.
+     */
+    
+    class LabTestOptimizer {
+      constructor(labs) {
+        this.labs = labs;
+        this.testIndex = this.buildTestIndex();
+      }
+      
+      buildTestIndex() {
+        const index = new Map();
+        for (const lab of this.labs) {
+          for (const test of lab.tests) {
+            if (!index.has(test.name)) {
+              index.set(test.name, []);
+            }
+            index.get(test.name).push({
+              lab: lab.name,
+              test: test,
+              labRef: lab
+            });
+          }
+        }
+        return index;
+      }
+      
+      findCheapestIndividualTest(testName) {
+        const options = this.testIndex.get(testName);
+        if (!options || options.length === 0) return null;
+        
+        let cheapest = null;
+        let minCost = Infinity;
+        
+        for (const option of options) {
+          if (option.test.b2b < minCost) {
+            minCost = option.test.b2b;
+            cheapest = {
+              lab: option.lab,
+              test: option.test,
+              cost: option.test.b2b
+            };
+          }
+        }
+        return cheapest;
+      }
+      
+      evaluateAllPackages(remainingTests) {
+        const candidates = [];
+        
+        for (const lab of this.labs) {
+          for (const pkg of lab.packages) {
+            const coveredTests = pkg.tests.filter(test => remainingTests.has(test));
+            
+            if (coveredTests.length === 0) continue;
+            
+            let individualCost = 0;
+            let individualMRP = 0;
+            let allTestsAvailable = true;
+            
+            for (const testName of coveredTests) {
+              const testObj = lab.tests.find(t => t.name === testName);
+              if (!testObj) {
+                allTestsAvailable = false;
+                break;
+              }
+              individualCost += testObj.b2b;
+              individualMRP += testObj.mrp;
+            }
+            
+            if (!allTestsAvailable) continue;
+            
+            const savings = individualCost - pkg.b2b;
+            
+            if (savings > 0) {
+              candidates.push({
+                lab: lab.name,
+                labRef: lab,
+                package: pkg,
+                coveredTests: coveredTests,
+                coveredCount: coveredTests.length,
+                individualCost: individualCost,
+                individualMRP: individualMRP,
+                savings: savings,
+                costPerTest: pkg.b2b / coveredTests.length
+              });
+            }
+          }
+        }
+        
+        candidates.sort((a, b) => {
+          if (a.savings !== b.savings) return b.savings - a.savings;
+          return b.coveredCount - a.coveredCount;
+        });
+        
+        return candidates;
+      }
+      
+      selectOptimalPackages(remainingTests) {
+        const selectedPackages = [];
+        const currentRemaining = new Set(remainingTests);
+        
+        while (currentRemaining.size > 0) {
+          const candidates = this.evaluateAllPackages(currentRemaining);
+          
+          if (candidates.length === 0) break;
+          
+          let bestCandidate = null;
+          let bestScore = -Infinity;
+          
+          for (const candidate of candidates) {
+            const coverageRatio = candidate.coveredCount / currentRemaining.size;
+            const score = candidate.savings * 100 + candidate.coveredCount * 10 + coverageRatio * 5;
+            
+            if (score > bestScore) {
+              bestScore = score;
+              bestCandidate = candidate;
+            }
+          }
+          
+          if (bestCandidate) {
+            selectedPackages.push({
+              lab: bestCandidate.lab,
+              type: "Package",
+              name: bestCandidate.package.name,
+              tests: [...bestCandidate.coveredTests],
+              cost: bestCandidate.package.b2b,
+              mrp: bestCandidate.package.mrp,
+              savings: bestCandidate.savings,
+              individualCost: bestCandidate.individualCost
+            });
+            
+            for (const test of bestCandidate.coveredTests) {
+              currentRemaining.delete(test);
+            }
+          } else {
+            break;
+          }
+        }
+        
+        return {
+          selectedPackages: selectedPackages,
+          remainingTests: currentRemaining
+        };
+      }
+      
+      selectIndividualTests(remainingTests) {
+        const selectedTests = [];
+        
+        for (const testName of remainingTests) {
+          const cheapest = this.findCheapestIndividualTest(testName);
+          
+          if (cheapest) {
+            selectedTests.push({
+              lab: cheapest.lab,
+              type: "Test",
+              name: testName,
+              tests: [testName],
+              cost: cheapest.test.b2b,
+              mrp: cheapest.test.mrp
+            });
+          }
+        }
+        
+        return selectedTests;
+      }
+      
+      optimize(userSelectedTests) {
+        if (!userSelectedTests || userSelectedTests.length === 0) {
+          return {
+            finalPlan: [],
+            totalB2B: 0,
+            totalMRP: 0,
+            savings: 0,
+            savingsPercentage: 0,
+            testsCovered: 0,
+            totalTestsRequested: 0,
+            missingTests: []
+          };
+        }
+        
+        const uniqueTests = [...new Set(userSelectedTests)];
+        const remainingTests = new Set(uniqueTests);
+        
+        const { selectedPackages, remainingTests: remainingAfterPackages } = 
+          this.selectOptimalPackages(remainingTests);
+        
+        const selectedTests = this.selectIndividualTests(remainingAfterPackages);
+        
+        const finalPlan = [...selectedPackages, ...selectedTests];
+        
+        let totalB2B = 0;
+        let totalMRP = 0;
+        
+        for (const item of finalPlan) {
+          totalB2B += item.cost;
+          totalMRP += item.mrp;
+        }
+        
+        const savings = totalMRP - totalB2B;
+        const savingsPercentage = totalMRP > 0 ? (savings / totalMRP) * 100 : 0;
+        
+        const coveredTests = new Set();
+        for (const item of finalPlan) {
+          for (const test of item.tests) {
+            coveredTests.add(test);
+          }
+        }
+        
+        const missingTests = uniqueTests.filter(t => !coveredTests.has(t));
+        
+        return {
+          finalPlan: finalPlan,
+          totalB2B: Math.round(totalB2B * 100) / 100,
+          totalMRP: Math.round(totalMRP * 100) / 100,
+          savings: Math.round(savings * 100) / 100,
+          savingsPercentage: Math.round(savingsPercentage * 100) / 100,
+          testsCovered: coveredTests.size,
+          totalTestsRequested: uniqueTests.length,
+          missingTests: missingTests
+        };
+      }
+    }
+    
+    // ============================================
+    // LAB DATA
+    // ============================================
+    
     const labs = [
       {
         name: "Lab A",
@@ -471,8 +715,7 @@
         ],
         packages: [
           {name: "Basic Package", tests: ["CBC","Sugar"], mrp: 400, b2b: 180},
-          {name: "Basic Package 2", tests: ["CBC","Sugar","Thyroid"], mrp: 500,b2b: 200},
-
+          {name: "Basic Package 2", tests: ["CBC","Sugar","Thyroid"], mrp: 500, b2b: 200},
         ]
       },
       {
@@ -502,28 +745,37 @@
         packages: []
       }
     ];
-
-    // ---------------- BUILD MASTER TEST LIST ----------------
-    const allTests = [...new Set(
-      labs.flatMap(l => l.tests.map(t => t.name))
-    )].sort();
-
+    
+    // Initialize optimizer
+    const optimizer = new LabTestOptimizer(labs);
+    
+    // ============================================
+    // UI STATE MANAGEMENT
+    // ============================================
+    
+    const allTests = [...new Set(labs.flatMap(l => l.tests.map(t => t.name)))].sort();
     let selected = [];
-
-    // ---------------- SEARCH ----------------
+    
+    // DOM Elements
     const searchInput = document.getElementById("search");
     const suggestions = document.getElementById("suggestions");
-
+    const selectedTestsDiv = document.getElementById("selectedTests");
+    const comparisonSection = document.getElementById("comparisonSection");
+    const comparisonTable = document.getElementById("comparisonTable");
+    const resultDiv = document.getElementById("result");
+    const clearAllBtn = document.getElementById("clearAllBtn");
+    
+    // Search functionality
     searchInput.addEventListener("input", () => {
       const value = searchInput.value.toLowerCase().trim();
       suggestions.innerHTML = "";
-
+      
       if (value === "") return;
-
+      
       const filtered = allTests.filter(t => 
         t.toLowerCase().includes(value) && !selected.includes(t)
       );
-
+      
       if (filtered.length === 0) {
         const div = document.createElement("div");
         div.textContent = "No tests found";
@@ -532,7 +784,7 @@
         suggestions.appendChild(div);
         return;
       }
-
+      
       filtered.forEach(test => {
         const div = document.createElement("div");
         div.textContent = test;
@@ -540,47 +792,38 @@
         suggestions.appendChild(div);
       });
     });
-
-    // Close suggestions when clicking outside
+    
     document.addEventListener('click', (e) => {
       if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
         suggestions.innerHTML = "";
       }
     });
-
-    // ---------------- ADD TEST ----------------
+    
     function addTest(test) {
       if (!selected.includes(test)) {
         selected.push(test);
         renderSelected();
         suggestions.innerHTML = "";
         searchInput.value = "";
-        optimize();
-        renderComparison();
+        runOptimization();
       }
     }
-
-    // ---------------- REMOVE TEST ----------------
+    
     function removeTest(test) {
       selected = selected.filter(t => t !== test);
       renderSelected();
-      optimize();
-      renderComparison();
+      runOptimization();
     }
-
-    // ---------------- CLEAR ALL ----------------
+    
     function clearAll() {
       selected = [];
       renderSelected();
-      optimize();
-      renderComparison();
+      runOptimization();
     }
-
-    // ---------------- RENDER SELECTED ----------------
+    
     function renderSelected() {
-      const container = document.getElementById("selectedTests");
-      container.innerHTML = "";
-
+      selectedTestsDiv.innerHTML = "";
+      
       if (selected.length === 0) {
         const emptyMsg = document.createElement("div");
         emptyMsg.textContent = "No tests selected. Start typing to add tests.";
@@ -588,35 +831,29 @@
         emptyMsg.style.fontSize = "14px";
         emptyMsg.style.padding = "12px";
         emptyMsg.style.textAlign = "center";
-        container.appendChild(emptyMsg);
+        selectedTestsDiv.appendChild(emptyMsg);
         return;
       }
-
+      
       selected.forEach(t => {
         const span = document.createElement("span");
         span.innerHTML = `${t} <i class="fas fa-times" style="font-size: 10px;"></i>`;
         span.onclick = () => removeTest(t);
-        container.appendChild(span);
+        selectedTestsDiv.appendChild(span);
       });
     }
-
-    // ---------------- RENDER COMPARISON ----------------
+    
     function renderComparison() {
-      const comparisonSection = document.getElementById("comparisonSection");
-      const comparisonTable = document.getElementById("comparisonTable");
-
       if (selected.length === 0) {
         comparisonSection.style.display = "none";
         return;
       }
-
+      
       comparisonSection.style.display = "block";
       
-      // Build comparison data for all labs
       const comparisonData = [];
       
       labs.forEach(lab => {
-        // Check which selected tests are available in this lab
         const availableTests = [];
         const unavailableTests = [];
         
@@ -629,7 +866,6 @@
           }
         });
         
-        // Check packages that cover selected tests
         const applicablePackages = [];
         lab.packages.forEach(pkg => {
           const coveredTests = pkg.tests.filter(t => selected.includes(t));
@@ -648,7 +884,6 @@
           }
         });
         
-        // Calculate total cost if taking all available tests individually
         const totalIndividualCost = availableTests.reduce((sum, test) => sum + test.b2b, 0);
         const totalMRP = availableTests.reduce((sum, test) => sum + test.mrp, 0);
         
@@ -663,7 +898,6 @@
         });
       });
       
-      // Generate comparison HTML with responsive table
       let html = `
         <table class="comparison-table">
           <thead>
@@ -707,10 +941,7 @@
         html += `
           <tr>
             <td class="lab-name">${data.lab}</td>
-            <td>
-              ${testsHtml}
-              ${unavailableHtml}
-            </td>
+            <td>${testsHtml}${unavailableHtml}</td>
             <td>
               <div><span class="price-b2b">₹${data.totalIndividualCost}</span></div>
               <div class="price-mrp">MRP: ₹${data.totalMRP}</div>
@@ -725,23 +956,18 @@
                 </div>` : 
                 '<span style="color: #7AB2B2;">No packages</span>'
               }
-             </td>
+            </td>
           </tr>
         `;
       });
       
-      html += `
-          </tbody>
-        </table>
-      `;
-      
+      html += `</tbody></table>`;
       comparisonTable.innerHTML = html;
     }
-
-    // ---------------- OPTIMIZATION LOGIC ----------------
-    function optimize() {
-      const resultDiv = document.getElementById("result");
-
+    
+    function runOptimization() {
+      const result = optimizer.optimize(selected);
+      
       if (selected.length === 0) {
         resultDiv.innerHTML = `
           <div class="empty-state">
@@ -749,69 +975,11 @@
             <p>Select tests to see optimization results</p>
           </div>
         `;
+        renderComparison();
         return;
       }
-
-      let remaining = new Set(selected);
-      let chosen = [];
-      let totalB2B = 0;
-      let totalMRP = 0;
-
-      // Step 1: Use beneficial packages
-      labs.forEach(lab => {
-        lab.packages.forEach(pkg => {
-          const covered = pkg.tests.filter(t => remaining.has(t));
-          if (covered.length > 0) {
-            // cost of individual vs package
-            let individualCost = 0;
-            covered.forEach(t => {
-              const testObj = lab.tests.find(x => x.name === t);
-              if (testObj) individualCost += testObj.b2b;
-            });
-
-            if (pkg.b2b < individualCost) {
-              chosen.push({
-                lab: lab.name, 
-                type: "Package", 
-                item: pkg.name, 
-                tests: pkg.tests,
-                savings: individualCost - pkg.b2b
-              });
-              totalB2B += pkg.b2b;
-              totalMRP += pkg.mrp;
-              covered.forEach(t => remaining.delete(t));
-            }
-          }
-        });
-      });
-
-      // Step 2: Remaining tests → cheapest individual
-      remaining.forEach(test => {
-        let best = null;
-
-        labs.forEach(lab => {
-          const t = lab.tests.find(x => x.name === test);
-          if (t) {
-            if (!best || t.b2b < best.b2b) {
-              best = {...t, lab: lab.name};
-            }
-          }
-        });
-
-        if (best) {
-          chosen.push({
-            lab: best.lab, 
-            type: "Test", 
-            item: test,
-            price: best.b2b,
-            mrp: best.mrp
-          });
-          totalB2B += best.b2b;
-          totalMRP += best.mrp;
-        }
-      });
-
-      // ---------------- DISPLAY ----------------
+      
+      // Display optimization results
       let html = `
         <div style="margin-bottom: 24px;">
           <strong style="color: #09637E; font-size: 16px;">Selected Tests:</strong>
@@ -825,69 +993,77 @@
       html += `
           </div>
         </div>
-        <h4 style="color: #09637E; margin-bottom: 20px; font-size: 18px;">Suggested Plan:</h4>
+        <h4 style="color: #09637E; margin-bottom: 20px; font-size: 18px;">
+          <i class="fas fa-microchip"></i> AI-Optimized Plan:
+        </h4>
       `;
-
-      chosen.forEach(c => {
-        if (c.type === "Package") {
-          html += `
-            <div class="lab-block">
-              <strong><i class="fas fa-flask"></i>${c.lab}</strong>
-              <div style="font-size: 14px; color: #088395; margin-bottom: 6px;">
-                <i class="fas fa-cube"></i> ${c.type}: ${c.item}
+      
+      if (result.finalPlan.length === 0) {
+        html += `<div class="empty-state">No tests available in any lab</div>`;
+      } else {
+        result.finalPlan.forEach(item => {
+          if (item.type === "Package") {
+            html += `
+              <div class="lab-block">
+                <strong><i class="fas fa-flask"></i> ${item.lab}</strong>
+                <div style="font-size: 14px; color: #088395; margin-bottom: 6px;">
+                  <i class="fas fa-cube"></i> Package: ${item.name}
+                </div>
+                <div style="font-size: 13px; color: #7AB2B2;">
+                  Includes: ${item.tests.join(", ")}
+                </div>
+                <div style="font-size: 12px; color: #5A6E7A; margin-top: 8px;">
+                  💰 Savings: ₹${item.savings} (Individual would cost ₹${item.individualCost})
+                </div>
               </div>
-              <div style="font-size: 13px; color: #7AB2B2;">
-                Includes: ${c.tests.join(", ")}
+            `;
+          } else {
+            html += `
+              <div class="lab-block">
+                <strong><i class="fas fa-flask"></i> ${item.lab}</strong>
+                <div style="font-size: 14px; color: #088395;">
+                  <i class="fas fa-microscope"></i> Test: ${item.name}
+                </div>
+                <div style="font-size: 12px; color: #7AB2B2; margin-top: 6px;">
+                  B2B Price: ₹${item.cost} | MRP: ₹${item.mrp}
+                </div>
               </div>
-              <div style="font-size: 12px; color: #5A6E7A; margin-top: 8px;">
-                Savings: ₹${c.savings}
-              </div>
-            </div>
-          `;
-        } else {
-          html += `
-            <div class="lab-block">
-              <strong><i class="fas fa-flask"></i>${c.lab}</strong>
-              <div style="font-size: 14px; color: #088395;">
-                <i class="fas fa-microscope"></i> ${c.type}: ${c.item}
-              </div>
-              <div style="font-size: 12px; color: #7AB2B2; margin-top: 6px;">
-                B2B Price: ₹${c.price} | MRP: ₹${c.mrp}
-              </div>
-            </div>
-          `;
-        }
-      });
-
-      const savings = totalMRP - totalB2B;
-      const savingsPercentage = totalMRP > 0 ? ((savings / totalMRP) * 100).toFixed(1) : 0;
-
+            `;
+          }
+        });
+      }
+      
       html += `
         <div class="result">
           <div style="background: #F8FDFE; padding: 20px; border-radius: 16px; margin-top: 20px;">
             <p style="margin: 10px 0;">
-              <strong>💰 Total MRP:</strong> <span style="color: #7AB2B2;">₹${totalMRP.toLocaleString()}</span>
+              <strong>💰 Total MRP:</strong> <span style="color: #7AB2B2;">₹${result.totalMRP.toLocaleString()}</span>
             </p>
             <p style="margin: 10px 0;">
-              <strong>✨ Optimized B2B Cost:</strong> <span style="color: #088395; font-size: 18px; font-weight: 700;">₹${totalB2B.toLocaleString()}</span>
+              <strong>✨ Optimized B2B Cost:</strong> <span style="color: #088395; font-size: 18px; font-weight: 700;">₹${result.totalB2B.toLocaleString()}</span>
             </p>
             <div class="highlight">
-              <i class="fas fa-tag"></i> Total Savings: ₹${savings.toLocaleString()} (${savingsPercentage}% off)
+              <i class="fas fa-tag"></i> Total Savings: ₹${result.savings.toLocaleString()} (${result.savingsPercentage}% off)
             </div>
+            ${result.missingTests.length > 0 ? `
+              <div style="margin-top: 15px; padding: 10px; background: #FFF3E0; border-radius: 12px; color: #E65100;">
+                <i class="fas fa-exclamation-triangle"></i> Warning: Some tests not available: ${result.missingTests.join(', ')}
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
-
+      
       resultDiv.innerHTML = html;
+      renderComparison();
     }
-
-    // ---------------- EVENT LISTENERS ----------------
-    document.getElementById("clearAllBtn").addEventListener("click", clearAll);
-
+    
+    // Event Listeners
+    clearAllBtn.addEventListener("click", clearAll);
+    
     // Initialize
     renderSelected();
-    optimize();
-    renderComparison();
+    runOptimization();
   </script>
 </body>
 </html>
