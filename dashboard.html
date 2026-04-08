@@ -41,7 +41,7 @@ body {
   flex-shrink: 0;
 }
 
-/* FIXED: Mobile sidebar positioning - opens from LEFT side */
+/* Mobile sidebar positioning */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -198,7 +198,6 @@ body {
   background: #d9e9ec;
 }
 
-/* Logo styling */
 .topbar-logo {
   width: 40px;
   height: 40px;
@@ -220,19 +219,86 @@ body {
 /* CONTENT AREA */
 .content {
   flex: 1;
-  padding: 5px 5px;
+  padding: 0;
   overflow-y: auto;
   background: #EBF4F6;
 }
 
 .dynamic-view {
   background: white;
-  border-radius: 28px;
-  box-shadow: 0 20px 35px -12px rgba(7, 50, 65, 0.12);
-  min-height: 500px;
-  border: 1px solid rgba(122, 178, 178, 0.2);
+  border-radius: 0;
+  min-height: 100%;
+  border: none;
   overflow: auto;
   position: relative;
+}
+
+.dynamic-view > * {
+  margin: 0;
+  padding: 0;
+}
+
+.loaded-content {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Home Page Welcome Styling */
+.home-welcome {
+  padding: 40px 30px;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7f9 100%);
+  min-height: 100%;
+}
+
+.home-welcome h1 {
+  color: #09637E;
+  font-size: 2.2rem;
+  margin-bottom: 20px;
+}
+
+.home-welcome .welcome-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.home-welcome p {
+  color: #4a6f73;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto 30px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  max-width: 800px;
+  margin: 40px auto 0;
+}
+
+.stat-card {
+  background: #EBF4F6;
+  border-radius: 20px;
+  padding: 25px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-card .stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #088395;
+}
+
+.stat-card .stat-label {
+  color: #09637E;
+  margin-top: 8px;
 }
 
 /* Loading Spinner */
@@ -248,19 +314,6 @@ body {
 
 @keyframes spin {
   100% { transform: rotate(360deg); }
-}
-
-/* Content display styles */
-.loaded-content {
-  padding: 0;
-}
-
-.loaded-content iframe {
-  width: 100%;
-  min-height: 550px;
-  border: none;
-  background: white;
-  border-radius: 28px;
 }
 
 .error-message {
@@ -284,14 +337,14 @@ body {
   margin-right: auto;
 }
 
-/* MOBILE RESPONSIVE - FIXED SIDEBAR POSITION */
+/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
   .topbar {
     padding: 0 16px;
   }
   
   .content {
-    padding: 16px;
+    padding: 0;
   }
   
   #menuToggleBtn {
@@ -308,9 +361,17 @@ body {
     width: 32px;
     height: 32px;
   }
+  
+  .home-welcome h1 {
+    font-size: 1.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* Mobile Overlay - appears behind sidebar when open */
+/* Mobile Overlay */
 .mobile-overlay {
   display: none;
   position: fixed;
@@ -338,15 +399,19 @@ body {
     <div class="user-profile-section">
       <div>🔐 <b id="sidebarLoginId">—</b></div>
       <div>👤 <b id="sidebarUserName">—</b></div>
-      <button id="logoutBtnSidebar">➜] Logout</button>
+      <button id="logoutBtnSidebar">🚪 Logout</button>
     </div>
 
     <div class="nav-menu" id="navMenu">
+      <!-- NEW: Home Page as first/default option -->
+      <button class="nav-item" data-section="Home Page" data-file="home.html">🏠 Home Page</button>
       <button class="nav-item" data-section="Add Entry" data-file="add_entry.html">📋 Add Entry</button>
       <button class="nav-item" data-section="Visit Schedule" data-file="visit_schedule.html">📅 Visit Schedule</button>
       <button class="nav-item" data-section="Price Comparison" data-file="price_comparison.html">💰 Price Comparison</button>
       <button class="nav-item" data-section="Test Reports" data-file="test_reports.html">🧪 Test Reports</button>
+      <button class="nav-item" data-section="Pending Payment" data-file="pending_payment.html">💳 Pending Payment</button>
       <button class="nav-item" data-section="Data Sheets" data-file="data_sheets.html">📊 Data Sheets</button>
+      <button class="nav-item" data-section="Data Analysis" data-file="data_analysis.html">📈 Data Analysis</button>
     </div>
   </div>
 
@@ -355,7 +420,7 @@ body {
     <div class="topbar">
       <button id="menuToggleBtn">☰</button>
       <img id="topbarLogo" class="topbar-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2309637E'/%3E%3Ctext x='50' y='67' font-size='40' text-anchor='middle' fill='white' font-weight='bold'%3EGH%3C/text%3E%3C/svg%3E" alt="Logo">
-      <h3>Goodness Healthcare</h3>
+      <h3>✨ Goodness Healthcare</h3>
     </div>
 
     <div class="content">
@@ -388,12 +453,12 @@ const auth = getAuth(app);
 const USERS = {
   "kaushalachrekar@gmail.com": {
     displayName: "Kaushal",
-    sections: ["Add Entry", "Visit Schedule", "Price Comparison", "Test Reports", "Data Sheets"],
+    sections: ["Home Page", "Add Entry", "Visit Schedule", "Price Comparison", "Test Reports", "Pending Payment", "Data Sheets", "Data Analysis"],
     canEdit: true
   },
   "staff@gmail.com": {
     displayName: "Staff",
-    sections: ["Add Entry", "Visit Schedule"],
+    sections: ["Home Page", "Add Entry", "Visit Schedule", "Pending Payment"],
     canEdit: false
   }
 };
@@ -412,7 +477,7 @@ const topbarLogo = document.getElementById("topbarLogo");
 let currentUserData = null;
 let currentUserEmail = null;
 
-/* ===== FIX LOGO: Load the actual image from Google Drive ===== */
+/* ===== FIX LOGO ===== */
 if (topbarLogo) {
   const logoUrl = "https://lh3.googleusercontent.com/d/1viGx6qVjAgEowFtmOJziX-NdhYArt4BM";
   const img = new Image();
@@ -425,10 +490,59 @@ if (topbarLogo) {
   img.src = logoUrl;
 }
 
-/* ===== CORE FUNCTION: Load HTML file directly using fetch ===== */
+/* ===== HOME PAGE CONTENT (Default when home.html doesn't exist) ===== */
+function showHomePage() {
+  const homeHTML = `
+    <div class="home-welcome">
+      <div class="welcome-icon">🏥</div>
+      <h1>Welcome to Goodness Healthcare</h1>
+      <p>Your comprehensive healthcare management dashboard. Access patient records, visit schedules, financial data, and analytics all in one place.</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">📋</div>
+          <div class="stat-label">Patient Records</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">📅</div>
+          <div class="stat-label">Appointments</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">💰</div>
+          <div class="stat-label">Revenue Tracked</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">📊</div>
+          <div class="stat-label">Data Insights</div>
+        </div>
+      </div>
+    </div>
+  `;
+  dynamicView.innerHTML = homeHTML;
+}
+
+/* ===== CORE FUNCTION: Load HTML file with full script execution ===== */
 async function loadHtmlFile(fileName, sectionName) {
+  // Special handling for Home Page - show default if file doesn't exist
+  if (sectionName === "Home Page") {
+    try {
+      const cacheBuster = `?t=${Date.now()}`;
+      const response = await fetch(fileName + cacheBuster);
+      if (response.ok) {
+        const htmlContent = await response.text();
+        if (htmlContent && htmlContent.trim().length > 0) {
+          renderHtmlContent(htmlContent);
+          return;
+        }
+      }
+    } catch (e) {
+      console.log("Home page file not found, showing default home page");
+    }
+    showHomePage();
+    return;
+  }
+  
   if (!fileName) {
-    showFileNotFoundError(sectionName, fileName);
+    showDemoContent(sectionName);
     return;
   }
   
@@ -437,17 +551,15 @@ async function loadHtmlFile(fileName, sectionName) {
     <div style="display: flex; justify-content: center; align-items: center; height: 400px; flex-direction: column; gap: 16px;">
       <div class="loading-spinner"></div>
       <p style="color:#09637E; font-weight:500;">Loading ${sectionName}...</p>
-      <p style="color:#7AB2B2; font-size:0.85rem;">Fetching: ${fileName}</p>
     </div>
   `;
   
   try {
-    // Add cache-busting parameter to prevent caching issues
     const cacheBuster = `?t=${Date.now()}`;
     const response = await fetch(fileName + cacheBuster);
     
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`HTTP ${response.status}`);
     }
     
     const htmlContent = await response.text();
@@ -456,86 +568,71 @@ async function loadHtmlFile(fileName, sectionName) {
       throw new Error("File is empty");
     }
     
-    // Create a container for the loaded content
-    const contentContainer = document.createElement('div');
-    contentContainer.className = 'loaded-content';
-    contentContainer.innerHTML = htmlContent;
-    
-    // Execute any scripts in the loaded HTML
-    const scripts = contentContainer.querySelectorAll('script');
-    scripts.forEach(oldScript => {
-      const newScript = document.createElement('script');
-      if (oldScript.src) {
-        newScript.src = oldScript.src;
-      } else {
-        newScript.textContent = oldScript.textContent;
-      }
-      document.body.appendChild(newScript);
-      document.body.removeChild(newScript);
-    });
-    
-    // Replace the dynamic view content
-    dynamicView.innerHTML = '';
-    dynamicView.appendChild(contentContainer);
-    
+    renderHtmlContent(htmlContent);
     console.log(`✅ Successfully loaded: ${fileName}`);
     
   } catch (error) {
     console.error(`Failed to load ${fileName}:`, error);
-    // Try alternative method - iframe
-    tryIframeFallback(fileName, sectionName);
+    showDemoContent(sectionName);
   }
 }
 
-/* ===== FALLBACK METHOD: Use iframe to load the file ===== */
-function tryIframeFallback(fileName, sectionName) {
-  // Clear loading state
-  dynamicView.innerHTML = '';
+/* ===== Render HTML content with proper script execution ===== */
+function renderHtmlContent(htmlContent) {
+  const contentContainer = document.createElement('div');
+  contentContainer.className = 'loaded-content';
+  contentContainer.innerHTML = htmlContent;
   
-  const iframe = document.createElement('iframe');
-  iframe.style.width = '100%';
-  iframe.style.minHeight = '550px';
-  iframe.style.border = 'none';
-  iframe.style.borderRadius = '28px';
-  iframe.style.backgroundColor = 'white';
-  
-  let timeoutId = setTimeout(() => {
-    if (dynamicView.contains(iframe)) {
-      showFileNotFoundError(sectionName, fileName);
+  // Execute all scripts properly
+  const scripts = contentContainer.querySelectorAll('script');
+  scripts.forEach(oldScript => {
+    const newScript = document.createElement('script');
+    Array.from(oldScript.attributes).forEach(attr => {
+      newScript.setAttribute(attr.name, attr.value);
+    });
+    if (oldScript.src) {
+      newScript.src = oldScript.src;
+      newScript.async = false;
+    } else {
+      newScript.textContent = oldScript.textContent;
     }
-  }, 5000);
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
   
-  iframe.onload = () => {
-    clearTimeout(timeoutId);
-    console.log(`✅ Iframe successfully loaded: ${fileName}`);
-  };
-  
-  iframe.onerror = () => {
-    clearTimeout(timeoutId);
-    showFileNotFoundError(sectionName, fileName);
-  };
-  
-  // Add cache-busting to iframe as well
-  iframe.src = fileName + `?t=${Date.now()}`;
-  dynamicView.appendChild(iframe);
+  dynamicView.innerHTML = '';
+  dynamicView.appendChild(contentContainer);
 }
 
-/* ===== SHOW ERROR WITH HELPFUL INSTRUCTIONS ===== */
-function showFileNotFoundError(sectionName, fileName) {
-  dynamicView.innerHTML = `
+/* ===== Show demo content for missing files ===== */
+function showDemoContent(sectionName) {
+  const demoContent = `
     <div class="error-message">
-      <div style="font-size: 48px; margin-bottom: 20px;">📁</div>
-      <h3>Unable to Load "${sectionName}"</h3>
-      <p style="color: #b91c1c; margin-bottom: 16px;">
-        File not found: <strong>${fileName}</strong>
+      <div style="font-size: 48px; margin-bottom: 20px;">📄</div>
+      <h3>${sectionName}</h3>
+      <p style="color: #5a7c82; margin-bottom: 16px;">
+        Content for ${sectionName} will appear here.
       </p>
       <div class="instruction-box">
-        <h4 style="color: #09637E; margin-bottom: 12px;">🔧 How to Fix This:</h4>
-        <p style="margin-bottom: 12px;">Make sure the file <strong>${fileName}</strong> exists in the same folder as this dashboard.</p>
-        <p>Create the file with your HTML content and refresh.</p>
+        <h4 style="color: #09637E; margin-bottom: 12px;">📁 Setup Instructions:</h4>
+        <p>Create <strong>${getFileNameForSection(sectionName)}</strong> in the same folder as this dashboard.</p>
+        <p style="margin-top: 10px;">Add your HTML content to that file and it will load automatically.</p>
       </div>
     </div>
   `;
+  dynamicView.innerHTML = demoContent;
+}
+
+function getFileNameForSection(sectionName) {
+  const fileMap = {
+    "Add Entry": "add_entry.html",
+    "Visit Schedule": "visit_schedule.html",
+    "Price Comparison": "price_comparison.html",
+    "Test Reports": "test_reports.html",
+    "Pending Payment": "pending_payment.html",
+    "Data Sheets": "data_sheets.html",
+    "Data Analysis": "data_analysis.html"
+  };
+  return fileMap[sectionName] || `${sectionName.toLowerCase().replace(/ /g, '_')}.html`;
 }
 
 /* ===== NAVIGATION FUNCTION ===== */
@@ -545,7 +642,6 @@ function navigateToSection(section, fileName) {
     return;
   }
 
-  // Update active state on buttons
   const allButtons = document.querySelectorAll(".nav-item");
   allButtons.forEach(btn => {
     const btnSection = btn.getAttribute("data-section");
@@ -561,29 +657,24 @@ function navigateToSection(section, fileName) {
 
 /* ===== RESET AND REINITIALIZE DASHBOARD ===== */
 function resetAndInitDashboard(userData) {
-  // Clear existing content
   dynamicView.innerHTML = '<div class="loading-spinner"></div>';
   
-  // Reset active states
   const allButtons = document.querySelectorAll(".nav-item");
   allButtons.forEach(btn => {
     btn.classList.remove("active");
   });
   
-  // Store user data
   currentUserData = userData;
   
-  // Update UI with user info
   if (currentUserEmail) {
     loginIdEl.innerText = currentUserEmail;
   }
   userNameEl.innerText = userData.displayName;
   
-  // Re-setup sidebar with fresh event listeners
   setupSidebarFresh();
 }
 
-/* ===== FRESH SETUP OF SIDEBAR (CLEARS OLD LISTENERS) ===== */
+/* ===== FRESH SETUP OF SIDEBAR ===== */
 function setupSidebarFresh() {
   const buttons = navMenu.querySelectorAll(".nav-item");
   let firstVisibleSection = null;
@@ -599,7 +690,6 @@ function setupSidebarFresh() {
         firstVisibleSection = section;
         firstVisibleFile = file;
       }
-      // Clone and replace to remove old listeners completely
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
       newBtn.addEventListener("click", (e) => {
@@ -608,7 +698,6 @@ function setupSidebarFresh() {
         const sectionName = newBtn.getAttribute("data-section");
         const fileName = newBtn.getAttribute("data-file");
         navigateToSection(sectionName, fileName);
-        // Close sidebar on mobile after selection
         if (window.innerWidth <= 768) {
           closeSidebarMobile();
         }
@@ -618,7 +707,7 @@ function setupSidebarFresh() {
     }
   });
 
-  // Navigate to first available section
+  // Navigate to Home Page by default (first visible section)
   if (firstVisibleSection && firstVisibleFile) {
     setTimeout(() => {
       navigateToSection(firstVisibleSection, firstVisibleFile);
@@ -626,12 +715,11 @@ function setupSidebarFresh() {
   }
 }
 
-/* ===== MOBILE SIDEBAR TOGGLE FUNCTIONS - FIXED FOR LEFT SIDE ===== */
+/* ===== MOBILE SIDEBAR FUNCTIONS ===== */
 function closeSidebarMobile() {
   if (window.innerWidth <= 768) {
     sidebar.classList.remove("open");
     overlay.classList.remove("active");
-    // Prevent body scrolling when sidebar is closed
     document.body.style.overflow = "";
   }
 }
@@ -640,14 +728,12 @@ function openSidebarMobile() {
   if (window.innerWidth <= 768) {
     sidebar.classList.add("open");
     overlay.classList.add("active");
-    // Prevent body scrolling when sidebar is open
     document.body.style.overflow = "hidden";
   }
 }
 
-/* ===== EVENT LISTENERS FOR MOBILE ===== */
+/* ===== EVENT LISTENERS ===== */
 if (menuToggle) {
-  // Remove any existing listeners
   const newMenuToggle = menuToggle.cloneNode(true);
   menuToggle.parentNode.replaceChild(newMenuToggle, menuToggle);
   
@@ -667,26 +753,17 @@ if (overlay) {
   });
 }
 
-// Handle window resize - ensure sidebar state is correct
 window.addEventListener("resize", () => {
   if (window.innerWidth > 768) {
-    // On desktop, ensure sidebar is visible and overlay is hidden
     sidebar.classList.remove("open");
     overlay.classList.remove("active");
     document.body.style.overflow = "";
-  } else {
-    // On mobile, if sidebar was open, keep it open? No, reset on resize
-    // This ensures consistent behavior
-    if (sidebar.classList.contains("open")) {
-      // Keep it open, but ensure overlay is active
-      overlay.classList.add("active");
-    }
   }
 });
 
-/* ===== AUTHENTICATION STATE MONITOR ===== */
+/* ===== AUTHENTICATION ===== */
 onAuthStateChanged(auth, (user) => {
-  console.log("Auth state changed:", user ? `User logged in: ${user.email}` : "No user");
+  console.log("Auth state changed:", user ? `Logged in: ${user.email}` : "No user");
   
   if (!user) {
     window.location.href = "login.html";
@@ -707,7 +784,7 @@ onAuthStateChanged(auth, (user) => {
   resetAndInitDashboard(userData);
 });
 
-/* ===== LOGOUT FUNCTIONALITY ===== */
+/* ===== LOGOUT ===== */
 if (logoutBtn) {
   const newLogoutBtn = logoutBtn.cloneNode(true);
   logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
@@ -742,21 +819,21 @@ window.logout = function() {
     });
 };
 
-// Remove any conflicting old elements
+// Remove conflicting old elements
 const oldSections = ['dashboard', 'patients', 'reports', 'settings'];
 oldSections.forEach(id => {
   const el = document.getElementById(id);
   if (el) el.remove();
 });
 
-// Handle page cache for proper logout/login flow
+// Handle page cache
 window.addEventListener('pageshow', function(event) {
   if (event.persisted) {
     window.location.reload();
   }
 });
 
-console.log("✅ Dashboard initialized - Sidebar now opens correctly from LEFT side on mobile");
+console.log("✅ Dashboard with 8 sidebar options - Home Page is default");
 
 </script>
 
