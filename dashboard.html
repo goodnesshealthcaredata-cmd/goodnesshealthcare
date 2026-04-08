@@ -233,17 +233,6 @@ body {
   position: relative;
 }
 
-.dynamic-view > * {
-  margin: 0;
-  padding: 0;
-}
-
-.loaded-content {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
 /* Home Page Welcome Styling */
 .home-welcome {
   padding: 40px 30px;
@@ -403,7 +392,6 @@ body {
     </div>
 
     <div class="nav-menu" id="navMenu">
-      <!-- NEW: Home Page as first/default option -->
       <button class="nav-item" data-section="Home Page" data-file="home.html">🏠 Home Page</button>
       <button class="nav-item" data-section="Add Entry" data-file="add_entry.html">📋 Add Entry</button>
       <button class="nav-item" data-section="Visit Schedule" data-file="visit_schedule.html">📅 Visit Schedule</button>
@@ -476,6 +464,8 @@ const topbarLogo = document.getElementById("topbarLogo");
 
 let currentUserData = null;
 let currentUserEmail = null;
+let currentSection = null;
+let currentIframe = null;
 
 /* ===== FIX LOGO ===== */
 if (topbarLogo) {
@@ -490,8 +480,65 @@ if (topbarLogo) {
   img.src = logoUrl;
 }
 
-/* ===== HOME PAGE CONTENT (Default when home.html doesn't exist) ===== */
+/* ===== COMPLETE CLEANUP FUNCTION ===== */
+function completeCleanup() {
+  // Destroy iframe if exists
+  if (currentIframe) {
+    currentIframe.src = 'about:blank';
+    currentIframe.remove();
+    currentIframe = null;
+  }
+  
+  // Clear the dynamic view completely
+  dynamicView.innerHTML = '';
+  
+  // Remove any dynamically added script tags that might have been added to body
+  const allScripts = document.querySelectorAll('script');
+  allScripts.forEach(script => {
+    if (script.id && script.id.startsWith('dynamic-script-')) {
+      script.remove();
+    }
+  });
+  
+  // Remove any dynamically added style tags
+  const allStyles = document.querySelectorAll('style');
+  allStyles.forEach(style => {
+    if (style.id && style.id.startsWith('dynamic-style-')) {
+      style.remove();
+    }
+  });
+}
+
+/* ===== LOAD CONTENT USING IFRAME (Most reliable method) ===== */
+function loadContentWithIframe(fileName, sectionName) {
+  // Complete cleanup before loading new content
+  completeCleanup();
+  
+  // Create new iframe
+  const iframe = document.createElement('iframe');
+  iframe.style.width = '100%';
+  iframe.style.height = 'calc(100vh - 70px)';
+  iframe.style.border = 'none';
+  iframe.style.backgroundColor = 'white';
+  iframe.style.display = 'block';
+  
+  // Add cache buster to prevent caching issues
+  const cacheBuster = `?t=${Date.now()}`;
+  iframe.src = fileName + cacheBuster;
+  
+  // Store reference for cleanup
+  currentIframe = iframe;
+  
+  // Add to DOM
+  dynamicView.appendChild(iframe);
+  
+  console.log(`✅ Loaded ${sectionName} via iframe: ${fileName}`);
+}
+
+/* ===== HOME PAGE CONTENT ===== */
 function showHomePage() {
+  completeCleanup();
+  
   const homeHTML = `
     <div class="home-welcome">
       <div class="welcome-icon">🏥</div>
@@ -520,9 +567,9 @@ function showHomePage() {
   dynamicView.innerHTML = homeHTML;
 }
 
-/* ===== CORE FUNCTION: Load HTML file with full script execution ===== */
+/* ===== LOAD HTML FILE WITH PROPER CLEANUP ===== */
 async function loadHtmlFile(fileName, sectionName) {
-  // Special handling for Home Page - show default if file doesn't exist
+  // Special handling for Home Page
   if (sectionName === "Home Page") {
     try {
       const cacheBuster = `?t=${Date.now()}`;
@@ -530,7 +577,8 @@ async function loadHtmlFile(fileName, sectionName) {
       if (response.ok) {
         const htmlContent = await response.text();
         if (htmlContent && htmlContent.trim().length > 0) {
-          renderHtmlContent(htmlContent);
+          // Use iframe method for consistency
+          loadContentWithIframe(fileName, sectionName);
           return;
         }
       }
@@ -546,65 +594,14 @@ async function loadHtmlFile(fileName, sectionName) {
     return;
   }
   
-  // Show loading state
-  dynamicView.innerHTML = `
-    <div style="display: flex; justify-content: center; align-items: center; height: 400px; flex-direction: column; gap: 16px;">
-      <div class="loading-spinner"></div>
-      <p style="color:#09637E; font-weight:500;">Loading ${sectionName}...</p>
-    </div>
-  `;
-  
-  try {
-    const cacheBuster = `?t=${Date.now()}`;
-    const response = await fetch(fileName + cacheBuster);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const htmlContent = await response.text();
-    
-    if (!htmlContent || htmlContent.trim().length === 0) {
-      throw new Error("File is empty");
-    }
-    
-    renderHtmlContent(htmlContent);
-    console.log(`✅ Successfully loaded: ${fileName}`);
-    
-  } catch (error) {
-    console.error(`Failed to load ${fileName}:`, error);
-    showDemoContent(sectionName);
-  }
+  // Use iframe method which is most reliable for script execution
+  loadContentWithIframe(fileName, sectionName);
 }
 
-/* ===== Render HTML content with proper script execution ===== */
-function renderHtmlContent(htmlContent) {
-  const contentContainer = document.createElement('div');
-  contentContainer.className = 'loaded-content';
-  contentContainer.innerHTML = htmlContent;
-  
-  // Execute all scripts properly
-  const scripts = contentContainer.querySelectorAll('script');
-  scripts.forEach(oldScript => {
-    const newScript = document.createElement('script');
-    Array.from(oldScript.attributes).forEach(attr => {
-      newScript.setAttribute(attr.name, attr.value);
-    });
-    if (oldScript.src) {
-      newScript.src = oldScript.src;
-      newScript.async = false;
-    } else {
-      newScript.textContent = oldScript.textContent;
-    }
-    oldScript.parentNode.replaceChild(newScript, oldScript);
-  });
-  
-  dynamicView.innerHTML = '';
-  dynamicView.appendChild(contentContainer);
-}
-
-/* ===== Show demo content for missing files ===== */
+/* ===== SHOW DEMO CONTENT FOR MISSING FILES ===== */
 function showDemoContent(sectionName) {
+  completeCleanup();
+  
   const demoContent = `
     <div class="error-message">
       <div style="font-size: 48px; margin-bottom: 20px;">📄</div>
@@ -624,6 +621,7 @@ function showDemoContent(sectionName) {
 
 function getFileNameForSection(sectionName) {
   const fileMap = {
+    "Home Page": "home.html",
     "Add Entry": "add_entry.html",
     "Visit Schedule": "visit_schedule.html",
     "Price Comparison": "price_comparison.html",
@@ -635,13 +633,18 @@ function getFileNameForSection(sectionName) {
   return fileMap[sectionName] || `${sectionName.toLowerCase().replace(/ /g, '_')}.html`;
 }
 
-/* ===== NAVIGATION FUNCTION ===== */
+/* ===== NAVIGATION FUNCTION - COMPLETELY RELOADS ON EACH CLICK ===== */
 function navigateToSection(section, fileName) {
+  // Security check
   if (!currentUserData || !currentUserData.sections.includes(section)) {
     alert("You don't have permission to access this section.");
     return;
   }
-
+  
+  // Update current section
+  currentSection = section;
+  
+  // Update active state on buttons
   const allButtons = document.querySelectorAll(".nav-item");
   allButtons.forEach(btn => {
     const btnSection = btn.getAttribute("data-section");
@@ -651,19 +654,29 @@ function navigateToSection(section, fileName) {
       btn.classList.remove("active");
     }
   });
-
+  
+  // Load the content fresh
   loadHtmlFile(fileName, section);
 }
 
 /* ===== RESET AND REINITIALIZE DASHBOARD ===== */
 function resetAndInitDashboard(userData) {
+  // Reset current section to force fresh load
+  currentSection = null;
+  
+  // Complete cleanup
+  completeCleanup();
+  
+  // Show loading state
   dynamicView.innerHTML = '<div class="loading-spinner"></div>';
   
+  // Reset active states
   const allButtons = document.querySelectorAll(".nav-item");
   allButtons.forEach(btn => {
     btn.classList.remove("active");
   });
   
+  // Update user data
   currentUserData = userData;
   
   if (currentUserEmail) {
@@ -671,6 +684,7 @@ function resetAndInitDashboard(userData) {
   }
   userNameEl.innerText = userData.displayName;
   
+  // Setup sidebar with fresh event listeners
   setupSidebarFresh();
 }
 
@@ -690,6 +704,7 @@ function setupSidebarFresh() {
         firstVisibleSection = section;
         firstVisibleFile = file;
       }
+      // Remove old listeners by cloning
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
       newBtn.addEventListener("click", (e) => {
@@ -707,7 +722,7 @@ function setupSidebarFresh() {
     }
   });
 
-  // Navigate to Home Page by default (first visible section)
+  // Navigate to first available section (Home Page by default)
   if (firstVisibleSection && firstVisibleFile) {
     setTimeout(() => {
       navigateToSection(firstVisibleSection, firstVisibleFile);
@@ -793,8 +808,12 @@ if (logoutBtn) {
     e.preventDefault();
     e.stopPropagation();
     
+    // Clean up before logout
+    completeCleanup();
     currentUserData = null;
     currentUserEmail = null;
+    currentSection = null;
+    currentIframe = null;
     dynamicView.innerHTML = '<div class="loading-spinner"></div>';
     
     try {
@@ -808,8 +827,11 @@ if (logoutBtn) {
 }
 
 window.logout = function() {
+  completeCleanup();
   currentUserData = null;
   currentUserEmail = null;
+  currentSection = null;
+  currentIframe = null;
   signOut(auth)
     .then(() => {
       window.location.href = "login.html";
@@ -833,7 +855,8 @@ window.addEventListener('pageshow', function(event) {
   }
 });
 
-console.log("✅ Dashboard with 8 sidebar options - Home Page is default");
+console.log("✅ Dashboard FULLY FIXED - Each section now loads fresh with complete cleanup");
+console.log("✅ Using iframe method for reliable script execution every time");
 
 </script>
 
