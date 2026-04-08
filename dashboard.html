@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Goodness Healthcare | Dashboard</title>
+
+<style>
+/* ===== PREMIUM TEAL THEME STYLES ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #EBF4F6;
+  height: 100vh;
+  overflow: hidden;
+  color: #1a2c3e;
+}
+
+.dashboard {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+/* SIDEBAR - Premium Teal */
+.sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, #09637E 0%, #055060 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  box-shadow: 8px 0 25px rgba(7, 50, 65, 0.12);
+  z-index: 20;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* FIXED: Mobile sidebar positioning - opens from LEFT side */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar {
+    position: relative;
+    transform: translateX(0) !important;
+  }
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: #09637E;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: #7AB2B2;
+  border-radius: 10px;
+}
+
+/* User Profile Section */
+.user-profile-section {
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(122, 178, 178, 0.35);
+  margin-bottom: 20px;
+  background: rgba(7, 80, 96, 0.3);
+}
+
+.user-profile-section div {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.user-profile-section b {
+  color: white;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+#logoutBtnSidebar {
+  margin-top: 16px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(122, 178, 178, 0.6);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+#logoutBtnSidebar:hover {
+  background: #088395;
+  border-color: #EBF4F6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Menu */
+.nav-menu {
+  flex: 1;
+  padding: 0 14px 20px 14px;
+}
+
+.nav-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #E9F3F5;
+  padding: 12px 18px;
+  margin-bottom: 8px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+}
+
+.nav-item:hover {
+  background: rgba(8, 131, 149, 0.5);
+  color: white;
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  background: #088395;
+  color: white;
+  box-shadow: 0 8px 16px -6px rgba(7, 50, 65, 0.35);
+  font-weight: 600;
+}
+
+/* MAIN CONTENT AREA */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #EBF4F6;
+}
+
+/* TOPBAR with Logo */
+.topbar {
+  background: white;
+  padding: 0 28px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(7, 50, 65, 0.05);
+  border-bottom: 1px solid rgba(122, 178, 178, 0.3);
+  flex-shrink: 0;
+}
+
+#menuToggleBtn {
+  background: #EBF4F6;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: #09637E;
+  transition: all 0.2s;
+  display: none;
+}
+
+#menuToggleBtn:hover {
+  background: #d9e9ec;
+}
+
+/* Logo styling */
+.topbar-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.topbar h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #09637E, #088395);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  letter-spacing: -0.2px;
+}
+
+/* CONTENT AREA */
+.content {
+  flex: 1;
+  padding: 24px 28px;
+  overflow-y: auto;
+  background: #EBF4F6;
+}
+
+.dynamic-view {
+  background: white;
+  border-radius: 28px;
+  box-shadow: 0 20px 35px -12px rgba(7, 50, 65, 0.12);
+  min-height: 500px;
+  border: 1px solid rgba(122, 178, 178, 0.2);
+  overflow: auto;
+  position: relative;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  border: 4px solid #EBF4F6;
+  border-top: 4px solid #088395;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 0.8s linear infinite;
+  margin: 60px auto;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* Content display styles */
+.loaded-content {
+  padding: 0;
+}
+
+.loaded-content iframe {
+  width: 100%;
+  min-height: 550px;
+  border: none;
+  background: white;
+  border-radius: 28px;
+}
+
+.error-message {
+  padding: 50px 30px;
+  text-align: center;
+}
+
+.error-message h3 {
+  color: #b91c1c;
+  margin-bottom: 16px;
+}
+
+.instruction-box {
+  background: #EBF4F6;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: left;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* MOBILE RESPONSIVE - FIXED SIDEBAR POSITION */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0 16px;
+  }
+  
+  .content {
+    padding: 16px;
+  }
+  
+  #menuToggleBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .topbar h3 {
+    font-size: 1rem;
+  }
+  
+  .topbar-logo {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Mobile Overlay - appears behind sidebar when open */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(7, 50, 65, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+}
+
+.mobile-overlay.active {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+
+<div class="dashboard">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="user-profile-section">
+      <div>🔐 <b id="sidebarLoginId">—</b></div>
+      <div>👤 <b id="sidebarUserName">—</b></div>
+      <button id="logoutBtnSidebar">➜] Logout</button>
+    </div>
+
+    <div class="nav-menu" id="navMenu">
+      <button class="nav-item" data-section="Add Entry" data-file="add_entry.html">📋 Add Entry</button>
+      <button class="nav-item" data-section="Visit Schedule" data-file="visit_schedule.html">📅 Visit Schedule</button>
+      <button class="nav-item" data-section="Price Comparison" data-file="price_comparison.html">💰 Price Comparison</button>
+      <button class="nav-item" data-section="Test Reports" data-file="test_reports.html">🧪 Test Reports</button>
+      <button class="nav-item" data-section="Data Sheets" data-file="data_sheets.html">📊 Data Sheets</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="main-area">
+    <div class="topbar">
+      <button id="menuToggleBtn">☰</button>
+      <img id="topbarLogo" class="topbar-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2309637E'/%3E%3Ctext x='50' y='67' font-size='40' text-anchor='middle' fill='white' font-weight='bold'%3EGH%3C/text%3E%3C/svg%3E" alt="Logo">
+      <h3>Goodness Healthcare</h3>
+    </div>
+
+    <div class="content">
+      <div id="dynamicView" class="dynamic-view">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+/* ===== FIREBASE CONFIGURATION ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBZn1isgreU_1YcVl7dQ5haa28gZ-vCrM4",
+  authDomain: "goodnessdata-41725.firebaseapp.com",
+  projectId: "goodnessdata-41725"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* ===== USERS DATABASE (ROLE SYSTEM) ===== */
+const USERS = {
+  "kaushalachrekar@gmail.com": {
+    displayName: "Kaushal",
+    sections: ["Add Entry", "Visit Schedule", "Price Comparison", "Test Reports", "Data Sheets"],
+    canEdit: true
+  },
+  "staff@gmail.com": {
+    displayName: "Staff",
+    sections: ["Add Entry", "Visit Schedule"],
+    canEdit: false
+  }
+};
+
+/* ===== DOM ELEMENTS ===== */
+const sidebar = document.getElementById("sidebar");
+const dynamicView = document.getElementById("dynamicView");
+const loginIdEl = document.getElementById("sidebarLoginId");
+const userNameEl = document.getElementById("sidebarUserName");
+const navMenu = document.getElementById("navMenu");
+const logoutBtn = document.getElementById("logoutBtnSidebar");
+const menuToggle = document.getElementById("menuToggleBtn");
+const overlay = document.getElementById("mobileOverlay");
+const topbarLogo = document.getElementById("topbarLogo");
+
+let currentUserData = null;
+let currentUserEmail = null;
+
+/* ===== FIX LOGO: Load the actual image from Google Drive ===== */
+if (topbarLogo) {
+  const logoUrl = "https://lh3.googleusercontent.com/d/1viGx6qVjAgEowFtmOJziX-NdhYArt4BM";
+  const img = new Image();
+  img.onload = function() {
+    topbarLogo.src = logoUrl;
+  };
+  img.onerror = function() {
+    console.log("Using fallback logo");
+  };
+  img.src = logoUrl;
+}
+
+/* ===== CORE FUNCTION: Load HTML file directly using fetch ===== */
+async function loadHtmlFile(fileName, sectionName) {
+  if (!fileName) {
+    showFileNotFoundError(sectionName, fileName);
+    return;
+  }
+  
+  // Show loading state
+  dynamicView.innerHTML = `
+    <div style="display: flex; justify-content: center; align-items: center; height: 400px; flex-direction: column; gap: 16px;">
+      <div class="loading-spinner"></div>
+      <p style="color:#09637E; font-weight:500;">Loading ${sectionName}...</p>
+      <p style="color:#7AB2B2; font-size:0.85rem;">Fetching: ${fileName}</p>
+    </div>
+  `;
+  
+  try {
+    // Add cache-busting parameter to prevent caching issues
+    const cacheBuster = `?t=${Date.now()}`;
+    const response = await fetch(fileName + cacheBuster);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const htmlContent = await response.text();
+    
+    if (!htmlContent || htmlContent.trim().length === 0) {
+      throw new Error("File is empty");
+    }
+    
+    // Create a container for the loaded content
+    const contentContainer = document.createElement('div');
+    contentContainer.className = 'loaded-content';
+    contentContainer.innerHTML = htmlContent;
+    
+    // Execute any scripts in the loaded HTML
+    const scripts = contentContainer.querySelectorAll('script');
+    scripts.forEach(oldScript => {
+      const newScript = document.createElement('script');
+      if (oldScript.src) {
+        newScript.src = oldScript.src;
+      } else {
+        newScript.textContent = oldScript.textContent;
+      }
+      document.body.appendChild(newScript);
+      document.body.removeChild(newScript);
+    });
+    
+    // Replace the dynamic view content
+    dynamicView.innerHTML = '';
+    dynamicView.appendChild(contentContainer);
+    
+    console.log(`✅ Successfully loaded: ${fileName}`);
+    
+  } catch (error) {
+    console.error(`Failed to load ${fileName}:`, error);
+    // Try alternative method - iframe
+    tryIframeFallback(fileName, sectionName);
+  }
+}
+
+/* ===== FALLBACK METHOD: Use iframe to load the file ===== */
+function tryIframeFallback(fileName, sectionName) {
+  // Clear loading state
+  dynamicView.innerHTML = '';
+  
+  const iframe = document.createElement('iframe');
+  iframe.style.width = '100%';
+  iframe.style.minHeight = '550px';
+  iframe.style.border = 'none';
+  iframe.style.borderRadius = '28px';
+  iframe.style.backgroundColor = 'white';
+  
+  let timeoutId = setTimeout(() => {
+    if (dynamicView.contains(iframe)) {
+      showFileNotFoundError(sectionName, fileName);
+    }
+  }, 5000);
+  
+  iframe.onload = () => {
+    clearTimeout(timeoutId);
+    console.log(`✅ Iframe successfully loaded: ${fileName}`);
+  };
+  
+  iframe.onerror = () => {
+    clearTimeout(timeoutId);
+    showFileNotFoundError(sectionName, fileName);
+  };
+  
+  // Add cache-busting to iframe as well
+  iframe.src = fileName + `?t=${Date.now()}`;
+  dynamicView.appendChild(iframe);
+}
+
+/* ===== SHOW ERROR WITH HELPFUL INSTRUCTIONS ===== */
+function showFileNotFoundError(sectionName, fileName) {
+  dynamicView.innerHTML = `
+    <div class="error-message">
+      <div style="font-size: 48px; margin-bottom: 20px;">📁</div>
+      <h3>Unable to Load "${sectionName}"</h3>
+      <p style="color: #b91c1c; margin-bottom: 16px;">
+        File not found: <strong>${fileName}</strong>
+      </p>
+      <div class="instruction-box">
+        <h4 style="color: #09637E; margin-bottom: 12px;">🔧 How to Fix This:</h4>
+        <p style="margin-bottom: 12px;">Make sure the file <strong>${fileName}</strong> exists in the same folder as this dashboard.</p>
+        <p>Create the file with your HTML content and refresh.</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ===== NAVIGATION FUNCTION ===== */
+function navigateToSection(section, fileName) {
+  if (!currentUserData || !currentUserData.sections.includes(section)) {
+    alert("You don't have permission to access this section.");
+    return;
+  }
+
+  // Update active state on buttons
+  const allButtons = document.querySelectorAll(".nav-item");
+  allButtons.forEach(btn => {
+    const btnSection = btn.getAttribute("data-section");
+    if (btnSection === section) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  loadHtmlFile(fileName, section);
+}
+
+/* ===== RESET AND REINITIALIZE DASHBOARD ===== */
+function resetAndInitDashboard(userData) {
+  // Clear existing content
+  dynamicView.innerHTML = '<div class="loading-spinner"></div>';
+  
+  // Reset active states
+  const allButtons = document.querySelectorAll(".nav-item");
+  allButtons.forEach(btn => {
+    btn.classList.remove("active");
+  });
+  
+  // Store user data
+  currentUserData = userData;
+  
+  // Update UI with user info
+  if (currentUserEmail) {
+    loginIdEl.innerText = currentUserEmail;
+  }
+  userNameEl.innerText = userData.displayName;
+  
+  // Re-setup sidebar with fresh event listeners
+  setupSidebarFresh();
+}
+
+/* ===== FRESH SETUP OF SIDEBAR (CLEARS OLD LISTENERS) ===== */
+function setupSidebarFresh() {
+  const buttons = navMenu.querySelectorAll(".nav-item");
+  let firstVisibleSection = null;
+  let firstVisibleFile = null;
+
+  buttons.forEach(btn => {
+    const section = btn.getAttribute("data-section");
+    const file = btn.getAttribute("data-file");
+    
+    if (currentUserData && currentUserData.sections.includes(section)) {
+      btn.style.display = "flex";
+      if (!firstVisibleSection) {
+        firstVisibleSection = section;
+        firstVisibleFile = file;
+      }
+      // Clone and replace to remove old listeners completely
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const sectionName = newBtn.getAttribute("data-section");
+        const fileName = newBtn.getAttribute("data-file");
+        navigateToSection(sectionName, fileName);
+        // Close sidebar on mobile after selection
+        if (window.innerWidth <= 768) {
+          closeSidebarMobile();
+        }
+      });
+    } else {
+      btn.style.display = "none";
+    }
+  });
+
+  // Navigate to first available section
+  if (firstVisibleSection && firstVisibleFile) {
+    setTimeout(() => {
+      navigateToSection(firstVisibleSection, firstVisibleFile);
+    }, 100);
+  }
+}
+
+/* ===== MOBILE SIDEBAR TOGGLE FUNCTIONS - FIXED FOR LEFT SIDE ===== */
+function closeSidebarMobile() {
+  if (window.innerWidth <= 768) {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("active");
+    // Prevent body scrolling when sidebar is closed
+    document.body.style.overflow = "";
+  }
+}
+
+function openSidebarMobile() {
+  if (window.innerWidth <= 768) {
+    sidebar.classList.add("open");
+    overlay.classList.add("active");
+    // Prevent body scrolling when sidebar is open
+    document.body.style.overflow = "hidden";
+  }
+}
+
+/* ===== EVENT LISTENERS FOR MOBILE ===== */
+if (menuToggle) {
+  // Remove any existing listeners
+  const newMenuToggle = menuToggle.cloneNode(true);
+  menuToggle.parentNode.replaceChild(newMenuToggle, menuToggle);
+  
+  newMenuToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (sidebar.classList.contains("open")) {
+      closeSidebarMobile();
+    } else {
+      openSidebarMobile();
+    }
+  });
+}
+
+if (overlay) {
+  overlay.addEventListener("click", () => {
+    closeSidebarMobile();
+  });
+}
+
+// Handle window resize - ensure sidebar state is correct
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 768) {
+    // On desktop, ensure sidebar is visible and overlay is hidden
+    sidebar.classList.remove("open");
+    overlay.classList.remove("active");
+    document.body.style.overflow = "";
+  } else {
+    // On mobile, if sidebar was open, keep it open? No, reset on resize
+    // This ensures consistent behavior
+    if (sidebar.classList.contains("open")) {
+      // Keep it open, but ensure overlay is active
+      overlay.classList.add("active");
+    }
+  }
+});
+
+/* ===== AUTHENTICATION STATE MONITOR ===== */
+onAuthStateChanged(auth, (user) => {
+  console.log("Auth state changed:", user ? `User logged in: ${user.email}` : "No user");
+  
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const userData = USERS[user.email];
+  
+  if (!userData) {
+    alert("Access Denied: Unauthorized User");
+    signOut(auth).then(() => {
+      window.location.href = "login.html";
+    });
+    return;
+  }
+
+  currentUserEmail = user.email;
+  resetAndInitDashboard(userData);
+});
+
+/* ===== LOGOUT FUNCTIONALITY ===== */
+if (logoutBtn) {
+  const newLogoutBtn = logoutBtn.cloneNode(true);
+  logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+  
+  newLogoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    currentUserData = null;
+    currentUserEmail = null;
+    dynamicView.innerHTML = '<div class="loading-spinner"></div>';
+    
+    try {
+      await signOut(auth);
+      window.location.href = "login.html";
+    } catch (error) {
+      console.error("Logout error:", error);
+      window.location.href = "login.html";
+    }
+  });
+}
+
+window.logout = function() {
+  currentUserData = null;
+  currentUserEmail = null;
+  signOut(auth)
+    .then(() => {
+      window.location.href = "login.html";
+    })
+    .catch(() => {
+      window.location.href = "login.html";
+    });
+};
+
+// Remove any conflicting old elements
+const oldSections = ['dashboard', 'patients', 'reports', 'settings'];
+oldSections.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+});
+
+// Handle page cache for proper logout/login flow
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
+
+console.log("✅ Dashboard initialized - Sidebar now opens correctly from LEFT side on mobile");
+
+</script>
+
+</body>
+</html>
