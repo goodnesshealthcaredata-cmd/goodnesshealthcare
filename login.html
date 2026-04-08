@@ -13,7 +13,7 @@
 
     body {
       font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      /* 🔹 1. Background Image: fully covers, no distortion, responsive */
+      /* Background Image: fully covers, no distortion, responsive */
       background-image: url('https://lh3.googleusercontent.com/d/1a_gZVsNEFJj6Td8lilXuYCiCx-O3qPtH');
       background-size: cover;
       background-position: center center;
@@ -27,7 +27,7 @@
       position: relative;
     }
 
-    /* subtle overlay to ensure text readability (optional, preserves modern look) */
+    /* subtle overlay to ensure text readability */
     body::before {
       content: '';
       position: absolute;
@@ -58,10 +58,11 @@
       box-shadow: 0 30px 50px -18px rgba(9, 99, 126, 0.4);
     }
 
-    /* 🔹 2. Logo Replacement: new image at the top, properly sized and aligned */
+    /* Logo styling */
     .brand-logo {
       text-align: center;
       margin-bottom: 1.2rem;
+      border-radius: 20px;
     }
 
     .brand-logo img {
@@ -71,15 +72,14 @@
       display: inline-block;
       filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.05));
       transition: transform 0.2s ease;
-      border-radius: 15px;
-
+      border-radius: 20px;
     }
 
     .brand-logo img:hover {
       transform: scale(1.02);
     }
 
-    /* header section with teal primary (welcome text) */
+    /* header section */
     .brand-header {
       text-align: center;
       margin-bottom: 1.8rem;
@@ -105,7 +105,7 @@
       padding-bottom: 4px;
     }
 
-    /* form groups - modern spacing */
+    /* form groups */
     .input-group {
       margin-bottom: 1.4rem;
       text-align: left;
@@ -118,6 +118,13 @@
       color: #09637E;
       margin-bottom: 0.4rem;
       letter-spacing: -0.2px;
+    }
+
+    /* password wrapper for toggle icon - CRITICAL FIX */
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+      display: block;
     }
 
     input {
@@ -134,6 +141,11 @@
       font-weight: 450;
     }
 
+    /* password input with right padding for eye icon */
+    .password-wrapper input {
+      padding-right: 3rem;
+    }
+
     input:focus {
       border-color: #088395;
       box-shadow: 0 0 0 4px rgba(8, 131, 149, 0.15);
@@ -145,8 +157,54 @@
       font-weight: 400;
     }
 
-    /* premium button - teal secondary */
-    button {
+    /* Eye icon styling - FIXED POSITIONING */
+    .toggle-password {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      transition: opacity 0.2s ease, transform 0.1s ease;
+      color: #7AB2B2;
+      z-index: 3;
+      outline: none;
+    }
+
+    .toggle-password:hover {
+      opacity: 0.8;
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .toggle-password:active {
+      transform: translateY(-50%) scale(0.98);
+    }
+
+    /* SVG icon styling */
+    .eye-icon {
+      width: 1.4rem;
+      height: 1.4rem;
+      stroke: #088395;
+      stroke-width: 1.8;
+      fill: none;
+      transition: stroke 0.2s;
+      pointer-events: none;
+    }
+
+    .toggle-password:hover .eye-icon {
+      stroke: #09637E;
+    }
+
+    /* button styling */
+    button[type="button"]:not(.toggle-password) {
       width: 100%;
       padding: 0.9rem 1rem;
       background: linear-gradient(105deg, #088395 0%, #09637E 100%);
@@ -163,13 +221,13 @@
       box-shadow: 0 6px 14px rgba(8, 131, 149, 0.25);
     }
 
-    button:hover {
+    button[type="button"]:not(.toggle-password):hover {
       transform: translateY(-2px);
       background: linear-gradient(105deg, #0A9BB0, #09637E);
       box-shadow: 0 12px 22px -8px rgba(8, 131, 149, 0.45);
     }
 
-    button:active {
+    button[type="button"]:not(.toggle-password):active {
       transform: translateY(1px);
       transition: 0.05s;
     }
@@ -188,7 +246,7 @@
       transition: 0.2s;
     }
 
-    /* extra micro interactions */
+    /* footer */
     .login-footer {
       margin-top: 2rem;
       text-align: center;
@@ -198,12 +256,11 @@
       padding-top: 1.3rem;
     }
 
-    /* ========== RESPONSIVE BREAKPOINTS (mobile + tablet + desktop) ========== */
+    /* ========== RESPONSIVE BREAKPOINTS ========== */
     @media (max-width: 640px) {
       body {
         padding: 1rem;
-        align-items: center;
-        background-attachment: scroll; /* better mobile performance */
+        background-attachment: scroll;
       }
       .login-container {
         padding: 1.5rem 1.2rem 1.8rem;
@@ -218,14 +275,22 @@
       }
       input {
         padding: 0.8rem 0.9rem;
-        border-radius: 1rem;
       }
-      button {
+      .password-wrapper input {
+        padding-right: 2.8rem;
+      }
+      button[type="button"]:not(.toggle-password) {
         padding: 0.8rem 0.9rem;
+      }
+      .toggle-password {
+        right: 0.8rem;
+      }
+      .eye-icon {
+        width: 1.2rem;
+        height: 1.2rem;
       }
     }
 
-    /* tablet optimization (641px - 900px) */
     @media (min-width: 641px) and (max-width: 900px) {
       .login-container {
         max-width: 480px;
@@ -239,7 +304,6 @@
       }
     }
 
-    /* desktop large screens */
     @media (min-width: 1600px) {
       .login-container {
         max-width: 520px;
@@ -251,12 +315,11 @@
       .brand-logo img {
         max-width: 100px;
       }
-      input, button {
+      input, button[type="button"]:not(.toggle-password) {
         font-size: 1.05rem;
       }
     }
 
-    /* reduce motion if user prefers */
     @media (prefers-reduced-motion: reduce) {
       * {
         transition: none !important;
@@ -264,18 +327,10 @@
       }
     }
 
-    /* glass effect enhancement on container */
     @supports (backdrop-filter: blur(4px)) {
       .login-container {
         background: rgba(255, 255, 255, 0.92);
         backdrop-filter: blur(2px);
-      }
-    }
-
-    /* Ensure background image covers all corners and no white gaps on very tall screens */
-    @media (min-height: 800px) {
-      body {
-        background-position: center 30%;
       }
     }
   </style>
@@ -283,7 +338,7 @@
 <body>
 
 <div class="login-container">
-  <!-- 🔹 2. Logo Replacement: placed at the top, correct image URL, responsive sizing -->
+  <!-- Logo section -->
   <div class="brand-logo">
     <img src="https://lh3.googleusercontent.com/d/1yGx6-7vfeQCInmOm_nMu2Jsz3MFWWDiK" 
          alt="Company Logo" 
@@ -296,18 +351,34 @@
     <div class="subhead">sign in to your account</div>
   </div>
 
-  <!-- Login form fields -->
+  <!-- Email field -->
   <div class="input-group">
     <label>📧 Email address</label>
     <input type="email" id="email" placeholder="hello@company.com" autocomplete="email">
   </div>
 
+  <!-- Password field with visibility toggle - FIXED POSITION -->
   <div class="input-group">
     <label>🔒 Password</label>
-    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    <div class="password-wrapper">
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      <span class="toggle-password" id="togglePasswordBtn" role="button" aria-label="Show password">
+        <!-- Eye open icon (visible when password is hidden) -->
+        <svg class="eye-icon" id="eyeOpenIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <!-- Eye closed icon (visible when password is visible) -->
+        <svg class="eye-icon" id="eyeClosedIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: none;">
+          <path d="M2 2L22 22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M6.712 6.712C4.062 8.316 2 12 2 12C2 12 6 20 12 20C13.818 20 15.419 19.217 16.745 18.082M9.879 9.879C9.336 10.422 9 11.167 9 12C9 13.657 10.343 15 12 15C12.833 15 13.578 14.664 14.121 14.121" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17.494 10.036C18.254 10.964 19 12 19 12C19 12 17.5 15.5 12 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+    </div>
   </div>
 
-  <button id="loginBtn">Sign in →</button>
+  <button type="button" id="loginBtn">Sign in →</button>
 
   <p id="error" class="error" style="display: none;"></p>
   
@@ -340,8 +411,13 @@
   const passwordInput = document.getElementById("password");
   const errorBox = document.getElementById("error");
   const loginButton = document.getElementById("loginBtn");
+  
+  // Password toggle elements
+  const toggleBtn = document.getElementById("togglePasswordBtn");
+  const eyeOpenIcon = document.getElementById("eyeOpenIcon");
+  const eyeClosedIcon = document.getElementById("eyeClosedIcon");
 
-  // Helper to show error message with smooth visibility
+  // Helper to show/hide error
   function showError(message) {
     errorBox.textContent = message;
     errorBox.style.display = "block";
@@ -351,6 +427,37 @@
     errorBox.textContent = "";
     errorBox.style.display = "none";
   }
+
+  // PASSWORD VISIBILITY TOGGLE FUNCTIONALITY
+  let isPasswordVisible = false;
+  
+  function togglePasswordVisibility() {
+    isPasswordVisible = !isPasswordVisible;
+    
+    if (isPasswordVisible) {
+      // Show password: change input type to text
+      passwordInput.type = "text";
+      // Update icons: hide open eye, show closed eye (indicating password is visible)
+      eyeOpenIcon.style.display = "none";
+      eyeClosedIcon.style.display = "block";
+    } else {
+      // Hide password: change input type back to password
+      passwordInput.type = "password";
+      // Update icons: show open eye, hide closed eye
+      eyeOpenIcon.style.display = "block";
+      eyeClosedIcon.style.display = "none";
+    }
+    
+    // Maintain focus on input for better UX
+    passwordInput.focus();
+  }
+  
+  // Add click event listener to toggle button (using span now)
+  toggleBtn.addEventListener("click", (e) => {
+    e.preventDefault(); // Prevent any form submission or default behavior
+    e.stopPropagation();
+    togglePasswordVisibility();
+  });
 
   // LOGIN function (preserved core logic)
   window.login = async function () {
@@ -364,8 +471,7 @@
       return;
     }
 
-    // Disable button during request to avoid double-click (nice micro-interaction)
-    const wasDisabled = loginButton.disabled;
+    // Disable button during request
     loginButton.disabled = true;
     loginButton.style.opacity = "0.8";
     const originalText = loginButton.innerText;
@@ -373,7 +479,7 @@
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Redirect handled by onAuthStateChanged, but ensures instant redirect
+      // Redirect handled by onAuthStateChanged
       window.location.href = "dashboard.html";
     } catch (error) {
       // Re-enable button
@@ -397,13 +503,13 @@
     }
   };
 
-  // Attach event listener to button (preserves window.login but also keeps modern event)
+  // Attach event listener to login button
   loginButton.addEventListener("click", (e) => {
     e.preventDefault();
     window.login();
   });
 
-  // Allow "Enter" key to submit the form (better accessibility + responsiveness)
+  // Allow "Enter" key to submit the form
   const inputs = [emailInput, passwordInput];
   inputs.forEach(input => {
     input.addEventListener("keypress", (event) => {
@@ -414,14 +520,20 @@
     });
   });
 
-  // small extra: sync error display initial hidden
+
+  // Initial setup
   hideError();
   
-  // optional: reset button state if any script anomaly
+  // Reset button state on load
   window.addEventListener("load", () => {
     loginButton.disabled = false;
     loginButton.style.opacity = "1";
     loginButton.innerText = "Sign in →";
+    // Ensure password is hidden initially and icon is correct
+    passwordInput.type = "password";
+    isPasswordVisible = false;
+    eyeOpenIcon.style.display = "block";
+    eyeClosedIcon.style.display = "none";
   });
 </script>
 
