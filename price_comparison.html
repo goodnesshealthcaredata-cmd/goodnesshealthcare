@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Goodness Healthcare | Lab Test Optimizer</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #EBF4F6;
+    color: #1A2C33;
+    line-height: 1.5;
+    padding: 0 0 40px 0;
+  }
+
+  /* Top Navigation - Teal Primary */
+  .top-nav {
+    background: linear-gradient(135deg, #09637E 0%, #0A7A9A 100%);
+    padding: 28px 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 20px rgba(9, 99, 126, 0.12);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+  }
+
+  .page-title h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .page-title h1 i {
+    background: rgba(255,255,255,0.2);
+    padding: 10px;
+    border-radius: 50%;
+    font-size: 1.4rem;
+  }
+
+  .page-title p {
+    color: rgba(255,255,255,0.85);
+    font-size: 1rem;
+    margin-top: 8px;
+    font-weight: 400;
+  }
+
+  /* Content container - responsive */
+  .content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* Card styling - premium, glassmorphism touch */
+  .card {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(0px);
+    border-radius: 28px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02);
+    padding: 28px 28px;
+    margin-bottom: 32px;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(122, 178, 178, 0.25);
+  }
+
+  .card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #09637E;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 4px solid #088395;
+    padding-left: 16px;
+  }
+
+  .card h3 i {
+    color: #088395;
+    font-size: 1.3rem;
+  }
+
+  /* Input group */
+  .input-group {
+    margin-bottom: 24px;
+  }
+
+  .input-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #09637E;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    border: 1.5px solid #D9E9EC;
+    border-radius: 60px;
+    background: white;
+    transition: all 0.2s;
+    outline: none;
+    color: #1A2C33;
+  }
+
+  .search-input:focus {
+    border-color: #088395;
+    box-shadow: 0 0 0 4px rgba(8, 131, 149, 0.15);
+  }
+
+  /* Suggestions */
+  .suggestions {
+    background: white;
+    border-radius: 20px;
+    margin-top: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 100;
+    position: relative;
+    border: 1px solid #E2F0F2;
+  }
+
+  .suggestions div {
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-weight: 500;
+    color: #1F4E5E;
+  }
+
+  .suggestions div:hover {
+    background: #EBF4F6;
+    color: #09637E;
+  }
+
+  /* Selected tests chips */
+  .selected-tests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 20px 0 16px;
+    min-height: 60px;
+  }
+
+  .selected-tests span {
+    background: linear-gradient(105deg, #EBF4F6 0%, #E6F0F2 100%);
+    color: #09637E;
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(8, 131, 149, 0.3);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  .selected-tests span i {
+    font-size: 12px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .selected-tests span:hover {
+    background: #fff;
+    border-color: #088395;
+    transform: translateY(-1px);
+  }
+
+  .btn-clear {
+    background: transparent;
+    border: 1.5px solid #7AB2B2;
+    color: #09637E;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-clear:hover {
+    background: #EBF4F6;
+    border-color: #088395;
+    color: #088395;
+    transform: scale(0.98);
+  }
+
+  /* Comparison section */
+  .comparison-section {
+    background: white;
+    border-radius: 28px;
+    padding: 24px 20px;
+    margin-bottom: 32px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.05);
+    border: 1px solid rgba(122, 178, 178, 0.3);
+    transition: all 0.2s;
+  }
+
+  .comparison-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #09637E;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #7AB2B2;
+    padding-bottom: 12px;
+  }
+
+  /* Table responsive wrapper */
+  .comparison-table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .comparison-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+    min-width: 640px;
+  }
+
+  .comparison-table th {
+    text-align: left;
+    padding: 14px 12px;
+    background: #EBF4F6;
+    color: #09637E;
+    font-weight: 700;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .comparison-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid #E2F0F2;
+    vertical-align: top;
+  }
+
+  .lab-name {
+    font-weight: 800;
+    color: #09637E;
+    background: #F8FDFE;
+  }
+
+  .test-item {
+    background: #F1F8FA;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 30px;
+    margin: 4px 6px 4px 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .price-b2b {
+    font-weight: 800;
+    color: #088395;
+    font-size: 1rem;
+  }
+
+  .price-mrp {
+    font-size: 0.7rem;
+    color: #7AB2B2;
+    text-decoration: line-through;
+    margin-top: 4px;
+  }
+
+  .package-badge {
+    background: #08839520;
+    color: #09637E;
+    padding: 2px 8px;
+    border-radius: 40px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  /* Lab block for result */
+  .lab-block {
+    background: #F9FDFF;
+    border-left: 5px solid #088395;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    border-radius: 20px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  }
+
+  .lab-block strong {
+    color: #09637E;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .highlight {
+    background: linear-gradient(120deg, #EBF4F6, #E2F0F4);
+    padding: 16px 20px;
+    border-radius: 20px;
+    margin-top: 20px;
+    font-weight: 700;
+    color: #09637E;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .result {
+    margin-top: 8px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: #7AB2B2;
+  }
+
+  /* Responsive breakpoints */
+  @media (max-width: 768px) {
+    .top-nav {
+      padding: 20px 16px;
+    }
+    .page-title h1 {
+      font-size: 1.5rem;
+    }
+    .content-container {
+      padding: 0 16px;
+    }
+    .card {
+      padding: 20px 18px;
+    }
+    .card h3 {
+      font-size: 1.3rem;
+    }
+    .comparison-title {
+      font-size: 1.2rem;
+    }
+    .comparison-table th, 
+    .comparison-table td {
+      padding: 12px 8px;
+    }
+    .lab-block {
+      padding: 12px 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-title h1 {
+      font-size: 1.3rem;
+    }
+    .btn-clear {
+      width: 100%;
+      justify-content: center;
+    }
+    .comparison-table th, 
+    .comparison-table td {
+      font-size: 0.75rem;
+    }
+    .highlight {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* subtle hover micro */
+  .lab-block:hover {
+    background: white;
+    box-shadow: 0 6px 14px rgba(9, 99, 126, 0.08);
+    transform: translateX(4px);
+  }
+  
+  button, .suggestions div, .selected-tests span {
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <!-- Top Navigation -->
+  <div class="top-nav">
+    <div class="page-title">
+      <h1>
+        <i class="fas fa-chart-line"></i>
+        Test Price Comparison
+      </h1>
+    </div>
+  </div>
+
+  <div class="content-container">
+    <!-- Test Selection Card -->
+    <div class="card">
+      <h3>
+        <i class="fas fa-search"></i>
+        Select Tests
+      </h3>
+      <div class="input-group">
+        <label class="input-label">Search for lab tests</label>
+        <input type="text" id="search" class="search-input" placeholder="e.g., CBC, Sugar, Thyroid...">
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+
+      <div class="selected-tests" id="selectedTests"></div>
+      
+      <button class="btn-clear" id="clearAllBtn">
+        <i class="fas fa-trash-alt"></i> Clear All Tests
+      </button>
+    </div>
+
+    <!-- Comparison Section -->
+    <div id="comparisonSection" class="comparison-section" style="display: none;">
+      <div class="comparison-title">
+        <i class="fas fa-chart-simple"></i>
+        <span>Available Options Comparison</span>
+      </div>
+      <div class="comparison-table-wrapper" id="comparisonTableWrapper">
+        <div id="comparisonTable"></div>
+      </div>
+    </div>
+
+    <!-- Optimization Results Card -->
+    <div class="card">
+      <h3>
+        <i class="fas fa-chart-line"></i>
+        Optimized Plan
+      </h3>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------------- DATA ----------------
+    const labs = [
+      {
+        name: "Lab A",
+        tests: [
+          {name: "CBC", mrp: 300, b2b: 150},
+          {name: "Sugar", mrp: 200, b2b: 100},
+          {name: "Thyroid", mrp: 500, b2b: 250}
+        ],
+        packages: [
+          {name: "Basic Package", tests: ["CBC","Sugar"], mrp: 400, b2b: 180},
+          {name: "Basic Package 2", tests: ["CBC","Sugar","Thyroid"], mrp: 500,b2b: 200},
+
+        ]
+      },
+      {
+        name: "Lab B",
+        tests: [
+          {name: "CBC", mrp: 320, b2b: 140},
+          {name: "Vitamin D", mrp: 800, b2b: 400}
+        ],
+        packages: [
+          {name: "Full Body", tests: ["CBC","Vitamin D"], mrp: 900, b2b: 450}
+        ]
+      },
+      {
+        name: "Lab C",
+        tests: [
+          {name: "Sugar", mrp: 210, b2b: 90},
+          {name: "Thyroid", mrp: 480, b2b: 240}
+        ],
+        packages: []
+      },
+      {
+        name: "Lab D",
+        tests: [
+          {name: "CBC", mrp: 310, b2b: 230},
+          {name: "Vitamin D", mrp: 750, b2b: 350}
+        ],
+        packages: []
+      }
+    ];
+
+    // ---------------- BUILD MASTER TEST LIST ----------------
+    const allTests = [...new Set(
+      labs.flatMap(l => l.tests.map(t => t.name))
+    )].sort();
+
+    let selected = [];
+
+    // ---------------- SEARCH ----------------
+    const searchInput = document.getElementById("search");
+    const suggestions = document.getElementById("suggestions");
+
+    searchInput.addEventListener("input", () => {
+      const value = searchInput.value.toLowerCase().trim();
+      suggestions.innerHTML = "";
+
+      if (value === "") return;
+
+      const filtered = allTests.filter(t => 
+        t.toLowerCase().includes(value) && !selected.includes(t)
+      );
+
+      if (filtered.length === 0) {
+        const div = document.createElement("div");
+        div.textContent = "No tests found";
+        div.style.color = "#7AB2B2";
+        div.style.cursor = "default";
+        suggestions.appendChild(div);
+        return;
+      }
+
+      filtered.forEach(test => {
+        const div = document.createElement("div");
+        div.textContent = test;
+        div.onclick = () => addTest(test);
+        suggestions.appendChild(div);
+      });
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+        suggestions.innerHTML = "";
+      }
+    });
+
+    // ---------------- ADD TEST ----------------
+    function addTest(test) {
+      if (!selected.includes(test)) {
+        selected.push(test);
+        renderSelected();
+        suggestions.innerHTML = "";
+        searchInput.value = "";
+        optimize();
+        renderComparison();
+      }
+    }
+
+    // ---------------- REMOVE TEST ----------------
+    function removeTest(test) {
+      selected = selected.filter(t => t !== test);
+      renderSelected();
+      optimize();
+      renderComparison();
+    }
+
+    // ---------------- CLEAR ALL ----------------
+    function clearAll() {
+      selected = [];
+      renderSelected();
+      optimize();
+      renderComparison();
+    }
+
+    // ---------------- RENDER SELECTED ----------------
+    function renderSelected() {
+      const container = document.getElementById("selectedTests");
+      container.innerHTML = "";
+
+      if (selected.length === 0) {
+        const emptyMsg = document.createElement("div");
+        emptyMsg.textContent = "No tests selected. Start typing to add tests.";
+        emptyMsg.style.color = "#7AB2B2";
+        emptyMsg.style.fontSize = "14px";
+        emptyMsg.style.padding = "12px";
+        emptyMsg.style.textAlign = "center";
+        container.appendChild(emptyMsg);
+        return;
+      }
+
+      selected.forEach(t => {
+        const span = document.createElement("span");
+        span.innerHTML = `${t} <i class="fas fa-times" style="font-size: 10px;"></i>`;
+        span.onclick = () => removeTest(t);
+        container.appendChild(span);
+      });
+    }
+
+    // ---------------- RENDER COMPARISON ----------------
+    function renderComparison() {
+      const comparisonSection = document.getElementById("comparisonSection");
+      const comparisonTable = document.getElementById("comparisonTable");
+
+      if (selected.length === 0) {
+        comparisonSection.style.display = "none";
+        return;
+      }
+
+      comparisonSection.style.display = "block";
+      
+      // Build comparison data for all labs
+      const comparisonData = [];
+      
+      labs.forEach(lab => {
+        // Check which selected tests are available in this lab
+        const availableTests = [];
+        const unavailableTests = [];
+        
+        selected.forEach(test => {
+          const testObj = lab.tests.find(t => t.name === test);
+          if (testObj) {
+            availableTests.push({...testObj, testName: test});
+          } else {
+            unavailableTests.push(test);
+          }
+        });
+        
+        // Check packages that cover selected tests
+        const applicablePackages = [];
+        lab.packages.forEach(pkg => {
+          const coveredTests = pkg.tests.filter(t => selected.includes(t));
+          if (coveredTests.length > 0) {
+            let individualCost = 0;
+            coveredTests.forEach(t => {
+              const testObj = lab.tests.find(x => x.name === t);
+              if (testObj) individualCost += testObj.b2b;
+            });
+            applicablePackages.push({
+              ...pkg,
+              coveredTests: coveredTests,
+              savings: individualCost - pkg.b2b,
+              individualCost: individualCost
+            });
+          }
+        });
+        
+        // Calculate total cost if taking all available tests individually
+        const totalIndividualCost = availableTests.reduce((sum, test) => sum + test.b2b, 0);
+        const totalMRP = availableTests.reduce((sum, test) => sum + test.mrp, 0);
+        
+        comparisonData.push({
+          lab: lab.name,
+          availableTests: availableTests,
+          unavailableTests: unavailableTests,
+          packages: applicablePackages,
+          totalIndividualCost: totalIndividualCost,
+          totalMRP: totalMRP,
+          hasPackages: applicablePackages.length > 0
+        });
+      });
+      
+      // Generate comparison HTML with responsive table
+      let html = `
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Lab</th>
+              <th>Available Tests</th>
+              <th>Individual Cost</th>
+              <th>Packages Available</th>
+              <th>Best Package Deal</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      comparisonData.forEach(data => {
+        const testsHtml = data.availableTests.map(test => 
+          `<span class="test-item">${test.testName} (₹${test.b2b})</span>`
+        ).join('');
+        
+        const unavailableHtml = data.unavailableTests.length > 0 ? 
+          `<div style="margin-top: 8px; color: #7AB2B2; font-size: 12px;">
+            <i class="fas fa-times-circle"></i> Unavailable: ${data.unavailableTests.join(', ')}
+          </div>` : '';
+        
+        const packagesHtml = data.packages.length > 0 ?
+          data.packages.map(pkg => 
+            `<div style="margin: 4px 0;">
+              <strong>${pkg.name}</strong>
+              <span class="package-badge">Save ₹${pkg.savings}</span>
+              <div style="font-size: 12px; color: #5A6E7A;">
+                Includes: ${pkg.coveredTests.join(', ')} | Cost: ₹${pkg.b2b}
+              </div>
+            </div>`
+          ).join('') :
+          '<span style="color: #7AB2B2;">No packages available</span>';
+        
+        const bestPackage = data.packages.length > 0 ?
+          data.packages.reduce((best, pkg) => pkg.savings > best.savings ? pkg : best, data.packages[0]) :
+          null;
+        
+        html += `
+          <tr>
+            <td class="lab-name">${data.lab}</td>
+            <td>
+              ${testsHtml}
+              ${unavailableHtml}
+            </td>
+            <td>
+              <div><span class="price-b2b">₹${data.totalIndividualCost}</span></div>
+              <div class="price-mrp">MRP: ₹${data.totalMRP}</div>
+            </td>
+            <td>${packagesHtml}</td>
+            <td>
+              ${bestPackage ? 
+                `<div>
+                  <strong>${bestPackage.name}</strong>
+                  <div>₹${bestPackage.b2b} <span style="color: #088395;">(Save ₹${bestPackage.savings})</span></div>
+                  <div style="font-size: 12px;">Covers: ${bestPackage.coveredTests.join(', ')}</div>
+                </div>` : 
+                '<span style="color: #7AB2B2;">No packages</span>'
+              }
+             </td>
+          </tr>
+        `;
+      });
+      
+      html += `
+          </tbody>
+        </table>
+      `;
+      
+      comparisonTable.innerHTML = html;
+    }
+
+    // ---------------- OPTIMIZATION LOGIC ----------------
+    function optimize() {
+      const resultDiv = document.getElementById("result");
+
+      if (selected.length === 0) {
+        resultDiv.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-chart-simple"></i>
+            <p>Select tests to see optimization results</p>
+          </div>
+        `;
+        return;
+      }
+
+      let remaining = new Set(selected);
+      let chosen = [];
+      let totalB2B = 0;
+      let totalMRP = 0;
+
+      // Step 1: Use beneficial packages
+      labs.forEach(lab => {
+        lab.packages.forEach(pkg => {
+          const covered = pkg.tests.filter(t => remaining.has(t));
+          if (covered.length > 0) {
+            // cost of individual vs package
+            let individualCost = 0;
+            covered.forEach(t => {
+              const testObj = lab.tests.find(x => x.name === t);
+              if (testObj) individualCost += testObj.b2b;
+            });
+
+            if (pkg.b2b < individualCost) {
+              chosen.push({
+                lab: lab.name, 
+                type: "Package", 
+                item: pkg.name, 
+                tests: pkg.tests,
+                savings: individualCost - pkg.b2b
+              });
+              totalB2B += pkg.b2b;
+              totalMRP += pkg.mrp;
+              covered.forEach(t => remaining.delete(t));
+            }
+          }
+        });
+      });
+
+      // Step 2: Remaining tests → cheapest individual
+      remaining.forEach(test => {
+        let best = null;
+
+        labs.forEach(lab => {
+          const t = lab.tests.find(x => x.name === test);
+          if (t) {
+            if (!best || t.b2b < best.b2b) {
+              best = {...t, lab: lab.name};
+            }
+          }
+        });
+
+        if (best) {
+          chosen.push({
+            lab: best.lab, 
+            type: "Test", 
+            item: test,
+            price: best.b2b,
+            mrp: best.mrp
+          });
+          totalB2B += best.b2b;
+          totalMRP += best.mrp;
+        }
+      });
+
+      // ---------------- DISPLAY ----------------
+      let html = `
+        <div style="margin-bottom: 24px;">
+          <strong style="color: #09637E; font-size: 16px;">Selected Tests:</strong>
+          <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px;">
+      `;
+      
+      selected.forEach(test => {
+        html += `<span style="background: #EBF4F6; color: #09637E; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">${test}</span>`;
+      });
+      
+      html += `
+          </div>
+        </div>
+        <h4 style="color: #09637E; margin-bottom: 20px; font-size: 18px;">Suggested Plan:</h4>
+      `;
+
+      chosen.forEach(c => {
+        if (c.type === "Package") {
+          html += `
+            <div class="lab-block">
+              <strong><i class="fas fa-flask"></i>${c.lab}</strong>
+              <div style="font-size: 14px; color: #088395; margin-bottom: 6px;">
+                <i class="fas fa-cube"></i> ${c.type}: ${c.item}
+              </div>
+              <div style="font-size: 13px; color: #7AB2B2;">
+                Includes: ${c.tests.join(", ")}
+              </div>
+              <div style="font-size: 12px; color: #5A6E7A; margin-top: 8px;">
+                Savings: ₹${c.savings}
+              </div>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="lab-block">
+              <strong><i class="fas fa-flask"></i>${c.lab}</strong>
+              <div style="font-size: 14px; color: #088395;">
+                <i class="fas fa-microscope"></i> ${c.type}: ${c.item}
+              </div>
+              <div style="font-size: 12px; color: #7AB2B2; margin-top: 6px;">
+                B2B Price: ₹${c.price} | MRP: ₹${c.mrp}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      const savings = totalMRP - totalB2B;
+      const savingsPercentage = totalMRP > 0 ? ((savings / totalMRP) * 100).toFixed(1) : 0;
+
+      html += `
+        <div class="result">
+          <div style="background: #F8FDFE; padding: 20px; border-radius: 16px; margin-top: 20px;">
+            <p style="margin: 10px 0;">
+              <strong>💰 Total MRP:</strong> <span style="color: #7AB2B2;">₹${totalMRP.toLocaleString()}</span>
+            </p>
+            <p style="margin: 10px 0;">
+              <strong>✨ Optimized B2B Cost:</strong> <span style="color: #088395; font-size: 18px; font-weight: 700;">₹${totalB2B.toLocaleString()}</span>
+            </p>
+            <div class="highlight">
+              <i class="fas fa-tag"></i> Total Savings: ₹${savings.toLocaleString()} (${savingsPercentage}% off)
+            </div>
+          </div>
+        </div>
+      `;
+
+      resultDiv.innerHTML = html;
+    }
+
+    // ---------------- EVENT LISTENERS ----------------
+    document.getElementById("clearAllBtn").addEventListener("click", clearAll);
+
+    // Initialize
+    renderSelected();
+    optimize();
+    renderComparison();
+  </script>
+</body>
+</html>
