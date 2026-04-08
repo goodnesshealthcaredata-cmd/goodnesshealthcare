@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TealSpace | Secure Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      /* 🔹 1. Background Image: fully covers, no distortion, responsive */
+      background-image: url('https://lh3.googleusercontent.com/d/1a_gZVsNEFJj6Td8lilXuYCiCx-O3qPtH');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    /* subtle overlay to ensure text readability (optional, preserves modern look) */
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: brightness(0.98) blur(1px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* main card container - glassmorphism premium teal theme */
+    .login-container {
+      max-width: 460px;
+      width: 100%;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(0px);
+      border-radius: 2rem;
+      padding: 2rem 1.8rem 2.2rem;
+      box-shadow: 0 25px 45px -12px rgba(9, 99, 126, 0.35), 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.25s ease;
+      border: 1px solid rgba(122, 178, 178, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    .login-container:hover {
+      box-shadow: 0 30px 50px -18px rgba(9, 99, 126, 0.4);
+    }
+
+    /* 🔹 2. Logo Replacement: new image at the top, properly sized and aligned */
+    .brand-logo {
+      text-align: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .brand-logo img {
+      max-width: 85px;
+      width: auto;
+      height: auto;
+      display: inline-block;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.05));
+      transition: transform 0.2s ease;
+      border-radius: 15px;
+
+    }
+
+    .brand-logo img:hover {
+      transform: scale(1.02);
+    }
+
+    /* header section with teal primary (welcome text) */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 1.8rem;
+    }
+
+    h2 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(125deg, #09637E 0%, #088395 70%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      margin-bottom: 0.35rem;
+    }
+
+    .subhead {
+      color: #4b6b6b;
+      font-size: 0.9rem;
+      font-weight: 450;
+      border-bottom: 1px solid rgba(122, 178, 178, 0.35);
+      display: inline-block;
+      padding-bottom: 4px;
+    }
+
+    /* form groups - modern spacing */
+    .input-group {
+      margin-bottom: 1.4rem;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #09637E;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.2px;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      font-size: 1rem;
+      font-family: inherit;
+      background-color: #ffffff;
+      border: 1.5px solid #e2edf0;
+      border-radius: 1.2rem;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      outline: none;
+      color: #1a2c2e;
+      font-weight: 450;
+    }
+
+    input:focus {
+      border-color: #088395;
+      box-shadow: 0 0 0 4px rgba(8, 131, 149, 0.15);
+      background-color: #ffffff;
+    }
+
+    input::placeholder {
+      color: #b2cfcf;
+      font-weight: 400;
+    }
+
+    /* premium button - teal secondary */
+    button {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: linear-gradient(105deg, #088395 0%, #09637E 100%);
+      color: white;
+      border: none;
+      border-radius: 1.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 0.6rem;
+      letter-spacing: 0.2px;
+      box-shadow: 0 6px 14px rgba(8, 131, 149, 0.25);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(105deg, #0A9BB0, #09637E);
+      box-shadow: 0 12px 22px -8px rgba(8, 131, 149, 0.45);
+    }
+
+    button:active {
+      transform: translateY(1px);
+      transition: 0.05s;
+    }
+
+    /* error message styling */
+    .error {
+      color: #e25c5c;
+      background: #fff2f0;
+      padding: 0.7rem 0.9rem;
+      border-radius: 1.2rem;
+      font-size: 0.85rem;
+      margin-top: 1.2rem;
+      text-align: center;
+      font-weight: 500;
+      border-left: 3px solid #e25c5c;
+      transition: 0.2s;
+    }
+
+    /* extra micro interactions */
+    .login-footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #7a9496;
+      border-top: 1px solid #e3f0f0;
+      padding-top: 1.3rem;
+    }
+
+    /* ========== RESPONSIVE BREAKPOINTS (mobile + tablet + desktop) ========== */
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+        align-items: center;
+        background-attachment: scroll; /* better mobile performance */
+      }
+      .login-container {
+        padding: 1.5rem 1.2rem 1.8rem;
+        border-radius: 1.5rem;
+        max-width: 100%;
+      }
+      h2 {
+        font-size: 1.65rem;
+      }
+      .brand-logo img {
+        max-width: 70px;
+      }
+      input {
+        padding: 0.8rem 0.9rem;
+        border-radius: 1rem;
+      }
+      button {
+        padding: 0.8rem 0.9rem;
+      }
+    }
+
+    /* tablet optimization (641px - 900px) */
+    @media (min-width: 641px) and (max-width: 900px) {
+      .login-container {
+        max-width: 480px;
+        padding: 2rem 2rem;
+      }
+      h2 {
+        font-size: 1.9rem;
+      }
+      .brand-logo img {
+        max-width: 80px;
+      }
+    }
+
+    /* desktop large screens */
+    @media (min-width: 1600px) {
+      .login-container {
+        max-width: 520px;
+        padding: 2.5rem 2.2rem;
+      }
+      h2 {
+        font-size: 2.2rem;
+      }
+      .brand-logo img {
+        max-width: 100px;
+      }
+      input, button {
+        font-size: 1.05rem;
+      }
+    }
+
+    /* reduce motion if user prefers */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+
+    /* glass effect enhancement on container */
+    @supports (backdrop-filter: blur(4px)) {
+      .login-container {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(2px);
+      }
+    }
+
+    /* Ensure background image covers all corners and no white gaps on very tall screens */
+    @media (min-height: 800px) {
+      body {
+        background-position: center 30%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <!-- 🔹 2. Logo Replacement: placed at the top, correct image URL, responsive sizing -->
+  <div class="brand-logo">
+    <img src="https://lh3.googleusercontent.com/d/1yGx6-7vfeQCInmOm_nMu2Jsz3MFWWDiK" 
+         alt="Company Logo" 
+         loading="eager"
+         onerror="this.onerror=null; this.style.display='none'; console.warn('Logo image could not be loaded');">
+  </div>
+
+  <div class="brand-header">
+    <h2>Welcome back</h2>
+    <div class="subhead">sign in to your account</div>
+  </div>
+
+  <!-- Login form fields -->
+  <div class="input-group">
+    <label>📧 Email address</label>
+    <input type="email" id="email" placeholder="hello@company.com" autocomplete="email">
+  </div>
+
+  <div class="input-group">
+    <label>🔒 Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+
+  <button id="loginBtn">Sign in →</button>
+
+  <p id="error" class="error" style="display: none;"></p>
+  
+  <div class="login-footer">
+    <span>Secure access · Firebase authentication</span>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  // Firebase configuration (original, untouched)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBZn1isgreU_1YcVl7dQ5haa28gZ-vCrM4",
+    authDomain: "goodnessdata-41725.firebaseapp.com",
+    databaseURL: "https://goodnessdata-41725-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "goodnessdata-41725",
+    storageBucket: "goodnessdata-41725.firebasestorage.app",
+    messagingSenderId: "356636455950",
+    appId: "1:356636455950:web:948567ecf6d14b3c7cb85f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // DOM elements
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const errorBox = document.getElementById("error");
+  const loginButton = document.getElementById("loginBtn");
+
+  // Helper to show error message with smooth visibility
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.style.display = "block";
+  }
+
+  function hideError() {
+    errorBox.textContent = "";
+    errorBox.style.display = "none";
+  }
+
+  // LOGIN function (preserved core logic)
+  window.login = async function () {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    
+    hideError();
+
+    if (!email || !password) {
+      showError("Please fill all fields");
+      return;
+    }
+
+    // Disable button during request to avoid double-click (nice micro-interaction)
+    const wasDisabled = loginButton.disabled;
+    loginButton.disabled = true;
+    loginButton.style.opacity = "0.8";
+    const originalText = loginButton.innerText;
+    loginButton.innerText = "Signing in...";
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // Redirect handled by onAuthStateChanged, but ensures instant redirect
+      window.location.href = "dashboard.html";
+    } catch (error) {
+      // Re-enable button
+      loginButton.disabled = false;
+      loginButton.style.opacity = "1";
+      loginButton.innerText = originalText;
+      
+      switch (error.code) {
+        case "auth/invalid-email":
+          showError("Invalid email format");
+          break;
+        case "auth/user-not-found":
+          showError("User not found");
+          break;
+        case "auth/wrong-password":
+          showError("Wrong password");
+          break;
+        default:
+          showError("Login failed. Please try again.");
+      }
+    }
+  };
+
+  // Attach event listener to button (preserves window.login but also keeps modern event)
+  loginButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.login();
+  });
+
+  // Allow "Enter" key to submit the form (better accessibility + responsiveness)
+  const inputs = [emailInput, passwordInput];
+  inputs.forEach(input => {
+    input.addEventListener("keypress", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        window.login();
+      }
+    });
+  });
+
+  // small extra: sync error display initial hidden
+  hideError();
+  
+  // optional: reset button state if any script anomaly
+  window.addEventListener("load", () => {
+    loginButton.disabled = false;
+    loginButton.style.opacity = "1";
+    loginButton.innerText = "Sign in →";
+  });
+</script>
+
+</body>
+</html>
