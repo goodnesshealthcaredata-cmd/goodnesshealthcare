@@ -1,5 +1,5 @@
 /* ========================= Main Application Logic ========================= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPJUW1hszqsnC_7D18Pom_VK7lxpPVHMmNtbMoKKPQCjil4fnqj_vHJhPAF31pHMLOlw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbytDW7RIGPh9zzhakuxESIcl4DmEjyb9TtfxF1-HH_cRVNko0oY_OfqhQ71fXKNKs-Zyg/exec";
 
 /* ========================= Helpers & UI ========================= */
 const el = (q) => document.querySelector(q);
@@ -27,7 +27,6 @@ function formatPatientName(name) {
 
 /* ========================= Get Logged-in User Name ========================= */
 function getCurrentUserName() {
-  // Try to get from parent window (dashboard.html)
   try {
     if (window.parent && window.parent.document) {
       const userNameEl = window.parent.document.querySelector("#sidebarUserName");
@@ -39,24 +38,21 @@ function getCurrentUserName() {
     console.log("Cannot access parent window:", e);
   }
   
-  // Try localStorage as fallback
   const storedUser = localStorage.getItem("loggedInUserName");
   if (storedUser) {
     return storedUser;
   }
   
-  // Try sessionStorage
   const sessionUser = sessionStorage.getItem("loggedInUserName");
   if (sessionUser) {
     return sessionUser;
   }
   
-  // Default fallback
   return "Unknown User";
 }
 
 /* ========================= Contact Number Validation ========================= */
-function validateContactNumber(input, errorElementId, isRequired = true) {
+function validateContactNumber(input, errorElementId, isRequired = false) {
   const errorEl = document.getElementById(errorElementId);
   const value = input.value.trim();
   
@@ -66,22 +62,24 @@ function validateContactNumber(input, errorElementId, isRequired = true) {
     return true;
   }
   
-  const numericRegex = /^\d+$/;
-  const isValidLength = value.length === 10;
-  const isNumeric = numericRegex.test(value);
-  
-  if (!isNumeric) {
-    errorEl.textContent = "Please enter numbers only (0-9)";
-    errorEl.classList.add("show");
-    input.classList.add("error");
-    return false;
-  }
-  
-  if (!isValidLength) {
-    errorEl.textContent = "Please enter exactly 10 digits";
-    errorEl.classList.add("show");
-    input.classList.add("error");
-    return false;
+  if (value !== "") {
+    const numericRegex = /^\d+$/;
+    const isValidLength = value.length === 10;
+    const isNumeric = numericRegex.test(value);
+    
+    if (!isNumeric) {
+      errorEl.textContent = "Please enter numbers only (0-9)";
+      errorEl.classList.add("show");
+      input.classList.add("error");
+      return false;
+    }
+    
+    if (!isValidLength) {
+      errorEl.textContent = "Please enter exactly 10 digits";
+      errorEl.classList.add("show");
+      input.classList.add("error");
+      return false;
+    }
   }
   
   errorEl.classList.remove("show");
@@ -95,6 +93,96 @@ function restrictToNumbers(input) {
     if (this.value.length > 10) {
       this.value = this.value.slice(0, 10);
     }
+  });
+}
+
+/* ========================= Date/Time Helper Functions ========================= */
+function parseDateFromSheet(dateValue) {
+  if (!dateValue) return "";
+  
+  if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    return dateValue;
+  }
+  
+  if (typeof dateValue === 'string') {
+    const match = dateValue.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      return `${match[1]}-${match[2]}-${match[3]}`;
+    }
+    
+    if (dateValue.includes('/')) {
+      const parts = dateValue.split('/');
+      if (parts.length === 3) {
+        let year = parts[2];
+        if (year.length === 2) year = '20' + year;
+        return `${year}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+    }
+    
+    if (dateValue.includes('T')) {
+      return dateValue.split('T')[0];
+    }
+  }
+  
+  return dateValue;
+}
+
+function parseTimeFromSheet(timeValue) {
+  if (!timeValue) return "";
+  
+  if (typeof timeValue === 'string') {
+    if (/^\d{2}:\d{2}$/.test(timeValue)) return timeValue;
+    if (timeValue.includes(':')) {
+      const parts = timeValue.split(':');
+      if (parts.length >= 2) {
+        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+      }
+    }
+  }
+  
+  return timeValue;
+}
+
+function formatDisplayDate(dateValue) {
+  if (!dateValue) return "-";
+  
+  const parsed = parseDateFromSheet(dateValue);
+  if (!parsed || parsed === "-") return "-";
+  
+  const parts = parsed.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  
+  return dateValue;
+}
+
+function formatDisplayTime(timeValue) {
+  if (!timeValue) return "-";
+  
+  const parsedTime = parseTimeFromSheet(timeValue);
+  if (!parsedTime || parsedTime === "-") return "-";
+  
+  if (parsedTime.match(/^\d{2}:\d{2}$/)) {
+    return parsedTime;
+  }
+  
+  return parsedTime;
+}
+
+function sortEntriesByDateAndTime(entries) {
+  return [...entries].sort((a, b) => {
+    const dateA = parseDateFromSheet(a.date) || "0000-00-00";
+    const dateB = parseDateFromSheet(b.date) || "0000-00-00";
+    
+    if (dateA !== dateB) {
+      return dateB.localeCompare(dateA);
+    }
+    
+    const timeA = parseTimeFromSheet(a.time_of_visit) || "00:00";
+    const timeB = parseTimeFromSheet(b.time_of_visit) || "00:00";
+    
+    return timeB.localeCompare(timeA);
   });
 }
 
@@ -263,6 +351,11 @@ function getAllSelectedTestsAcrossLabs() {
   const all = [];
   for (let i = 1; i <= 4; i++) all.push(...getAllTestsForLab(i));
   return [...new Set(all)];
+}
+
+function getCombinedTestsList() {
+  const allTests = getAllSelectedTestsAcrossLabs();
+  return allTests.sort().join(", ");
 }
 
 function calculateUniqueTubeCountsPerLab(tests) {
@@ -865,24 +958,88 @@ function updateAddressRequirement() {
   const addr = F.address();
   const lbl = F.addrLabel();
   if (!vt || !addr || !lbl) return;
-  const isHome = vt.value === "Home Visit";
-  addr.required = isHome;
-  lbl.classList.toggle("req", isHome);
-  if (isHome && !addr.value) addr.focus();
+  
+  addr.required = false;
+  lbl.classList.remove("req");
 }
 
 const vtSelect = F.visitType();
 if (vtSelect) vtSelect.addEventListener("change", updateAddressRequirement);
 
+/* ========================= Form Validation ========================= */
+function validateRequiredFields() {
+  const patientName = F.patientName();
+  const visitType = F.visitType();
+  const visitDate = F.visitDate();
+  const visitTime = F.visitTime();
+  
+  let isValid = true;
+  let errorMessage = "";
+  
+  if (!patientName?.value.trim()) {
+    isValid = false;
+    errorMessage = "Patient Name is required";
+    patientName?.focus();
+    patientName?.classList.add("error");
+  } else {
+    patientName?.classList.remove("error");
+  }
+  
+  if (isValid && (!visitType?.value || visitType.value === "")) {
+    isValid = false;
+    errorMessage = "Visit Type is required";
+    visitType?.focus();
+    visitType?.classList.add("error");
+  } else {
+    visitType?.classList.remove("error");
+  }
+  
+  if (isValid && !visitDate?.value) {
+    isValid = false;
+    errorMessage = "Visit Date is required";
+    visitDate?.focus();
+    visitDate?.classList.add("error");
+  } else {
+    visitDate?.classList.remove("error");
+  }
+  
+  if (isValid && !visitTime?.value) {
+    isValid = false;
+    errorMessage = "Visit Time is required";
+    visitTime?.focus();
+    visitTime?.classList.add("error");
+  } else {
+    visitTime?.classList.remove("error");
+  }
+  
+  if (!isValid) {
+    showToast(errorMessage);
+  }
+  
+  return isValid;
+}
+
 /* ========================= Progress bar ========================= */
 function checkPatientDetailsCompleted() {
-  const n = F.patientName(); const a = F.age(); const g = F.gender(); const c = F.contact();
-  return !!(n?.value.trim() && a?.value.trim() && g?.value && c?.value.trim());
+  const name = F.patientName();
+  const age = F.age();
+  const gender = F.gender();
+  const contact = F.contact();
+  
+  return !!(name?.value.trim() && age?.value && age?.value !== "" && 
+            gender?.value && gender?.value !== "" && 
+            contact?.value.trim());
 }
+
 function checkTestDetailsCompleted() {
-  for (let i = 1; i <= 4; i++) if (selectedTestsByLab[i].length || selectedPackagesByLab[i].length) return true;
+  for (let i = 1; i <= 4; i++) {
+    if (selectedTestsByLab[i].length > 0 || selectedPackagesByLab[i].length > 0) {
+      return true;
+    }
+  }
   return false;
 }
+
 function checkVisitScheduled() {
   const vt = F.visitType(); const vd = F.visitDate(); const vtime = F.visitTime();
   return !!(vt?.value && vd?.value && vtime?.value);
@@ -972,10 +1129,26 @@ function getAllTestsFromEntry(entry) {
   const tests = new Set();
   for (let i = 1; i <= 4; i++) {
     (entry[`tests_lab${i}`] || "").split(",").forEach(t => t.trim() && tests.add(t.trim()));
-    (entry[`packages_lab${i}`] || "").split(",").forEach(pkg => {
-      const p = (PACKAGES[`lab${i}`] || []).find(x => x.name === pkg.trim());
-      if (p) p.tests.forEach(t => tests.add(t));
-    });
+    // Handle package data that might be JSON string
+    const packagesData = entry[`packages_lab${i}`];
+    if (packagesData && packagesData !== "" && packagesData !== "[]") {
+      try {
+        const parsed = JSON.parse(packagesData);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(pkg => {
+            if (pkg.tests) {
+              pkg.tests.split(",").forEach(t => t.trim() && tests.add(t.trim()));
+            }
+          });
+        }
+      } catch (e) {
+        // If not JSON, treat as comma-separated package names
+        packagesData.split(",").forEach(pkg => {
+          const p = (PACKAGES[`lab${i}`] || []).find(x => x.name === pkg.trim());
+          if (p) p.tests.forEach(t => tests.add(t));
+        });
+      }
+    }
   }
   return Array.from(tests);
 }
@@ -986,8 +1159,15 @@ function getCurrentStage(entry) {
   const stages = [
     { name: "Patient Details", check: () => entry.patient_name && entry.age && entry.gender && entry.contact },
     {
-      name: "Test Details", check: () => entry.tests_lab1 || entry.tests_lab2 || entry.tests_lab3 || entry.tests_lab4 ||
-        entry.packages_lab1 || entry.packages_lab2 || entry.packages_lab3 || entry.packages_lab4
+      name: "Test Details", check: () => {
+        for (let i = 1; i <= 4; i++) {
+          if ((entry[`tests_lab${i}`] && entry[`tests_lab${i}`] !== "") || 
+              (entry[`packages_lab${i}`] && entry[`packages_lab${i}`] !== "" && entry[`packages_lab${i}`] !== "[]")) {
+            return true;
+          }
+        }
+        return false;
+      }
     },
     { name: "Visit Scheduled", check: () => entry.date && entry.time_of_visit && entry.visit_type },
     { name: "Phlebotomist Assigned", check: () => entry.phlebotomist },
@@ -1032,11 +1212,20 @@ function getCompletionPercentage(entry) {
 
   const inc = (cond) => { total++; if (cond) done++; };
 
-  inc(entry.patient_name && entry.age && entry.gender && entry.contact);
-  inc(entry.tests_lab1 || entry.tests_lab2 || entry.tests_lab3 || entry.tests_lab4 ||
-    entry.packages_lab1 || entry.packages_lab2 || entry.packages_lab3 || entry.packages_lab4);
-  inc(entry.date && entry.time_of_visit && entry.visit_type);
-  inc(entry.phlebotomist);
+  inc(!!(entry.patient_name && entry.age && entry.gender && entry.contact));
+  
+  let hasTestOrPackage = false;
+  for (let i = 1; i <= 4; i++) {
+    if ((entry[`tests_lab${i}`] && entry[`tests_lab${i}`] !== "") || 
+        (entry[`packages_lab${i}`] && entry[`packages_lab${i}`] !== "" && entry[`packages_lab${i}`] !== "[]")) {
+      hasTestOrPackage = true;
+      break;
+    }
+  }
+  inc(hasTestOrPackage);
+  
+  inc(!!(entry.date && entry.time_of_visit && entry.visit_type));
+  inc(!!entry.phlebotomist);
   inc(entry.blood_collected === "true");
 
   const allTests = getAllTestsFromEntry(entry);
@@ -1158,8 +1347,8 @@ const altContactField = F.altContact();
 
 if (contactField) {
   restrictToNumbers(contactField);
-  contactField.addEventListener("blur", () => validateContactNumber(contactField, "contactError", true));
-  contactField.addEventListener("input", () => validateContactNumber(contactField, "contactError", true));
+  contactField.addEventListener("blur", () => validateContactNumber(contactField, "contactError", false));
+  contactField.addEventListener("input", () => validateContactNumber(contactField, "contactError", false));
 }
 
 if (altContactField) {
@@ -1212,11 +1401,17 @@ function initAccordions() {
 /* ========================= DOB / Age ========================= */
 function calculateAgeFromDOB(dob) {
   if (!dob) return "";
-  const birth = new Date(dob);
+  const parts = dob.split('-');
+  if (parts.length !== 3) return "";
+  
+  const birthYear = parseInt(parts[0]);
+  const birthMonth = parseInt(parts[1]) - 1;
+  const birthDay = parseInt(parts[2]);
+  
   const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const md = today.getMonth() - birth.getMonth();
-  if (md < 0 || (md === 0 && today.getDate() < birth.getDate())) age--;
+  let age = today.getFullYear() - birthYear;
+  const md = today.getMonth() - birthMonth;
+  if (md < 0 || (md === 0 && today.getDate() < birthDay)) age--;
   return age >= 0 ? age : "";
 }
 
@@ -1365,7 +1560,6 @@ function clearDateFilter() {
   }
 }
 
-// Setup date filter listeners
 const filterDateEl = F.filterDate();
 const clearFilterBtn = F.clearFilterBtn();
 
@@ -1393,8 +1587,6 @@ function createMultiselectForLab(labNum) {
   const msEmpty = el(`#msEmpty${labNum}`);
   const testsValue = el(`#testsValue${labNum}`);
   if (!testsSelect || !chips || !msInput || !msPopup || !msList || !msEmpty || !testsValue) return;
-
-  let lastTs = 0;
 
   function addTest(t) {
     if (!t || selectedTestsByLab[labNum].includes(t)) return;
@@ -1466,7 +1658,6 @@ function createPackagesMultiselectForLab(labNum) {
   const packagesValue = el(`#packagesValue${labNum}`);
   if (!packagesSelect || !packagesChips || !packagesInput || !packagesPopup || !pkgList || !packagesEmpty || !packagesValue) return;
 
-  let lastTs = 0;
   const available = PACKAGES[`lab${labNum}`] || [];
 
   function addPackage(pkg) {
@@ -1562,23 +1753,23 @@ async function fetchServerList() {
   } catch (e) { console.error("fetchServerList:", e); }
 }
 
-/* ========================= In-progress cards with date filtering and colored progress bars ========================= */
+/* ========================= In-progress cards ========================= */
 function renderInProgress() {
   const listEl = F.inProgressList();
   const emptyEl = F.inProgressEmpty();
   if (!listEl || !emptyEl) return;
 
-  // Filter entries based on completion percentage and date filter
   let items = serverEntriesCache.filter(e => getCompletionPercentage(e) < 100);
   
-  // Apply date filter if selected
   if (currentFilterDate) {
     items = items.filter(entry => {
       if (!entry.date) return false;
-      const entryDate = entry.date.split('T')[0]; // Handle datetime format
+      const entryDate = parseDateFromSheet(entry.date);
       return entryDate === currentFilterDate;
     });
   }
+  
+  items = sortEntriesByDateAndTime(items);
   
   listEl.innerHTML = "";
 
@@ -1593,36 +1784,49 @@ function renderInProgress() {
   items.forEach(entry => {
     const pct = getCompletionPercentage(entry);
     const currentStage = getCurrentStage(entry);
-    const displayDate = entry.date ? entry.date.split('T')[0] : "-";
+    const displayDate = entry.date ? formatDisplayDate(entry.date) : "-";
+    const displayTime = entry.time_of_visit ? formatDisplayTime(entry.time_of_visit) : "-";
     
-    // Determine color based on percentage
     let progressColor;
     if (pct < 30) {
-      progressColor = "#ef4444"; // Red for < 30%
+      progressColor = "#ef4444";
     } else if (pct < 70) {
-      progressColor = "#f59e0b"; // Orange for 30-69%
+      progressColor = "#f59e0b";
     } else {
-      progressColor = "#10b981"; // Green for 70-100%
+      progressColor = "#10b981";
     }
 
     const row = document.createElement("div");
     row.className = "card-item";
     row.innerHTML = `
       <div class="card-top">
-        <div class="card-name" title="${entry.patient_name || "-"}">${entry.patient_name || "-"}</div>
-        <div class="card-date">${displayDate}</div>
+        <div class="card-name" title="${escapeHtml(entry.patient_name || "-")}">${escapeHtml(entry.patient_name || "-")}</div>
+        <div class="card-date">
+          📅 ${displayDate}<br>
+          ⏰ ${displayTime}
+        </div>
       </div>
-      <div class="card-stage">Progress: <strong>${pct}% Complete</strong> - Current Stage: ${currentStage}</div>
+      <div class="card-stage">Progress: <strong>${pct}% Complete</strong> - Current Stage: ${escapeHtml(currentStage)}</div>
       <div class="progress-bar-wrapper" style="margin:10px 0;">
         <div class="progress-bar-fill" style="width:${pct}%;height:8px;background:${progressColor};border-radius:4px;"></div>
       </div>
       <div class="card-actions">
-        <button class="btn ghost sm" data-edit="${entry.id}">Edit</button>
-        <button class="btn danger sm" data-del="${entry.id}"><span class="btn-text">Delete</span></button>
+        <button class="btn ghost sm" data-edit="${escapeHtml(entry.id)}">Edit</button>
+        <button class="btn danger sm" data-del="${escapeHtml(entry.id)}"><span class="btn-text">Delete</span></button>
       </div>`;
     row.querySelector("[data-edit]").addEventListener("click", () => loadForEdit(entry));
     row.querySelector("[data-del]").addEventListener("click", (ev) => deleteEntry(entry.id, ev.currentTarget));
     listEl.appendChild(row);
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
   });
 }
 
@@ -1717,7 +1921,7 @@ function fullFormReset() {
   setDefaults();
 }
 
-/* ========================= Edit / Load for edit ========================= */
+/* ========================= Edit / Load for edit (FIXED: Proper package loading) ========================= */
 function loadForEdit(entry) {
   if (!entry) return;
 
@@ -1726,9 +1930,15 @@ function loadForEdit(entry) {
 
   const setVal = (fn, val) => { const n = fn(); if (n) n.value = val || ""; };
   setVal(() => el('[name="patient_name"]'), entry.patient_name);
-  applyDOBToAge(entry.dob || "");
-  setVal(F.dob, entry.dob);
-  if (!entry.dob) setVal(F.age, entry.age);
+  
+  const dobValue = entry.dob ? parseDateFromSheet(entry.dob) : "";
+  setVal(F.dob, dobValue);
+  applyDOBToAge(dobValue);
+  
+  const lmpValue = entry.lmp_date ? parseDateFromSheet(entry.lmp_date) : "";
+  setVal(F.lmpDate, lmpValue);
+  
+  if (!dobValue) setVal(F.age, entry.age);
   setVal(F.gender, entry.gender);
   setVal(() => F.contact(), entry.contact);
   setVal(F.altContact, entry.alt_contact);
@@ -1737,12 +1947,34 @@ function loadForEdit(entry) {
   setVal(F.mapLink, entry.map_link);
   setVal(F.height, entry.height);
   setVal(F.weight, entry.weight);
-  setVal(F.lmpDate, entry.lmp_date);
   setVal(F.clinicalHistory, entry.clinical_history);
 
+  // FIX: Properly load packages for each lab
   for (let i = 1; i <= 4; i++) {
+    // Load individual tests
     selectedTestsByLab[i] = (entry[`tests_lab${i}`] || "").split(",").map(s => s.trim()).filter(Boolean);
-    selectedPackagesByLab[i] = (entry[`packages_lab${i}`] || "").split(",").map(s => s.trim()).filter(Boolean);
+    
+    // Load packages - handle both JSON string and comma-separated format
+    const packagesData = entry[`packages_lab${i}`];
+    if (packagesData && packagesData !== "" && packagesData !== "[]") {
+      try {
+        // Try to parse as JSON first (new format)
+        const parsed = JSON.parse(packagesData);
+        if (Array.isArray(parsed)) {
+          // Extract package names from JSON array
+          selectedPackagesByLab[i] = parsed.map(pkg => pkg.name).filter(Boolean);
+        } else {
+          selectedPackagesByLab[i] = [];
+        }
+      } catch (e) {
+        // If not JSON, treat as comma-separated string (old format)
+        selectedPackagesByLab[i] = packagesData.split(",").map(s => s.trim()).filter(Boolean);
+      }
+    } else {
+      selectedPackagesByLab[i] = [];
+    }
+    
+    // Clear and re-render package chips
     const mi = el(`#msInput${i}`); if (mi) mi.value = "";
     const tv = el(`#testsValue${i}`); if (tv) tv.value = selectedTestsByLab[i].join(", ");
     const pi = el(`#packagesInput${i}`); if (pi) pi.value = "";
@@ -1760,15 +1992,11 @@ function loadForEdit(entry) {
   setVal(F.careOf, entry.care_of);
 
   let dateValue = entry.date || "";
-  if (dateValue && dateValue.includes('T')) {
-    dateValue = dateValue.split('T')[0];
-  }
+  dateValue = parseDateFromSheet(dateValue);
   setVal(F.visitDate, dateValue);
 
   let timeValue = entry.time_of_visit || "";
-  if (timeValue && timeValue.includes('T')) {
-    timeValue = timeValue.split('T')[1].substring(0, 5);
-  }
+  timeValue = parseTimeFromSheet(timeValue);
   setVal(F.visitTime, timeValue);
 
   setVal(F.visitType, entry.visit_type);
@@ -1778,8 +2006,9 @@ function loadForEdit(entry) {
 
   const ptEl2 = F.ppTime();
   if (ptEl2) {
-    ptEl2.value = entry.pp_time || "";
-    if (entry.pp_time) ptEl2.dataset.manual = "1";
+    const ppTimeValue = entry.pp_time ? parseTimeFromSheet(entry.pp_time) : "";
+    ptEl2.value = ppTimeValue;
+    if (ppTimeValue) ptEl2.dataset.manual = "1";
     else delete ptEl2.dataset.manual;
   }
 
@@ -1882,25 +2111,16 @@ if (formEl) {
   formEl.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const labNum = labNumFromId(currentSelectedLab);
-    if (!selectedTestsByLab[labNum].length && !selectedPackagesByLab[labNum].length) {
-      showToast("Please select at least one test or package for the selected Processing Lab");
+    if (!validateRequiredFields()) {
       return;
     }
 
-    const contactValid = validateContactNumber(contactField, "contactError", true);
+    const contactValid = validateContactNumber(contactField, "contactError", false);
     const altContactValid = validateContactNumber(altContactField, "altContactError", false);
 
     if (!contactValid) {
       showToast("Please enter a valid 10-digit contact number");
       contactField?.focus();
-      return;
-    }
-
-    const addrEl = F.address(); const vtEl2 = F.visitType();
-    if (vtEl2?.value === "Home Visit" && !addrEl?.value.trim()) {
-      addrEl?.reportValidity(); addrEl?.focus();
-      showToast("Address is required for Home visit");
       return;
     }
 
@@ -1911,10 +2131,36 @@ if (formEl) {
     }
 
     const data = new FormData(formEl);
+    
     for (let i = 1; i <= 4; i++) {
       data.set(`tests_lab${i}`, selectedTestsByLab[i].join(", "));
-      data.set(`packages_lab${i}`, selectedPackagesByLab[i].join(", "));
+      
+      const packagesData = [];
+      selectedPackagesByLab[i].forEach(pkgName => {
+        const pkg = getPackage(`lab${i}`, pkgName);
+        if (pkg) {
+          packagesData.push({
+            name: pkgName,
+            tests: pkg.tests.join(", ")
+          });
+        }
+      });
+      
+      if (packagesData.length === 0) {
+        data.set(`packages_lab${i}`, "");
+        data.set(`packages_lab${i}_names`, "");
+      } else {
+        data.set(`packages_lab${i}`, JSON.stringify(packagesData));
+        data.set(`packages_lab${i}_names`, selectedPackagesByLab[i].join(", "));
+      }
     }
+    
+    const combinedTestsList = getCombinedTestsList();
+    data.set("all_tests_combined", combinedTestsList);
+    
+    const finalB2BPrice = calculateTotalB2B();
+    data.set("total_b2b_price", finalB2BPrice);
+    
     data.set("processing_lab", currentSelectedLab);
     data.set("total_mrp", calculateTotalMRP());
 
@@ -1941,7 +2187,6 @@ if (formEl) {
     data.set("visit_instruction", (F.visitInstruction()?.value || ""));
     data.set("tube_overrides", JSON.stringify(tubeCountOverrides));
     
-    // Add logged-in user name to the data
     const userName = getCurrentUserName();
     data.set("created_by", userName);
     data.set("last_modified_by", userName);
@@ -1959,6 +2204,8 @@ if (formEl) {
 
     const vdEl = F.visitDate(); const vtimeEl = F.visitTime();
     data.set("visit_datetime", vdEl?.value && vtimeEl?.value ? `${vdEl.value}T${vtimeEl.value}` : "");
+    data.set("date", vdEl?.value || "");
+    data.set("time_of_visit", vtimeEl?.value || "");
 
     const eiEl2 = F.editId();
     const editId = eiEl2?.value?.trim() || "";
@@ -2080,11 +2327,19 @@ function selectPatient(p) {
   const pnEl = F.patientName(); if (pnEl) pnEl.value = p.patient_name || "";
   if (nameSuggestionsEl) nameSuggestionsEl.hidden = true;
 
-  applyDOBToAge(p.dob || "");
-  if (!p.dob) { const ageEl3 = F.age(); if (ageEl3) { ageEl3.value = p.age || ""; ageEl3.readOnly = false; ageEl3.classList.remove("readonly"); } }
+  const dobValue = p.dob ? parseDateFromSheet(p.dob) : "";
+  applyDOBToAge(dobValue);
+  if (!dobValue) { 
+    const ageEl3 = F.age(); 
+    if (ageEl3) { 
+      ageEl3.value = p.age || ""; 
+      ageEl3.readOnly = false; 
+      ageEl3.classList.remove("readonly"); 
+    } 
+  }
 
   const setVal2 = (fn, val) => { const n = fn(); if (n) n.value = val || ""; };
-  setVal2(F.dob, p.dob);
+  setVal2(F.dob, dobValue);
   setVal2(F.gender, p.gender);
   setVal2(() => F.contact(), p.contact);
   setVal2(F.altContact, p.alt_contact);
@@ -2095,7 +2350,7 @@ function selectPatient(p) {
   setVal2(F.careOf, p.care_of);
   setVal2(F.height, p.height);
   setVal2(F.weight, p.weight);
-  setVal2(F.lmpDate, p.lmp_date);
+  setVal2(F.lmpDate, p.lmp_date ? parseDateFromSheet(p.lmp_date) : "");
   setVal2(F.clinicalHistory, p.clinical_history);
   setVal2(F.phlebotomistInput, p.phlebotomist);
   setVal2(F.ppPhlebotomistInput, p.pp_phlebotomist);
@@ -2130,7 +2385,6 @@ initAccordions();
 setDefaults();
 fetchServerList().then(() => renderInProgress());
 
-// Attach reset button listener
 const resetTubeBtn = F.resetTubeBtn();
 if (resetTubeBtn) {
   resetTubeBtn.addEventListener("click", resetTubeCounts);
