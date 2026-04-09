@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Pathology Lab | Blood Collection Schedule - Formula Ready</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f0f4f8;
+            padding: 1.5rem;
+            color: #1a2c3e;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #0b5e7e, #1b7a9c);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .badge {
+            background: #eef2f5;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1f6e8c;
+        }
+
+        .filters-card {
+            background: white;
+            border-radius: 28px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2edf2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            align-items: flex-end;
+        }
+        .filter-group {
+            flex: 1 1 200px;
+            min-width: 160px;
+        }
+        .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #5e7e8f;
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border-radius: 18px;
+            border: 1px solid #cbdde6;
+            font-size: 0.9rem;
+        }
+        .reset-btn, .refresh-btn {
+            background: #eef2fa;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #1f5e7a;
+            transition: 0.2s;
+        }
+        .reset-btn:hover, .refresh-btn:hover {
+            background: #e0e9f0;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .result-count {
+            background: #e9f0f5;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+        .last-updated {
+            font-size: 0.7rem;
+            color: #7a9aaa;
+        }
+        .visits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.4rem;
+        }
+        .visit-card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+            border: 1px solid #e2edf2;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .visit-card:hover {
+            transform: translateY(-3px);
+        }
+        .card-header {
+            padding: 1.2rem 1.4rem 0.6rem 1.4rem;
+            border-bottom: 1px solid #ecf3f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .patient-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0b4f6c;
+        }
+        .today-highlight {
+            background: #ffe6c7;
+            color: #c26b1a;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-weight: 600;
+        }
+        .card-body {
+            padding: 1rem 1.4rem;
+        }
+        .info-row {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #5f7e8c;
+            min-width: 70px;
+        }
+        .view-btn {
+            margin: 0.8rem 1.4rem 1.4rem;
+            background: #ecf9ff;
+            border: none;
+            padding: 0.7rem;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #107c9e;
+            cursor: pointer;
+            width: calc(100% - 2.8rem);
+            transition: 0.2s;
+        }
+        .view-btn:hover {
+            background: #d6eef9;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background: white;
+            max-width: 750px;
+            width: 90%;
+            max-height: 85vh;
+            border-radius: 32px;
+            overflow-y: auto;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #0b5e7e, #1b7a9c);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 32px 32px 0 0;
+            position: sticky;
+            top: 0;
+        }
+        .modal-header h3 {
+            font-size: 1.6rem;
+            margin-bottom: 0.25rem;
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .detail-section {
+            background: #f9fbfd;
+            border-radius: 20px;
+            padding: 1.2rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid #e6edf2;
+        }
+        .detail-section h4 {
+            font-size: 1.1rem;
+            color: #0b5e7e;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-left: 4px solid #1b7a9c;
+            padding-left: 0.7rem;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 0.8rem;
+        }
+        .info-item {
+            font-size: 0.9rem;
+        }
+        .info-item strong {
+            color: #2c6e8f;
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .tests-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .test-tag {
+            background: #e0f0f5;
+            color: #0b5e7e;
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .package-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 3px solid #1b7a9c;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .package-name {
+            font-weight: 700;
+            color: #0b4f6c;
+            margin-bottom: 0.5rem;
+        }
+        .tube-badge {
+            background: #f1e5d3;
+            color: #8a5a2a;
+            padding: 0.3rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .map-btn {
+            background: #107c9e;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .close-modal-btn {
+            background: #eef2f5;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        .error-message, .loading-indicator {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 28px;
+            color: #5e7e8f;
+        }
+        .error-message {
+            background: #fee2e2;
+            color: #c62828;
+        }
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .visits-grid { grid-template-columns: 1fr; }
+            .filters-card { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <h1>🩸 MedFlow Schedule · Blood Collection</h1>
+        <div class="badge">📅 Formula-Ready | Live from Sheets</div>
+    </div>
+
+    <div class="filters-card">
+        <div class="filter-group">
+            <label>📆 Date Filter</label>
+            <input type="date" id="dateFilterInput">
+        </div>
+        <div class="filter-group">
+            <label>🧑‍⚕️ Phlebotomist</label>
+            <select id="phleboFilterSelect"><option value="">All Phlebotomists</option></select>
+        </div>
+        <div class="filter-group search-group">
+            <label>🔍 Search Patient</label>
+            <input type="text" id="searchInput" placeholder="Patient name...">
+        </div>
+        <button class="reset-btn" id="resetFiltersBtn">⟳ Reset Filters</button>
+        <button class="refresh-btn" id="refreshBtn">🔄 Refresh Data</button>
+    </div>
+
+    <div class="stats">
+        <div class="result-count" id="resultCount">Loading data...</div>
+        <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+    <div id="visitsContainer" class="visits-grid">
+        <div class="loading-indicator">📡 Fetching schedule from Google Sheets (including formula results)...</div>
+    </div>
+    <footer style="margin-top:2rem; text-align:center; font-size:0.75rem; color:#88a4b5;">
+        ✅ Formula values are calculated automatically • Data refreshes on load
+    </footer>
+</div>
+
+<div id="detailModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Visit Details</h3>
+            <p>Complete clinical & logistics information</p>
+        </div>
+        <div class="modal-body" id="modalDetailsInner"></div>
+        <div style="padding:0 1.5rem 1.5rem 1.5rem;">
+            <button class="close-modal-btn" id="closeModalBtn">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // YOUR GOOGLE APPS SCRIPT URL - PASTE BELOW
+    // ============================================================
+    const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzlPLpnK4DHVoaZ-GxAfgkZnLFTvoze6X6ObygSBdcEkLAAYTJoIVgw5NIWHhIRvMxhDA/exec";
+    
+    let masterVisits = [];
+    let filteredVisits = [];
+
+    function formatDateDMY(dateStr) {
+        if (!dateStr) return '';
+        let parts = dateStr.split('-');
+        if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        return dateStr;
+    }
+
+    function parseTests(testsStr) {
+        if (!testsStr) return [];
+        return String(testsStr).split(',').map(t => t.trim()).filter(t => t);
+    }
+
+    function parsePackages(packagesStr) {
+        if (!packagesStr) return [];
+        try {
+            let parsed = typeof packagesStr === 'string' ? JSON.parse(packagesStr) : packagesStr;
+            if (!Array.isArray(parsed)) parsed = [parsed];
+            return parsed.map(pkg => ({
+                name: pkg.name || 'Unnamed Package',
+                tests: pkg.tests ? String(pkg.tests).split(',').map(t => t.trim()) : []
+            }));
+        } catch(e) { return []; }
+    }
+
+    function parseTestTubes(tubesStr) {
+        if (!tubesStr) return [];
+        try {
+            let parsed = typeof tubesStr === 'string' ? JSON.parse(tubesStr) : tubesStr;
+            if (!Array.isArray(parsed)) parsed = [parsed];
+            let result = [];
+            for (let item of parsed) {
+                for (let [tube, count] of Object.entries(item)) {
+                    result.push({ name: tube, count: count });
+                }
+            }
+            return result;
+        } catch(e) { return []; }
+    }
+
+    function expandVisitsWithPP(visitsArray) {
+        let expanded = [];
+        for (let v of visitsArray) {
+            let main = { ...v, isPPEntry: false, effectiveTime: v.Visit_Time, effectivePhlebotomist: v.Phlebotomist, originalRef: v };
+            expanded.push(main);
+            if (v.PP_Time && v.PP_Time.trim() !== "") {
+                let pp = { ...v, isPPEntry: true, effectiveTime: v.PP_Time, effectivePhlebotomist: v.PP_Phlebotomist || v.Phlebotomist, Visit_Time: v.PP_Time, Phlebotomist: v.PP_Phlebotomist || v.Phlebotomist, originalRef: v, Visit_ID: v.Visit_ID + "_PP" };
+                expanded.push(pp);
+            }
+        }
+        return expanded;
+    }
+
+    async function fetchDataFromSheet() {
+        const container = document.getElementById('visitsContainer');
+        container.innerHTML = '<div class="loading-indicator">🔄 Fetching latest schedule from Google Sheets (calculating formula values)...</div>';
+        
+        try {
+            const response = await fetch(GOOGLE_SHEETS_API_URL);
+            const result = await response.json();
+            
+            if (result.success && Array.isArray(result.data)) {
+                if (result.lastUpdated) {
+                    document.getElementById('lastUpdated').innerText = `📅 Last updated: ${new Date(result.lastUpdated).toLocaleString()}`;
+                }
+                return result.data;
+            } else if (Array.isArray(result)) {
+                return result;
+            } else {
+                throw new Error(result.error || "Unexpected data format");
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            container.innerHTML = `<div class="error-message">
+                ❌ Failed to load data from Google Sheets.<br>
+                Possible issues:<br>
+                • Formulas referencing other sheets may be returning empty values<br>
+                • Check that the source sheet (e.g., sheet1) has data<br>
+                • Verify your Apps Script is deployed and authorized<br>
+                <br>Error: ${error.message}
+            </div>`;
+            return [];
+        }
+    }
+
+    // DOM elements
+    const container = document.getElementById('visitsContainer');
+    const dateFilterInput = document.getElementById('dateFilterInput');
+    const phleboFilterSelect = document.getElementById('phleboFilterSelect');
+    const searchInput = document.getElementById('searchInput');
+    const resetBtn = document.getElementById('resetFiltersBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const resultCountSpan = document.getElementById('resultCount');
+    const modalOverlay = document.getElementById('detailModal');
+    const modalDetailsInner = document.getElementById('modalDetailsInner');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    function getTodayDate() {
+        let today = new Date();
+        return `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    }
+
+    function sortVisits(visits) {
+        return [...visits].sort((a,b) => {
+            let dateComp = (b.Visit_Date || "").localeCompare(a.Visit_Date || "");
+            if (dateComp !== 0) return dateComp;
+            return (a.effectiveTime || "23:59").localeCompare(b.effectiveTime || "23:59");
+        });
+    }
+
+    function applyFilters() {
+        if (!masterVisits.length) return;
+        let dateVal = dateFilterInput.value || getTodayDate();
+        let phleboVal = phleboFilterSelect.value.toLowerCase();
+        let searchVal = searchInput.value.trim().toLowerCase();
+        
+        let filtered = masterVisits.filter(v => {
+            if (v.Visit_Date !== dateVal) return false;
+            let phlebo = (v.effectivePhlebotomist || "").toLowerCase();
+            if (phleboVal && !phlebo.includes(phleboVal)) return false;
+            let patient = (v.Patient_Name || "").toLowerCase();
+            if (searchVal && !patient.includes(searchVal)) return false;
+            return true;
+        });
+        filteredVisits = sortVisits(filtered);
+        renderVisits(filteredVisits);
+        resultCountSpan.innerText = `📋 ${filteredVisits.length} visit${filteredVisits.length !== 1 ? 's' : ''} shown`;
+    }
+
+    function populatePhlebotomistDropdown() {
+        let phSet = new Set();
+        masterVisits.forEach(v => { if(v.effectivePhlebotomist && v.effectivePhlebotomist.trim()) phSet.add(v.effectivePhlebotomist); });
+        let curr = phleboFilterSelect.value;
+        phleboFilterSelect.innerHTML = '<option value="">All Phlebotomists</option>';
+        [...phSet].sort().forEach(p => {
+            let opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            phleboFilterSelect.appendChild(opt);
+        });
+        if (curr && phSet.has(curr)) phleboFilterSelect.value = curr;
+        else phleboFilterSelect.value = "";
+    }
+
+    function isToday(dateStr) { return dateStr === getTodayDate(); }
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, function(m){ return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
+    function escapeJson(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function renderVisits(visits) {
+        if (!visits.length) {
+            container.innerHTML = `<div class="error-message" style="background:#f0f4f8;">📭 No visits match the selected filters. Try changing date or search term.</div>`;
+            return;
+        }
+        container.innerHTML = visits.map(v => `
+            <div class="visit-card">
+                <div class="card-header">
+                    <div class="patient-name">${escapeHtml(v.Patient_Name)}</div>
+                    <div style="display:flex; gap:6px;">${v.isPPEntry ? '<span style="background:#eef2f5; font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:30px;">📌 PP</span>' : ''}${isToday(v.Visit_Date) ? '<span class="today-highlight">🟡 Today</span>' : ''}</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-row"><span class="info-label">📅 Date:</span><span>${formatDateDMY(v.Visit_Date)}</span></div>
+                    <div class="info-row"><span class="info-label">⏰ Time:</span><span>${v.effectiveTime || '--:--'} ${v.isPPEntry ? '(PP slot)' : ''}</span></div>
+                    <div class="info-row"><span class="info-label">🧑‍⚕️ Phleb:</span><span>${escapeHtml(v.effectivePhlebotomist || '—')}</span></div>
+                </div>
+                <button class="view-btn" data-detail='${escapeJson(JSON.stringify(v.originalRef || v))}'>🔍 View Full Details</button>
+            </div>
+        `).join('');
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => { if(btn.getAttribute('data-detail')) showModal(JSON.parse(btn.getAttribute('data-detail'))); });
+        });
+    }
+
+    function showModal(visit) {
+        let testsArray = parseTests(visit.Tests);
+        let packagesArray = parsePackages(visit.Packages);
+        let tubesArray = parseTestTubes(visit.Test_Tubes);
+        let hasMap = visit.Google_Maps && visit.Google_Maps.trim() !== "";
+        
+        modalDetailsInner.innerHTML = `
+            <div class="detail-section"><h4>👤 Patient Information</h4><div class="info-grid">
+                <div class="info-item"><strong>Name</strong> ${escapeHtml(visit.Patient_Name)}</div>
+                <div class="info-item"><strong>Age/Gender</strong> ${visit.Patient_Age || '—'} / ${visit.Patient_Gender || '—'}</div>
+                <div class="info-item"><strong>Contact</strong> ${escapeHtml(visit.Contact_No || '—')} ${visit.Alternate_No ? `/ ${escapeHtml(visit.Alternate_No)}` : ''}</div>
+                <div class="info-item"><strong>Address</strong> ${escapeHtml(visit.Address || '—')}, ${escapeHtml(visit.Area || '—')}</div>
+                <div class="info-item"><strong>Doctor</strong> ${escapeHtml(visit.Doctor || '—')}</div>
+            </div></div>
+            <div class="detail-section"><h4>📋 Visit Details</h4><div class="info-grid">
+                <div class="info-item"><strong>Visit Date</strong> ${formatDateDMY(visit.Visit_Date)}</div>
+                <div class="info-item"><strong>Visit Time</strong> ${visit.Visit_Time || '—'} ${visit.PP_Time ? `(PP: ${visit.PP_Time})` : ''}</div>
+                <div class="info-item"><strong>Phlebotomist</strong> ${escapeHtml(visit.Phlebotomist || '—')} ${visit.PP_Phlebotomist ? ` / PP: ${escapeHtml(visit.PP_Phlebotomist)}` : ''}</div>
+                <div class="info-item"><strong>Visit Type</strong> ${escapeHtml(visit.Visit_Type || '—')}</div>
+                <div class="info-item"><strong>Pending Payment</strong> ${escapeHtml(visit.Pending_Payment || '$0')}</div>
+                <div class="info-item"><strong>Instructions</strong> ${escapeHtml(visit.Visit_Instruction || 'None')}</div>
+            </div>${hasMap ? `<button class="map-btn" id="openMapBtn">🗺️ Open in Google Maps</button>` : ''}</div>
+            <div class="detail-section"><h4>🔬 Tests Required</h4><div class="tests-list">${testsArray.length ? testsArray.map(t => `<span class="test-tag">${escapeHtml(t)}</span>`).join('') : '<span>— No tests listed —</span>'}</div></div>
+            <div class="detail-section"><h4>📦 Packages & Tests</h4>${packagesArray.length ? packagesArray.map(pkg => `<div class="package-card"><div class="package-name">📌 ${escapeHtml(pkg.name)}</div><div class="tests-list">${pkg.tests.map(t => `<span class="test-tag">${escapeHtml(t)}</span>`).join('')}</div></div>`).join('') : '<p>No packages assigned</p>'}</div>
+            <div class="detail-section"><h4>🧪 Required Test Tubes</h4><div class="tests-list">${tubesArray.length ? tubesArray.map(tube => `<span class="tube-badge">🧴 ${escapeHtml(tube.name)} ×${tube.count}</span>`).join('') : '<span>— No tube info —</span>'}</div></div>
+        `;
+        modalOverlay.classList.add('active');
+        if(hasMap) setTimeout(() => document.getElementById('openMapBtn')?.addEventListener('click', () => window.open(visit.Google_Maps, '_blank')), 50);
+    }
+
+    async function init() {
+        dateFilterInput.value = getTodayDate();
+        const rawData = await fetchDataFromSheet();
+        if (rawData && rawData.length > 0) {
+            masterVisits = expandVisitsWithPP(rawData);
+            populatePhlebotomistDropdown();
+            applyFilters();
+        } else {
+            container.innerHTML = '<div class="error-message">📭 No visit records found. Formula cells may be returning empty values. Check that source sheets have data.</div>';
+            resultCountSpan.innerText = '📋 0 visits';
+        }
+        dateFilterInput.addEventListener('change', applyFilters);
+        phleboFilterSelect.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
+        resetBtn.addEventListener('click', () => { dateFilterInput.value = getTodayDate(); searchInput.value = ''; phleboFilterSelect.value = ''; applyFilters(); });
+        refreshBtn.addEventListener('click', async () => { const newData = await fetchDataFromSheet(); if(newData && newData.length) { masterVisits = expandVisitsWithPP(newData); populatePhlebotomistDropdown(); applyFilters(); } });
+        closeModalBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
+        modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) modalOverlay.classList.remove('active'); });
+    }
+    init();
+</script>
+</body>
+</html>
