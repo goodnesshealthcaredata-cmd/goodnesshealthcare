@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Pathology Lab | Blood Collection Schedule - Formula Ready</title>
+    <title>Pathology Lab | Blood Collection Schedule - Premium</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: system-ui, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
         }
 
         body {
-            background: #f0f4f8;
-            padding: 1.5rem;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: #EBF4F6;
             color: #1a2c3e;
+            line-height: 1.5;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         .app-container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 1.5rem;
         }
 
+        /* Header */
         .header {
             display: flex;
             flex-wrap: wrap;
@@ -33,102 +39,149 @@
         }
         h1 {
             font-size: 1.8rem;
-            background: linear-gradient(135deg, #0b5e7e, #1b7a9c);
+            background: linear-gradient(135deg, #09637E, #088395);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
+            font-weight: 700;
+            letter-spacing: -0.3px;
         }
         .badge {
-            background: #eef2f5;
-            padding: 0.4rem 1rem;
-            border-radius: 40px;
+            background: rgba(7, 131, 149, 0.12);
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
             font-size: 0.85rem;
-            font-weight: 500;
-            color: #1f6e8c;
+            font-weight: 600;
+            color: #09637E;
         }
 
+        /* Filters Card - Compact & Responsive */
         .filters-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
             border-radius: 28px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid #e2edf2;
+            padding: 1.25rem;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(7, 99, 126, 0.08);
+            border: 1px solid rgba(122, 178, 178, 0.3);
+        }
+        
+        .filters-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 1.2rem;
+            gap: 20px;
             align-items: flex-end;
         }
+        
         .filter-group {
-            flex: 1 1 200px;
-            min-width: 160px;
+            flex: 1 1 70px;
+            min-width: 140px;
         }
+        
         .filter-group label {
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.7rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #5e7e8f;
+            letter-spacing: 0.6px;
+            color: #09637E;
             display: block;
             margin-bottom: 0.4rem;
         }
-        .filter-group input, .filter-group select {
+        
+        .filter-group input, 
+        .filter-group select {
             width: 100%;
-            padding: 0.7rem 0.9rem;
-            border-radius: 18px;
-            border: 1px solid #cbdde6;
-            font-size: 0.9rem;
+            padding: 0.65rem 0.9rem;
+            border-radius: 24px;
+            border: 1.5px solid #e2edf2;
+            background: white;
+            font-size: 0.85rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
         }
+        
+        .filter-group input:focus, 
+        .filter-group select:focus {
+            outline: none;
+            border-color: #088395;
+            box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.15);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        
         .reset-btn, .refresh-btn {
-            background: #eef2fa;
-            border: none;
-            padding: 0.7rem 1.2rem;
+            background: #EBF4F6;
+            border: 1.5px solid #7AB2B2;
+            padding: 0.65rem 1.2rem;
             border-radius: 40px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            color: #1f5e7a;
-            transition: 0.2s;
+            color: #09637E;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
+        
         .reset-btn:hover, .refresh-btn:hover {
-            background: #e0e9f0;
+            background: #088395;
+            border-color: #088395;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(8, 131, 149, 0.25);
         }
+
+        /* Stats */
         .stats {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
             flex-wrap: wrap;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
         }
         .result-count {
-            background: #e9f0f5;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
+            background: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
             font-size: 0.85rem;
+            font-weight: 600;
+            color: #09637E;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            border: 1px solid #e2edf2;
         }
         .last-updated {
             font-size: 0.7rem;
-            color: #7a9aaa;
+            color: #7AB2B2;
+            font-weight: 500;
         }
+
+        /* Visit Cards Grid */
         .visits-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 1.4rem;
+            gap: 1.5rem;
         }
         .visit-card {
             background: white;
-            border-radius: 28px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.05);
-            border: 1px solid #e2edf2;
+            border-radius: 32px;
+            box-shadow: 0 12px 24px -12px rgba(7, 99, 126, 0.12);
+            border: 1px solid rgba(122, 178, 178, 0.25);
             overflow: hidden;
-            transition: transform 0.2s;
+            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
         }
         .visit-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 32px -14px rgba(7, 99, 126, 0.2);
+            border-color: #7AB2B2;
         }
         .card-header {
-            padding: 1.2rem 1.4rem 0.6rem 1.4rem;
-            border-bottom: 1px solid #ecf3f7;
+            padding: 1.2rem 1.3rem 0.7rem 1.3rem;
+            border-bottom: 2px solid #EBF4F6;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -138,105 +191,118 @@
         .patient-name {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #0b4f6c;
+            background: linear-gradient(135deg, #09637E, #088395);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
         }
         .today-highlight {
-            background: #ffe6c7;
-            color: #c26b1a;
+            background: linear-gradient(135deg, #FFE6C7, #FFD6A5);
+            color: #C26B1A;
             font-size: 0.7rem;
-            padding: 0.2rem 0.7rem;
-            border-radius: 30px;
-            font-weight: 600;
+            padding: 0.25rem 0.8rem;
+            border-radius: 40px;
+            font-weight: 700;
         }
         .card-body {
-            padding: 1rem 1.4rem;
+            padding: 0.9rem 1.3rem;
         }
         .info-row {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.6rem;
             font-size: 0.9rem;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.5rem;
         }
         .info-label {
-            font-weight: 600;
-            color: #5f7e8c;
+            font-weight: 700;
+            color: #7AB2B2;
             min-width: 70px;
         }
         .view-btn {
-            margin: 0.8rem 1.4rem 1.4rem;
-            background: #ecf9ff;
+            margin: 0.6rem 1.3rem 1.2rem;
+            background: #EBF4F6;
             border: none;
             padding: 0.7rem;
-            border-radius: 40px;
-            font-weight: 600;
-            color: #107c9e;
+            border-radius: 60px;
+            font-weight: 700;
+            color: #09637E;
             cursor: pointer;
-            width: calc(100% - 2.8rem);
-            transition: 0.2s;
+            width: calc(100% - 2.6rem);
+            transition: all 0.2s ease;
+            font-family: inherit;
+            font-size: 0.85rem;
         }
         .view-btn:hover {
-            background: #d6eef9;
+            background: #088395;
+            color: white;
+            transform: scale(0.98);
         }
+
+        /* Modal Premium Design */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
+            background: rgba(7, 99, 126, 0.4);
+            backdrop-filter: blur(12px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             visibility: hidden;
             opacity: 0;
-            transition: 0.2s;
+            transition: 0.25s ease;
         }
         .modal-overlay.active {
             visibility: visible;
             opacity: 1;
         }
         .modal-content {
-            background: white;
-            max-width: 750px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(2px);
+            max-width: 850px;
             width: 90%;
             max-height: 85vh;
-            border-radius: 32px;
+            border-radius: 40px;
             overflow-y: auto;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+            box-shadow: 0 30px 50px rgba(7, 99, 126, 0.25);
+            border: 1px solid rgba(122, 178, 178, 0.4);
         }
         .modal-header {
-            background: linear-gradient(135deg, #0b5e7e, #1b7a9c);
+            background: linear-gradient(135deg, #09637E, #088395);
             color: white;
-            padding: 1.5rem;
-            border-radius: 32px 32px 0 0;
+            padding: 1.4rem;
+            border-radius: 40px 40px 0 0;
             position: sticky;
             top: 0;
         }
         .modal-header h3 {
             font-size: 1.6rem;
-            margin-bottom: 0.25rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
         }
         .modal-body {
             padding: 1.5rem;
         }
         .detail-section {
-            background: #f9fbfd;
-            border-radius: 20px;
+            background: #EBF4F6;
+            border-radius: 24px;
             padding: 1.2rem;
             margin-bottom: 1.2rem;
-            border: 1px solid #e6edf2;
+            border: 1px solid rgba(122, 178, 178, 0.3);
         }
         .detail-section h4 {
-            font-size: 1.1rem;
-            color: #0b5e7e;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #09637E;
             margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            border-left: 4px solid #1b7a9c;
-            padding-left: 0.7rem;
+            border-left: 4px solid #088395;
+            padding-left: 0.8rem;
         }
         .info-grid {
             display: grid;
@@ -244,74 +310,102 @@
             gap: 0.8rem;
         }
         .info-item {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .info-item strong {
-            color: #2c6e8f;
+            color: #09637E;
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
         }
         .tests-list {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
         }
         .test-tag {
-            background: #e0f0f5;
-            color: #0b5e7e;
-            padding: 0.3rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        .package-card {
             background: white;
-            border-radius: 16px;
-            padding: 1rem;
-            margin-bottom: 0.8rem;
-            border-left: 3px solid #1b7a9c;
+            color: #088395;
+            padding: 0.3rem 0.9rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #7AB2B2;
         }
-        .package-name {
-            font-weight: 700;
-            color: #0b4f6c;
-            margin-bottom: 0.5rem;
-        }
-        .tube-badge {
-            background: #f1e5d3;
-            color: #8a5a2a;
-            padding: 0.3rem 0.8rem;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .map-btn {
-            background: #107c9e;
-            color: white;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 40px;
-            font-weight: 500;
-            cursor: pointer;
+        .tube-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+            gap: 1rem;
             margin-top: 0.5rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
+        }
+        .tube-item {
+            text-align: center;
+            background: white;
+            border-radius: 20px;
+            padding: 0.8rem 0.3rem;
+            box-shadow: 0 4px 12px rgba(7, 99, 126, 0.08);
+            transition: all 0.2s;
+            border: 1px solid #e2edf2;
+        }
+        .tube-item:hover {
+            transform: translateY(-3px);
+            border-color: #7AB2B2;
+        }
+        .tube-image {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 0.4rem;
+        }
+        .tube-name {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #09637E;
+            margin-bottom: 0.2rem;
+        }
+        .tube-count {
+            font-size: 0.65rem;
+            background: #EBF4F6;
+            display: inline-block;
+            padding: 0.15rem 0.6rem;
+            border-radius: 30px;
+            font-weight: 600;
+            color: #088395;
+        }
+        .map-link {
+            margin-top: 0.3rem;
+            word-break: break-all;
+        }
+        .map-link a {
+            color: #088395;
+            font-size: 0.75rem;
+            text-decoration: none;
+            border-bottom: 1px dashed #7AB2B2;
+        }
+        .map-link a:hover {
+            border-bottom: 1px solid #088395;
         }
         .close-modal-btn {
-            background: #eef2f5;
-            border: none;
-            padding: 0.7rem 1.5rem;
-            border-radius: 40px;
-            font-weight: 600;
+            background: #EBF4F6;
+            border: 1px solid #7AB2B2;
+            padding: 0.7rem;
+            border-radius: 50px;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
             margin-top: 0.5rem;
+            transition: 0.2s;
+            color: #09637E;
+        }
+        .close-modal-btn:hover {
+            background: #088395;
+            color: white;
+            border-color: #088395;
         }
         .error-message, .loading-indicator {
             text-align: center;
@@ -319,40 +413,124 @@
             background: white;
             border-radius: 28px;
             color: #5e7e8f;
+            font-weight: 500;
         }
         .error-message {
-            background: #fee2e2;
-            color: #c62828;
+            background: #fff4f0;
+            color: #c26b1a;
         }
-        @media (max-width: 640px) {
-            body { padding: 1rem; }
-            .visits-grid { grid-template-columns: 1fr; }
-            .filters-card { flex-direction: column; }
+
+        /* ========== RESPONSIVE BREAKPOINTS ========== */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+            .filters-card {
+                padding: 1rem;
+            }
+            .filters-grid {
+                flex-direction: column;
+                gap: 0.7rem;
+            }
+            .filter-group {
+                width: 100%;
+                min-width: auto;
+            }
+            .filter-actions {
+                display: flex;
+                flex-direction: row;
+                gap: 0.6rem;
+                margin-top: 0.3rem;
+            }
+            .reset-btn, .refresh-btn {
+                flex: 1;
+                text-align: center;
+                white-space: nowrap;
+                padding: 0.6rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .visits-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            .modal-header h3 {
+                font-size: 1.3rem;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .tube-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+            .stats {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tube-grid {
+                grid-template-columns: 1fr;
+            }
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .filter-actions {
+                flex-direction: column;
+            }
+            .reset-btn, .refresh-btn {
+                white-space: normal;
+                text-align: center;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .visits-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .tube-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div class="header">
-        <h1>🩸 MedFlow Schedule · Blood Collection</h1>
-        <div class="badge">📅 Formula-Ready | Live from Sheets</div>
+        <h1>Visit Schedule</h1>
     </div>
 
     <div class="filters-card">
-        <div class="filter-group">
-            <label>📆 Date Filter</label>
-            <input type="date" id="dateFilterInput">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>📆 Date Filter</label>
+                <input type="date" id="dateFilterInput">
+            </div>
+            <div class="filter-group">
+                <label>🧑‍⚕️ Phlebotomist</label>
+                <select id="phleboFilterSelect"><option value="">All Phlebotomists</option></select>
+            </div>
+            <div class="filter-group">
+                <label>🔍 Search Patient</label>
+                <input type="text" id="searchInput" placeholder="Patient name...">
+            </div>
+            <div class="filter-actions">
+                <button class="reset-btn" id="resetFiltersBtn">⟳ Reset</button>
+                <button class="refresh-btn" id="refreshBtn">🔄 Refresh</button>
+            </div>
         </div>
-        <div class="filter-group">
-            <label>🧑‍⚕️ Phlebotomist</label>
-            <select id="phleboFilterSelect"><option value="">All Phlebotomists</option></select>
-        </div>
-        <div class="filter-group search-group">
-            <label>🔍 Search Patient</label>
-            <input type="text" id="searchInput" placeholder="Patient name...">
-        </div>
-        <button class="reset-btn" id="resetFiltersBtn">⟳ Reset Filters</button>
-        <button class="refresh-btn" id="refreshBtn">🔄 Refresh Data</button>
     </div>
 
     <div class="stats">
@@ -361,10 +539,10 @@
     </div>
 
     <div id="visitsContainer" class="visits-grid">
-        <div class="loading-indicator">📡 Fetching schedule from Google Sheets (including formula results)...</div>
+        <div class="loading-indicator">📡 Fetching latest schedule...</div>
     </div>
-    <footer style="margin-top:2rem; text-align:center; font-size:0.75rem; color:#88a4b5;">
-        ✅ Formula values are calculated automatically • Data refreshes on load
+    <footer style="margin-top:1.8rem; text-align:center; font-size:0.7rem; color:#7AB2B2; padding:0.8rem;">
+        ✨ 24‑hour time format • Click on any visit for details
     </footer>
 </div>
 
@@ -372,10 +550,9 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3>📋 Visit Details</h3>
-            <p>Complete clinical & logistics information</p>
         </div>
         <div class="modal-body" id="modalDetailsInner"></div>
-        <div style="padding:0 1.5rem 1.5rem 1.5rem;">
+        <div style="padding:0 1.3rem 1.3rem 1.3rem;">
             <button class="close-modal-btn" id="closeModalBtn">Close</button>
         </div>
     </div>
@@ -383,12 +560,51 @@
 
 <script>
     // ============================================================
-    // YOUR GOOGLE APPS SCRIPT URL - PASTE BELOW
+    // GOOGLE APPS SCRIPT URL - REPLACE WITH YOUR DEPLOYED URL
     // ============================================================
     const GOOGLE_SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzlPLpnK4DHVoaZ-GxAfgkZnLFTvoze6X6ObygSBdcEkLAAYTJoIVgw5NIWHhIRvMxhDA/exec";
     
+    const TUBE_TYPES = {
+        "EDTA": { displayName: "EDTA Tube", imageUrl: "https://lh3.googleusercontent.com/d/1iHKiKtrFMgpLEkyIRUnhz4cl9LZ9XFux" },
+        "Fluoride": { displayName: "Fluoride Tube", imageUrl: "https://lh3.googleusercontent.com/d/1MZdwsqJlSHhRbVEUrm_TYv4InUWs5kdV" },
+        "Plain": { displayName: "Plain Tube", imageUrl: "https://lh3.googleusercontent.com/d/1O9o_bmtUvZ3cuiOqfRog1wFzYY4UxRkt" },
+        "Urine": { displayName: "Urine Container", imageUrl: "https://lh3.googleusercontent.com/d/1bjZq6bvMic2Azyd11-aasyQss3AOeFZw" },
+        "PP Extra": { displayName: "PP Extra Tube", imageUrl: "https://lh3.googleusercontent.com/d/1MZdwsqJlSHhRbVEUrm_TYv4InUWs5kdV" }
+    };
+    
     let masterVisits = [];
     let filteredVisits = [];
+
+    function formatTimeTo24Hour(timeValue) {
+        if (!timeValue || timeValue === "") return "--:--";
+        if (typeof timeValue === "string" && /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeValue)) return timeValue;
+        try {
+            let dateObj = null;
+            if (timeValue instanceof Date) dateObj = timeValue;
+            else if (typeof timeValue === "number") {
+                const totalSeconds = Math.floor(timeValue * 86400);
+                const hours = Math.floor(totalSeconds / 3600) % 24;
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            } else if (typeof timeValue === "string") {
+                const timeMatch = timeValue.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+                if (timeMatch) {
+                    let hours = parseInt(timeMatch[1]);
+                    const minutes = timeMatch[2];
+                    const ampm = timeMatch[4]?.toUpperCase();
+                    if (ampm === "PM" && hours !== 12) hours += 12;
+                    if (ampm === "AM" && hours === 12) hours = 0;
+                    return `${String(hours).padStart(2, '0')}:${minutes}`;
+                }
+                dateObj = new Date(timeValue);
+                if (isNaN(dateObj.getTime())) dateObj = null;
+            }
+            if (dateObj && !isNaN(dateObj.getTime())) {
+                return `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+            }
+        } catch(e) { /* fallback */ }
+        return String(timeValue).substring(0, 5);
+    }
 
     function formatDateDMY(dateStr) {
         if (!dateStr) return '';
@@ -400,18 +616,6 @@
     function parseTests(testsStr) {
         if (!testsStr) return [];
         return String(testsStr).split(',').map(t => t.trim()).filter(t => t);
-    }
-
-    function parsePackages(packagesStr) {
-        if (!packagesStr) return [];
-        try {
-            let parsed = typeof packagesStr === 'string' ? JSON.parse(packagesStr) : packagesStr;
-            if (!Array.isArray(parsed)) parsed = [parsed];
-            return parsed.map(pkg => ({
-                name: pkg.name || 'Unnamed Package',
-                tests: pkg.tests ? String(pkg.tests).split(',').map(t => t.trim()) : []
-            }));
-        } catch(e) { return []; }
     }
 
     function parseTestTubes(tubesStr) {
@@ -429,12 +633,22 @@
         } catch(e) { return []; }
     }
 
+    function getTubeDisplayInfo(tubeName) {
+        const normalized = tubeName.trim();
+        for (const [key, value] of Object.entries(TUBE_TYPES)) {
+            if (normalized.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(normalized.toLowerCase())) {
+                return value;
+            }
+        }
+        return { displayName: tubeName, imageUrl: "https://lh3.googleusercontent.com/d/1MZdwsqJlSHhRbVEUrm_TYv4InUWs5kdV" };
+    }
+
     function expandVisitsWithPP(visitsArray) {
         let expanded = [];
         for (let v of visitsArray) {
             let main = { ...v, isPPEntry: false, effectiveTime: v.Visit_Time, effectivePhlebotomist: v.Phlebotomist, originalRef: v };
             expanded.push(main);
-            if (v.PP_Time && v.PP_Time.trim() !== "") {
+            if (v.PP_Time && v.PP_Time.toString().trim() !== "" && v.PP_Time !== "00:00:00") {
                 let pp = { ...v, isPPEntry: true, effectiveTime: v.PP_Time, effectivePhlebotomist: v.PP_Phlebotomist || v.Phlebotomist, Visit_Time: v.PP_Time, Phlebotomist: v.PP_Phlebotomist || v.Phlebotomist, originalRef: v, Visit_ID: v.Visit_ID + "_PP" };
                 expanded.push(pp);
             }
@@ -444,37 +658,21 @@
 
     async function fetchDataFromSheet() {
         const container = document.getElementById('visitsContainer');
-        container.innerHTML = '<div class="loading-indicator">🔄 Fetching latest schedule from Google Sheets (calculating formula values)...</div>';
-        
+        container.innerHTML = '<div class="loading-indicator">🔄 Loading schedule...</div>';
         try {
             const response = await fetch(GOOGLE_SHEETS_API_URL);
             const result = await response.json();
-            
             if (result.success && Array.isArray(result.data)) {
-                if (result.lastUpdated) {
-                    document.getElementById('lastUpdated').innerText = `📅 Last updated: ${new Date(result.lastUpdated).toLocaleString()}`;
-                }
+                if (result.lastUpdated) document.getElementById('lastUpdated').innerText = `📅 Updated: ${new Date(result.lastUpdated).toLocaleString()}`;
                 return result.data;
-            } else if (Array.isArray(result)) {
-                return result;
-            } else {
-                throw new Error(result.error || "Unexpected data format");
-            }
+            } else if (Array.isArray(result)) return result;
+            else throw new Error(result.error || "Invalid format");
         } catch (error) {
-            console.error("Fetch error:", error);
-            container.innerHTML = `<div class="error-message">
-                ❌ Failed to load data from Google Sheets.<br>
-                Possible issues:<br>
-                • Formulas referencing other sheets may be returning empty values<br>
-                • Check that the source sheet (e.g., sheet1) has data<br>
-                • Verify your Apps Script is deployed and authorized<br>
-                <br>Error: ${error.message}
-            </div>`;
+            container.innerHTML = `<div class="error-message">❌ Failed to load data. Check Apps Script URL.<br>${error.message}</div>`;
             return [];
         }
     }
 
-    // DOM elements
     const container = document.getElementById('visitsContainer');
     const dateFilterInput = document.getElementById('dateFilterInput');
     const phleboFilterSelect = document.getElementById('phleboFilterSelect');
@@ -504,7 +702,6 @@
         let dateVal = dateFilterInput.value || getTodayDate();
         let phleboVal = phleboFilterSelect.value.toLowerCase();
         let searchVal = searchInput.value.trim().toLowerCase();
-        
         let filtered = masterVisits.filter(v => {
             if (v.Visit_Date !== dateVal) return false;
             let phlebo = (v.effectivePhlebotomist || "").toLowerCase();
@@ -534,23 +731,23 @@
     }
 
     function isToday(dateStr) { return dateStr === getTodayDate(); }
-    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, function(m){ return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
     function escapeJson(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     function renderVisits(visits) {
         if (!visits.length) {
-            container.innerHTML = `<div class="error-message" style="background:#f0f4f8;">📭 No visits match the selected filters. Try changing date or search term.</div>`;
+            container.innerHTML = `<div class="error-message" style="background:#f0f4f8;">📭 No visits match filters. Adjust date or search.</div>`;
             return;
         }
         container.innerHTML = visits.map(v => `
             <div class="visit-card">
                 <div class="card-header">
                     <div class="patient-name">${escapeHtml(v.Patient_Name)}</div>
-                    <div style="display:flex; gap:6px;">${v.isPPEntry ? '<span style="background:#eef2f5; font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:30px;">📌 PP</span>' : ''}${isToday(v.Visit_Date) ? '<span class="today-highlight">🟡 Today</span>' : ''}</div>
+                    <div style="display:flex; gap:6px;">${v.isPPEntry ? '<span style="background:#EBF4F6; font-size:0.7rem; padding:0.2rem 0.7rem; border-radius:30px;">📌 PP</span>' : ''}${isToday(v.Visit_Date) ? '<span class="today-highlight">🟡 Today</span>' : ''}</div>
                 </div>
                 <div class="card-body">
                     <div class="info-row"><span class="info-label">📅 Date:</span><span>${formatDateDMY(v.Visit_Date)}</span></div>
-                    <div class="info-row"><span class="info-label">⏰ Time:</span><span>${v.effectiveTime || '--:--'} ${v.isPPEntry ? '(PP slot)' : ''}</span></div>
+                    <div class="info-row"><span class="info-label">⏰ Time:</span><span>${formatTimeTo24Hour(v.effectiveTime)} ${v.isPPEntry ? '(PP)' : ''}</span></div>
                     <div class="info-row"><span class="info-label">🧑‍⚕️ Phleb:</span><span>${escapeHtml(v.effectivePhlebotomist || '—')}</span></div>
                 </div>
                 <button class="view-btn" data-detail='${escapeJson(JSON.stringify(v.originalRef || v))}'>🔍 View Full Details</button>
@@ -563,50 +760,78 @@
 
     function showModal(visit) {
         let testsArray = parseTests(visit.Tests);
-        let packagesArray = parsePackages(visit.Packages);
         let tubesArray = parseTestTubes(visit.Test_Tubes);
-        let hasMap = visit.Google_Maps && visit.Google_Maps.trim() !== "";
+        let hasMap = visit.Google_Maps && visit.Google_Maps.toString().trim() !== "";
+        let mapUrl = hasMap ? visit.Google_Maps.toString().trim() : "";
+        
+        let tubesHtml = tubesArray.length ? `<div class="tube-grid">${tubesArray.map(tube => {
+            const info = getTubeDisplayInfo(tube.name);
+            return `<div class="tube-item"><img class="tube-image" src="${info.imageUrl}" loading="lazy" onerror="this.src='https://lh3.googleusercontent.com/d/1MZdwsqJlSHhRbVEUrm_TYv4InUWs5kdV'"><div class="tube-name">${escapeHtml(info.displayName)}</div><div class="tube-count">×${tube.count}</div></div>`;
+        }).join('')}</div>` : '<p>— No tube information —</p>';
+        
+        // Google Maps as a simple clickable link (like other fields)
+        let mapDisplay = '';
+        if (hasMap && mapUrl) {
+            let validUrl = mapUrl.startsWith('http') ? mapUrl : 'https://' + mapUrl;
+            mapDisplay = `<div class="info-item"><strong>Google Maps</strong><div class="map-link"><a href="${validUrl}" target="_blank">${escapeHtml(mapUrl.length > 50 ? mapUrl.substring(0, 50) + '...' : mapUrl)}</a></div></div>`;
+        }
         
         modalDetailsInner.innerHTML = `
-            <div class="detail-section"><h4>👤 Patient Information</h4><div class="info-grid">
-                <div class="info-item"><strong>Name</strong> ${escapeHtml(visit.Patient_Name)}</div>
-                <div class="info-item"><strong>Age/Gender</strong> ${visit.Patient_Age || '—'} / ${visit.Patient_Gender || '—'}</div>
-                <div class="info-item"><strong>Contact</strong> ${escapeHtml(visit.Contact_No || '—')} ${visit.Alternate_No ? `/ ${escapeHtml(visit.Alternate_No)}` : ''}</div>
-                <div class="info-item"><strong>Address</strong> ${escapeHtml(visit.Address || '—')}, ${escapeHtml(visit.Area || '—')}</div>
-                <div class="info-item"><strong>Doctor</strong> ${escapeHtml(visit.Doctor || '—')}</div>
-            </div></div>
-            <div class="detail-section"><h4>📋 Visit Details</h4><div class="info-grid">
-                <div class="info-item"><strong>Visit Date</strong> ${formatDateDMY(visit.Visit_Date)}</div>
-                <div class="info-item"><strong>Visit Time</strong> ${visit.Visit_Time || '—'} ${visit.PP_Time ? `(PP: ${visit.PP_Time})` : ''}</div>
-                <div class="info-item"><strong>Phlebotomist</strong> ${escapeHtml(visit.Phlebotomist || '—')} ${visit.PP_Phlebotomist ? ` / PP: ${escapeHtml(visit.PP_Phlebotomist)}` : ''}</div>
-                <div class="info-item"><strong>Visit Type</strong> ${escapeHtml(visit.Visit_Type || '—')}</div>
-                <div class="info-item"><strong>Pending Payment</strong> ${escapeHtml(visit.Pending_Payment || '$0')}</div>
-                <div class="info-item"><strong>Instructions</strong> ${escapeHtml(visit.Visit_Instruction || 'None')}</div>
-            </div>${hasMap ? `<button class="map-btn" id="openMapBtn">🗺️ Open in Google Maps</button>` : ''}</div>
-            <div class="detail-section"><h4>🔬 Tests Required</h4><div class="tests-list">${testsArray.length ? testsArray.map(t => `<span class="test-tag">${escapeHtml(t)}</span>`).join('') : '<span>— No tests listed —</span>'}</div></div>
-            <div class="detail-section"><h4>📦 Packages & Tests</h4>${packagesArray.length ? packagesArray.map(pkg => `<div class="package-card"><div class="package-name">📌 ${escapeHtml(pkg.name)}</div><div class="tests-list">${pkg.tests.map(t => `<span class="test-tag">${escapeHtml(t)}</span>`).join('')}</div></div>`).join('') : '<p>No packages assigned</p>'}</div>
-            <div class="detail-section"><h4>🧪 Required Test Tubes</h4><div class="tests-list">${tubesArray.length ? tubesArray.map(tube => `<span class="tube-badge">🧴 ${escapeHtml(tube.name)} ×${tube.count}</span>`).join('') : '<span>— No tube info —</span>'}</div></div>
+            <div class="detail-section">
+                <h4>👤 Patient Information</h4>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Patient Name</strong> ${escapeHtml(visit.Patient_Name)}</div>
+                    <div class="info-item"><strong>Age</strong> ${visit.Patient_Age || '—'}</div>
+                    <div class="info-item"><strong>Gender</strong> ${visit.Patient_Gender || '—'}</div>
+                    <div class="info-item"><strong>Contact</strong> ${escapeHtml(visit.Contact_No || '—')}</div>
+                    <div class="info-item"><strong>Alternate</strong> ${escapeHtml(visit.Alternate_No || '—')}</div>
+                    <div class="info-item"><strong>Address</strong> ${escapeHtml(visit.Address || '—')}</div>
+                    <div class="info-item"><strong>Area</strong> ${escapeHtml(visit.Area || '—')}</div>
+                    ${mapDisplay}
+                </div>
+            </div>
+            <div class="detail-section">
+                <h4>📋 Visit Details</h4>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Visit Type</strong> ${escapeHtml(visit.Visit_Type || '—')}</div>
+                    <div class="info-item"><strong>Date</strong> ${formatDateDMY(visit.Visit_Date)}</div>
+                    <div class="info-item"><strong>Time</strong> ${formatTimeTo24Hour(visit.Visit_Time)}</div>
+                    <div class="info-item"><strong>Phlebotomist</strong> ${escapeHtml(visit.Phlebotomist || '—')}</div>
+                    <div class="info-item"><strong>PP Time</strong> ${visit.PP_Time ? formatTimeTo24Hour(visit.PP_Time) : '—'}</div>
+                    <div class="info-item"><strong>PP Phleb</strong> ${escapeHtml(visit.PP_Phlebotomist || '—')}</div>
+                    <div class="info-item"><strong>Doctor</strong> ${escapeHtml(visit.Doctor || '—')}</div>
+                    <div class="info-item"><strong>Payment</strong> ${escapeHtml(visit.Pending_Payment || '$0')}</div>
+                    <div class="info-item"><strong>Instructions</strong> ${escapeHtml(visit.Visit_Instruction || 'None')}</div>
+                </div>
+            </div>
+            <div class="detail-section">
+                <h4>🔬 Tests Required</h4>
+                <div class="tests-list">${testsArray.length ? testsArray.map(t => `<span class="test-tag">${escapeHtml(t)}</span>`).join('') : '<span>— No tests —</span>'}</div>
+            </div>
+            <div class="detail-section">
+                <h4>🧪 Required Test Tubes</h4>
+                ${tubesHtml}
+            </div>
         `;
         modalOverlay.classList.add('active');
-        if(hasMap) setTimeout(() => document.getElementById('openMapBtn')?.addEventListener('click', () => window.open(visit.Google_Maps, '_blank')), 50);
     }
 
     async function init() {
         dateFilterInput.value = getTodayDate();
         const rawData = await fetchDataFromSheet();
-        if (rawData && rawData.length > 0) {
+        if (rawData && rawData.length) {
             masterVisits = expandVisitsWithPP(rawData);
             populatePhlebotomistDropdown();
             applyFilters();
         } else {
-            container.innerHTML = '<div class="error-message">📭 No visit records found. Formula cells may be returning empty values. Check that source sheets have data.</div>';
+            container.innerHTML = '<div class="error-message">📭 No records found. Please add data to Google Sheet.</div>';
             resultCountSpan.innerText = '📋 0 visits';
         }
         dateFilterInput.addEventListener('change', applyFilters);
         phleboFilterSelect.addEventListener('change', applyFilters);
         searchInput.addEventListener('input', applyFilters);
         resetBtn.addEventListener('click', () => { dateFilterInput.value = getTodayDate(); searchInput.value = ''; phleboFilterSelect.value = ''; applyFilters(); });
-        refreshBtn.addEventListener('click', async () => { const newData = await fetchDataFromSheet(); if(newData && newData.length) { masterVisits = expandVisitsWithPP(newData); populatePhlebotomistDropdown(); applyFilters(); } });
+        refreshBtn.addEventListener('click', async () => { const newData = await fetchDataFromSheet(); if(newData?.length) { masterVisits = expandVisitsWithPP(newData); populatePhlebotomistDropdown(); applyFilters(); } });
         closeModalBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
         modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) modalOverlay.classList.remove('active'); });
     }
