@@ -6,6 +6,13 @@ const el = (q) => document.querySelector(q);
 const $ = (q, root = document) => Array.from(root.querySelectorAll(q));
 const fmtINR = (n) => "₹" + (Number(n) || 0).toLocaleString("en-IN");
 
+// Pagination state
+let currentPage = 1;
+const ITEMS_PER_PAGE = 15;
+let showAllEntries = false;
+let currentSearchQuery = "";
+let currentFilterDate = null;
+
 function showToast(msg = "Saved!") {
   const t = el("#toast");
   if (!t) return;
@@ -267,6 +274,8 @@ const F = {
   closeB2BPopup:          () => el("#closeB2BPopup"),
   filterDate:             () => el("#filterDate"),
   clearFilterBtn:         () => el("#clearFilterBtn"),
+  showAllToggle:          () => el("#showAllToggle"),
+  searchPatientInput:     () => el("#searchPatientInput"),
 };
 
 /* ========================= Global state ========================= */
@@ -277,21 +286,62 @@ let tubeCountOverrides    = {};
 let syringeCounts         = { "2ml": 0, "5ml": 0, "10ml": 0 };
 let serverEntriesCache    = [];
 let globallySelectedTests = new Set();
-let currentFilterDate     = null;
 
 function labNumFromId(labId) {
   return parseInt(labId.replace("lab", ""), 10) || 1;
 }
 
-/* ========================= Global Test Selection Management ========================= */
-function updateGlobalTestSet() {
-  globallySelectedTests.clear();
-  for (let i = 1; i <= 4; i++) {
-    const tests = getAllTestsForLab(i);
-    tests.forEach(t => globallySelectedTests.add(t));
-  }
+/* ========================= De-duplication Logic ========================= */
+// Get all tests from a specific lab (including package tests)
+function getAllTestsForLab(labNum) {
+  const labId = `lab${labNum}`;
+  const direct = selectedTestsByLab[labNum] || [];
+  const pkgNames = selectedPackagesByLab[labNum] || [];
+  const fromPkgs = [];
+  pkgNames.forEach(n => {
+    const pkg = (PACKAGES[labId] || []).find(p => p.name === n);
+    if (pkg) fromPkgs.push(...pkg.tests);
+  });
+  return [...new Set([...direct, ...fromPkgs])];
 }
 
+// Get all selected tests across all labs (unique)
+function getAllSelectedTestsAcrossLabs() {
+  const all = [];
+  for (let i = 1; i <= 4; i++) all.push(...getAllTestsForLab(i));
+  return [...new Set(all)];
+}
+
+// Get combined tests list as string
+function getCombinedTestsList() {
+  const allTests = getAllSelectedTestsAcrossLabs();
+  return allTests.sort().join(", ");
+}
+
+// Get all selected package names across all labs (unique)
+function getAllSelectedPackagesAcrossLabs() {
+  const all = [];
+  for (let i = 1; i <= 4; i++) {
+    all.push(...(selectedPackagesByLab[i] || []));
+  }
+  return [...new Set(all)];
+}
+
+// Get all package-included tests across all labs (unique)
+function getAllPackageTestsAcrossLabs() {
+  const all = [];
+  for (let i = 1; i <= 4; i++) {
+    const labId = `lab${i}`;
+    const pkgNames = selectedPackagesByLab[i] || [];
+    pkgNames.forEach(n => {
+      const pkg = (PACKAGES[labId] || []).find(p => p.name === n);
+      if (pkg) all.push(...pkg.tests);
+    });
+  }
+  return [...new Set(all)];
+}
+
+// Check if a test is already selected in ANY lab (individual or package)
 function isTestGloballySelected(testName, currentLabNum) {
   for (let i = 1; i <= 4; i++) {
     if (i !== currentLabNum) {
@@ -304,6 +354,7 @@ function isTestGloballySelected(testName, currentLabNum) {
   return false;
 }
 
+// Remove a test from all other labs (used when selecting individually)
 function removeTestFromOtherLabs(testName, currentLabNum) {
   for (let i = 1; i <= 4; i++) {
     if (i !== currentLabNum) {
@@ -334,50 +385,37 @@ function removeTestFromOtherLabs(testName, currentLabNum) {
   }
 }
 
-/* ========================= Enhanced Tube Calculation ========================= */
-function getAllTestsForLab(labNum) {
-  const labId = `lab${labNum}`;
-  const direct = selectedTestsByLab[labNum] || [];
-  const pkgNames = selectedPackagesByLab[labNum] || [];
-  const fromPkgs = [];
-  pkgNames.forEach(n => {
-    const pkg = (PACKAGES[labId] || []).find(p => p.name === n);
-    if (pkg) fromPkgs.push(...pkg.tests);
-  });
-  return [...new Set([...direct, ...fromPkgs])];
-}
-
-function getAllSelectedTestsAcrossLabs() {
-  const all = [];
-  for (let i = 1; i <= 4; i++) all.push(...getAllTestsForLab(i));
-  return [...new Set(all)];
-}
-
-function getCombinedTestsList() {
-  const allTests = getAllSelectedTestsAcrossLabs();
-  return allTests.sort().join(", ");
-}
-
-function calculateUniqueTubeCountsPerLab(tests) {
-  const tubeSet = new Set();
-  
-  tests.forEach(test => {
-    const tubeTypes = getTubeTypesForTest(test);
-    tubeTypes.forEach(tubeType => tubeSet.add(tubeType));
-  });
-  
-  const tubeCounts = {};
-  tubeSet.forEach(tubeType => {
-    tubeCounts[tubeType] = 1;
-  });
-  
-  if (tests.includes("PP")) {
-    tubeCounts["PP Extra"] = (tubeCounts["PP Extra"] || 0) + 1;
+// Remove conflicting individual tests when a package is selected
+function removeConflictingIndividualTests(pkg, labNum) {
+  const individualTestsToRemove = [];
+  for (const test of pkg.tests) {
+    const testIndex = selectedTestsByLab[labNum].indexOf(test);
+    if (testIndex !== -1) {
+      individualTestsToRemove.push(test);
+    }
   }
   
-  return tubeCounts;
+  individualTestsToRemove.forEach(test => {
+    const testIndex = selectedTestsByLab[labNum].indexOf(test);
+    if (testIndex !== -1) {
+      selectedTestsByLab[labNum].splice(testIndex, 1);
+    }
+  });
+  
+  return individualTestsToRemove;
 }
 
+// Update global test set after changes
+function updateGlobalTestSet() {
+  globallySelectedTests.clear();
+  for (let i = 1; i <= 4; i++) {
+    const tests = getAllTestsForLab(i);
+    tests.forEach(t => globallySelectedTests.add(t));
+  }
+}
+
+/* ========================= Enhanced Tube Calculation (Combined Across Labs) ========================= */
+// Calculate aggregated tube counts across all labs (sum per tube type)
 function calculateAggregatedTubeCounts() {
   const aggregatedCounts = {};
   
@@ -391,6 +429,13 @@ function calculateAggregatedTubeCounts() {
   }
   
   return aggregatedCounts;
+}
+
+// Get combined tube counts as formatted string for sheet submission
+function getCombinedTubeCountsString() {
+  const counts = calculateAggregatedTubeCounts();
+  const entries = Object.entries(counts).filter(([, c]) => c > 0);
+  return entries.map(([tube, count]) => `${tube}: ${count}`).join(", ");
 }
 
 function getAutoTubeCounts() {
@@ -464,7 +509,7 @@ function createStepper(initialValue, minValue, maxValue, onChange) {
   return { container, getValue: () => currentValue, setValue: updateValue };
 }
 
-/* ========================= Tube rendering ========================= */
+/* ========================= Tube rendering (Combined View) ========================= */
 function renderTubes() {
   const container = F.tubeList();
   if (!container) return;
@@ -618,6 +663,7 @@ function addTestWithGlobalCheck(testName, labNum) {
   return true;
 }
 
+/* ========================= Add package with global uniqueness ========================= */
 function addPackageWithGlobalCheck(pkg, labNum) {
   if (selectedPackagesByLab[labNum].includes(pkg.name)) return false;
   
@@ -633,20 +679,11 @@ function addPackageWithGlobalCheck(pkg, labNum) {
     return false;
   }
   
-  const individualTestsToRemove = [];
-  for (const test of pkg.tests) {
-    const testIndex = selectedTestsByLab[labNum].indexOf(test);
-    if (testIndex !== -1) {
-      individualTestsToRemove.push(test);
-    }
+  const removedTests = removeConflictingIndividualTests(pkg, labNum);
+  if (removedTests.length > 0) {
+    const tv = el(`#testsValue${labNum}`);
+    if (tv) tv.value = selectedTestsByLab[labNum].join(", ");
   }
-  
-  individualTestsToRemove.forEach(test => {
-    const testIndex = selectedTestsByLab[labNum].indexOf(test);
-    if (testIndex !== -1) {
-      selectedTestsByLab[labNum].splice(testIndex, 1);
-    }
-  });
   
   selectedPackagesByLab[labNum].push(pkg.name);
   
@@ -688,10 +725,10 @@ function renderSelectedTestsDisplay() {
     div.className = "selected-test-item";
     div.innerHTML = `
       <div class="test-info">
-        <div class="test-name">${test}</div>
+        <div class="test-name">${escapeHtml(test)}</div>
         <div class="test-price">MRP: ${fmtINR(mrp)}</div>
       </div>
-      <button class="remove-test-btn" data-test="${test}" title="Remove test">❌</button>`;
+      <button class="remove-test-btn" data-test="${escapeHtml(test)}" title="Remove test">❌</button>`;
     div.querySelector(".remove-test-btn").addEventListener("click", (e) => {
       e.stopPropagation();
       const testIndex = selectedTestsByLab[labNum].indexOf(test);
@@ -727,12 +764,12 @@ function renderSelectedPackagesDisplay() {
     div.className = "selected-package-item";
     div.innerHTML = `
       <div class="package-header">
-        <div class="package-name">📦 ${pkg.name}</div>
-        <button class="remove-package-btn" data-package="${pkgName}" title="Remove package">❌</button>
+        <div class="package-name">📦 ${escapeHtml(pkg.name)}</div>
+        <button class="remove-package-btn" data-package="${escapeHtml(pkgName)}" title="Remove package">❌</button>
       </div>
       <div class="package-tests-list">
         <strong>Tests included:</strong>
-        <ul>${pkg.tests.map(t => `<li>${t}</li>`).join("")}</ul>
+        <ul>${pkg.tests.map(t => `<li>${escapeHtml(t)}</li>`).join("")}</ul>
       </div>
       <div class="package-price">💰 Package MRP: ${fmtINR(pkg.mrp)}</div>`;
     div.querySelector(".remove-package-btn").addEventListener("click", (e) => {
@@ -761,7 +798,7 @@ function renderPackagesChips(labNum) {
   selectedPackagesByLab[labNum].forEach(pkg => {
     const chip = document.createElement("span");
     chip.className = "chip";
-    chip.innerHTML = `<span>${pkg}</span><button title="Remove" aria-label="Remove">&times;</button>`;
+    chip.innerHTML = `<span>${escapeHtml(pkg)}</span><button title="Remove" aria-label="Remove">&times;</button>`;
     chip.querySelector("button").addEventListener("click", (ev) => {
       ev.stopPropagation();
       const pkgIndex = selectedPackagesByLab[labNum].indexOf(pkg);
@@ -1129,7 +1166,6 @@ function getAllTestsFromEntry(entry) {
   const tests = new Set();
   for (let i = 1; i <= 4; i++) {
     (entry[`tests_lab${i}`] || "").split(",").forEach(t => t.trim() && tests.add(t.trim()));
-    // Handle package data that might be JSON string
     const packagesData = entry[`packages_lab${i}`];
     if (packagesData && packagesData !== "" && packagesData !== "[]") {
       try {
@@ -1142,7 +1178,6 @@ function getAllTestsFromEntry(entry) {
           });
         }
       } catch (e) {
-        // If not JSON, treat as comma-separated package names
         packagesData.split(",").forEach(pkg => {
           const p = (PACKAGES[`lab${i}`] || []).find(x => x.name === pkg.trim());
           if (p) p.tests.forEach(t => tests.add(t));
@@ -1287,7 +1322,7 @@ function generateReportReceivedList() {
     const item = document.createElement("div");
     item.className = "report-test-item";
     const safeid = `report_test_${test.replace(/\s/g, "_")}`;
-    item.innerHTML = `<input type="checkbox" id="${safeid}" data-test="${test}" class="report-checkbox" ${checkedTests[test] ? "checked" : ""}><label for="${safeid}">${test}</label><span class="test-source">Report Received</span>`;
+    item.innerHTML = `<input type="checkbox" id="${safeid}" data-test="${escapeHtml(test)}" class="report-checkbox" ${checkedTests[test] ? "checked" : ""}><label for="${safeid}">${escapeHtml(test)}</label><span class="test-source">Report Received</span>`;
     const cb = item.querySelector("input");
     cb.addEventListener("change", () => {
       cb.checked ? (checkedTests[cb.dataset.test] = true) : delete checkedTests[cb.dataset.test];
@@ -1470,12 +1505,14 @@ function createTypeahead({ inputFn, suggFn, listFn, itemClass }) {
     const items = listFn(searchTerm);
     if (!items.length) { sugg.style.display = "none"; return; }
 
-    sugg.innerHTML = items.map(item => `<div class="${itemClass}">${item}</div>`).join("");
+    sugg.innerHTML = items.map(item => `<div class="${itemClass}">${escapeHtml(item)}</div>`).join("");
     sugg.style.display = "block";
     sugg.querySelectorAll(`.${itemClass}`).forEach(div => {
       div.addEventListener("click", () => {
         if (input) input.value = div.textContent;
         sugg.style.display = "none";
+        const changeEvent = new Event('change', { bubbles: true });
+        input.dispatchEvent(changeEvent);
       });
     });
   }
@@ -1487,6 +1524,16 @@ function createTypeahead({ inputFn, suggFn, listFn, itemClass }) {
   }
 
   return filter;
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
 }
 
 createTypeahead({
@@ -1544,10 +1591,11 @@ $(".tab-btn").forEach(btn => {
   });
 });
 
-/* ========================= Date Filter for In Progress ========================= */
+/* ========================= Date Filter, Search, Toggle, Pagination ========================= */
 function filterInProgressEntries() {
   const filterDate = F.filterDate();
   currentFilterDate = filterDate ? filterDate.value : null;
+  currentPage = 1;
   renderInProgress();
 }
 
@@ -1556,210 +1604,42 @@ function clearDateFilter() {
   if (filterDate) {
     filterDate.value = "";
     currentFilterDate = null;
+    currentPage = 1;
     renderInProgress();
   }
 }
 
-const filterDateEl = F.filterDate();
-const clearFilterBtn = F.clearFilterBtn();
-
-if (filterDateEl) {
-  filterDateEl.addEventListener("change", filterInProgressEntries);
+function handleSearch() {
+  const searchInput = F.searchPatientInput();
+  currentSearchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  currentPage = 1;
+  renderInProgress();
 }
 
-if (clearFilterBtn) {
-  clearFilterBtn.addEventListener("click", clearDateFilter);
+function handleToggleChange() {
+  const toggle = F.showAllToggle();
+  showAllEntries = toggle ? toggle.checked : false;
+  currentPage = 1;
+  renderInProgress();
 }
 
-/* ========================= Multiselect – Tests ========================= */
-function getAlreadySelectedTestsInOtherLabs(currentLabNum) {
-  const set = new Set();
-  for (let i = 1; i <= 4; i++) if (i !== currentLabNum) getAllTestsForLab(i).forEach(t => set.add(t));
-  return set;
-}
-
-function createMultiselectForLab(labNum) {
-  const testsSelect = el(`#testsSelect${labNum}`);
-  const chips = el(`#chips${labNum}`);
-  const msInput = el(`#msInput${labNum}`);
-  const msPopup = el(`#msPopup${labNum}`);
-  const msList = el(`#msList${labNum}`);
-  const msEmpty = el(`#msEmpty${labNum}`);
-  const testsValue = el(`#testsValue${labNum}`);
-  if (!testsSelect || !chips || !msInput || !msPopup || !msList || !msEmpty || !testsValue) return;
-
-  function addTest(t) {
-    if (!t || selectedTestsByLab[labNum].includes(t)) return;
-    
-    if (addTestWithGlobalCheck(t, labNum)) {
-      msInput.value = "";
-      syncTests(true);
-      setTimeout(() => { msInput.focus(); filterList(""); }, 220);
-      updateAllCalculations();
-    }
-  }
-
-  function renderChips() {
-    chips.innerHTML = "";
-    chips.appendChild(msInput);
-    testsValue.value = selectedTestsByLab[labNum].join(", ");
-  }
-
-  const openPopup = () => { if (msPopup.hidden) { msPopup.hidden = false; testsSelect.setAttribute("aria-expanded", "true"); } filterList(msInput.value.trim()); };
-  const closePopup = () => { if (!msPopup.hidden) { msPopup.hidden = true; testsSelect.setAttribute("aria-expanded", "false"); } };
-
-  function filterList(q) {
-    const excluded = new Set([...selectedTestsByLab[labNum], ...getAlreadySelectedTestsInOtherLabs(labNum)]);
-    const testsList = TESTS_DATA[`lab${labNum}`] || [];
-    const items = testsList.filter(t => t.name.toLowerCase().includes((q || "").toLowerCase()) && !excluded.has(t.name));
-    msList.innerHTML = "";
-    msEmpty.hidden = !!items.length;
-    items.forEach(t => {
-      const li = document.createElement("li");
-      li.className = "ms-item";
-      li.innerHTML = `<span>${t.name}</span><span class="ms-item-price">${fmtINR(t.mrp)}</span>`;
-      li.addEventListener("pointerdown", ev => { if (ev.pointerType === "mouse" && ev.button === 0) { ev.preventDefault(); ev.stopPropagation(); addTest(t.name); } });
-      li.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); addTest(t.name); });
-      msList.appendChild(li);
+let searchDebounceTimer;
+function setupSearchDebounce() {
+  const searchInput = F.searchPatientInput();
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(handleSearch, 300);
     });
   }
+}
 
-  function syncTests(keepOpen = false) {
-    renderChips();
-    filterList(msInput.value.trim());
-    if (keepOpen) openPopup(); else if (!msInput.value.trim()) closePopup();
-  }
-
-  testsSelect.addEventListener("pointerdown", () => { msInput.focus(); openPopup(); });
-  msInput.addEventListener("focus", openPopup);
-  msInput.addEventListener("input", (e) => { openPopup(); filterList(e.target.value); });
-  msInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); const first = msList.querySelector(".ms-item"); if (first) addTest(first.querySelector("span:first-child")?.textContent.trim()); return; }
-    if (e.key === "Backspace" && !msInput.value && selectedTestsByLab[labNum].length) {
-      selectedTestsByLab[labNum].pop();
-      syncTests(true);
-      setTimeout(() => { msInput.focus(); filterList(""); }, 220);
-      updateAllCalculations();
-    }
-  });
-  document.addEventListener("click", (e) => { if (!testsSelect.contains(e.target)) closePopup(); });
-  syncTests(false);
+function getFilteredEntries() {
+  let items = [...serverEntriesCache];
   
-  window[`filterList${labNum}`] = filterList;
-}
-
-function createPackagesMultiselectForLab(labNum) {
-  const packagesSelect = el(`#packagesSelect${labNum}`);
-  const packagesChips = el(`#packagesChips${labNum}`);
-  const packagesInput = el(`#packagesInput${labNum}`);
-  const packagesPopup = el(`#packagesPopup${labNum}`);
-  const pkgList = el(`#packagesList${labNum}`);
-  const packagesEmpty = el(`#packagesEmpty${labNum}`);
-  const packagesValue = el(`#packagesValue${labNum}`);
-  if (!packagesSelect || !packagesChips || !packagesInput || !packagesPopup || !pkgList || !packagesEmpty || !packagesValue) return;
-
-  const available = PACKAGES[`lab${labNum}`] || [];
-
-  function addPackage(pkg) {
-    if (!pkg || selectedPackagesByLab[labNum].includes(pkg.name)) return;
-    
-    if (addPackageWithGlobalCheck(pkg, labNum)) {
-      packagesInput.value = "";
-      syncPackages(true);
-      setTimeout(() => { packagesInput.focus(); filterPkgList(""); }, 220);
-      updateAllCalculations();
-    }
+  if (!showAllEntries) {
+    items = items.filter(e => getCompletionPercentage(e) < 100);
   }
-
-  function renderChipsLocal() {
-    packagesChips.innerHTML = "";
-    packagesChips.appendChild(packagesInput);
-    packagesValue.value = selectedPackagesByLab[labNum].join(", ");
-  }
-
-  const openPkgPopup = () => { if (packagesPopup.hidden) { packagesPopup.hidden = false; packagesSelect.setAttribute("aria-expanded", "true"); } filterPkgList(packagesInput.value.trim()); };
-  const closePkgPopup = () => { if (!packagesPopup.hidden) { packagesPopup.hidden = true; packagesSelect.setAttribute("aria-expanded", "false"); } };
-
-  function filterPkgList(q) {
-    const activeTests = getAllSelectedTestsAcrossLabs();
-    const items = available.filter(p =>
-      p.name.toLowerCase().includes((q || "").toLowerCase()) &&
-      !selectedPackagesByLab[labNum].includes(p.name) &&
-      !p.tests.some(t => activeTests.includes(t))
-    );
-    pkgList.innerHTML = "";
-    packagesEmpty.hidden = !!items.length;
-    items.forEach(p => {
-      const li = document.createElement("li");
-      li.className = "ms-item";
-      li.innerHTML = `<span>${p.name}</span><span class="ms-item-price">${fmtINR(p.mrp)}</span>`;
-      li.addEventListener("pointerdown", ev => { if (ev.pointerType === "mouse" && ev.button === 0) { ev.preventDefault(); ev.stopPropagation(); addPackage(p); } });
-      li.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); addPackage(p); });
-      pkgList.appendChild(li);
-    });
-  }
-
-  function syncPackages(keepOpen = false) {
-    renderChipsLocal();
-    filterPkgList(packagesInput.value.trim());
-    if (keepOpen) openPkgPopup(); else if (!packagesInput.value.trim()) closePkgPopup();
-  }
-
-  packagesSelect.addEventListener("pointerdown", () => { packagesInput.focus(); openPkgPopup(); });
-  packagesInput.addEventListener("focus", openPkgPopup);
-  packagesInput.addEventListener("input", (e) => { openPkgPopup(); filterPkgList(e.target.value); });
-  packagesInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const first = pkgList.querySelector(".ms-item");
-      if (first) { const name = first.querySelector("span:first-child")?.textContent; const p = available.find(x => x.name === name); if (p) addPackage(p); }
-    }
-  });
-  document.addEventListener("click", (e) => { if (!packagesSelect.contains(e.target)) closePkgPopup(); });
-  syncPackages(false);
-}
-
-for (let i = 1; i <= 4; i++) {
-  createMultiselectForLab(i);
-  createPackagesMultiselectForLab(i);
-}
-
-/* ========================= Lab panel selection ========================= */
-const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel") };
-
-function showLabPanel(labId) {
-  Object.values(labPanels).forEach(p => { if (p) p.style.display = "none"; });
-  if (labPanels[labId]) labPanels[labId].style.display = "block";
-  currentSelectedLab = labId;
-  updateAllCalculations();
-}
-
-const plEl = F.processingLab();
-if (plEl) {
-  plEl.addEventListener("change", (e) => { if (e.target.value) showLabPanel(e.target.value); });
-  plEl.value = "lab1";
-  showLabPanel("lab1");
-}
-
-/* ========================= Server list fetch ========================= */
-async function fetchServerList() {
-  try {
-    const res = await fetch(SCRIPT_URL + "?action=list", { method: "GET" });
-    if (!res.ok) throw new Error("Status " + res.status);
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      serverEntriesCache = data.filter(e => e && e.id);
-    }
-  } catch (e) { console.error("fetchServerList:", e); }
-}
-
-/* ========================= In-progress cards ========================= */
-function renderInProgress() {
-  const listEl = F.inProgressList();
-  const emptyEl = F.inProgressEmpty();
-  if (!listEl || !emptyEl) return;
-
-  let items = serverEntriesCache.filter(e => getCompletionPercentage(e) < 100);
   
   if (currentFilterDate) {
     items = items.filter(entry => {
@@ -1769,19 +1649,142 @@ function renderInProgress() {
     });
   }
   
-  items = sortEntriesByDateAndTime(items);
+  if (currentSearchQuery) {
+    items = items.filter(entry => {
+      const patientName = (entry.patient_name || "").toLowerCase();
+      return patientName.includes(currentSearchQuery);
+    });
+  }
+  
+  return sortEntriesByDateAndTime(items);
+}
+
+function renderPagination(totalItems) {
+  const paginationContainer = el("#paginationControls");
+  if (!paginationContainer) return;
+  
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  
+  if (totalPages <= 1) {
+    paginationContainer.style.display = "none";
+    return;
+  }
+  
+  paginationContainer.style.display = "flex";
+  paginationContainer.innerHTML = "";
+  
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "← Previous";
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderInProgress();
+    }
+  });
+  paginationContainer.appendChild(prevBtn);
+  
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, currentPage + 2);
+  
+  if (startPage > 1) {
+    const firstPageBtn = document.createElement("button");
+    firstPageBtn.textContent = "1";
+    firstPageBtn.classList.add("page-number");
+    firstPageBtn.addEventListener("click", () => {
+      currentPage = 1;
+      renderInProgress();
+    });
+    paginationContainer.appendChild(firstPageBtn);
+    
+    if (startPage > 2) {
+      const dots = document.createElement("span");
+      dots.textContent = "...";
+      dots.className = "page-info";
+      paginationContainer.appendChild(dots);
+    }
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = document.createElement("button");
+    pageBtn.textContent = i;
+    pageBtn.classList.add("page-number");
+    if (i === currentPage) {
+      pageBtn.style.background = "var(--primary)";
+      pageBtn.style.color = "white";
+      pageBtn.style.borderColor = "var(--primary)";
+    }
+    pageBtn.addEventListener("click", () => {
+      currentPage = i;
+      renderInProgress();
+    });
+    paginationContainer.appendChild(pageBtn);
+  }
+  
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const dots = document.createElement("span");
+      dots.textContent = "...";
+      dots.className = "page-info";
+      paginationContainer.appendChild(dots);
+    }
+    const lastPageBtn = document.createElement("button");
+    lastPageBtn.textContent = totalPages;
+    lastPageBtn.classList.add("page-number");
+    lastPageBtn.addEventListener("click", () => {
+      currentPage = totalPages;
+      renderInProgress();
+    });
+    paginationContainer.appendChild(lastPageBtn);
+  }
+  
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "Next →";
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderInProgress();
+    }
+  });
+  paginationContainer.appendChild(nextBtn);
+  
+  const pageInfo = document.createElement("span");
+  pageInfo.className = "page-info";
+  const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+  pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems}`;
+  paginationContainer.appendChild(pageInfo);
+}
+
+/* ========================= In-progress cards with pagination ========================= */
+function renderInProgress() {
+  const listEl = F.inProgressList();
+  const emptyEl = F.inProgressEmpty();
+  if (!listEl || !emptyEl) return;
+
+  const filteredItems = getFilteredEntries();
+  const totalItems = filteredItems.length;
+  
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
   
   listEl.innerHTML = "";
 
-  if (!items.length) { 
+  if (!paginatedItems.length) { 
     emptyEl.style.display = "block";
-    const filterMsg = currentFilterDate ? `No in-progress entries found for ${currentFilterDate}.` : "No in-progress items right now.";
+    let filterMsg = "No entries found.";
+    if (currentSearchQuery) filterMsg = `No entries found matching "${currentSearchQuery}".`;
+    else if (currentFilterDate) filterMsg = `No entries found for ${currentFilterDate}.`;
+    else if (!showAllEntries) filterMsg = "No in-progress items right now.";
     emptyEl.textContent = filterMsg;
+    renderPagination(0);
     return; 
   }
   emptyEl.style.display = "none";
 
-  items.forEach(entry => {
+  paginatedItems.forEach(entry => {
     const pct = getCompletionPercentage(entry);
     const currentStage = getCurrentStage(entry);
     const displayDate = entry.date ? formatDisplayDate(entry.date) : "-";
@@ -1818,16 +1821,8 @@ function renderInProgress() {
     row.querySelector("[data-del]").addEventListener("click", (ev) => deleteEntry(entry.id, ev.currentTarget));
     listEl.appendChild(row);
   });
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
+  
+  renderPagination(totalItems);
 }
 
 function setDeleting(btn, on) {
@@ -1921,7 +1916,7 @@ function fullFormReset() {
   setDefaults();
 }
 
-/* ========================= Edit / Load for edit (FIXED: Proper package loading) ========================= */
+/* ========================= Edit / Load for edit ========================= */
 function loadForEdit(entry) {
   if (!entry) return;
 
@@ -1949,32 +1944,25 @@ function loadForEdit(entry) {
   setVal(F.weight, entry.weight);
   setVal(F.clinicalHistory, entry.clinical_history);
 
-  // FIX: Properly load packages for each lab
   for (let i = 1; i <= 4; i++) {
-    // Load individual tests
     selectedTestsByLab[i] = (entry[`tests_lab${i}`] || "").split(",").map(s => s.trim()).filter(Boolean);
     
-    // Load packages - handle both JSON string and comma-separated format
     const packagesData = entry[`packages_lab${i}`];
     if (packagesData && packagesData !== "" && packagesData !== "[]") {
       try {
-        // Try to parse as JSON first (new format)
         const parsed = JSON.parse(packagesData);
         if (Array.isArray(parsed)) {
-          // Extract package names from JSON array
           selectedPackagesByLab[i] = parsed.map(pkg => pkg.name).filter(Boolean);
         } else {
           selectedPackagesByLab[i] = [];
         }
       } catch (e) {
-        // If not JSON, treat as comma-separated string (old format)
         selectedPackagesByLab[i] = packagesData.split(",").map(s => s.trim()).filter(Boolean);
       }
     } else {
       selectedPackagesByLab[i] = [];
     }
     
-    // Clear and re-render package chips
     const mi = el(`#msInput${i}`); if (mi) mi.value = "";
     const tv = el(`#testsValue${i}`); if (tv) tv.value = selectedTestsByLab[i].join(", ");
     const pi = el(`#packagesInput${i}`); if (pi) pi.value = "";
@@ -2132,11 +2120,27 @@ if (formEl) {
 
     const data = new FormData(formEl);
     
+    // ========== 1. Lab-wise Tests & Packages (Separate Columns) ==========
     for (let i = 1; i <= 4; i++) {
-      data.set(`tests_lab${i}`, selectedTestsByLab[i].join(", "));
+      // Individual tests for this lab
+      const individualTests = selectedTestsByLab[i] || [];
       
+      // Package names for this lab
+      const packageNames = selectedPackagesByLab[i] || [];
+      
+      // Combine tests and packages for lab-wise column
+      const labTestsAndPackages = [...individualTests, ...packageNames];
+      data.set(`lab${i}_tests_packages`, labTestsAndPackages.join(", "));
+      
+      // Also keep individual test list for backward compatibility
+      data.set(`tests_lab${i}`, individualTests.join(", "));
+      
+      // Package names only (comma-separated)
+      data.set(`packages_lab${i}_names`, packageNames.join(", "));
+      
+      // Full package data with test lists (for sheet processing)
       const packagesData = [];
-      selectedPackagesByLab[i].forEach(pkgName => {
+      packageNames.forEach(pkgName => {
         const pkg = getPackage(`lab${i}`, pkgName);
         if (pkg) {
           packagesData.push({
@@ -2148,21 +2152,42 @@ if (formEl) {
       
       if (packagesData.length === 0) {
         data.set(`packages_lab${i}`, "");
-        data.set(`packages_lab${i}_names`, "");
       } else {
         data.set(`packages_lab${i}`, JSON.stringify(packagesData));
-        data.set(`packages_lab${i}_names`, selectedPackagesByLab[i].join(", "));
       }
     }
     
-    const combinedTestsList = getCombinedTestsList();
-    data.set("all_tests_combined", combinedTestsList);
+    // ========== 2. Overall Combined Data (All Labs) ==========
+    // All individual tests across all labs
+    const allIndividualTests = [];
+    for (let i = 1; i <= 4; i++) {
+      allIndividualTests.push(...(selectedTestsByLab[i] || []));
+    }
+    data.set("all_individual_tests", [...new Set(allIndividualTests)].join(", "));
     
-    const finalB2BPrice = calculateTotalB2B();
-    data.set("total_b2b_price", finalB2BPrice);
+    // All package names across all labs
+    const allPackageNames = getAllSelectedPackagesAcrossLabs();
+    data.set("all_packages", allPackageNames.join(", "));
     
+    // All tests included in packages across all labs
+    const allPackageTests = getAllPackageTestsAcrossLabs();
+    data.set("all_package_tests", allPackageTests.join(", "));
+    
+    // Combined unique tests (individual + package tests)
+    const combinedTestsList = getAllSelectedTestsAcrossLabs();
+    data.set("all_tests_combined", combinedTestsList.join(", "));
+    
+    // ========== 3. Combined Test Tubes Data ==========
+    const combinedTubeCounts = getCombinedTubeCountsString();
+    data.set("combined_tubes", combinedTubeCounts);
+    
+    // Also store tube overrides if any
+    data.set("tube_overrides", JSON.stringify(tubeCountOverrides));
+    
+    // ========== 4. Other Form Data ==========
     data.set("processing_lab", currentSelectedLab);
     data.set("total_mrp", calculateTotalMRP());
+    data.set("total_b2b_price", calculateTotalB2B());
 
     const crEl = F.costRaw(); if (crEl) data.set("cost", crEl.value);
     const discEl = F.discount(); if (discEl) data.set("discount", discEl.value);
@@ -2185,7 +2210,6 @@ if (formEl) {
     data.set("phlebotomist", (F.phlebotomistInput()?.value || ""));
     data.set("pp_phlebotomist", (F.ppPhlebotomistInput()?.value || ""));
     data.set("visit_instruction", (F.visitInstruction()?.value || ""));
-    data.set("tube_overrides", JSON.stringify(tubeCountOverrides));
     
     const userName = getCurrentUserName();
     data.set("created_by", userName);
@@ -2380,10 +2404,216 @@ function selectPatient(p) {
   renderSyringes();
 }
 
+/* ========================= Setup Event Listeners ========================= */
+function setupEventListeners() {
+  const toggle = F.showAllToggle();
+  if (toggle) {
+    toggle.addEventListener("change", handleToggleChange);
+  }
+  
+  setupSearchDebounce();
+  
+  const filterDateEl = F.filterDate();
+  const clearFilterBtn = F.clearFilterBtn();
+  
+  if (filterDateEl) {
+    filterDateEl.addEventListener("change", filterInProgressEntries);
+  }
+  
+  if (clearFilterBtn) {
+    clearFilterBtn.addEventListener("click", clearDateFilter);
+  }
+}
+
+/* ========================= Multiselect – Tests ========================= */
+function getAlreadySelectedTestsInOtherLabs(currentLabNum) {
+  const set = new Set();
+  for (let i = 1; i <= 4; i++) if (i !== currentLabNum) getAllTestsForLab(i).forEach(t => set.add(t));
+  return set;
+}
+
+function createMultiselectForLab(labNum) {
+  const testsSelect = el(`#testsSelect${labNum}`);
+  const chips = el(`#chips${labNum}`);
+  const msInput = el(`#msInput${labNum}`);
+  const msPopup = el(`#msPopup${labNum}`);
+  const msList = el(`#msList${labNum}`);
+  const msEmpty = el(`#msEmpty${labNum}`);
+  const testsValue = el(`#testsValue${labNum}`);
+  if (!testsSelect || !chips || !msInput || !msPopup || !msList || !msEmpty || !testsValue) return;
+
+  function addTest(t) {
+    if (!t || selectedTestsByLab[labNum].includes(t)) return;
+    
+    if (addTestWithGlobalCheck(t, labNum)) {
+      msInput.value = "";
+      syncTests(true);
+      setTimeout(() => { msInput.focus(); filterList(""); }, 220);
+      updateAllCalculations();
+    }
+  }
+
+  function renderChips() {
+    chips.innerHTML = "";
+    chips.appendChild(msInput);
+    testsValue.value = selectedTestsByLab[labNum].join(", ");
+  }
+
+  const openPopup = () => { if (msPopup.hidden) { msPopup.hidden = false; testsSelect.setAttribute("aria-expanded", "true"); } filterList(msInput.value.trim()); };
+  const closePopup = () => { if (!msPopup.hidden) { msPopup.hidden = true; testsSelect.setAttribute("aria-expanded", "false"); } };
+
+  function filterList(q) {
+    const excluded = new Set([...selectedTestsByLab[labNum], ...getAlreadySelectedTestsInOtherLabs(labNum)]);
+    const testsList = TESTS_DATA[`lab${labNum}`] || [];
+    const items = testsList.filter(t => t.name.toLowerCase().includes((q || "").toLowerCase()) && !excluded.has(t.name));
+    msList.innerHTML = "";
+    msEmpty.hidden = !!items.length;
+    items.forEach(t => {
+      const li = document.createElement("li");
+      li.className = "ms-item";
+      li.innerHTML = `<span>${escapeHtml(t.name)}</span><span class="ms-item-price">${fmtINR(t.mrp)}</span>`;
+      li.addEventListener("pointerdown", ev => { if (ev.pointerType === "mouse" && ev.button === 0) { ev.preventDefault(); ev.stopPropagation(); addTest(t.name); } });
+      li.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); addTest(t.name); });
+      msList.appendChild(li);
+    });
+  }
+
+  function syncTests(keepOpen = false) {
+    renderChips();
+    filterList(msInput.value.trim());
+    if (keepOpen) openPopup(); else if (!msInput.value.trim()) closePopup();
+  }
+
+  testsSelect.addEventListener("pointerdown", () => { msInput.focus(); openPopup(); });
+  msInput.addEventListener("focus", openPopup);
+  msInput.addEventListener("input", (e) => { openPopup(); filterList(e.target.value); });
+  msInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); const first = msList.querySelector(".ms-item"); if (first) addTest(first.querySelector("span:first-child")?.textContent.trim()); return; }
+    if (e.key === "Backspace" && !msInput.value && selectedTestsByLab[labNum].length) {
+      selectedTestsByLab[labNum].pop();
+      syncTests(true);
+      setTimeout(() => { msInput.focus(); filterList(""); }, 220);
+      updateAllCalculations();
+    }
+  });
+  document.addEventListener("click", (e) => { if (!testsSelect.contains(e.target)) closePopup(); });
+  syncTests(false);
+  
+  window[`filterList${labNum}`] = filterList;
+}
+
+function createPackagesMultiselectForLab(labNum) {
+  const packagesSelect = el(`#packagesSelect${labNum}`);
+  const packagesChips = el(`#packagesChips${labNum}`);
+  const packagesInput = el(`#packagesInput${labNum}`);
+  const packagesPopup = el(`#packagesPopup${labNum}`);
+  const pkgList = el(`#packagesList${labNum}`);
+  const packagesEmpty = el(`#packagesEmpty${labNum}`);
+  const packagesValue = el(`#packagesValue${labNum}`);
+  if (!packagesSelect || !packagesChips || !packagesInput || !packagesPopup || !pkgList || !packagesEmpty || !packagesValue) return;
+
+  const available = PACKAGES[`lab${labNum}`] || [];
+
+  function addPackage(pkg) {
+    if (!pkg || selectedPackagesByLab[labNum].includes(pkg.name)) return;
+    
+    if (addPackageWithGlobalCheck(pkg, labNum)) {
+      packagesInput.value = "";
+      syncPackages(true);
+      setTimeout(() => { packagesInput.focus(); filterPkgList(""); }, 220);
+      updateAllCalculations();
+    }
+  }
+
+  function renderChipsLocal() {
+    packagesChips.innerHTML = "";
+    packagesChips.appendChild(packagesInput);
+    packagesValue.value = selectedPackagesByLab[labNum].join(", ");
+  }
+
+  const openPkgPopup = () => { if (packagesPopup.hidden) { packagesPopup.hidden = false; packagesSelect.setAttribute("aria-expanded", "true"); } filterPkgList(packagesInput.value.trim()); };
+  const closePkgPopup = () => { if (!packagesPopup.hidden) { packagesPopup.hidden = true; packagesSelect.setAttribute("aria-expanded", "false"); } };
+
+  function filterPkgList(q) {
+    const activeTests = getAllSelectedTestsAcrossLabs();
+    const items = available.filter(p =>
+      p.name.toLowerCase().includes((q || "").toLowerCase()) &&
+      !selectedPackagesByLab[labNum].includes(p.name) &&
+      !p.tests.some(t => activeTests.includes(t))
+    );
+    pkgList.innerHTML = "";
+    packagesEmpty.hidden = !!items.length;
+    items.forEach(p => {
+      const li = document.createElement("li");
+      li.className = "ms-item";
+      li.innerHTML = `<span>${escapeHtml(p.name)}</span><span class="ms-item-price">${fmtINR(p.mrp)}</span>`;
+      li.addEventListener("pointerdown", ev => { if (ev.pointerType === "mouse" && ev.button === 0) { ev.preventDefault(); ev.stopPropagation(); addPackage(p); } });
+      li.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); addPackage(p); });
+      pkgList.appendChild(li);
+    });
+  }
+
+  function syncPackages(keepOpen = false) {
+    renderChipsLocal();
+    filterPkgList(packagesInput.value.trim());
+    if (keepOpen) openPkgPopup(); else if (!packagesInput.value.trim()) closePkgPopup();
+  }
+
+  packagesSelect.addEventListener("pointerdown", () => { packagesInput.focus(); openPkgPopup(); });
+  packagesInput.addEventListener("focus", openPkgPopup);
+  packagesInput.addEventListener("input", (e) => { openPkgPopup(); filterPkgList(e.target.value); });
+  packagesInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const first = pkgList.querySelector(".ms-item");
+      if (first) { const name = first.querySelector("span:first-child")?.textContent; const p = available.find(x => x.name === name); if (p) addPackage(p); }
+    }
+  });
+  document.addEventListener("click", (e) => { if (!packagesSelect.contains(e.target)) closePkgPopup(); });
+  syncPackages(false);
+}
+
+for (let i = 1; i <= 4; i++) {
+  createMultiselectForLab(i);
+  createPackagesMultiselectForLab(i);
+}
+
+/* ========================= Lab panel selection ========================= */
+const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel") };
+
+function showLabPanel(labId) {
+  Object.values(labPanels).forEach(p => { if (p) p.style.display = "none"; });
+  if (labPanels[labId]) labPanels[labId].style.display = "block";
+  currentSelectedLab = labId;
+  updateAllCalculations();
+}
+
+const plEl = F.processingLab();
+if (plEl) {
+  plEl.addEventListener("change", (e) => { if (e.target.value) showLabPanel(e.target.value); });
+  plEl.value = "lab1";
+  showLabPanel("lab1");
+}
+
+/* ========================= Server list fetch ========================= */
+async function fetchServerList() {
+  try {
+    const res = await fetch(SCRIPT_URL + "?action=list", { method: "GET" });
+    if (!res.ok) throw new Error("Status " + res.status);
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      serverEntriesCache = data.filter(e => e && e.id);
+    }
+  } catch (e) { console.error("fetchServerList:", e); }
+}
+
 /* ========================= Boot ========================= */
 initAccordions();
 setDefaults();
-fetchServerList().then(() => renderInProgress());
+fetchServerList().then(() => {
+  renderInProgress();
+  setupEventListeners();
+});
 
 const resetTubeBtn = F.resetTubeBtn();
 if (resetTubeBtn) {
