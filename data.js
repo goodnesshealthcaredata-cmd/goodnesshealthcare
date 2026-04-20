@@ -75,6 +75,16 @@ const TUBE_TYPES = {
     displayName: "Plain Tube",
     imageUrl: "https://lh3.googleusercontent.com/d/1O9o_bmtUvZ3cuiOqfRog1wFzYY4UxRkt"
   },
+  "Citrate": {
+    name: "Citrate Tube (Blue)",
+    displayName: "Citrate Tube",
+    imageUrl: "https://lh3.googleusercontent.com/d/1_jb-6BP-Dr5W3Aj8DFc6faCaX6tRhC3A"
+  },
+  "Serum": {
+    name: "Serum Tube (Yellow)",
+    displayName: "Serum Tube",
+    imageUrl: "https://lh3.googleusercontent.com/d/1-9Fvi0XRk92RSAas4uHubJrhvu569UWd"
+  },
   "Urine": {
     name: "Urine Container",
     displayName: "Urine Container",
