@@ -48,7 +48,6 @@ body {
   min-height: 100vh;
 }
 
-
 .wrap {
   max-width: 1400px;
   margin: 0 auto;
@@ -174,6 +173,20 @@ body {
   }
 }
 
+/* Control Bar - New styles for toggle, search, pagination */
+.control-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, rgba(9, 99, 126, 0.03) 0%, rgba(8, 131, 149, 0.03) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(122, 178, 178, 0.2);
+}
+
 .filter-controls {
   display: flex;
   gap: 0.75rem;
@@ -201,6 +214,128 @@ body {
   outline: none;
   border-color: var(--secondary);
   box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.1);
+}
+
+/* Toggle Switch */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-white);
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent);
+}
+
+.toggle-container span {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-medium);
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-switch input[type="checkbox"] {
+  width: 2.5rem;
+  height: 1.25rem;
+  appearance: none;
+  background: var(--accent);
+  border-radius: 9999px;
+  position: relative;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toggle-switch input[type="checkbox"]:checked {
+  background: var(--secondary);
+}
+
+.toggle-switch input[type="checkbox"]::before {
+  content: '';
+  position: absolute;
+  width: 0.875rem;
+  height: 0.875rem;
+  background: white;
+  border-radius: 50%;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  transition: transform 0.3s ease;
+}
+
+.toggle-switch input[type="checkbox"]:checked::before {
+  transform: translateX(1.25rem);
+}
+
+/* Search Bar */
+.search-container {
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.search-container input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: var(--transition);
+  background: var(--bg-white);
+}
+
+.search-container input:focus {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(8, 131, 149, 0.1);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: var(--bg-white);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-medium);
+}
+
+.pagination button:hover:not(:disabled) {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--primary);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination .page-number {
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+.pagination .page-info {
+  font-size: 0.813rem;
+  color: var(--text-medium);
+  margin: 0 0.5rem;
 }
 
 .clear-filter-btn {
@@ -395,6 +530,63 @@ body {
   border-top-color: rgba(122, 178, 178, 0.2);
 }
 
+/* Doctor/Care Of Row */
+.doctor-careof-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  padding-bottom: 6rem;
+  border-top: 2px solid rgba(122, 178, 178, 0.2);
+  position: relative;
+  z-index: 5;
+}
+
+@media (min-width: 768px) {
+  .doctor-careof-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+}
+
+/* Searchable dropdown */
+.searchable-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-white);
+  border: 1px solid rgba(122, 178, 178, 0.3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+}
+
+.dropdown-suggestions div {
+  padding: 0.625rem 0.875rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: var(--transition);
+  border-bottom: 1px solid rgba(122, 178, 178, 0.1);
+}
+
+.dropdown-suggestions div:last-child {
+  border-bottom: none;
+}
+
+.dropdown-suggestions div:hover {
+  background: linear-gradient(135deg, rgba(9, 99, 126, 0.05) 0%, rgba(8, 131, 149, 0.05) 100%);
+}
+
 /* Multiselect */
 .multiselect {
   position: relative;
@@ -504,8 +696,7 @@ body {
 
 /* Suggestions */
 .suggestions,
-.area-suggestions,
-.dropdown-suggestions {
+.area-suggestions {
   position: absolute;
   background: var(--bg-white);
   border: 1px solid rgba(122, 178, 178, 0.2);
@@ -518,11 +709,7 @@ body {
 }
 
 .suggestions div,
-.area-suggestion-item,
-.doctor-suggestion-item,
-.careof-suggestion-item,
-.phlebotomist-suggestion-item,
-.pp-phlebotomist-suggestion-item {
+.area-suggestion-item {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -530,11 +717,7 @@ body {
 }
 
 .suggestions div:hover,
-.area-suggestion-item:hover,
-.doctor-suggestion-item:hover,
-.careof-suggestion-item:hover,
-.phlebotomist-suggestion-item:hover,
-.pp-phlebotomist-suggestion-item:hover {
+.area-suggestion-item:hover {
   background: linear-gradient(135deg, rgba(9, 99, 126, 0.05) 0%, rgba(8, 131, 149, 0.05) 100%);
 }
 
@@ -542,24 +725,8 @@ body {
   position: relative;
 }
 
-.area-search-container,
-.searchable-dropdown {
+.area-search-container {
   position: relative;
-}
-
-/* Two-column layout for doctor and care of */
-.doctor-careof-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-@media (min-width: 768px) {
-  .doctor-careof-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
-  }
 }
 
 /* Selected Packages Styling */
@@ -660,7 +827,7 @@ body {
   color: var(--text-light);
 }
 
-/* Test tube section spacing */
+/* Test tube section */
 .tube-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
@@ -674,7 +841,6 @@ body {
   color: var(--primary);
 }
 
-/* Grid layout for tubes and syringes */
 .tubes-grid,
 .syringes-grid {
   display: grid;
@@ -697,7 +863,6 @@ body {
   }
 }
 
-/* Enhanced Tube and Syringe Cards */
 .tube-card,
 .syringe-card {
   display: flex;
@@ -766,7 +931,6 @@ body {
   margin-top: 0.5rem;
 }
 
-/* Stepper Control */
 .stepper-control {
   display: flex;
   align-items: center;
@@ -810,7 +974,6 @@ body {
   color: var(--primary);
 }
 
-/* Syringe section spacing */
 .syringe-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
@@ -832,50 +995,6 @@ body {
 .reset-tube-btn:hover {
   background: var(--accent-light);
   border-color: var(--accent);
-}
-
-/* Toggle switch */
-.toggle-switch {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.toggle-switch input[type="checkbox"] {
-  width: 2.5rem;
-  height: 1.25rem;
-  appearance: none;
-  background: var(--accent);
-  border-radius: 9999px;
-  position: relative;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.toggle-switch input[type="checkbox"]:checked {
-  background: var(--secondary);
-}
-
-.toggle-switch input[type="checkbox"]::before {
-  content: '';
-  position: absolute;
-  width: 0.875rem;
-  height: 0.875rem;
-  background: white;
-  border-radius: 50%;
-  top: 0.1875rem;
-  left: 0.1875rem;
-  transition: transform 0.3s ease;
-}
-
-.toggle-switch input[type="checkbox"]:checked::before {
-  transform: translateX(1.25rem);
-}
-
-.toggle-switch label {
-  cursor: pointer;
-  margin: 0;
-  color: var(--text-medium);
 }
 
 /* Report list */
@@ -1236,7 +1355,7 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 640px) {
   .btn {
     padding: 0.5rem 1rem;
@@ -1263,6 +1382,15 @@ body {
   .actions .btn {
     width: 100%;
   }
+  
+  .control-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-container {
+    max-width: none;
+  }
 }
 </style>
 </head>
@@ -1279,16 +1407,40 @@ body {
     <section id="panel-inprogress" class="tab-panel">
       <div class="card">
         <div class="card-header">
-          <h2>In Progress Entries</h2>
-          <div class="filter-controls">
-            <label>Filter by Date:</label>
-            <input type="date" id="filterDate" />
-            <button type="button" id="clearFilterBtn" class="clear-filter-btn">Clear Filter</button>
-          </div>
+          <h2>Patient Entries</h2>
         </div>
-        <div class="card-body" id="inProgressBody">
+        <div class="card-body">
+          <!-- Control Bar: Toggle, Search, Filters, Pagination -->
+          <div class="control-bar">
+            <!-- Toggle Switch for In Progress / All Entries -->
+            <div class="toggle-container">
+              <span>📋 In Progress</span>
+              <div class="toggle-switch">
+                <input type="checkbox" id="showAllToggle" />
+                <label for="showAllToggle"></label>
+              </div>
+              <span>📊 All Entries</span>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+              <input type="text" id="searchPatientInput" placeholder="🔍 Search by patient name..." autocomplete="off" />
+            </div>
+            
+            <!-- Date Filter -->
+            <div class="filter-controls">
+              <label>📅 Filter by Date:</label>
+              <input type="date" id="filterDate" />
+              <button type="button" id="clearFilterBtn" class="clear-filter-btn">Clear Filter</button>
+            </div>
+          </div>
+          
+          <!-- Entries List -->
           <div id="inProgressList" class="inprogress-cards"></div>
-          <div id="inProgressEmpty" class="hint">No in-progress items right now.</div>
+          <div id="inProgressEmpty" class="hint">No entries found.</div>
+          
+          <!-- Pagination Controls -->
+          <div id="paginationControls" class="pagination" style="display: none;"></div>
         </div>
       </div>
     </section>
@@ -1379,7 +1531,6 @@ body {
           </div>
           <div class="accordion-content">
             <div class="card-body">
-              <!-- Processing Lab Selection -->
               <div class="field">
                 <label class="req">Processing Lab</label>
                 <select id="processingLab" name="processing_lab" required>
@@ -1390,9 +1541,7 @@ body {
                 </select>
               </div>
 
-              <!-- Lab-wise Test Selection (Dynamic based on selected lab) -->
               <div id="labTestContainer">
-                <!-- Lab 1 Panel -->
                 <div id="lab1Panel" class="lab-panel active">
                   <div class="grid">
                     <div class="span-all">
@@ -1409,7 +1558,6 @@ body {
                       <input type="hidden" name="tests_lab1" id="testsValue1" />
                     </div>
                     
-                    <!-- Packages Selection -->
                     <div class="span-all">
                       <label>Packages</label>
                       <div class="multiselect" id="packagesSelect1" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
@@ -1426,7 +1574,6 @@ body {
                   </div>
                 </div>
 
-                <!-- Lab 2 Panel -->
                 <div id="lab2Panel" class="lab-panel">
                   <div class="grid">
                     <div class="span-all">
@@ -1443,7 +1590,6 @@ body {
                       <input type="hidden" name="tests_lab2" id="testsValue2" />
                     </div>
                     
-                    <!-- Packages Selection -->
                     <div class="span-all">
                       <label>Packages</label>
                       <div class="multiselect" id="packagesSelect2" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
@@ -1460,7 +1606,6 @@ body {
                   </div>
                 </div>
 
-                <!-- Lab 3 Panel -->
                 <div id="lab3Panel" class="lab-panel">
                   <div class="grid">
                     <div class="span-all">
@@ -1477,7 +1622,6 @@ body {
                       <input type="hidden" name="tests_lab3" id="testsValue3" />
                     </div>
                     
-                    <!-- Packages Selection -->
                     <div class="span-all">
                       <label>Packages</label>
                       <div class="multiselect" id="packagesSelect3" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
@@ -1494,7 +1638,6 @@ body {
                   </div>
                 </div>
 
-                <!-- Lab 4 Panel -->
                 <div id="lab4Panel" class="lab-panel">
                   <div class="grid">
                     <div class="span-all">
@@ -1511,7 +1654,6 @@ body {
                       <input type="hidden" name="tests_lab4" id="testsValue4" />
                     </div>
                     
-                    <!-- Packages Selection -->
                     <div class="span-all">
                       <label>Packages</label>
                       <div class="multiselect" id="packagesSelect4" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
@@ -1529,33 +1671,23 @@ body {
                 </div>
               </div>
 
-              <!-- Selected Tests Display (Vertical List) -->
               <div id="selectedTestsDisplay" class="selected-items-list">
                 <div class="selected-items-title">Selected Tests</div>
                 <div id="selectedTestsList"></div>
               </div>
 
-              <!-- Selected Packages Display (Vertical Cards) -->
               <div id="selectedPackagesDisplay" class="selected-items-list">
                 <div class="selected-items-title">Selected Packages</div>
                 <div id="selectedPackagesList"></div>
               </div>
 
-              <!-- Required Test Tubes - Grid Layout with Images and Steppers -->
               <div class="tube-section">
                 <p class="tube-title">Required Test Tubes</p>
                 <div id="tubeList" class="tubes-grid"></div>
                 <button type="button" id="resetTubeCounts" class="reset-tube-btn">Reset to Auto-Calculated</button>
               </div>
 
-              <!-- Required Syringes - Grid Layout with Images and Steppers -->
-              <div class="syringe-section">
-                <p class="tube-title">Required Syringes</p>
-                <div id="syringesList" class="syringes-grid"></div>
-                <input type="hidden" id="syringesValue" name="syringes" />
-              </div>
 
-              <!-- Doctor and Care Of - Side by side -->
               <div class="doctor-careof-row">
                 <div class="field">
                   <label>Doctor Name</label>
@@ -1770,7 +1902,6 @@ body {
           </div>
         </div>
 
-        <!-- Progress Bar Section -->
         <div class="progress-container" id="progressContainer">
           <div class="progress-steps" id="progressSteps"></div>
           <div class="progress-bar-wrapper">
@@ -1779,7 +1910,6 @@ body {
           <div class="progress-percentage" id="progressPercentage">0% Complete</div>
         </div>
 
-        <!-- Action Buttons -->
         <div class="actions">
           <button type="reset" class="btn ghost">Clear</button>
           <button type="submit" id="submitBtn" class="btn primary"><span id="submitContent">Submit Entry</span></button>
@@ -1791,7 +1921,6 @@ body {
     </section>
   </div>
 
-  <!-- B2B Popup Overlay -->
   <div id="b2bPopupOverlay" class="b2b-popup-overlay"></div>
   <div id="b2bPopup" class="b2b-popup">
     <h3>B2B Price (Trade Price)</h3>
@@ -1804,10 +1933,7 @@ body {
 
   <div class="toast" id="toast">Saved!</div>
 
-  <!-- Data File (to be loaded separately) -->
   <script src="data.js"></script>
-  
-  <!-- Main Application Script -->
   <script src="add_entry.js"></script>
 </body>
 </html>
