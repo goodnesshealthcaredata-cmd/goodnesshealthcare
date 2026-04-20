@@ -454,7 +454,12 @@ lab3: [
   { name: "Anti CCP", mrp: 1375, b2b: 385 },
   { name: "ANA", mrp: 750, b2b: 175 }
 ],
-  lab4: [ ]
+  lab4: [
+    { name: "Complete Blood Count", mrp: 520, b2b: 364 },
+    { name: "Blood Glucose", mrp: 210, b2b: 147 },
+    { name: "Lipid Profile", mrp: 820, b2b: 574 },
+    { name: "Thyroid Profile", mrp: 720, b2b: 504 }
+  ]
 };
 
 // For backward compatibility
@@ -463,19 +468,22 @@ const TESTS = TESTS_DATA.lab1.map(t => t.name);
 /* ========================= Packages Data per Lab ========================= */
 const PACKAGES = {
   lab1: [
-    { name: "Basic Wellness", tests: ["Complete Blood Count", "Blood Glucose"], mrp: 650, b2b: 455 },
-    { name: "Comprehensive Health", tests: ["Complete Blood Count", "Lipid Profile", "Liver Function Test", "Kidney Function Test"], mrp: 2000, b2b: 1400 },
-    { name: "Full Body Checkup", tests: ["Complete Blood Count", "Lipid Profile", "Liver Function Test", "Kidney Function Test", "Thyroid Profile", "Vitamin D", "Vitamin B12"], mrp: 4000, b2b: 2800 }
+{ name: "Goodness A1", tests: ["CBC", "LFT", "RFT", "Lipid Profile", "Iron Study", "HbA1C", "Total TFT", "Vit B12", "Vit D3"], mrp: 2500, b2b: 1200 },
+{ name: "Goodness C", tests: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
+{ name: "Goodness 3H", tests: ["HIV", "HBsAg", "HCV"], mrp: 1500, b2b: 650 },
+{ name: "Goodness BA (Male)", tests: ["CBC", "FBS", "HbA1C", "Fasting Insuline", "Lipid Profile", "LFT", "RFT", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "PSA (Male)", "CRP"], mrp: 3500, b2b: 1400 },
+{ name: "Goodness BB (Female)", tests: ["CBC", "FBS", "HbA1C", "Fasting Insuline", "Lipid Profile", "LFT", "RFT", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)", "CRP"], mrp: 3500, b2b: 1500 },
+{ name: "Goodness E", tests: ["CBC", "FBS", "PP", "HbA1C", "Creatinine", "Uric Acid", "Lipid Profile"], mrp: 1000, b2b: 450 },
+{ name: "Goodness G", tests: ["CBC", "FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Total TFT", "Uric Acid"], mrp: 1500, b2b: 550 },
+{ name: "Goodness F", tests: ["CBC", "Creatinine", "HbA1C", "Lipid Profile", "LFT", "RFT"], mrp: 1800, b2b: 600 },
+{ name: "ANC Profile", tests: ["CBC", "Blood Group", "FBS", "HBsAg", "HIV", "HCV", "VDRL", "TSH", "Hb Electrophoresis", "Urine Routine"], mrp: 1800, b2b: 1620 },
+{ name: "Goodness Fever Profile", tests: ["CBC", "ESR", "SGOT", "SGPT", "CRP", "Dengue NSI", "MP-Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 }
   ],
   lab2: [
-    { name: "Basic Wellness", tests: ["Complete Blood Count", "Blood Glucose"], mrp: 700, b2b: 490 },
-    { name: "Comprehensive Health", tests: ["Complete Blood Count", "Lipid Profile", "Liver Function Test", "Kidney Function Test"], mrp: 2200, b2b: 1540 }
   ],
   lab3: [
-    { name: "Basic Wellness", tests: ["Complete Blood Count", "Blood Glucose"], mrp: 600, b2b: 420 }
   ],
   lab4: [
-    { name: "Basic Wellness", tests: ["Complete Blood Count", "Blood Glucose"], mrp: 680, b2b: 476 }
   ]
 };
 
