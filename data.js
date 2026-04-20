@@ -79,11 +79,6 @@ const TUBE_TYPES = {
     name: "Urine Container",
     displayName: "Urine Container",
     imageUrl: "https://lh3.googleusercontent.com/d/1bjZq6bvMic2Azyd11-aasyQss3AOeFZw"
-  },
-  "PP Extra": {
-    name: "PP Test Extra Tube",
-    displayName: "PP Extra Tube",
-    imageUrl: "https://lh3.googleusercontent.com/d/1MZdwsqJlSHhRbVEUrm_TYv4InUWs5kdV"
   }
 };
 
@@ -91,10 +86,6 @@ const TUBE_TYPES = {
 const TEST_TUBE_MAPPING = {
   "CBC": ["EDTA"],
   "Blood Group":["EDTA"],
-  
-  
-  
-  
   "Blood Glucose": ["Fluoride"],
   "Lipid Profile": ["Plain"],
   "Liver Function Test": ["Plain"],
@@ -102,8 +93,72 @@ const TEST_TUBE_MAPPING = {
   "Thyroid Profile": ["Plain"],
   "Vitamin D": ["Plain"],
   "Vitamin B12": ["Plain"],
-  "PP": ["EDTA", "PP Extra"],
-  "Urine": ["Urine"]
+  "PP": ["Fluoride"],
+  "Urine": ["Urine"],
+  // Additional mappings for backward compatibility
+  "Complete Blood Count": ["EDTA"],
+  "Fasting Sugar": ["Fluoride"],
+  "RBS": ["Fluoride"],
+  "FASTING INSULINE": ["Plain"],
+  "HBA1C": ["EDTA"],
+  "LFT": ["Plain"],
+  "BILIRUBIN-TOTAL": ["Plain"],
+  "BILIRUBIN-DIRECT": ["Plain"],
+  "SGPT": ["Plain"],
+  "SGOT": ["Plain"],
+  "GGT": ["Plain"],
+  "RFT": ["Plain"],
+  "CREATININE": ["Plain"],
+  "UREA": ["Plain"],
+  "BUN": ["Plain"],
+  "URIC ACID": ["Plain"],
+  "CALCIUM": ["Plain"],
+  "TOTAL CHOLESTEROL": ["Plain"],
+  "HDL": ["Plain"],
+  "LDL": ["Plain"],
+  "LDH": ["Plain"],
+  "ELECTROLYTES": ["Plain"],
+  "SODIUM": ["Plain"],
+  "CHLORIDES": ["Plain"],
+  "PHOSPHORUS": ["Plain"],
+  "POTASSIUM": ["Plain"],
+  "IRON STUDY": ["Plain"],
+  "VIT D3": ["Plain"],
+  "VIT B12": ["Plain"],
+  "T3,T4,TSH": ["Plain"],
+  "TSH": ["Plain"],
+  "FT3,FT4,TSH": ["Plain"],
+  "CRP": ["Plain"],
+  "HSCRP": ["Plain"],
+  "CPK-MP": ["Plain"],
+  "CPK-TOTAL": ["Plain"],
+  "TROP-I": ["Plain"],
+  "D-DIMEAR": ["Plain"],
+  "PT INR": ["Plain"],
+  "APTT": ["Plain"],
+  "HIV": ["Plain"],
+  "HCV": ["Plain"],
+  "HBSAG": ["Plain"],
+  "VDRL": ["Plain"],
+  "URINE CULTURE": ["Urine"],
+  "URINE ROUTINE": ["Urine"],
+  "STOOL ROUTINE": ["Urine"],
+  "RA FACTOR": ["Plain"],
+  "MP": ["Plain"],
+  "WIDAL": ["Plain"],
+  "DENGU NS1": ["Plain"],
+  "DENGU IGG": ["Plain"],
+  "DENGU IGM": ["Plain"],
+  "MP-ANTIGEN": ["Plain"],
+  "BETA HCG": ["Plain"],
+  "HOMOSYSTINE": ["Plain"],
+  "CA125(FEMALE)": ["Plain"],
+  "PSA (MALE)": ["Plain"],
+  "IGE": ["Plain"],
+  "COVID ANTIBODY": ["Plain"],
+  "TYPHI IGM": ["Plain"],
+  "LIPASE": ["Plain"],
+  "ESR": ["EDTA"]
 };
 
 /* ========================= Syringe Types Definition ========================= */
@@ -197,6 +252,7 @@ lab1: [
   { name: "LIPASE", mrp: 2000, b2b: 1800 }
 ],
   lab2: [
+      { name: "HBC", mrp: 260, b2b: 90 },
     { name: "Complete Blood Count", mrp: 550, b2b: 385 },
     { name: "Blood Glucose", mrp: 220, b2b: 154 },
     { name: "Lipid Profile", mrp: 880, b2b: 616 },
@@ -254,6 +310,7 @@ function getSyringeInfo(syringeSize) {
 }
 
 // Calculate unique tube counts per lab (each tube type counted once per lab)
+// Then add +1 extra Fluoride tube if PP test exists in that lab
 function calculateUniqueTubeCountsPerLab(tests) {
   const tubeSet = new Set();
   
@@ -267,15 +324,19 @@ function calculateUniqueTubeCountsPerLab(tests) {
     tubeCounts[tubeType] = 1;
   });
   
-  // Special rule: If PP test is present, add +1 extra PP Extra tube
+  // Special handling for PP test: add exactly +1 additional Fluoride tube
   if (tests.includes("PP")) {
-    tubeCounts["PP Extra"] = (tubeCounts["PP Extra"] || 0) + 1;
+    if (tubeCounts["Fluoride"]) {
+      tubeCounts["Fluoride"] += 1;
+    } else {
+      tubeCounts["Fluoride"] = 1;
+    }
   }
   
   return tubeCounts;
 }
 
-// Calculate total tube counts across all labs
+// Calculate total tube counts across all labs (sum per lab)
 function calculateTotalTubeCounts(labsData) {
   const totalCounts = {};
   
