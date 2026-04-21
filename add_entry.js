@@ -1,5 +1,5 @@
 /* ========================= Main Application Logic ========================= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1jlsYnwlIEBFToYViiEvVpfn1RqcBgC5khV7W89bh5mwpfmN8VNRoySbFdREkGOGKYA/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcBc6IL4ZapTvLZBuFg81YRC1UPC6Yy7qTn7T6NJXwxuiNGwWcDGPp-0lmDxwP3M3yhg/exec";
 
 /* ========================= Helpers & UI ========================= */
 const el = (q) => document.querySelector(q);
@@ -131,23 +131,60 @@ function parseDateFromSheet(dateValue) {
     }
   }
   
+  // Handle Date objects - extract UTC date parts
+  if (dateValue instanceof Date) {
+    const year = dateValue.getUTCFullYear();
+    const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateValue.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
   return dateValue;
 }
 
+// CRITICAL FIX: Parse time from sheet WITHOUT any timezone conversion
+// Time values are stored as simple strings (HH:MM) in Google Sheets
 function parseTimeFromSheet(timeValue) {
   if (!timeValue) return "";
   
+  // If it's already a string in HH:MM format, return as is
+  if (typeof timeValue === 'string' && /^\d{2}:\d{2}$/.test(timeValue)) {
+    return timeValue;
+  }
+  
+  // If it's a string that contains time
   if (typeof timeValue === 'string') {
-    if (/^\d{2}:\d{2}$/.test(timeValue)) return timeValue;
-    if (timeValue.includes(':')) {
-      const parts = timeValue.split(':');
-      if (parts.length >= 2) {
-        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-      }
+    // Extract HH:MM pattern from any string
+    const match = timeValue.match(/(\d{2}):(\d{2})/);
+    if (match) {
+      return `${match[1]}:${match[2]}`;
     }
   }
   
-  return timeValue;
+  // CRITICAL: If it's a Date object, extract UTC time parts directly
+  // Google Sheets returns time as Date object with timezone offset
+  // We need to get the actual stored time by using UTC methods
+  if (timeValue instanceof Date) {
+    // Get the UTC hours and minutes - this gives us the stored time
+    let hours = timeValue.getUTCHours();
+    let minutes = timeValue.getUTCMinutes();
+    
+    // Format as HH:MM with leading zeros
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  }
+  
+  return "";
+}
+
+// CRITICAL FIX: Format display time without any modification
+function formatDisplayTime(timeValue) {
+  if (!timeValue) return "-";
+  
+  const parsedTime = parseTimeFromSheet(timeValue);
+  if (!parsedTime || parsedTime === "-") return "-";
+  
+  // Return exactly as parsed, already in HH:MM format
+  return parsedTime;
 }
 
 function formatDisplayDate(dateValue) {
@@ -162,19 +199,6 @@ function formatDisplayDate(dateValue) {
   }
   
   return dateValue;
-}
-
-function formatDisplayTime(timeValue) {
-  if (!timeValue) return "-";
-  
-  const parsedTime = parseTimeFromSheet(timeValue);
-  if (!parsedTime || parsedTime === "-") return "-";
-  
-  if (parsedTime.match(/^\d{2}:\d{2}$/)) {
-    return parsedTime;
-  }
-  
-  return parsedTime;
 }
 
 function sortEntriesByDateAndTime(entries) {
@@ -246,12 +270,7 @@ const F = {
   finalPrice:             () => el("#finalPrice"),
   pendingPayment:         () => el("#pendingPayment"),
   costRaw:                () => el("#costRaw"),
-  syringe2ml:             () => el("#syringe2ml"),
-  syringe5ml:             () => el("#syringe5ml"),
-  syringe10ml:            () => el("#syringe10ml"),
-  syringesValue:          () => el("#syringesValue"),
   tubeList:               () => el("#tubeList"),
-  syringesList:           () => el("#syringesList"),
   progressBarFill:        () => el("#progressBarFill"),
   progressPercentage:     () => el("#progressPercentage"),
   progressSteps:          () => el("#progressSteps"),
@@ -283,7 +302,6 @@ let selectedTestsByLab    = { 1: [], 2: [], 3: [], 4: [] };
 let selectedPackagesByLab = { 1: [], 2: [], 3: [], 4: [] };
 let currentSelectedLab    = "lab1";
 let tubeCountOverrides    = {};
-let syringeCounts         = { "2ml": 0, "5ml": 0, "10ml": 0 };
 let serverEntriesCache    = [];
 let globallySelectedTests = new Set();
 
@@ -563,70 +581,7 @@ function renderTubes() {
   });
 }
 
-/* ========================= Syringe rendering ========================= */
-function renderSyringes() {
-  const container = F.syringesList();
-  if (!container) return;
-  
-  container.innerHTML = "";
-  
-  const syringeSizes = ["2ml", "5ml", "10ml"];
-  
-  syringeSizes.forEach(size => {
-    const syringeInfo = getSyringeInfo(size);
-    const displayName = syringeInfo.displayName || size;
-    const imageUrl = syringeInfo.imageUrl;
-    const currentValue = syringeCounts[size] || 0;
-    
-    const card = document.createElement("div");
-    card.className = "syringe-card";
-    
-    const imageContainer = document.createElement("div");
-    imageContainer.className = "syringe-image-container";
-    const img = document.createElement("img");
-    img.src = imageUrl;
-    img.alt = displayName;
-    img.className = "syringe-image";
-    imageContainer.appendChild(img);
-    
-    const nameDiv = document.createElement("div");
-    nameDiv.className = "syringe-name";
-    nameDiv.textContent = displayName;
-    
-    const stepperContainer = document.createElement("div");
-    stepperContainer.className = "syringe-stepper";
-    
-    const stepper = createStepper(currentValue, 0, undefined, (newValue) => {
-      syringeCounts[size] = newValue;
-      const inputId = size === "2ml" ? "syringe2ml" : size === "5ml" ? "syringe5ml" : "syringe10ml";
-      const inputElement = el(`#${inputId}`);
-      if (inputElement) inputElement.value = newValue;
-      updateSyringesValue();
-    });
-    stepperContainer.appendChild(stepper.container);
-    
-    card.appendChild(imageContainer);
-    card.appendChild(nameDiv);
-    card.appendChild(stepperContainer);
-    container.appendChild(card);
-  });
-}
 
-function updateSyringesValue() {
-  const counts = [];
-  if (syringeCounts["2ml"] > 0) counts.push(`2ml x ${syringeCounts["2ml"]}`);
-  if (syringeCounts["5ml"] > 0) counts.push(`5ml x ${syringeCounts["5ml"]}`);
-  if (syringeCounts["10ml"] > 0) counts.push(`10ml x ${syringeCounts["10ml"]}`);
-  const sv = F.syringesValue();
-  if (sv) sv.value = counts.join(", ");
-  
-  const syringe2ml = F.syringe2ml();
-  const syringe5ml = F.syringe5ml();
-  const syringe10ml = F.syringe10ml();
-  if (syringe2ml) syringe2ml.value = syringeCounts["2ml"];
-  if (syringe5ml) syringe5ml.value = syringeCounts["5ml"];
-  if (syringe10ml) syringe10ml.value = syringeCounts["10ml"];
-}
 
 /* ========================= Add test with global uniqueness ========================= */
 function addTestWithGlobalCheck(testName, labNum) {
@@ -979,10 +934,17 @@ function autoPPTime() {
   const vtEl = F.visitTime();
   const ptEl = F.ppTime();
   if (!vtEl || !vtEl.value || !ptEl || ptEl.dataset.manual) return;
-  const [h, m] = vtEl.value.split(":").map(Number);
-  const dt = new Date();
-  dt.setHours(h + 2, m, 0, 0);
-  ptEl.value = `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
+  
+  // Parse visit time as simple string (HH:MM) without timezone
+  const timeParts = vtEl.value.split(":").map(Number);
+  let hours = timeParts[0];
+  let minutes = timeParts[1];
+  
+  // Add 2 hours for PP time
+  hours = (hours + 2) % 24;
+  
+  // Format as HH:MM
+  ptEl.value = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 const vtEl = F.visitTime();
@@ -1340,7 +1302,6 @@ function updateAllCalculations() {
   renderSelectedTestsDisplay();
   renderSelectedPackagesDisplay();
   renderTubes();
-  renderSyringes();
   updatePaymentFields();
   autoPPTime();
   updateConditionalVisitFields();
@@ -1872,15 +1833,9 @@ function resetLabState() {
     renderPackagesChips(i);
   }
   tubeCountOverrides = {};
-  syringeCounts = { "2ml": 0, "5ml": 0, "10ml": 0 };
   updateGlobalTestSet();
 }
 
-function resetSyringes() {
-  syringeCounts = { "2ml": 0, "5ml": 0, "10ml": 0 };
-  updateSyringesValue();
-  renderSyringes();
-}
 
 function resetPaymentFields() {
   [F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived].forEach(fn => {
@@ -1908,7 +1863,6 @@ function resetMiscFields() {
 
 function fullFormReset() {
   resetLabState();
-  resetSyringes();
   resetPaymentFields();
   resetCheckboxes();
   resetMiscFields();
@@ -1917,6 +1871,7 @@ function fullFormReset() {
 }
 
 /* ========================= Edit / Load for edit ========================= */
+// CRITICAL FIX: Updated to properly handle time values without timezone conversion
 function loadForEdit(entry) {
   if (!entry) return;
 
@@ -1983,6 +1938,7 @@ function loadForEdit(entry) {
   dateValue = parseDateFromSheet(dateValue);
   setVal(F.visitDate, dateValue);
 
+  // CRITICAL FIX: Parse time without timezone conversion
   let timeValue = entry.time_of_visit || "";
   timeValue = parseTimeFromSheet(timeValue);
   setVal(F.visitTime, timeValue);
@@ -1994,6 +1950,7 @@ function loadForEdit(entry) {
 
   const ptEl2 = F.ppTime();
   if (ptEl2) {
+    // CRITICAL FIX: Parse PP time without timezone conversion
     const ppTimeValue = entry.pp_time ? parseTimeFromSheet(entry.pp_time) : "";
     ptEl2.value = ppTimeValue;
     if (ppTimeValue) ptEl2.dataset.manual = "1";
@@ -2020,23 +1977,6 @@ function loadForEdit(entry) {
   setVal(F.cashReceived, entry.cash_received);
   setVal(F.onlineReceived, entry.online_received);
   updatePaymentFields();
-
-  if (entry.syringes) {
-    const parts = entry.syringes.split(",");
-    syringeCounts = { "2ml": 0, "5ml": 0, "10ml": 0 };
-    parts.forEach(part => {
-      const match = part.trim().match(/(\d+)ml\s*x\s*(\d+)/i);
-      if (match) {
-        const size = match[1];
-        const count = parseInt(match[2]);
-        if (size === "2") syringeCounts["2ml"] = count;
-        else if (size === "5") syringeCounts["5ml"] = count;
-        else if (size === "10") syringeCounts["10ml"] = count;
-      }
-    });
-  }
-  updateSyringesValue();
-  renderSyringes();
 
   tubeCountOverrides = safeJSONParse(entry.tube_overrides, {});
 
@@ -2122,23 +2062,15 @@ if (formEl) {
     
     // ========== 1. Lab-wise Tests & Packages (Separate Columns) ==========
     for (let i = 1; i <= 4; i++) {
-      // Individual tests for this lab
       const individualTests = selectedTestsByLab[i] || [];
-      
-      // Package names for this lab
       const packageNames = selectedPackagesByLab[i] || [];
       
-      // Combine tests and packages for lab-wise column
       const labTestsAndPackages = [...individualTests, ...packageNames];
       data.set(`lab${i}_tests_packages`, labTestsAndPackages.join(", "));
       
-      // Also keep individual test list for backward compatibility
       data.set(`tests_lab${i}`, individualTests.join(", "));
-      
-      // Package names only (comma-separated)
       data.set(`packages_lab${i}_names`, packageNames.join(", "));
       
-      // Full package data with test lists (for sheet processing)
       const packagesData = [];
       packageNames.forEach(pkgName => {
         const pkg = getPackage(`lab${i}`, pkgName);
@@ -2158,30 +2090,25 @@ if (formEl) {
     }
     
     // ========== 2. Overall Combined Data (All Labs) ==========
-    // All individual tests across all labs
     const allIndividualTests = [];
     for (let i = 1; i <= 4; i++) {
       allIndividualTests.push(...(selectedTestsByLab[i] || []));
     }
-    data.set("all_individual_tests", [...new Set(allIndividualTests)].join(", "));
+    const uniqueIndividualTests = [...new Set(allIndividualTests)];
+    data.set("all_individual_tests", uniqueIndividualTests.join(", "));
     
-    // All package names across all labs
     const allPackageNames = getAllSelectedPackagesAcrossLabs();
     data.set("all_packages", allPackageNames.join(", "));
     
-    // All tests included in packages across all labs
     const allPackageTests = getAllPackageTestsAcrossLabs();
     data.set("all_package_tests", allPackageTests.join(", "));
     
-    // Combined unique tests (individual + package tests)
     const combinedTestsList = getAllSelectedTestsAcrossLabs();
     data.set("all_tests_combined", combinedTestsList.join(", "));
     
     // ========== 3. Combined Test Tubes Data ==========
     const combinedTubeCounts = getCombinedTubeCountsString();
     data.set("combined_tubes", combinedTubeCounts);
-    
-    // Also store tube overrides if any
     data.set("tube_overrides", JSON.stringify(tubeCountOverrides));
     
     // ========== 4. Other Form Data ==========
@@ -2197,7 +2124,6 @@ if (formEl) {
     const crcdEl = F.cashReceived(); if (crcdEl) data.set("cash_received", crcdEl.value);
     const orcdEl = F.onlineReceived(); if (orcdEl) data.set("online_received", orcdEl.value);
     const ppEl2 = F.pendingPayment(); if (ppEl2) data.set("pending_payment", ppEl2.value.replace("₹", ""));
-    const svEl = F.syringesValue(); if (svEl) data.set("syringes", svEl.value);
 
     data.set("area", (F.areaInput()?.value || ""));
     data.set("care_of", (F.careOf()?.value || ""));
@@ -2302,7 +2228,6 @@ function setDefaults() {
 
   autoPPTime();
   renderTubes();
-  renderSyringes();
   const dobEl2 = F.dob(); const ageEl2 = F.age();
   if (dobEl2 && !dobEl2.value && ageEl2) { ageEl2.readOnly = false; ageEl2.classList.remove("readonly"); }
   updateAddressRequirement();
@@ -2381,27 +2306,12 @@ function selectPatient(p) {
   setVal2(F.visitInstruction, p.visit_instruction);
 
   if (p.tube_overrides) tubeCountOverrides = safeJSONParse(p.tube_overrides, {});
-  if (p.syringes) {
-    const parts = p.syringes.split(",");
-    syringeCounts = { "2ml": 0, "5ml": 0, "10ml": 0 };
-    parts.forEach(part => {
-      const match = part.trim().match(/(\d+)ml\s*x\s*(\d+)/i);
-      if (match) {
-        const size = match[1];
-        const count = parseInt(match[2]);
-        if (size === "2") syringeCounts["2ml"] = count;
-        else if (size === "5") syringeCounts["5ml"] = count;
-        else if (size === "10") syringeCounts["10ml"] = count;
-      }
-    });
-  }
   if (p.discount) { const n = F.discount(); if (n) n.value = p.discount; }
   if (p.discounted_price) { const n = F.discountedPrice(); if (n) n.value = p.discounted_price; }
   if (p.home_visit_charges) { const n = F.homeVisitCharges(); if (n) n.value = p.home_visit_charges; }
   if (p.cash_received) { const n = F.cashReceived(); if (n) n.value = p.cash_received; }
   if (p.online_received) { const n = F.onlineReceived(); if (n) n.value = p.online_received; }
   updatePaymentFields();
-  renderSyringes();
 }
 
 /* ========================= Setup Event Listeners ========================= */
