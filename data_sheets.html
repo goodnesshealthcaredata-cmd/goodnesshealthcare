@@ -3,37 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>SheetVision | Smart Google Sheet Data Viewer</title>
+    <title>SheetVision | Excel-Style Column Filters</title>
     <!-- SheetJS CDN with fallback -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script>
-        // CDN Fallback - if primary CDN fails, load from Cloudflare
         if (typeof XLSX === "undefined") {
             document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
         }
     </script>
-    <!-- Google Fonts + Font Awesome Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: #f4f7fc;
             color: #1a2c3e;
             padding: 24px 20px;
         }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
+        .container { max-width: 1400px; margin: 0 auto; }
         .header {
             background: linear-gradient(135deg, #0b2b3b 0%, #1a4b6e 100%);
             border-radius: 28px;
@@ -42,96 +30,34 @@
             box-shadow: 0 12px 28px rgba(0,0,0,0.08);
             color: white;
         }
-
-        .header h1 {
-            font-size: 1.9rem;
-            font-weight: 600;
-            letter-spacing: -0.3px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .header h1 i {
-            background: rgba(255,255,255,0.2);
-            padding: 10px;
-            border-radius: 60px;
-            font-size: 1.5rem;
-        }
-
-        .sub {
-            margin-top: 10px;
-            opacity: 0.85;
-            font-weight: 400;
-            font-size: 0.95rem;
-        }
-
+        .header h1 { font-size: 1.9rem; font-weight: 600; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .header h1 i { background: rgba(255,255,255,0.2); padding: 10px; border-radius: 60px; font-size: 1.5rem; }
+        .sub { margin-top: 10px; opacity: 0.85; font-size: 0.95rem; }
         .controls {
             background: white;
             border-radius: 24px;
             padding: 20px 28px;
             margin-bottom: 28px;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.03);
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             align-items: flex-end;
             justify-content: space-between;
         }
-
-        .filter-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            align-items: flex-end;
-            flex: 2;
-        }
-
-        .date-box, .search-box {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .date-box label, .search-box label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #4a627a;
-        }
-
-        input, button {
-            font-family: 'Inter', sans-serif;
-        }
-
+        .filter-group { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; flex: 2; }
+        .date-box, .search-box { display: flex; flex-direction: column; gap: 6px; }
+        .date-box label, .search-box label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #4a627a; }
+        input, button { font-family: 'Inter', sans-serif; }
         .date-box input, .search-box input {
             border: 1px solid #cfdfed;
             border-radius: 18px;
             padding: 10px 16px;
             font-size: 0.9rem;
-            background: #fff;
-            transition: 0.2s;
             width: 180px;
         }
-
-        .search-box input {
-            width: 240px;
-        }
-
-        .date-box input:focus, .search-box input:focus {
-            outline: none;
-            border-color: #1f7b9e;
-            box-shadow: 0 0 0 3px rgba(31,123,158,0.2);
-        }
-
-        .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
+        .search-box input { width: 240px; }
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
         button {
             background: #ecf3f8;
             border: none;
@@ -140,44 +66,16 @@
             font-weight: 600;
             font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             color: #1e4b6e;
+            transition: all 0.2s;
         }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        button i {
-            font-size: 1rem;
-        }
-
-        button.primary {
-            background: #1f7b9e;
-            color: white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        button.primary:hover:not(:disabled) {
-            background: #0e5f7e;
-            transform: translateY(-1px);
-        }
-
-        button:hover:not(:disabled) {
-            background: #e2eaf1;
-            transform: translateY(-1px);
-        }
-
-        .reset-btn {
-            background: #f0f2f5;
-            border: 1px solid #cddfea;
-        }
-
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.primary { background: #1f7b9e; color: white; }
+        button.primary:hover:not(:disabled) { background: #0e5f7e; transform: translateY(-1px); }
+        button:hover:not(:disabled) { background: #e2eaf1; transform: translateY(-1px); }
         .stats {
             background: white;
             border-radius: 20px;
@@ -189,16 +87,8 @@
             flex-wrap: wrap;
             font-size: 0.9rem;
             font-weight: 500;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
         }
-
-        .badge {
-            background: #e7f0f5;
-            padding: 6px 14px;
-            border-radius: 40px;
-            color: #1a5d7a;
-        }
-
+        .badge { background: #e7f0f5; padding: 6px 14px; border-radius: 40px; color: #1a5d7a; }
         .table-wrapper {
             background: white;
             border-radius: 24px;
@@ -206,144 +96,190 @@
             overflow-x: auto;
             border: 1px solid #eef3f9;
         }
-
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
-            min-width: 580px;
+            font-size: 0.85rem;
+            min-width: 800px;
         }
-
         .data-table th {
             background: #f8fbfe;
-            padding: 16px 16px;
+            padding: 10px 12px;
             text-align: left;
             font-weight: 600;
             color: #1e4b6e;
             border-bottom: 2px solid #e2edf5;
             position: sticky;
             top: 0;
-            background-color: #f8fbfe;
             z-index: 10;
+            vertical-align: top;
         }
-
         .data-table td {
-            padding: 14px 16px;
+            padding: 12px 12px;
             border-bottom: 1px solid #ecf3f8;
             color: #1f2f3e;
             word-break: break-word;
         }
-
-        .data-table tr:hover td {
-            background-color: #fafeff;
+        .data-table tr:hover td { background-color: #fafeff; }
+        
+        /* Excel-Style Dropdown Filter Styles */
+        .filter-header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
         }
-
-        @media (max-width: 700px) {
-            body {
-                padding: 16px 12px;
-            }
-            .header {
-                padding: 20px 18px;
-            }
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .filter-group {
-                flex-direction: column;
-                width: 100%;
-            }
-            .date-box input, .search-box input {
-                width: 100%;
-            }
-            .search-box input {
-                width: 100%;
-            }
-            .action-buttons {
-                justify-content: flex-start;
-                margin-top: 6px;
-            }
-            .data-table th, .data-table td {
-                padding: 12px 12px;
-                font-size: 0.8rem;
-            }
-            .stats {
-                flex-direction: column;
-                gap: 8px;
-                align-items: flex-start;
-            }
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 0;
         }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 24px;
-            color: #7f9ab3;
-            font-weight: 500;
-        }
-
-        .error-message {
-            background: #ffe8e6;
-            border-left: 5px solid #d9534f;
-            padding: 14px 20px;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            color: #b33c37;
-        }
-
-        footer {
-            margin-top: 32px;
-            text-align: center;
+        .header-title span { font-weight: 600; font-size: 0.85rem; }
+        .filter-icon {
+            color: #8ba3bc;
             font-size: 0.75rem;
-            color: #6f8eaa;
+            transition: color 0.2s;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
         }
+        .filter-icon:hover { background: #e2eaf1; }
+        .filter-icon.active { color: #1f7b9e; }
         
-        .loading-spinner {
+        /* Dropdown Container */
+        .filter-dropdown {
+            position: relative;
+            width: 100%;
+        }
+        .dropdown-btn {
+            width: 100%;
+            padding: 6px 10px;
+            background: white;
+            border: 1px solid #cfdfed;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            color: #4a627a;
+        }
+        .dropdown-btn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dropdown-btn:hover { background: #f8fbfe; border-color: #1f7b9e; }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #cfdfed;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 280px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 4px;
+        }
+        .dropdown-menu.show { display: block; }
+        .dropdown-search {
+            padding: 8px;
+            border-bottom: 1px solid #e2edf5;
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+        .dropdown-search input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #cfdfed;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
+        .dropdown-options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .dropdown-option {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background 0.1s;
+        }
+        .dropdown-option:hover { background: #e7f0f5; }
+        .dropdown-option input { margin: 0; cursor: pointer; }
+        .dropdown-option label { cursor: pointer; flex: 1; color: #1a2c3e; }
+        .dropdown-actions {
+            padding: 8px;
+            border-top: 1px solid #e2edf5;
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+            background: white;
+            position: sticky;
+            bottom: 0;
+        }
+        .dropdown-actions button {
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            background: #ecf3f8;
+            border-radius: 16px;
+        }
+        .filter-badge {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
+            background: #1f7b9e;
+            color: white;
+            font-size: 0.6rem;
+            border-radius: 10px;
+            padding: 2px 6px;
+            margin-left: 6px;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @media (max-width: 700px) {
+            body { padding: 16px 12px; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .filter-group { flex-direction: column; width: 100%; }
+            .date-box input, .search-box input { width: 100%; }
+            .action-buttons { justify-content: flex-start; }
+            .data-table th, .data-table td { padding: 8px 8px; font-size: 0.75rem; }
         }
-        
-        button .fa-spinner {
-            animation: spin 0.8s linear infinite;
-        }
+        .empty-state { text-align: center; padding: 60px 24px; color: #7f9ab3; font-weight: 500; }
+        .error-message { background: #ffe8e6; border-left: 5px solid #d9534f; padding: 14px 20px; border-radius: 16px; margin-bottom: 20px; color: #b33c37; }
+        footer { margin-top: 32px; text-align: center; font-size: 0.75rem; color: #6f8eaa; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>
-            <i class="fas fa-table-list"></i> 
-            SheetVision
-        </h1>
-        <div class="sub"><i class="fas fa-cloud-arrow-down"></i> Live Google Sheets data • filter • export • instant insights</div>
+        <h1><i class="fas fa-filter"></i> SheetVision Pro</h1>
+        <div class="sub"><i class="fas fa-caret-down"></i> Excel-style dropdown column filters • Date range • Export</div>
     </div>
 
     <div class="controls">
         <div class="filter-group">
             <div class="date-box">
                 <label><i class="far fa-calendar-alt"></i> FROM DATE</label>
-                <input type="date" id="fromDate" placeholder="Start date">
+                <input type="date" id="fromDate">
             </div>
             <div class="date-box">
                 <label><i class="far fa-calendar-check"></i> TO DATE</label>
-                <input type="date" id="toDate" placeholder="End date">
+                <input type="date" id="toDate">
             </div>
             <div class="search-box">
-                <label><i class="fas fa-search"></i> GLOBAL FILTER</label>
+                <label><i class="fas fa-search"></i> GLOBAL SEARCH</label>
                 <input type="text" id="globalSearch" placeholder="Search any column...">
             </div>
         </div>
         <div class="action-buttons">
-            <button id="resetFiltersBtn" class="reset-btn"><i class="fas fa-undo-alt"></i> Reset</button>
+            <button id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> Reset All</button>
             <button id="downloadFullBtn" disabled><i class="fas fa-download"></i> Full Excel</button>
             <button id="downloadFilteredBtn" class="primary" disabled><i class="fas fa-filter"></i> Download Filtered</button>
         </div>
@@ -356,26 +292,24 @@
 
     <div class="table-wrapper">
         <div id="tableContainer">
-            <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> Fetching data from Google Sheet...</div>
+            <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> Fetching data...</div>
         </div>
     </div>
-    <footer>
-        <i class="fas fa-chart-line"></i> Live Google Sheets integration • Date filtering (2nd column) • Instant search
-    </footer>
+    <footer><i class="fas fa-caret-down"></i> Click dropdown on any column header to filter by specific values</footer>
 </div>
 
 <script>
-    // ======================= CONFIGURATION =======================
-    // PRODUCTION DATA SOURCE - Provided CSV link
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXinJqkALxMdxrd0h26geavFTtx4wRKNvsa4uEMEbgvXD-lm7tRs3Ynz4b0qzzAoEq2IshzrZHzjdH/pub?gid=0&single=true&output=csv";
     
-    // Global state
     let masterData = [];
     let headers = [];
     let isLoading = true;
     let fetchError = null;
-
-    // DOM elements
+    
+    // Store selected values for each column (Set of selected strings)
+    let columnSelections = {};
+    let openDropdown = null;
+    
     const fromDateInput = document.getElementById('fromDate');
     const toDateInput = document.getElementById('toDate');
     const globalSearchInput = document.getElementById('globalSearch');
@@ -386,13 +320,11 @@
     const statsPanel = document.getElementById('statsPanel');
     const filterCountBadge = document.getElementById('filterCountBadge');
 
-    // Helper: parse date from second column
     function parseDateFromValue(dateStr) {
         if (!dateStr || dateStr.trim() === '') return null;
         let trimmed = dateStr.trim();
         let d = new Date(trimmed);
         if (!isNaN(d.getTime())) return d;
-        
         let parts = trimmed.split(/[\/\-\.]/);
         if (parts.length === 3) {
             let year, month, day;
@@ -400,8 +332,7 @@
                 year = parseInt(parts[0]);
                 month = parseInt(parts[1]) - 1;
                 day = parseInt(parts[2]);
-            } 
-            else if (parts[2].length === 4) {
+            } else if (parts[2].length === 4) {
                 year = parseInt(parts[2]);
                 if (parseInt(parts[0]) > 12) {
                     day = parseInt(parts[0]);
@@ -410,16 +341,36 @@
                     month = parseInt(parts[0]) - 1;
                     day = parseInt(parts[1]);
                 }
-            } else {
-                return null;
-            }
+            } else return null;
             let parsed = new Date(year, month, day);
             if (!isNaN(parsed.getTime())) return parsed;
         }
         return null;
     }
 
-    // Filter logic
+    // Get unique values for a column
+    function getUniqueValues(colIndex) {
+        const values = new Set();
+        masterData.forEach(row => {
+            let val = row.columns[colIndex];
+            if (val !== undefined && val !== null && val.toString().trim() !== '') {
+                values.add(val.toString());
+            }
+        });
+        return Array.from(values).sort();
+    }
+
+    // Check if a row matches all column filters
+    function matchesColumnFilters(row) {
+        for (const [colIdxStr, selectedSet] of Object.entries(columnSelections)) {
+            const colIdx = parseInt(colIdxStr);
+            if (selectedSet.size === 0) continue;
+            const cellValue = (row.columns[colIdx] !== undefined && row.columns[colIdx] !== null) ? row.columns[colIdx].toString() : '';
+            if (!selectedSet.has(cellValue)) return false;
+        }
+        return true;
+    }
+
     function getFilteredData() {
         if (!masterData.length) return [];
 
@@ -429,38 +380,90 @@
         const toDate = toDateVal ? new Date(toDateVal) : null;
         if (fromDate) fromDate.setHours(0,0,0,0);
         if (toDate) toDate.setHours(23,59,59,999);
-
-        const searchTerm = globalSearchInput.value.trim().toLowerCase();
+        const globalSearchTerm = globalSearchInput.value.trim().toLowerCase();
 
         return masterData.filter(row => {
+            // Date filter (2nd column)
             const dateRaw = row.columns[1] || '';
             const rowDate = parseDateFromValue(dateRaw);
             let dateMatch = true;
-            
-            if (fromDate && rowDate) {
-                if (rowDate < fromDate) dateMatch = false;
-            }
-            if (toDate && rowDate && dateMatch) {
-                if (rowDate > toDate) dateMatch = false;
-            }
-            if ((fromDate || toDate) && dateRaw && dateRaw.trim() !== '' && (!rowDate || isNaN(rowDate.getTime()))) {
-                dateMatch = false;
-            }
-
+            if (fromDate && rowDate && rowDate < fromDate) dateMatch = false;
+            if (toDate && rowDate && dateMatch && rowDate > toDate) dateMatch = false;
+            if ((fromDate || toDate) && dateRaw && dateRaw.trim() !== '' && (!rowDate || isNaN(rowDate.getTime()))) dateMatch = false;
             if (!dateMatch) return false;
 
-            if (searchTerm !== '') {
-                return row.columns.some(cell => String(cell !== undefined && cell !== null ? cell : '').toLowerCase().includes(searchTerm));
+            // Column dropdown filters
+            if (!matchesColumnFilters(row)) return false;
+
+            // Global search
+            if (globalSearchTerm !== '') {
+                return row.columns.some(cell => String(cell || '').toLowerCase().includes(globalSearchTerm));
             }
             return true;
         });
     }
 
-    // Render table
+    // Close any open dropdown
+    function closeDropdown() {
+        if (openDropdown) {
+            const menu = document.getElementById(`dropdown-menu-${openDropdown}`);
+            if (menu) menu.classList.remove('show');
+            openDropdown = null;
+        }
+    }
+
+    // Handle click outside to close dropdown
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.filter-dropdown')) {
+            closeDropdown();
+        }
+    });
+
+    // Build dropdown HTML for a column
+    function buildDropdownHTML(colIdx, columnName) {
+        const uniqueValues = getUniqueValues(colIdx);
+        const selectedSet = columnSelections[colIdx] || new Set();
+        const hasSelection = selectedSet.size > 0;
+        
+        let optionsHtml = '';
+        uniqueValues.forEach(value => {
+            const isChecked = selectedSet.has(value);
+            optionsHtml += `
+                <div class="dropdown-option" data-value="${escapeHtml(value).replace(/"/g, '&quot;')}">
+                    <input type="checkbox" value="${escapeHtml(value).replace(/"/g, '&quot;')}" ${isChecked ? 'checked' : ''}>
+                    <label>${escapeHtml(value.length > 50 ? value.substring(0, 47) + '...' : value)}</label>
+                </div>
+            `;
+        });
+        
+        const buttonText = hasSelection ? `${selectedSet.size} selected` : 'All';
+        
+        return `
+            <div class="filter-dropdown" id="dropdown-${colIdx}">
+                <div class="dropdown-btn" data-col="${colIdx}">
+                    <span>${buttonText}</span>
+                    <i class="fas fa-caret-down"></i>
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu-${colIdx}">
+                    <div class="dropdown-search">
+                        <input type="text" placeholder="Search..." class="dropdown-search-input">
+                    </div>
+                    <div class="dropdown-options">
+                        ${optionsHtml || '<div style="padding: 12px; text-align: center; color: #999;">No unique values</div>'}
+                    </div>
+                    <div class="dropdown-actions">
+                        <button class="select-all-btn">Select All</button>
+                        <button class="clear-all-btn">Clear All</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     function renderTable() {
         if (!masterData.length && !isLoading) {
             const errorMsg = fetchError ? `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${fetchError}</div>` : '';
-            tableContainer.innerHTML = `${errorMsg}<div class="empty-state"><i class="fas fa-database"></i> No data available. Please check the Google Sheet link or refresh.</div>`;
+            tableContainer.innerHTML = `${errorMsg}<div class="empty-state"><i class="fas fa-database"></i> No data available.</div>`;
             statsPanel.innerHTML = `<span><i class="fas fa-database"></i> No data loaded</span>`;
             filterCountBadge.innerHTML = `0 rows`;
             return;
@@ -469,32 +472,183 @@
         const filtered = getFilteredData();
         const total = masterData.length;
         const showing = filtered.length;
-        statsPanel.innerHTML = `<span><i class="fas fa-table"></i> Total rows: ${total} &nbsp;|&nbsp; Showing: ${showing}</span>`;
+        statsPanel.innerHTML = `<span><i class="fas fa-table"></i> Total: ${total} &nbsp;|&nbsp; Showing: ${showing}</span>`;
         filterCountBadge.innerHTML = `<i class="fas fa-chart-simple"></i> Filtered: ${showing}`;
-        
-        if (filtered.length === 0) {
-            tableContainer.innerHTML = `<div class="empty-state"><i class="fas fa-filter"></i> No matching records. Adjust filters or date range.</div>`;
-            return;
-        }
         
         let columnNames = (headers && headers.length) ? headers : (masterData[0]?.columns.map((_, idx) => `Column ${idx+1}`) || []);
         
-        let html = `<table class="data-table"><thead><tr>`;
+        let html = `<table class="data-table"><thead>`;
+        html += `<tr>`;
         columnNames.forEach((h, idx) => {
-            html += `<th>${escapeHtml(h)}</th>`;
+            const hasActiveFilter = columnSelections[idx] && columnSelections[idx].size > 0;
+            html += `<th style="min-width: 140px;">
+                        <div class="filter-header">
+                            <div class="header-title">
+                                <span>${escapeHtml(h)}</span>
+                                <i class="fas fa-filter filter-icon ${hasActiveFilter ? 'active' : ''}" data-col="${idx}"></i>
+                            </div>
+                            ${buildDropdownHTML(idx, h)}
+                        </div>
+                    </th>`;
         });
         html += `</tr></thead><tbody>`;
         
-        filtered.forEach(row => {
-            html += `<tr>`;
-            row.columns.forEach(cell => {
-                const displayValue = (cell !== undefined && cell !== null) ? String(cell) : '';
-                html += `<td>${escapeHtml(displayValue)}</td>`;
+        if (filtered.length === 0) {
+            html += `<tr><td colspan="${columnNames.length}" class="empty-state" style="text-align:center;">No matching records</td></tr>`;
+        } else {
+            filtered.forEach(row => {
+                html += `<tr>`;
+                row.columns.forEach(cell => {
+                    const displayValue = (cell !== undefined && cell !== null) ? String(cell) : '';
+                    html += `<td title="${escapeHtml(displayValue.substring(0, 100))}">${escapeHtml(displayValue)}</td>`;
+                });
+                html += `</tr>`;
             });
-            html += `</tr>`;
-        });
-        html += `</tbody></table>`;
+        }
+        html += `</tbody> </table>`;
         tableContainer.innerHTML = html;
+        
+        // Attach dropdown event listeners
+        attachDropdownEvents();
+    }
+    
+    function attachDropdownEvents() {
+        // Dropdown button click
+        document.querySelectorAll('.dropdown-btn').forEach(btn => {
+            btn.removeEventListener('click', dropdownClickHandler);
+            btn.addEventListener('click', dropdownClickHandler);
+        });
+        
+        // Filter icon click (opens dropdown too)
+        document.querySelectorAll('.filter-icon').forEach(icon => {
+            icon.removeEventListener('click', iconClickHandler);
+            icon.addEventListener('click', iconClickHandler);
+        });
+    }
+    
+    function dropdownClickHandler(e) {
+        e.stopPropagation();
+        const colIdx = parseInt(this.dataset.col);
+        const menu = document.getElementById(`dropdown-menu-${colIdx}`);
+        if (!menu) return;
+        
+        if (openDropdown === colIdx) {
+            closeDropdown();
+        } else {
+            closeDropdown();
+            menu.classList.add('show');
+            openDropdown = colIdx;
+            // Populate search and checkbox events for this dropdown
+            setupDropdownInteractions(colIdx);
+        }
+    }
+    
+    function iconClickHandler(e) {
+        e.stopPropagation();
+        const colIdx = parseInt(this.dataset.col);
+        const btn = document.querySelector(`.dropdown-btn[data-col="${colIdx}"]`);
+        if (btn) btn.click();
+    }
+    
+    function setupDropdownInteractions(colIdx) {
+        const menu = document.getElementById(`dropdown-menu-${colIdx}`);
+        if (!menu) return;
+        
+        // Search functionality
+        const searchInput = menu.querySelector('.dropdown-search-input');
+        const optionsContainer = menu.querySelector('.dropdown-options');
+        
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                const options = optionsContainer.querySelectorAll('.dropdown-option');
+                options.forEach(opt => {
+                    const label = opt.querySelector('label').innerText.toLowerCase();
+                    opt.style.display = label.includes(term) ? 'flex' : 'none';
+                });
+            };
+        }
+        
+        // Checkbox change handlers
+        const checkboxes = menu.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.onchange = (e) => {
+                e.stopPropagation();
+                updateColumnSelection(colIdx);
+            };
+        });
+        
+        // Option div click (toggle checkbox)
+        const optionDivs = menu.querySelectorAll('.dropdown-option');
+        optionDivs.forEach(opt => {
+            opt.onclick = (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    const cb = opt.querySelector('input');
+                    if (cb) {
+                        cb.checked = !cb.checked;
+                        updateColumnSelection(colIdx);
+                    }
+                }
+            };
+        });
+        
+        // Select All button
+        const selectAllBtn = menu.querySelector('.select-all-btn');
+        if (selectAllBtn) {
+            selectAllBtn.onclick = (e) => {
+                e.stopPropagation();
+                const allCheckboxes = menu.querySelectorAll('input[type="checkbox"]');
+                allCheckboxes.forEach(cb => { cb.checked = true; });
+                updateColumnSelection(colIdx);
+            };
+        }
+        
+        // Clear All button
+        const clearAllBtn = menu.querySelector('.clear-all-btn');
+        if (clearAllBtn) {
+            clearAllBtn.onclick = (e) => {
+                e.stopPropagation();
+                const allCheckboxes = menu.querySelectorAll('input[type="checkbox"]');
+                allCheckboxes.forEach(cb => { cb.checked = false; });
+                updateColumnSelection(colIdx);
+            };
+        }
+    }
+    
+    function updateColumnSelection(colIdx) {
+        const menu = document.getElementById(`dropdown-menu-${colIdx}`);
+        if (!menu) return;
+        
+        const selectedValues = new Set();
+        const checkboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+        checkboxes.forEach(cb => {
+            selectedValues.add(cb.value);
+        });
+        
+        if (selectedValues.size === 0) {
+            delete columnSelections[colIdx];
+        } else {
+            columnSelections[colIdx] = selectedValues;
+        }
+        
+        // Update button text
+        const btn = document.querySelector(`.dropdown-btn[data-col="${colIdx}"]`);
+        if (btn) {
+            const span = btn.querySelector('span');
+            if (span) {
+                span.textContent = selectedValues.size > 0 ? `${selectedValues.size} selected` : 'All';
+            }
+        }
+        
+        // Update filter icon
+        const icon = document.querySelector(`.filter-icon[data-col="${colIdx}"]`);
+        if (icon) {
+            if (selectedValues.size > 0) icon.classList.add('active');
+            else icon.classList.remove('active');
+        }
+        
+        renderTable();
     }
     
     function escapeHtml(str) {
@@ -507,68 +661,29 @@
         });
     }
     
-    // ========== IMPROVED EXPORT FUNCTIONALITY WITH BLOB ==========
-    // Generate safe timestamp (no toISOString issues)
     function getSafeTimestamp() {
         const now = new Date();
-        return now.getFullYear() + "-" +
-            String(now.getMonth() + 1).padStart(2, '0') + "-" +
-            String(now.getDate()).padStart(2, '0') + "_" +
-            String(now.getHours()).padStart(2, '0') + "-" +
-            String(now.getMinutes()).padStart(2, '0') + "-" +
-            String(now.getSeconds()).padStart(2, '0');
+        return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}-${String(now.getSeconds()).padStart(2,'0')}`;
     }
     
-    // Main export function with Blob-based download (more reliable across browsers)
     function exportToExcel(filteredOnly = false) {
-        // CHECK 1: Verify SheetJS library loaded
-        if (typeof XLSX === 'undefined') {
-            alert("❌ Excel export library failed to load. Please check your internet connection and refresh the page.");
-            console.error("XLSX is undefined - CDN failed");
-            return false;
-        }
+        if (typeof XLSX === 'undefined') { alert("❌ Excel library failed to load."); return false; }
+        if (!masterData.length) { alert("⚠️ No data available."); return false; }
         
-        // CHECK 2: Verify data exists
-        if (!masterData || masterData.length === 0) {
-            alert("⚠️ No data available to export. Please wait for data to load.");
-            return false;
-        }
+        let rowsForExport = filteredOnly ? getFilteredData() : masterData;
+        if (rowsForExport.length === 0) { alert("⚠️ No data to export."); return false; }
         
-        // CHECK 3: For filtered export, verify filtered data exists
-        let rowsForExport;
-        if (filteredOnly) {
-            rowsForExport = getFilteredData();
-            if (rowsForExport.length === 0) {
-                alert("⚠️ No filtered data available to export. Please adjust your filters.");
-                return false;
-            }
-        } else {
-            rowsForExport = masterData;
-        }
-        
-        // CHECK 4: Confirmation prompt
         const exportType = filteredOnly ? "filtered data" : "full dataset";
-        const rowCount = rowsForExport.length;
-        const confirmMsg = `📊 Confirm Export\n\nDo you want to download the ${exportType}?\nTotal rows: ${rowCount}\n\nClick OK to proceed.`;
-        if (!confirm(confirmMsg)) {
-            return false;
-        }
+        if (!confirm(`📊 Export ${exportType}?\nRows: ${rowsForExport.length}\nClick OK to proceed.`)) return false;
         
-        // Prepare column headers
         let columnNames = (headers && headers.length) ? headers : (masterData[0]?.columns.map((_, idx) => `Column ${idx+1}`) || []);
-        
-        // Build 2D array for SheetJS
         const sheetData = [columnNames];
         rowsForExport.forEach(row => {
-            const rowArray = row.columns.map(cell => (cell !== undefined && cell !== null) ? cell : "");
-            sheetData.push(rowArray);
+            sheetData.push(row.columns.map(cell => (cell !== undefined && cell !== null) ? cell : ""));
         });
         
         try {
-            // Create worksheet
             const ws = XLSX.utils.aoa_to_sheet(sheetData);
-            
-            // Auto-size columns for better readability
             const colWidths = [];
             if (sheetData.length > 0) {
                 for (let i = 0; i < sheetData[0].length; i++) {
@@ -581,59 +696,36 @@
                 }
                 ws['!cols'] = colWidths;
             }
-            
-            // Create workbook
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "SheetData");
-            
-            // Generate filename with safe timestamp
             const timestamp = getSafeTimestamp();
             const fileName = filteredOnly ? `filtered_data_${timestamp}.xlsx` : `full_data_${timestamp}.xlsx`;
             
-            // ========== IMPROVED: Using Blob instead of direct writeFile for better browser compatibility ==========
             const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            
             const blob = new Blob([wbout], { type: "application/octet-stream" });
-            
             const url = URL.createObjectURL(blob);
-            
             const a = document.createElement("a");
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
             a.click();
-            
-            // Clean up after download
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-            
-            console.log(`✅ Export successful: ${fileName} (${rowCount} rows) using Blob method`);
+            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
             return true;
         } catch (err) {
-            console.error("Export error details:", err);
-            alert("❌ Failed to generate Excel file. Error: " + (err.message || "Unknown error") + "\n\nPlease try again or check browser console.");
+            alert("❌ Export failed: " + err.message);
             return false;
         }
     }
     
-    // Robust CSV parser
     function parseCSVToRows(csvText) {
         const lines = [];
         let inQuoteBlock = false;
         let currentLine = '';
         for (let i = 0; i < csvText.length; i++) {
             const ch = csvText[i];
-            if (ch === '"') {
-                inQuoteBlock = !inQuoteBlock;
-                currentLine += ch;
-            } else if (ch === '\n' && !inQuoteBlock) {
-                lines.push(currentLine);
-                currentLine = '';
-            } else {
-                currentLine += ch;
-            }
+            if (ch === '"') { inQuoteBlock = !inQuoteBlock; currentLine += ch; }
+            else if (ch === '\n' && !inQuoteBlock) { lines.push(currentLine); currentLine = ''; }
+            else { currentLine += ch; }
         }
         if (currentLine) lines.push(currentLine);
         
@@ -646,124 +738,81 @@
             for (let i = 0; i < line.length; i++) {
                 let ch = line[i];
                 if (ch === '"') {
-                    if (inQuotes && line[i+1] === '"') {
-                        current += '"';
-                        i++;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (ch === ',' && !inQuotes) {
-                    row.push(current);
-                    current = '';
-                } else {
-                    current += ch;
-                }
+                    if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
+                    else { inQuotes = !inQuotes; }
+                } else if (ch === ',' && !inQuotes) { row.push(current); current = ''; }
+                else { current += ch; }
             }
             row.push(current);
-            if (row.length > 1 || (row.length === 1 && row[0] !== '')) {
-                rows.push(row);
-            }
+            if (row.length > 1 || (row.length === 1 && row[0] !== '')) rows.push(row);
         }
         return rows;
     }
     
-    // Fetch and parse CSV
     async function fetchGoogleSheetData() {
-        tableContainer.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> Fetching live data from Google Sheets...</div>`;
+        tableContainer.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> Fetching live data...</div>`;
         isLoading = true;
         fetchError = null;
-        
-        // Disable download buttons while loading
         downloadFullBtn.disabled = true;
         downloadFilteredBtn.disabled = true;
         
         try {
-            const response = await fetch(SHEET_CSV_URL, { 
-                cache: "no-store",
-                headers: { "Cache-Control": "no-cache" }
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch sheet`);
+            const response = await fetch(SHEET_CSV_URL, { cache: "no-store" });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const csvText = await response.text();
-            if (!csvText || csvText.trim().length === 0) throw new Error("Received empty data from Google Sheet");
+            if (!csvText || csvText.trim().length === 0) throw new Error("Empty data");
             
             const parsedRows = parseCSVToRows(csvText);
-            if (parsedRows.length === 0) throw new Error("No data rows found in CSV");
+            if (parsedRows.length === 0) throw new Error("No data rows");
             
-            const rawHeaders = parsedRows[0];
-            headers = rawHeaders.map(h => (h && h.trim()) ? h.trim() : `Column`);
+            headers = parsedRows[0].map(h => (h && h.trim()) ? h.trim() : `Column`);
             const dataRows = parsedRows.slice(1);
-            
-            if (dataRows.length === 0) {
-                masterData = [];
-            } else {
-                masterData = dataRows.map(row => {
-                    const fullRow = [...row];
-                    while (fullRow.length < headers.length) fullRow.push('');
-                    if (fullRow.length > headers.length) fullRow.length = headers.length;
-                    return { columns: fullRow };
-                });
-            }
-            
+            masterData = dataRows.map(row => {
+                const fullRow = [...row];
+                while (fullRow.length < headers.length) fullRow.push('');
+                if (fullRow.length > headers.length) fullRow.length = headers.length;
+                return { columns: fullRow };
+            });
             fetchError = null;
-            console.log(`✅ Loaded ${masterData.length} rows from Google Sheet`);
         } catch (err) {
-            console.error("Fetch error:", err);
-            fetchError = err.message || "Failed to load Google Sheet data. Please verify the CSV link is publicly accessible.";
+            fetchError = err.message || "Failed to load data";
             masterData = [];
             headers = [];
         } finally {
             isLoading = false;
-            // Enable download buttons after data loads
             downloadFullBtn.disabled = false;
             downloadFilteredBtn.disabled = false;
             renderTable();
         }
     }
     
-    // Event handlers
-    fromDateInput.addEventListener('change', () => renderTable());
-    toDateInput.addEventListener('change', () => renderTable());
-    globalSearchInput.addEventListener('input', () => renderTable());
-    
-    resetBtn.addEventListener('click', () => {
+    function resetAllFilters() {
         fromDateInput.value = '';
         toDateInput.value = '';
         globalSearchInput.value = '';
+        columnSelections = {};
         renderTable();
-    });
+    }
     
-    // Full download with loading check
+    fromDateInput.addEventListener('change', () => renderTable());
+    toDateInput.addEventListener('change', () => renderTable());
+    globalSearchInput.addEventListener('input', () => renderTable());
+    resetBtn.addEventListener('click', resetAllFilters);
+    
     downloadFullBtn.addEventListener('click', () => {
-        if (isLoading) {
-            alert("⏳ Data is still loading. Please wait for data to finish loading before exporting.");
-            return;
-        }
-        if (masterData.length === 0) {
-            alert("⚠️ No data loaded yet. Please refresh or check the Google Sheet link.");
-            return;
-        }
+        if (isLoading) { alert("⏳ Data loading..."); return; }
+        if (!masterData.length) { alert("No data loaded"); return; }
         exportToExcel(false);
     });
     
-    // Filtered download with loading check
     downloadFilteredBtn.addEventListener('click', () => {
-        if (isLoading) {
-            alert("⏳ Data is still loading. Please wait for data to finish loading before exporting.");
-            return;
-        }
-        if (masterData.length === 0) {
-            alert("⚠️ No data loaded yet. Please refresh or check the Google Sheet link.");
-            return;
-        }
-        const filteredRows = getFilteredData();
-        if (filteredRows.length === 0) {
-            alert("⚠️ No filtered data available. Adjust your filters to include some data.");
-            return;
-        }
+        if (isLoading) { alert("⏳ Data loading..."); return; }
+        if (!masterData.length) { alert("No data loaded"); return; }
+        const filtered = getFilteredData();
+        if (filtered.length === 0) { alert("No filtered data to export"); return; }
         exportToExcel(true);
     });
     
-    // Initialize
     fetchGoogleSheetData();
 </script>
 </body>
