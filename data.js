@@ -654,6 +654,12 @@ const PACKAGES = {
   lab2: [
   ],
   lab3: [
+    { name: "GD Life A1", tests: ["Iron Study", "RFT", "CBC", "LFT", "Lipid Profile", "T3  T4  TSH"], mrp: 1400, b2b: 295 },
+    { name: "GD Life A3", tests: ["FBS", "LFT", "Lipid Profile", "TSH", "CBC", "RFT"], mrp: 1200, b2b: 230 },
+    { name: "GD Wellness 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "Vit D3", "Vit B12", "T3  T4  TSH"], mrp: 1800, b2b: 600 },
+    { name: "ALPHA WELLNESS 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "RFT", "Vit D3", "Vit B12", "CBC", "ESR", "CRP", "T3  T4  TSH"], mrp: 2150, b2b: 750 },
+    { name: "GD WELLNESS 15.1", tests: ["Iron Study", "LFT", "Lipid Profile", "T3  T4  TSH", "RFT"], mrp: 1000, b2b: 550 },
+    { name: "Extra Package", tests: [], mrp: null, b2b: null }
   ],
   lab4: [
   ]
