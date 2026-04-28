@@ -1541,152 +1541,39 @@ body {
                 </select>
               </div>
 
-              <div id="labTestContainer">
-                <div id="lab1Panel" class="lab-panel active">
-                  <div class="grid">
-                    <div class="span-all">
-                      <label class="req">Tests</label>
-                      <div class="multiselect" id="testsSelect1" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="chips1">
-                          <input class="ms-input" id="msInput1" placeholder="Type to search…"/>
-                        </div>
-                        <div class="ms-popup" id="msPopup1" hidden>
-                          <ul class="ms-list" id="msList1" role="listbox" aria-label="Tests"></ul>
-                          <div class="ms-empty" id="msEmpty1" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="tests_lab1" id="testsValue1" />
-                    </div>
-                    
-                    <div class="span-all">
-                      <label>Packages</label>
-                      <div class="multiselect" id="packagesSelect1" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="packagesChips1">
-                          <input class="ms-input" id="packagesInput1" placeholder="Type to search packages…"/>
-                        </div>
-                        <div class="ms-popup" id="packagesPopup1" hidden>
-                          <ul class="ms-list" id="packagesList1" role="listbox" aria-label="Packages"></ul>
-                          <div class="ms-empty" id="packagesEmpty1" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="packages_lab1" id="packagesValue1" />
-                    </div>
-                  </div>
-                </div>
+<!-- Unified Test & Package Selection -->
+<div class="unified-selection-section" style="margin-bottom: 24px; margin-top: 24px">
+  <div class="field">
+    <label class="req">Search Tests & Packages</label>
+    <div class="searchable-dropdown">
+      <input type="text" id="unifiedSearchInput" placeholder="🔍 Search for tests or packages..." autocomplete="off" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--accent);" />
+      <div id="unifiedSearchResults" class="dropdown-suggestions" style="display: none; max-height: 300px;"></div>
+    </div>
+  </div>
+</div>
 
-                <div id="lab2Panel" class="lab-panel">
-                  <div class="grid">
-                    <div class="span-all">
-                      <label class="req">Tests</label>
-                      <div class="multiselect" id="testsSelect2" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="chips2">
-                          <input class="ms-input" id="msInput2" placeholder="Type to search…"/>
-                        </div>
-                        <div class="ms-popup" id="msPopup2" hidden>
-                          <ul class="ms-list" id="msList2" role="listbox" aria-label="Tests"></ul>
-                          <div class="ms-empty" id="msEmpty2" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="tests_lab2" id="testsValue2" />
-                    </div>
-                    
-                    <div class="span-all">
-                      <label>Packages</label>
-                      <div class="multiselect" id="packagesSelect2" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="packagesChips2">
-                          <input class="ms-input" id="packagesInput2" placeholder="Type to search packages…"/>
-                        </div>
-                        <div class="ms-popup" id="packagesPopup2" hidden>
-                          <ul class="ms-list" id="packagesList2" role="listbox" aria-label="Packages"></ul>
-                          <div class="ms-empty" id="packagesEmpty2" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="packages_lab2" id="packagesValue2" />
-                    </div>
-                  </div>
-                </div>
+<!-- Bulk Add Section -->
+<div class="bulk-add-section" style="margin-bottom: 24px; padding: 16px; background: linear-gradient(135deg, rgba(9, 99, 126, 0.03) 0%, rgba(8, 131, 149, 0.03) 100%); border-radius: 12px;">
+  <div class="field">
+    <label>📋 Bulk Add (Comma Separated)</label>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <input type="text" id="bulkAddInput" placeholder="e.g., CBC, LFT, Goodness A1, TSH" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--accent);" />
+      <button type="button" id="bulkAddBtn" class="btn primary" style="padding: 10px 20px;">Add All</button>
+    </div>
+  </div>
+</div>
 
-                <div id="lab3Panel" class="lab-panel">
-                  <div class="grid">
-                    <div class="span-all">
-                      <label class="req">Tests</label>
-                      <div class="multiselect" id="testsSelect3" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="chips3">
-                          <input class="ms-input" id="msInput3" placeholder="Type to search…"/>
-                        </div>
-                        <div class="ms-popup" id="msPopup3" hidden>
-                          <ul class="ms-list" id="msList3" role="listbox" aria-label="Tests"></ul>
-                          <div class="ms-empty" id="msEmpty3" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="tests_lab3" id="testsValue3" />
-                    </div>
-                    
-                    <div class="span-all">
-                      <label>Packages</label>
-                      <div class="multiselect" id="packagesSelect3" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="packagesChips3">
-                          <input class="ms-input" id="packagesInput3" placeholder="Type to search packages…"/>
-                        </div>
-                        <div class="ms-popup" id="packagesPopup3" hidden>
-                          <ul class="ms-list" id="packagesList3" role="listbox" aria-label="Packages"></ul>
-                          <div class="ms-empty" id="packagesEmpty3" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="packages_lab3" id="packagesValue3" />
-                    </div>
-                  </div>
-                </div>
+<!-- Selected Items Display (Unified) -->
+<div id="selectedItemsList" class="selected-items-list" style="margin-top: 16px;">
+  <div class="selected-items-title">Selected Tests & Packages</div>
+  <div class="hint" style="padding: 12px; text-align: center;">No tests or packages selected</div>
+</div>
 
-                <div id="lab4Panel" class="lab-panel">
-                  <div class="grid">
-                    <div class="span-all">
-                      <label class="req">Tests</label>
-                      <div class="multiselect" id="testsSelect4" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="chips4">
-                          <input class="ms-input" id="msInput4" placeholder="Type to search…"/>
-                        </div>
-                        <div class="ms-popup" id="msPopup4" hidden>
-                          <ul class="ms-list" id="msList4" role="listbox" aria-label="Tests"></ul>
-                          <div class="ms-empty" id="msEmpty4" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="tests_lab4" id="testsValue4" />
-                    </div>
-                    
-                    <div class="span-all">
-                      <label>Packages</label>
-                      <div class="multiselect" id="packagesSelect4" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
-                        <div class="chips" id="packagesChips4">
-                          <input class="ms-input" id="packagesInput4" placeholder="Type to search packages…"/>
-                        </div>
-                        <div class="ms-popup" id="packagesPopup4" hidden>
-                          <ul class="ms-list" id="packagesList4" role="listbox" aria-label="Packages"></ul>
-                          <div class="ms-empty" id="packagesEmpty4" hidden>No matches</div>
-                        </div>
-                      </div>
-                      <input type="hidden" name="packages_lab4" id="packagesValue4" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div id="selectedTestsDisplay" class="selected-items-list">
-                <div class="selected-items-title">Selected Tests</div>
-                <div id="selectedTestsList"></div>
-              </div>
-
-              <div id="selectedPackagesDisplay" class="selected-items-list">
-                <div class="selected-items-title">Selected Packages</div>
-                <div id="selectedPackagesList"></div>
-              </div>
-
-              <div class="tube-section">
-                <p class="tube-title">Required Test Tubes</p>
-                <div id="tubeList" class="tubes-grid"></div>
-                <button type="button" id="resetTubeCounts" class="reset-tube-btn">Reset to Auto-Calculated</button>
-              </div>
-
+<div class="tube-section">
+  <p class="tube-title">Required Test Tubes</p>
+  <div id="tubeList" class="tubes-grid"></div>
+  <button type="button" id="resetTubeCounts" class="reset-tube-btn">Reset to Auto-Calculated</button>
+</div>
 
               <div class="doctor-careof-row">
                 <div class="field">
