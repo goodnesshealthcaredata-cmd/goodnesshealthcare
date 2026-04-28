@@ -350,7 +350,8 @@ lab1: [
 { name: "PSA Free & Total", mrp: 850, b2b: 350 },
 { name: "LH", mrp: 520, b2b: 180 },
 { name: "FSH", mrp: 520, b2b: 180 },
-{ name: "Semen Analysis", mrp: 1100, b2b: 770 }
+{ name: "Semen Analysis", mrp: 1100, b2b: 770 },
+{ name: "Extra Test", mrp: null, b2b: null } 
 ],
 
 lab2: [
@@ -487,7 +488,8 @@ lab2: [
 { name: "PSA Free & Total", mrp: 1450, b2b: 1001 },
 { name: "LH", mrp: 525, b2b: 263 },
 { name: "FSH", mrp: 525, b2b: 263 },
-{ name: "Semen Analysis", mrp: 300, b2b: 300 }
+{ name: "Semen Analysis", mrp: 300, b2b: 300 },
+{ name: "Extra Test", mrp: null, b2b: null }
 ],
 
 lab3: [
@@ -624,7 +626,8 @@ lab3: [
 { name: "PSA Free & Total", mrp: 1760, b2b: 465 },
 { name: "LH", mrp: 495, b2b: 100 },
 { name: "FSH", mrp: 495, b2b: 100 },
-{ name: "Semen Analysis", mrp: null, b2b: null }
+{ name: "Semen Analysis", mrp: null, b2b: null },
+{ name: "Extra Test", mrp: null, b2b: null }
 ],
 
   lab4: [  ]
@@ -645,7 +648,8 @@ const PACKAGES = {
 { name: "Goodness G", tests: ["CBC", "FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Total TFT", "Uric Acid"], mrp: 1500, b2b: 550 },
 { name: "Goodness F", tests: ["CBC", "Creatinine", "HbA1C", "Lipid Profile", "LFT", "RFT"], mrp: 1800, b2b: 600 },
 { name: "ANC Profile", tests: ["CBC", "Blood Group", "FBS", "HBsAg", "HIV", "HCV", "VDRL", "TSH", "Hb Electrophoresis", "Urine Routine"], mrp: 1800, b2b: 1620 },
-{ name: "Goodness Fever Profile", tests: ["CBC", "ESR", "SGOT", "SGPT", "CRP", "Dengue NSI", "MP-Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 }
+{ name: "Goodness Fever Profile", tests: ["CBC", "ESR", "SGOT", "SGPT", "CRP", "Dengue NSI", "MP-Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 },
+{ name: "Extra Package", tests: [], mrp: null, b2b: null }
   ],
   lab2: [
   ],
