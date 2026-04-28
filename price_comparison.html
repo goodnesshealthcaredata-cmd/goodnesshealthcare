@@ -12,1124 +12,893 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: 'Inter', sans-serif;
-    background: #EBF4F6;
-    color: #1A2C33;
-    line-height: 1.5;
-  }
-
-  /* Top Navigation - Teal Primary */
-  .top-nav {
-    background: linear-gradient(135deg, #09637E 0%, #0A7A9A 100%);
-    padding: 28px 24px;
-    margin-bottom: 32px;
-    box-shadow: 0 8px 20px rgba(9, 99, 126, 0.12);
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-  }
-
-  .page-title h1 {
-    font-size: 1.9rem;
-    font-weight: 700;
-    color: white;
-    letter-spacing: -0.3px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .page-title h1 i {
-    background: rgba(255,255,255,0.2);
-    padding: 10px;
-    border-radius: 50%;
-    font-size: 1.4rem;
-  }
-
-  .page-title p {
-    color: rgba(255,255,255,0.85);
-    font-size: 1rem;
-    margin-top: 8px;
-    font-weight: 400;
-  }
-
-  /* Content container - responsive */
-  .content-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px;
-  }
-
-  /* Card styling - premium, glassmorphism touch */
-  .card {
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(0px);
-    border-radius: 28px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02);
-    padding: 28px 28px;
-    margin-bottom: 32px;
-    transition: all 0.25s ease;
-    border: 1px solid rgba(122, 178, 178, 0.25);
-  }
-
-  .card h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #09637E;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-left: 4px solid #088395;
-    padding-left: 16px;
-  }
-
-  .card h3 i {
-    color: #088395;
-    font-size: 1.3rem;
-  }
-
-  /* Input group */
-  .input-group {
-    margin-bottom: 24px;
-  }
-
-  .input-label {
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #09637E;
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: 14px 18px;
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-    border: 1.5px solid #D9E9EC;
-    border-radius: 60px;
-    background: white;
-    transition: all 0.2s;
-    outline: none;
-    color: #1A2C33;
-  }
-
-  .search-input:focus {
-    border-color: #088395;
-    box-shadow: 0 0 0 4px rgba(8, 131, 149, 0.15);
-  }
-
-  /* Suggestions */
-  .suggestions {
-    background: white;
-    border-radius: 20px;
-    margin-top: 8px;
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
-    max-height: 220px;
-    overflow-y: auto;
-    z-index: 100;
-    position: relative;
-    border: 1px solid #E2F0F2;
-  }
-
-  .suggestions div {
-    padding: 12px 18px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-weight: 500;
-    color: #1F4E5E;
-  }
-
-  .suggestions div:hover {
-    background: #EBF4F6;
-    color: #09637E;
-  }
-
-  /* Selected tests chips */
-  .selected-tests {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin: 20px 0 16px;
-    min-height: 60px;
-  }
-
-  .selected-tests span {
-    background: linear-gradient(105deg, #EBF4F6 0%, #E6F0F2 100%);
-    color: #09637E;
-    padding: 8px 18px;
-    border-radius: 40px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1px solid rgba(8, 131, 149, 0.3);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-  }
-
-  .selected-tests span i {
-    font-size: 12px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-  }
-
-  .selected-tests span:hover {
-    background: #fff;
-    border-color: #088395;
-    transform: translateY(-1px);
-  }
-
-  .btn-clear {
-    background: transparent;
-    border: 1.5px solid #7AB2B2;
-    color: #09637E;
-    padding: 10px 20px;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .btn-clear:hover {
-    background: #EBF4F6;
-    border-color: #088395;
-    color: #088395;
-    transform: scale(0.98);
-  }
-
-  /* Comparison section */
-  .comparison-section {
-    background: white;
-    border-radius: 28px;
-    padding: 24px 20px;
-    margin-bottom: 32px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.05);
-    border: 1px solid rgba(122, 178, 178, 0.3);
-    transition: all 0.2s;
-  }
-
-  .comparison-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #09637E;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 24px;
-    border-bottom: 2px solid #7AB2B2;
-    padding-bottom: 12px;
-  }
-
-  /* Table responsive wrapper */
-  .comparison-table-wrapper {
-    overflow-x: auto;
-    width: 100%;
-  }
-
-  .comparison-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 0.85rem;
-    min-width: 640px;
-  }
-
-  .comparison-table th {
-    text-align: left;
-    padding: 14px 12px;
-    background: #EBF4F6;
-    color: #09637E;
-    font-weight: 700;
-    border-radius: 16px 16px 0 0;
-  }
-
-  .comparison-table td {
-    padding: 16px 12px;
-    border-bottom: 1px solid #E2F0F2;
-    vertical-align: top;
-  }
-
-  .lab-name {
-    font-weight: 800;
-    color: #09637E;
-    background: #F8FDFE;
-  }
-
-  .test-item {
-    background: #F1F8FA;
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 30px;
-    margin: 4px 6px 4px 0;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  .price-b2b {
-    font-weight: 800;
-    color: #088395;
-    font-size: 1rem;
-  }
-
-  .price-mrp {
-    font-size: 0.7rem;
-    color: #7AB2B2;
-    text-decoration: line-through;
-    margin-top: 4px;
-  }
-
-  .package-badge {
-    background: #08839520;
-    color: #09637E;
-    padding: 2px 8px;
-    border-radius: 40px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    margin-left: 6px;
-  }
-
-  /* Lab block for result */
-  .lab-block {
-    background: #F9FDFF;
-    border-left: 5px solid #088395;
-    padding: 16px 18px;
-    margin-bottom: 16px;
-    border-radius: 20px;
-    transition: all 0.2s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-  }
-
-  .lab-block strong {
-    color: #09637E;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .highlight {
-    background: linear-gradient(120deg, #EBF4F6, #E2F0F4);
-    padding: 16px 20px;
-    border-radius: 20px;
-    margin-top: 20px;
-    font-weight: 700;
-    color: #09637E;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .result {
-    margin-top: 8px;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: #7AB2B2;
-  }
-
-  /* Responsive breakpoints */
-  @media (max-width: 768px) {
-    .top-nav {
-      padding: 20px 16px;
-    }
-    .page-title h1 {
-      font-size: 1.5rem;
-    }
-    .content-container {
-      padding: 0 16px;
-    }
-    .card {
-      padding: 20px 18px;
-    }
-    .card h3 {
-      font-size: 1.3rem;
-    }
-    .comparison-title {
-      font-size: 1.2rem;
-    }
-    .comparison-table th, 
-    .comparison-table td {
-      padding: 12px 8px;
-    }
-    .lab-block {
-      padding: 12px 14px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .page-title h1 {
-      font-size: 1.3rem;
-    }
-    .btn-clear {
-      width: 100%;
-      justify-content: center;
-    }
-    .comparison-table th, 
-    .comparison-table td {
-      font-size: 0.75rem;
-    }
-    .highlight {
-      font-size: 0.9rem;
-    }
-  }
-
-  /* subtle hover micro */
-  .lab-block:hover {
-    background: white;
-    box-shadow: 0 6px 14px rgba(9, 99, 126, 0.08);
-    transform: translateX(4px);
-  }
-  
-  button, .suggestions div, .selected-tests span {
-    cursor: pointer;
-  }
-
-  /* Optimization engine badge */
-  .engine-badge {
-    display: inline-block;
-    background: #088395;
-    color: white;
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    margin-left: 12px;
-    vertical-align: middle;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #EBF4F6; color: #1A2C33; line-height: 1.5; }
+  .top-nav { background: linear-gradient(135deg, #09637E 0%, #0A7A9A 100%); padding: 28px 24px; margin-bottom: 32px; box-shadow: 0 8px 20px rgba(9,99,126,0.12); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; }
+  .page-title h1 { font-size: 1.9rem; font-weight: 700; color: white; letter-spacing: -0.3px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .page-title h1 i { background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; }
+  .content-container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+  .card { background: rgba(255,255,255,0.96); border-radius: 28px; box-shadow: 0 12px 30px rgba(0,0,0,0.05); padding: 28px; margin-bottom: 32px; border: 1px solid rgba(122,178,178,0.25); }
+  .card h3 { font-size: 1.5rem; font-weight: 600; color: #09637E; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-left: 4px solid #088395; padding-left: 16px; }
+  .search-input { width: 100%; padding: 14px 18px; font-size: 1rem; border: 1.5px solid #D9E9EC; border-radius: 60px; outline: none; }
+  .search-input:focus { border-color: #088395; box-shadow: 0 0 0 4px rgba(8,131,149,0.15); }
+  .suggestions { background: white; border-radius: 20px; margin-top: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); max-height: 260px; overflow-y: auto; border: 1px solid #E2F0F2; z-index: 10; position: relative; }
+  .suggestions div { padding: 12px 18px; cursor: pointer; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+  .suggestions div:hover { background: #EBF4F6; }
+  .suggestion-combo { border-left: 3px solid #088395; background: #F8FDFE; }
+  .suggestion-combo i { color: #088395; width: 20px; }
+  .suggestion-test i { color: #7AB2B2; width: 20px; }
+  .combo-badge { background: #08839520; color: #088395; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; margin-left: 8px; font-weight: 600; }
+  .selected-tests { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 16px; min-height: 60px; }
+  .selected-tests span { background: linear-gradient(105deg, #EBF4F6 0%, #E6F0F2 100%); color: #09637E; padding: 8px 18px; border-radius: 40px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid rgba(8,131,149,0.3); transition: all 0.2s; }
+  .selected-tests span:hover { background: #fff; border-color: #088395; transform: translateY(-1px); }
+  .selected-combo { background: linear-gradient(105deg, #E0F2F5 0%, #D6ECEF 100%) !important; border-left: 3px solid #088395 !important; }
+  .selected-combo i { color: #088395; }
+  .btn-clear { background: transparent; border: 1.5px solid #7AB2B2; color: #09637E; padding: 10px 20px; border-radius: 40px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; }
+  .btn-clear:hover { background: #EBF4F6; border-color: #088395; }
+  .comparison-section { background: white; border-radius: 28px; padding: 24px; margin-bottom: 32px; border: 1px solid rgba(122,178,178,0.3); }
+  .comparison-title { font-size: 1.4rem; font-weight: 700; color: #09637E; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; border-bottom: 2px solid #7AB2B2; padding-bottom: 12px; flex-wrap: wrap; }
+  .comparison-table-wrapper { overflow-x: auto; }
+  .comparison-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 900px; border: 1px solid #D9E9EC; }
+  .comparison-table th, .comparison-table td { border: 1px solid #D9E9EC; padding: 14px 12px; vertical-align: top; }
+  .comparison-table th { background: #EBF4F6; color: #09637E; font-weight: 700; }
+  .lab-name { font-weight: 800; color: #09637E; background: #F8FDFE; }
+  .test-item { background: #F1F8FA; display: inline-block; padding: 4px 12px; border-radius: 30px; margin: 4px 6px 4px 0; font-size: 0.75rem; font-weight: 500; }
+  .price-b2b { font-weight: 800; color: #088395; font-size: 1rem; background: #E6F7FA; padding: 2px 8px; border-radius: 20px; display: inline-block; }
+  .price-mrp { font-size: 0.7rem; color: #7AB2B2; text-decoration: line-through; margin-top: 4px; }
+  .info-icon { margin-left: 8px; color: #088395; cursor: pointer; font-size: 0.8rem; }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+  .modal-content { background: white; border-radius: 28px; padding: 24px; max-width: 500px; width: 90%; max-height: 70vh; overflow-y: auto; }
+  .lab-checkboxes { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; padding: 12px 0; border-bottom: 1px solid #E2F0F2; }
+  .lab-checkboxes label { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #09637E; cursor: pointer; }
+  .lab-block { background: #F9FDFF; border-left: 5px solid #088395; padding: 16px 18px; margin-bottom: 16px; border-radius: 20px; position: relative; }
+  .lab-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .lab-copy-btn { background: #08839520; border: none; padding: 4px 12px; border-radius: 30px; cursor: pointer; font-size: 0.7rem; font-weight: 600; color: #09637E; transition: all 0.2s; }
+  .lab-copy-btn:hover { background: #08839540; }
+  .highlight { background: linear-gradient(120deg, #EBF4F6, #E2F0F4); padding: 16px 20px; border-radius: 20px; margin-top: 20px; font-weight: 700; color: #09637E; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .empty-state { text-align: center; padding: 48px 20px; color: #7AB2B2; }
+  .copy-btn { margin-left: 16px; background: #08839520; border: none; padding: 6px 12px; border-radius: 30px; cursor: pointer; font-size: 0.75rem; font-weight: 600; color: #09637E; transition: all 0.2s; }
+  .copy-btn:hover { background: #08839540; }
+  .b2p-highlight { font-weight: 800; color: #088395; background: #E6F7FA; display: inline-block; padding: 2px 6px; border-radius: 16px; font-size: 0.85rem; }
+  .disabled-test-note { font-size: 0.7rem; color: #7AB2B2; margin-top: 4px; font-style: italic; }
+  @media (max-width: 768px) { .card { padding: 20px; } .comparison-table th, .comparison-table td { padding: 10px 6px; } }
 </style>
 </head>
 <body>
-  <!-- Top Navigation -->
-  <div class="top-nav">
-    <div class="page-title">
-      <h1>
-        <i class="fas fa-chart-line"></i>
-        Test Price Comparison
-      </h1>
-    </div>
+<div class="top-nav"><div class="page-title"><h1><i class="fas fa-chart-line"></i> Test Price Comparison</h1></div></div>
+<div class="content-container">
+  <div class="card">
+    <h3><i class="fas fa-search"></i> Select Tests & Combos</h3>
+    <div class="input-group"><label class="input-label">Search for tests or combos</label><input type="text" id="search" class="search-input" placeholder="e.g., CBC, Sugar, Diabetic Combo, Vital Check..."><div class="suggestions" id="suggestions"></div></div>
+    <div class="selected-tests" id="selectedTests"></div>
+    <button class="btn-clear" id="clearAllBtn"><i class="fas fa-trash-alt"></i> Clear All Selections</button>
   </div>
 
-  <div class="content-container">
-    <!-- Test Selection Card -->
-    <div class="card">
-      <h3>
-        <i class="fas fa-search"></i>
-        Select Tests
-      </h3>
-      <div class="input-group">
-        <label class="input-label">Search for lab tests</label>
-        <input type="text" id="search" class="search-input" placeholder="e.g., CBC, Sugar, Thyroid...">
-        <div class="suggestions" id="suggestions"></div>
-      </div>
-
-      <div class="selected-tests" id="selectedTests"></div>
-      
-      <button class="btn-clear" id="clearAllBtn">
-        <i class="fas fa-trash-alt"></i> Clear All Tests
-      </button>
-    </div>
-
-    <!-- Comparison Section -->
-    <div id="comparisonSection" class="comparison-section" style="display: none;">
-      <div class="comparison-title">
-        <i class="fas fa-chart-simple"></i>
-        <span>Available Options Comparison</span>
-      </div>
-      <div class="comparison-table-wrapper" id="comparisonTableWrapper">
-        <div id="comparisonTable"></div>
-      </div>
-    </div>
-
-    <!-- Optimization Results Card -->
-    <div class="card">
-      <h3>
-        <i class="fas fa-chart-line"></i>
-        Optimized Plan
-      </h3>
-      <div id="result"></div>
-    </div>
+  <!-- Lab selection control -->
+  <div class="card" style="padding: 16px 28px;">
+    <h3><i class="fas fa-check-square"></i> Labs Selection</h3>
+    <div id="labCheckboxes" class="lab-checkboxes"></div>
   </div>
 
-  <script>
-    // ============================================
-    // LAB TEST OPTIMIZATION ENGINE
-    // ============================================
-    
-    /**
-     * LAB TEST OPTIMIZER CLASS
-     * Smart algorithm to select most cost-effective combination
-     * of lab test packages and individual tests across multiple labs.
-     */
-    
-    class LabTestOptimizer {
-      constructor(labs) {
-        this.labs = labs;
-        this.testIndex = this.buildTestIndex();
-      }
-      
-      buildTestIndex() {
-        const index = new Map();
-        for (const lab of this.labs) {
-          for (const test of lab.tests) {
-            if (!index.has(test.name)) {
-              index.set(test.name, []);
-            }
-            index.get(test.name).push({
-              lab: lab.name,
-              test: test,
-              labRef: lab
-            });
-          }
-        }
-        return index;
-      }
-      
-      findCheapestIndividualTest(testName) {
-        const options = this.testIndex.get(testName);
-        if (!options || options.length === 0) return null;
-        
-        let cheapest = null;
-        let minCost = Infinity;
-        
-        for (const option of options) {
-          if (option.test.b2b < minCost) {
-            minCost = option.test.b2b;
-            cheapest = {
-              lab: option.lab,
-              test: option.test,
-              cost: option.test.b2b
-            };
-          }
-        }
-        return cheapest;
-      }
-      
-      evaluateAllPackages(remainingTests) {
-        const candidates = [];
-        
-        for (const lab of this.labs) {
-          for (const pkg of lab.packages) {
-            const coveredTests = pkg.tests.filter(test => remainingTests.has(test));
-            
-            if (coveredTests.length === 0) continue;
-            
-            let individualCost = 0;
-            let individualMRP = 0;
-            let allTestsAvailable = true;
-            
-            for (const testName of coveredTests) {
-              const testObj = lab.tests.find(t => t.name === testName);
-              if (!testObj) {
-                allTestsAvailable = false;
-                break;
-              }
-              individualCost += testObj.b2b;
-              individualMRP += testObj.mrp;
-            }
-            
-            if (!allTestsAvailable) continue;
-            
-            const savings = individualCost - pkg.b2b;
-            
-            if (savings > 0) {
-              candidates.push({
-                lab: lab.name,
-                labRef: lab,
-                package: pkg,
-                coveredTests: coveredTests,
-                coveredCount: coveredTests.length,
-                individualCost: individualCost,
-                individualMRP: individualMRP,
-                savings: savings,
-                costPerTest: pkg.b2b / coveredTests.length
-              });
-            }
-          }
-        }
-        
-        candidates.sort((a, b) => {
-          if (a.savings !== b.savings) return b.savings - a.savings;
-          return b.coveredCount - a.coveredCount;
-        });
-        
-        return candidates;
-      }
-      
-      selectOptimalPackages(remainingTests) {
-        const selectedPackages = [];
-        const currentRemaining = new Set(remainingTests);
-        
-        while (currentRemaining.size > 0) {
-          const candidates = this.evaluateAllPackages(currentRemaining);
-          
-          if (candidates.length === 0) break;
-          
-          let bestCandidate = null;
-          let bestScore = -Infinity;
-          
-          for (const candidate of candidates) {
-            const coverageRatio = candidate.coveredCount / currentRemaining.size;
-            const score = candidate.savings * 100 + candidate.coveredCount * 10 + coverageRatio * 5;
-            
-            if (score > bestScore) {
-              bestScore = score;
-              bestCandidate = candidate;
-            }
-          }
-          
-          if (bestCandidate) {
-            selectedPackages.push({
-              lab: bestCandidate.lab,
-              type: "Package",
-              name: bestCandidate.package.name,
-              tests: [...bestCandidate.coveredTests],
-              cost: bestCandidate.package.b2b,
-              mrp: bestCandidate.package.mrp,
-              savings: bestCandidate.savings,
-              individualCost: bestCandidate.individualCost
-            });
-            
-            for (const test of bestCandidate.coveredTests) {
-              currentRemaining.delete(test);
-            }
-          } else {
-            break;
-          }
-        }
-        
-        return {
-          selectedPackages: selectedPackages,
-          remainingTests: currentRemaining
-        };
-      }
-      
-      selectIndividualTests(remainingTests) {
-        const selectedTests = [];
-        
-        for (const testName of remainingTests) {
-          const cheapest = this.findCheapestIndividualTest(testName);
-          
-          if (cheapest) {
-            selectedTests.push({
-              lab: cheapest.lab,
-              type: "Test",
-              name: testName,
-              tests: [testName],
-              cost: cheapest.test.b2b,
-              mrp: cheapest.test.mrp
-            });
-          }
-        }
-        
-        return selectedTests;
-      }
-      
-      optimize(userSelectedTests) {
-        if (!userSelectedTests || userSelectedTests.length === 0) {
-          return {
-            finalPlan: [],
-            totalB2B: 0,
-            totalMRP: 0,
-            savings: 0,
-            savingsPercentage: 0,
-            testsCovered: 0,
-            totalTestsRequested: 0,
-            missingTests: []
-          };
-        }
-        
-        const uniqueTests = [...new Set(userSelectedTests)];
-        const remainingTests = new Set(uniqueTests);
-        
-        const { selectedPackages, remainingTests: remainingAfterPackages } = 
-          this.selectOptimalPackages(remainingTests);
-        
-        const selectedTests = this.selectIndividualTests(remainingAfterPackages);
-        
-        const finalPlan = [...selectedPackages, ...selectedTests];
-        
-        let totalB2B = 0;
-        let totalMRP = 0;
-        
-        for (const item of finalPlan) {
-          totalB2B += item.cost;
-          totalMRP += item.mrp;
-        }
-        
-        const savings = totalMRP - totalB2B;
-        const savingsPercentage = totalMRP > 0 ? (savings / totalMRP) * 100 : 0;
-        
-        const coveredTests = new Set();
-        for (const item of finalPlan) {
-          for (const test of item.tests) {
-            coveredTests.add(test);
-          }
-        }
-        
-        const missingTests = uniqueTests.filter(t => !coveredTests.has(t));
-        
-        return {
-          finalPlan: finalPlan,
-          totalB2B: Math.round(totalB2B * 100) / 100,
-          totalMRP: Math.round(totalMRP * 100) / 100,
-          savings: Math.round(savings * 100) / 100,
-          savingsPercentage: Math.round(savingsPercentage * 100) / 100,
-          testsCovered: coveredTests.size,
-          totalTestsRequested: uniqueTests.length,
-          missingTests: missingTests
-        };
-      }
+  <div id="comparisonSection" class="comparison-section" style="display: none;">
+    <div class="comparison-title"><i class="fas fa-chart-simple"></i> <span>Available Options Comparison</span><button id="globalCopyBtn" class="copy-btn" style="margin-left:auto;"><i class="fas fa-copy"></i> Copy All Selected</button></div>
+    <div class="comparison-table-wrapper"><div id="comparisonTable"></div></div>
+  </div>
+
+  <div class="card">
+    <h3><i class="fas fa-chart-line"></i> Optimized Plan</h3>
+    <div id="result"></div>
+  </div>
+</div>
+
+<div id="infoModal" class="modal"><div class="modal-content"><h3 id="modalTitle"></h3><div id="modalBody"></div><button style="margin-top:16px; padding:8px 16px;" onclick="closeModal()">Close</button></div></div>
+
+<script>
+// ========================= DATA STRUCTURE =========================
+const labsData = [
+  {
+    name: "Dr. Ajay Shah Laboratory",
+    tests: [
+      { name: "CBC", mrp: 280, b2b: 80 },
+{ name: "Blood Group", mrp: 170, b2b: 90 },
+{ name: "ESR", mrp: 140, b2b: 60 },
+{ name: "FBS", mrp: 80, b2b: 30 },
+{ name: "PP", mrp: 80, b2b: 30 },
+{ name: "RBS", mrp: 80, b2b: 30 },
+{ name: "Fasting Insuline", mrp: 800, b2b: 350 },
+{ name: "HbA1C", mrp: 500, b2b: 130 },
+{ name: "LFT", mrp: 850, b2b: 220 },
+{ name: "Bilirubin-Total", mrp: 180, b2b: 108 },
+{ name: "Bilirubin-Direct", mrp: 160, b2b: 96 },
+{ name: "SGPT", mrp: 180, b2b: 40 },
+{ name: "SGOT", mrp: 180, b2b: 40 },
+{ name: "GGT", mrp: 140, b2b: 30 },
+{ name: "RFT", mrp: 1100, b2b: 990 },
+{ name: "Creatinine", mrp: 180, b2b: 50 },
+{ name: "Urea", mrp: 180, b2b: 108 },
+{ name: "BUN", mrp: 180, b2b: 108 },
+{ name: "Uric Acid", mrp: 180, b2b: 50 },
+{ name: "Calcium", mrp: 180, b2b: 108 },
+{ name: "Lipid Profile", mrp: 550, b2b: 185 },
+{ name: "Total Cholestrol", mrp: 180, b2b: 108 },
+{ name: "HDL", mrp: 200, b2b: 120 },
+{ name: "LDL", mrp: 370, b2b: 222 },
+{ name: "LDH", mrp: 500, b2b: 150 },
+{ name: "Electrolytes", mrp: 450, b2b: 130 },
+{ name: "Sodium", mrp: 170, b2b: 102 },
+{ name: "Chlorides", mrp: 150, b2b: 90 },
+{ name: "Phosphorous", mrp: 180, b2b: 108 },
+{ name: "Potassium", mrp: 170, b2b: 102 },
+{ name: "Iron Study", mrp: 700, b2b: 300 },
+{ name: "Vit D3", mrp: 1400, b2b: 600 },
+{ name: "Vit B12", mrp: 850, b2b: 250 },
+{ name: "T3, T4, TSH", mrp: 550, b2b: 110 },
+{ name: "TSH", mrp: 330, b2b: 50 },
+{ name: "FT3, FT4, TSH", mrp: 650, b2b: 200 },
+{ name: "CRP", mrp: 450, b2b: 150 },
+{ name: "HSCRP", mrp: 850, b2b: 350 },
+{ name: "CPK-MB", mrp: 700, b2b: 420 },
+{ name: "CPK-Total", mrp: 500, b2b: 300 },
+{ name: "Trop-I", mrp: 1000, b2b: 750 },
+{ name: "D-Dimer", mrp: 1200, b2b: 500 },
+{ name: "PT INR", mrp: 300, b2b: 120 },
+{ name: "ApTT", mrp: 550, b2b: 330 },
+{ name: "HIV", mrp: 500, b2b: 350 },
+{ name: "HCV", mrp: 750, b2b: 525 },
+{ name: "HBsAg", mrp: 1400, b2b: 1120 },
+{ name: "VDRL", mrp: 300, b2b: 180 },
+{ name: "Triple H Package", mrp: 1500, b2b: 650 },
+{ name: "Urine Culture", mrp: 950, b2b: 400 },
+{ name: "Urine Routine", mrp: 150, b2b: 60 },
+{ name: "RA Factor", mrp: 450, b2b: 270 },
+{ name: "MP", mrp: 120, b2b: 72 },
+{ name: "Widal", mrp: 250, b2b: 150 },
+{ name: "Dengue NSI", mrp: 950, b2b: 300 },
+{ name: "Dengue IGG", mrp: 800, b2b: 300 },
+{ name: "Dengue IGM", mrp: 800, b2b: 350 },
+{ name: "MP-Antigen", mrp: 450, b2b: 315 },
+{ name: "Beta HCG", mrp: 800, b2b: 200 },
+{ name: "Homocysten", mrp: 1350, b2b: 500 },
+{ name: "CA125 (Female)", mrp: 1200, b2b: 500 },
+{ name: "PSA (Male)", mrp: 850, b2b: 350 },
+{ name: "IGE", mrp: 900, b2b: 400 },
+{ name: "Trop-T", mrp: 1500, b2b: 1050 },
+{ name: "Anti CCP", mrp: 1450, b2b: 650 },
+{ name: "ANA", mrp: 950, b2b: 500 },
+{ name: "Total Protien", mrp: null, b2b: null },
+{ name: "Covid Antibody", mrp: 1000, b2b: 500 },
+{ name: "FNAC", mrp: 1500, b2b: 1050 },
+{ name: "PP Insuline", mrp: 800, b2b: 560 },
+{ name: "CEA", mrp: 800, b2b: 400 },
+{ name: "AFPL", mrp: 900, b2b: 450 },
+{ name: "Hb Electrophoresis", mrp: 800, b2b: 450 },
+{ name: "FT3", mrp: 260, b2b: 80 },
+{ name: "FT4", mrp: 260, b2b: 80 },
+{ name: "Urine Protein Creatinine Ratio", mrp: 400, b2b: 240 },
+{ name: "Protein with A/G Ratio", mrp: 250, b2b: 80 },
+{ name: "Lypase", mrp: 700, b2b: 300 },
+{ name: "Estradiol", mrp: 750, b2b: 300 },
+{ name: "PUS Culture (Aerobic)", mrp: 950, b2b: 400 },
+{ name: "FT3, FT4", mrp: null, b2b: null },
+{ name: "Fecal Calprotectin", mrp: 2800, b2b: 2240 },
+{ name: "Blood Culture 1 SE", mrp: 1500, b2b: 800 },
+{ name: "Anti Pro MBP", mrp: 2500, b2b: 1100 },
+{ name: "Total TFT", mrp: 550, b2b: 110 },
+{ name: "HBS Antigen", mrp: 500, b2b: 350 },
+{ name: "Mantoux Test", mrp: 150, b2b: 135 },
+{ name: "Reticulate Count", mrp: 350, b2b: 210 },
+{ name: "Direct Coombs Test", mrp: 500, b2b: 150 },
+{ name: "Microalbuminuria", mrp: 580, b2b: 250 },
+{ name: "Total Testosteron", mrp: 750, b2b: 350 },
+{ name: "Free Testosteron", mrp: 1550, b2b: 750 },
+{ name: "Protein C", mrp: 4500, b2b: 4050 },
+{ name: "Protein S", mrp: 4500, b2b: 4050 },
+{ name: "Lupus Anticoagulant", mrp: 1800, b2b: 800 },
+{ name: "Fibrinogen Level", mrp: 800, b2b: 400 },
+{ name: "Anti dsDNA NCX", mrp: 1650, b2b: 1000 },
+{ name: "Apolipoprotein A-1 & B", mrp: 1100, b2b: 770 },
+{ name: "Folic Acid Level", mrp: 1100, b2b: 500 },
+{ name: "Allergy Comprehensive", mrp: 5500, b2b: 3850 },
+{ name: "Maleria Antigen", mrp: 450, b2b: 315 },
+{ name: "Urine Glucose (Fasting)", mrp: 50, b2b: 30 },
+{ name: "Factor V", mrp: 5500, b2b: 4400 },
+{ name: "Ferritine", mrp: 900, b2b: 400 },
+{ name: "HAV", mrp: 1200, b2b: 550 },
+{ name: "HEV", mrp: 1500, b2b: 600 },
+{ name: "RA Test", mrp: 450, b2b: 270 },
+{ name: "Iron Profile with Ferritine", mrp: null, b2b: null },
+{ name: "Allergy Drug Test", mrp: 7500, b2b: 5250 },
+{ name: "IGA TTG", mrp: 750, b2b: 500 },
+{ name: "Peripheral Smear", mrp: null, b2b: null },
+{ name: "PTT", mrp: 550, b2b: 330 },
+{ name: "Cortisol 8 AM", mrp: 800, b2b: 350 },
+{ name: "H. Pylori Stool", mrp: 1200, b2b: 960 },
+{ name: "Chikungunya IgG", mrp: 900, b2b: 810 },
+{ name: "FBA", mrp: null, b2b: null },
+{ name: "Protein Electrophoresis", mrp: 1100, b2b: 500 },
+{ name: "Sputum TB Culture & ABS", mrp: 150, b2b: 90 },
+{ name: "Complement C3 & C4", mrp: null, b2b: null },
+{ name: "DHE AS", mrp: 1100, b2b: 600 },
+{ name: "Torch Complex", mrp: 2800, b2b: 1200 },
+{ name: "Zinc Level", mrp: 2200, b2b: 1980 },
+{ name: "Magnesium", mrp: 400, b2b: 280 },
+{ name: "DHEA", mrp: 3000, b2b: 2100 },
+{ name: "Estrogen", mrp: null, b2b: null },
+{ name: "C-Peptide Random", mrp: 1150, b2b: 550 },
+{ name: "B2 Glycoprotein 1 IgG", mrp: 1200, b2b: 500 },
+{ name: "Karyotyping - Husband", mrp: null, b2b: null },
+{ name: "Karyotyping - Wife", mrp: null, b2b: null },
+{ name: "Influenza Screening for ABF", mrp: null, b2b: null },
+{ name: "PSA Free & Total", mrp: 850, b2b: 350 },
+{ name: "LH", mrp: 520, b2b: 180 },
+{ name: "FSH", mrp: 520, b2b: 180 },
+{ name: "Semen Analysis", mrp: 1100, b2b: 770 },
+{ name: "Extra Test", mrp: null, b2b: null } 
+      ],
+    combos: [
+      { name: "Diabetic Combo", tests: ["Fasting Sugar", "HbA1C"], mrp: 400, b2b: 150 },
+      { name: "Liver Combo", tests: ["SGPT", "SGOT", "LFT"], mrp: 900, b2b: 260 }
+    ],
+    packages: [
+      { name: "Goodness A1", tests: ["CBC", "LFT", "RFT", "Lipid Profile", "Iron Study", "HbA1C", "Total TFT", "Vit B12", "Vit D3"], mrp: 2500, b2b: 1200 },
+{ name: "Goodness C", tests: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
+{ name: "Goodness 3H", tests: ["HIV", "HBsAg", "HCV"], mrp: 1500, b2b: 650 },
+{ name: "Goodness BA (Male)", tests: ["CBC", "FBS", "HbA1C", "Fasting Insuline", "Lipid Profile", "LFT", "RFT", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "PSA (Male)", "CRP"], mrp: 3500, b2b: 1400 },
+{ name: "Goodness BB (Female)", tests: ["CBC", "FBS", "HbA1C", "Fasting Insuline", "Lipid Profile", "LFT", "RFT", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)", "CRP"], mrp: 3500, b2b: 1500 },
+{ name: "Goodness E", tests: ["CBC", "FBS", "PP", "HbA1C", "Creatinine", "Uric Acid", "Lipid Profile"], mrp: 1000, b2b: 450 },
+{ name: "Goodness G", tests: ["CBC", "FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Total TFT", "Uric Acid"], mrp: 1500, b2b: 550 },
+{ name: "Goodness F", tests: ["CBC", "Creatinine", "HbA1C", "Lipid Profile", "LFT", "RFT"], mrp: 1800, b2b: 600 },
+{ name: "ANC Profile", tests: ["CBC", "Blood Group", "FBS", "HBsAg", "HIV", "HCV", "VDRL", "TSH", "Hb Electrophoresis", "Urine Routine"], mrp: 1800, b2b: 1620 },
+{ name: "Goodness Fever Profile", tests: ["CBC", "ESR", "SGOT", "SGPT", "CRP", "Dengue NSI", "MP-Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 },
+{ name: "Extra Package", tests: [], mrp: null, b2b: null }
+    ]
+  },
+  {
+    name: "Dr. Jariwala Laboratory",
+    tests: [
+      { name: "CBC", mrp: 280, b2b: 168 },
+{ name: "Blood Group", mrp: 150, b2b: 90 },
+{ name: "ESR", mrp: 40, b2b: 54 },
+{ name: "FBS", mrp: 70, b2b: 46 },
+{ name: "PP", mrp: 70, b2b: 46 },
+{ name: "RBS", mrp: 70, b2b: 46 },
+{ name: "Fasting Insuline", mrp: 715, b2b: 501 },
+{ name: "HbA1C", mrp: 520, b2b: 338 },
+{ name: "LFT", mrp: 900, b2b: 585 },
+{ name: "Bilirubin-Total", mrp: 200, b2b: 120 },
+{ name: "Bilirubin-Direct", mrp: 200, b2b: 120 },
+{ name: "SGPT", mrp: 180, b2b: 108 },
+{ name: "SGOT", mrp: 180, b2b: 108 },
+{ name: "GGT", mrp: 200, b2b: 126 },
+{ name: "RFT", mrp: 1350, b2b: 878 },
+{ name: "Creatinine", mrp: 180, b2b: 108 },
+{ name: "Urea", mrp: 180, b2b: 108 },
+{ name: "BUN", mrp: null, b2b: null },
+{ name: "Uric Acid", mrp: 180, b2b: 108 },
+{ name: "Calcium", mrp: 275, b2b: 176 },
+{ name: "Lipid Profile", mrp: 550, b2b: 352 },
+{ name: "Total Cholestrol", mrp: 180, b2b: 108 },
+{ name: "HDL", mrp: 180, b2b: 106 },
+{ name: "LDL", mrp: 320, b2b: 224 },
+{ name: "LDH", mrp: 350, b2b: 263 },
+{ name: "Electrolytes", mrp: 400, b2b: 240 },
+{ name: "Sodium", mrp: null, b2b: null },
+{ name: "Chlorides", mrp: null, b2b: null },
+{ name: "Phosphorous", mrp: null, b2b: null },
+{ name: "Potassium", mrp: null, b2b: null },
+{ name: "Iron Study", mrp: 520, b2b: 333 },
+{ name: "Vit D3", mrp: 1500, b2b: 450 },
+{ name: "Vit B12", mrp: 950, b2b: 285 },
+{ name: "T3, T4, TSH", mrp: 580, b2b: 232 },
+{ name: "TSH", mrp: 320, b2b: 128 },
+{ name: "FT3, FT4, TSH", mrp: 680, b2b: 272 },
+{ name: "CRP", mrp: 500, b2b: 225 },
+{ name: "HSCRP", mrp: 700, b2b: 420 },
+{ name: "CPK-MB", mrp: 850, b2b: 536 },
+{ name: "CPK-Total", mrp: 380, b2b: 236 },
+{ name: "Trop-I", mrp: 770, b2b: 539 },
+{ name: "D-Dimer", mrp: 1150, b2b: 736 },
+{ name: "PT INR", mrp: 300, b2b: 195 },
+{ name: "ApTT", mrp: 400, b2b: 240 },
+{ name: "HIV", mrp: 400, b2b: 280 },
+{ name: "HCV", mrp: 750, b2b: 600 },
+{ name: "HBsAg", mrp: 900, b2b: 612 },
+{ name: "VDRL", mrp: 165, b2b: 106 },
+{ name: "Triple H Package", mrp: null, b2b: null },
+{ name: "Urine Culture", mrp: 800, b2b: 560 },
+{ name: "Urine Routine", mrp: 110, b2b: 70 },
+{ name: "RA Factor", mrp: 275, b2b: 176 },
+{ name: "MP", mrp: 180, b2b: 106 },
+{ name: "Widal", mrp: 165, b2b: 106 },
+{ name: "Dengue NSI", mrp: 880, b2b: 563 },
+{ name: "Dengue IGG", mrp: 880, b2b: 563 },
+{ name: "Dengue IGM", mrp: 880, b2b: 563 },
+{ name: "MP-Antigen", mrp: 500, b2b: 315 },
+{ name: "Beta HCG", mrp: 500, b2b: 355 },
+{ name: "Homocysten", mrp: 1200, b2b: 744 },
+{ name: "CA125 (Female)", mrp: 1050, b2b: 863 },
+{ name: "PSA (Male)", mrp: 1450, b2b: 1001 },
+{ name: "IGE", mrp: 770, b2b: 539 },
+{ name: "Trop-T", mrp: 770, b2b: 539 },
+{ name: "Anti CCP", mrp: 1250, b2b: 813 },
+{ name: "ANA", mrp: 950, b2b: 599 },
+{ name: "Total Protien", mrp: 200, b2b: 120 },
+{ name: "Covid Antibody", mrp: 500, b2b: 350 },
+{ name: "FNAC", mrp: 800, b2b: 560 },
+{ name: "PP Insuline", mrp: 715, b2b: 501 },
+{ name: "CEA", mrp: 850, b2b: 578 },
+{ name: "AFPL", mrp: 700, b2b: 462 },
+{ name: "Hb Electrophoresis", mrp: null, b2b: null },
+{ name: "FT3", mrp: 240, b2b: 120 },
+{ name: "FT4", mrp: 240, b2b: 120 },
+{ name: "Urine Protein Creatinine Ratio", mrp: null, b2b: null },
+{ name: "Protein with A/G Ratio", mrp: null, b2b: null },
+{ name: "Lypase", mrp: 700, b2b: 490 },
+{ name: "Estradiol", mrp: 600, b2b: 414 },
+{ name: "PUS Culture (Aerobic)", mrp: 800, b2b: 560 },
+{ name: "FT3, FT4", mrp: null, b2b: null },
+{ name: "Fecal Calprotectin", mrp: 3000, b2b: 1920 },
+{ name: "Blood Culture 1 SE", mrp: 1050, b2b: 735 },
+{ name: "Anti Pro MBP", mrp: 2035, b2b: 1302 },
+{ name: "Total TFT", mrp: 580, b2b: 232 },
+{ name: "HBS Antigen", mrp: null, b2b: null },
+{ name: "Mantoux Test", mrp: 120, b2b: 71 },
+{ name: "Reticulate Count", mrp: 180, b2b: 108 },
+{ name: "Direct Coombs Test", mrp: 300, b2b: 177 },
+{ name: "Microalbuminuria", mrp: 550, b2b: 352 },
+{ name: "Total Testosteron", mrp: 600, b2b: 426 },
+{ name: "Free Testosteron", mrp: 1600, b2b: 1440 },
+{ name: "Protein C", mrp: 3300, b2b: 2640 },
+{ name: "Protein S", mrp: 3300, b2b: 2640 },
+{ name: "Lupus Anticoagulant", mrp: null, b2b: null },
+{ name: "Fibrinogen Level", mrp: 700, b2b: 420 },
+{ name: "Anti dsDNA NCX", mrp: 935, b2b: 598 },
+{ name: "Apolipoprotein A-1 & B", mrp: 700, b2b: 385 },
+{ name: "Folic Acid Level", mrp: 900, b2b: 612 },
+{ name: "Allergy Comprehensive", mrp: null, b2b: null },
+{ name: "Maleria Antigen", mrp: 500, b2b: 315 },
+{ name: "Urine Glucose (Fasting)", mrp: null, b2b: null },
+{ name: "Factor V", mrp: null, b2b: null },
+{ name: "Ferritine", mrp: 750, b2b: 525 },
+{ name: "HAV", mrp: 950, b2b: 665 },
+{ name: "HEV", mrp: 1050, b2b: 693 },
+{ name: "RA Test", mrp: 275, b2b: 176 },
+{ name: "Iron Profile with Ferritine", mrp: null, b2b: null },
+{ name: "Allergy Drug Test", mrp: null, b2b: null },
+{ name: "IGA TTG", mrp: 1430, b2b: 1001 },
+{ name: "Peripheral Smear", mrp: 800, b2b: 528 },
+{ name: "PTT", mrp: 300, b2b: 195 },
+{ name: "Cortisol 8 AM", mrp: 600, b2b: 434 },
+{ name: "H. Pylori Stool", mrp: 750, b2b: 458 },
+{ name: "Chikungunya IgG", mrp: null, b2b: null },
+{ name: "FBA", mrp: null, b2b: null },
+{ name: "Protein Electrophoresis", mrp: 950, b2b: 608 },
+{ name: "Sputum TB Culture & ABS", mrp: 800, b2b: 560 },
+{ name: "Complement C3 & C4", mrp: null, b2b: null },
+{ name: "DHE AS", mrp: 850, b2b: 587 },
+{ name: "Torch Complex", mrp: null, b2b: null },
+{ name: "Zinc Level", mrp: null, b2b: null },
+{ name: "Magnesium", mrp: 450, b2b: 284 },
+{ name: "DHEA", mrp: null, b2b: null },
+{ name: "Estrogen", mrp: null, b2b: null },
+{ name: "C-Peptide Random", mrp: null, b2b: null },
+{ name: "B2 Glycoprotein 1 IgG", mrp: null, b2b: null },
+{ name: "Karyotyping - Husband", mrp: null, b2b: null },
+{ name: "Karyotyping - Wife", mrp: null, b2b: null },
+{ name: "Influenza Screening for ABF", mrp: 1650, b2b: 1056 },
+{ name: "PSA Free & Total", mrp: 1450, b2b: 1001 },
+{ name: "LH", mrp: 525, b2b: 263 },
+{ name: "FSH", mrp: 525, b2b: 263 },
+{ name: "Semen Analysis", mrp: 300, b2b: 300 },
+{ name: "Extra Test", mrp: null, b2b: null }
+      ],
+    combos: [{ name: "Vital Check", tests: ["CBC", "Vitamin D"], mrp: 900, b2b: 480 }],
+    packages: [{ name: "Full Health", tests: ["CBC", "Vitamin D", "TSH"], combos: [], mrp: 1300, b2b: 550 }]
+  },
+  {
+    name: "General Diagnostics",
+    tests: [
+      { name: "CBC", mrp: 190, b2b: 60 },
+{ name: "Blood Group", mrp: 220, b2b: 50 },
+{ name: "ESR", mrp: 200, b2b: 50 },
+{ name: "FBS", mrp: 70, b2b: 15 },
+{ name: "PP", mrp: 70, b2b: 15 },
+{ name: "RBS", mrp: 70, b2b: 15 },
+{ name: "Fasting Insuline", mrp: 770, b2b: 150 },
+{ name: "HbA1C", mrp: 495, b2b: 60 },
+{ name: "LFT", mrp: 1045, b2b: 150 },
+{ name: "Bilirubin-Total", mrp: 130, b2b: 22 },
+{ name: "Bilirubin-Direct", mrp: 130, b2b: 24 },
+{ name: "SGPT", mrp: 190, b2b: 24 },
+{ name: "SGOT", mrp: 190, b2b: 22 },
+{ name: "GGT", mrp: 242, b2b: 60 },
+{ name: "RFT", mrp: 1150, b2b: 863 },
+{ name: "Creatinine", mrp: 180, b2b: 22 },
+{ name: "Urea", mrp: 165, b2b: 25 },
+{ name: "BUN", mrp: 220, b2b: 60 },
+{ name: "Uric Acid", mrp: 220, b2b: 22 },
+{ name: "Calcium", mrp: 176, b2b: 22 },
+{ name: "Lipid Profile", mrp: 715, b2b: 100 },
+{ name: "Total Cholestrol", mrp: 180, b2b: 10 },
+{ name: "HDL", mrp: 180, b2b: 10 },
+{ name: "LDL", mrp: 300, b2b: 50 },
+{ name: "LDH", mrp: 363, b2b: 60 },
+{ name: "Electrolytes", mrp: 520, b2b: 140 },
+{ name: "Sodium", mrp: 275, b2b: 40 },
+{ name: "Chlorides", mrp: 275, b2b: 40 },
+{ name: "Phosphorous", mrp: 275, b2b: 40 },
+{ name: "Potassium", mrp: 220, b2b: 40 },
+{ name: "Iron Study", mrp: 660, b2b: 150 },
+{ name: "Vit D3", mrp: 1280, b2b: 200 },
+{ name: "Vit B12", mrp: 1800, b2b: 1200 },
+{ name: "T3, T4, TSH", mrp: 495, b2b: 60 },
+{ name: "TSH", mrp: 275, b2b: 20 },
+{ name: "FT3, FT4, TSH", mrp: 1045, b2b: 140 },
+{ name: "CRP", mrp: 495, b2b: 150 },
+{ name: "HSCRP", mrp: 750, b2b: 175 },
+{ name: "CPK-MB", mrp: 715, b2b: 200 },
+{ name: "CPK-Total", mrp: 385, b2b: 125 },
+{ name: "Trop-I", mrp: 1200, b2b: 650 },
+{ name: "D-Dimer", mrp: 1540, b2b: 1230 },
+{ name: "PT INR", mrp: 450, b2b: 105 },
+{ name: "ApTT", mrp: 418, b2b: 200 },
+{ name: "HIV", mrp: 475, b2b: 120 },
+{ name: "HCV", mrp: 935, b2b: 99 },
+{ name: "HBsAg", mrp: 450, b2b: 250 },
+{ name: "VDRL", mrp: 220, b2b: 75 },
+{ name: "Triple H Package", mrp: 1730, b2b: 350 },
+{ name: "Urine Culture", mrp: 950, b2b: 120 },
+{ name: "Urine Routine", mrp: 300, b2b: 100 },
+{ name: "RA Factor", mrp: 495, b2b: 200 },
+{ name: "MP", mrp: 275, b2b: 100 },
+{ name: "Widal", mrp: 330, b2b: 60 },
+{ name: "Dengue NSI", mrp: 660, b2b: 250 },
+{ name: "Dengue IGG", mrp: 660, b2b: 275 },
+{ name: "Dengue IGM", mrp: 660, b2b: 275 },
+{ name: "MP-Antigen", mrp: 700, b2b: 100 },
+{ name: "Beta HCG", mrp: 550, b2b: 160 },
+{ name: "Homocysten", mrp: 1155, b2b: 400 },
+{ name: "CA125 (Female)", mrp: 1155, b2b: 350 },
+{ name: "PSA (Male)", mrp: 935, b2b: 300 },
+{ name: "IGE", mrp: 825, b2b: 195 },
+{ name: "Trop-T", mrp: 1800, b2b: 700 },
+{ name: "Anti CCP", mrp: 1375, b2b: 385 },
+{ name: "ANA", mrp: 750, b2b: 175 },
+{ name: "Total Protien", mrp: 200, b2b: 22 },
+{ name: "Covid Antibody", mrp: 700, b2b: 270 },
+{ name: "FNAC", mrp: 1150, b2b: 330 },
+{ name: "PP Insuline", mrp: 770, b2b: 150 },
+{ name: "CEA", mrp: 715, b2b: 250 },
+{ name: "AFPL", mrp: 750, b2b: 295 },
+{ name: "Hb Electrophoresis", mrp: null, b2b: null },
+{ name: "FT3", mrp: 275, b2b: 60 },
+{ name: "FT4", mrp: 300, b2b: 60 },
+{ name: "Urine Protein Creatinine Ratio", mrp: 900, b2b: 150 },
+{ name: "Protein with A/G Ratio", mrp: 400, b2b: 150 },
+{ name: "Lypase", mrp: 620, b2b: 120 },
+{ name: "Estradiol", mrp: 605, b2b: 165 },
+{ name: "PUS Culture (Aerobic)", mrp: 1455, b2b: 945 },
+{ name: "FT3, FT4", mrp: null, b2b: null },
+{ name: "Fecal Calprotectin", mrp: null, b2b: null },
+{ name: "Blood Culture 1 SE", mrp: 1045, b2b: 530 },
+{ name: "Anti Pro MBP", mrp: 3450, b2b: 2500 },
+{ name: "Total TFT", mrp: 495, b2b: 60 },
+{ name: "HBS Antigen", mrp: 450, b2b: 250 },
+{ name: "Mantoux Test", mrp: null, b2b: null },
+{ name: "Reticulate Count", mrp: 550, b2b: 20 },
+{ name: "Direct Coombs Test", mrp: 825, b2b: 160 },
+{ name: "Microalbuminuria", mrp: 800, b2b: 350 },
+{ name: "Total Testosteron", mrp: 605, b2b: 100 },
+{ name: "Free Testosteron", mrp: 1485, b2b: 340 },
+{ name: "Protein C", mrp: 5350, b2b: 2600 },
+{ name: "Protein S", mrp: 4950, b2b: 2600 },
+{ name: "Lupus Anticoagulant", mrp: 2650, b2b: 600 },
+{ name: "Fibrinogen Level", mrp: 1250, b2b: 900 },
+{ name: "Anti dsDNA NCX", mrp: 1650, b2b: 200 },
+{ name: "Apolipoprotein A-1 & B", mrp: null, b2b: null },
+{ name: "Folic Acid Level", mrp: 1045, b2b: 160 },
+{ name: "Allergy Comprehensive", mrp: null, b2b: null },
+{ name: "Maleria Antigen", mrp: 700, b2b: 100 },
+{ name: "Urine Glucose (Fasting)", mrp: 70, b2b: 25 },
+{ name: "Factor V", mrp: 7086, b2b: 4200 },
+{ name: "Ferritine", mrp: 800, b2b: 160 },
+{ name: "HAV", mrp: 880, b2b: 275 },
+{ name: "HEV", mrp: 1210, b2b: 375 },
+{ name: "RA Test", mrp: 495, b2b: 200 },
+{ name: "Iron Profile with Ferritine", mrp: null, b2b: null },
+{ name: "Allergy Drug Test", mrp: 5900, b2b: 1700 },
+{ name: "IGA TTG", mrp: 1210, b2b: 280 },
+{ name: "Peripheral Smear", mrp: 300, b2b: 100 },
+{ name: "PTT", mrp: 450, b2b: 105 },
+{ name: "Cortisol 8 AM", mrp: 605, b2b: 295 },
+{ name: "H. Pylori Stool", mrp: 1500, b2b: 1200 },
+{ name: "Chikungunya IgG", mrp: 825, b2b: 500 },
+{ name: "FBA", mrp: null, b2b: null },
+{ name: "Protein Electrophoresis", mrp: 660, b2b: 350 },
+{ name: "Sputum TB Culture & ABS", mrp: null, b2b: null },
+{ name: "Complement C3 & C4", mrp: null, b2b: null },
+{ name: "DHE AS", mrp: 1045, b2b: 275 },
+{ name: "Torch Complex", mrp: 1430, b2b: 800 },
+{ name: "Zinc Level", mrp: 880, b2b: 460 },
+{ name: "Magnesium", mrp: 440, b2b: 50 },
+{ name: "DHEA", mrp: 2965, b2b: 2150 },
+{ name: "Estrogen", mrp: null, b2b: null },
+{ name: "C-Peptide Random", mrp: null, b2b: null },
+{ name: "B2 Glycoprotein 1 IgG", mrp: 1100, b2b: 660 },
+{ name: "Karyotyping - Husband", mrp: 4400, b2b: 1500 },
+{ name: "Karyotyping - Wife", mrp: 4400, b2b: 1500 },
+{ name: "Influenza Screening for ABF", mrp: null, b2b: null },
+{ name: "PSA Free & Total", mrp: 1760, b2b: 465 },
+{ name: "LH", mrp: 495, b2b: 100 },
+{ name: "FSH", mrp: 495, b2b: 100 },
+{ name: "Semen Analysis", mrp: null, b2b: null },
+{ name: "Extra Test", mrp: null, b2b: null }
+      ],
+    combos: [{ name: "Sugar+Thyroid", tests: ["Sugar", "Thyroid"], mrp: 550, b2b: 290 }],
+    packages: [
+      { name: "GD Life A1", tests: ["Iron Study", "RFT", "CBC", "LFT", "Lipid Profile", "T3  T4  TSH"], mrp: 1400, b2b: 295 },
+    { name: "GD Life A3", tests: ["FBS", "LFT", "Lipid Profile", "TSH", "CBC", "RFT"], mrp: 1200, b2b: 230 },
+    { name: "GD Wellness 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "Vit D3", "Vit B12", "T3  T4  TSH"], mrp: 1800, b2b: 600 },
+    { name: "ALPHA WELLNESS 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "RFT", "Vit D3", "Vit B12", "CBC", "ESR", "CRP", "T3  T4  TSH"], mrp: 2150, b2b: 750 },
+    { name: "GD WELLNESS 15.1", tests: ["Iron Study", "LFT", "Lipid Profile", "T3  T4  TSH", "RFT"], mrp: 1000, b2b: 550 }
+      ]
+  },
+  {
+    name: "Trucheck Diagnostics",
+    tests: [{ name: "CBC", mrp: 310, b2b: 230 }, { name: "Vitamin D", mrp: 750, b2b: 350 }, { name: "LIPID PROFILE", mrp: 500, b2b: 200 }],
+    combos: [{ name: "Lipid+CBC", tests: ["CBC", "LIPID PROFILE"], mrp: 700, b2b: 400 }],
+    packages: []
+  }
+];
+
+// Build unified searchable items: tests + combos
+function buildUnifiedItems() {
+  const testItems = [];
+  const comboItems = [];
+  const allTestNames = new Set();
+  
+  labsData.forEach(lab => {
+    lab.tests.forEach(test => { if(test.b2b !== null) allTestNames.add(test.name); });
+    lab.combos.forEach(combo => { if(!comboItems.some(c => c.name === combo.name)) comboItems.push({ name: combo.name, type: "combo", tests: combo.tests, mrp: combo.mrp, b2b: combo.b2b }); });
+  });
+  
+  allTestNames.forEach(testName => { testItems.push({ name: testName, type: "test" }); });
+  
+  return [...testItems, ...comboItems];
+}
+
+const unifiedItems = buildUnifiedItems();
+
+// State: selected items (stores { name, type, tests (for combos) })
+let selectedItems = []; // { name, type, tests (array) }
+let selectedTestsFlat = []; // derived: all test names from individual tests + combo tests
+
+// Helper: update flat tests list from selected items
+function updateFlatTests() {
+  const testsSet = new Set();
+  selectedItems.forEach(item => {
+    if(item.type === "test") testsSet.add(item.name);
+    else if(item.type === "combo" && item.tests) item.tests.forEach(t => testsSet.add(t));
+  });
+  selectedTestsFlat = Array.from(testsSet);
+}
+
+// Check if a test is already covered by any selected combo
+function isTestCoveredByCombo(testName) {
+  return selectedItems.some(item => item.type === "combo" && item.tests && item.tests.includes(testName));
+}
+
+// Get all combo objects for search display
+function getAllCombos() {
+  const combosMap = new Map();
+  labsData.forEach(lab => {
+    lab.combos.forEach(combo => { if(!combosMap.has(combo.name)) combosMap.set(combo.name, combo); });
+  });
+  return Array.from(combosMap.values());
+}
+
+// DOM elements
+const searchInput = document.getElementById("search"), suggestionsDiv = document.getElementById("suggestions");
+const selectedTestsDiv = document.getElementById("selectedTests"), comparisonSection = document.getElementById("comparisonSection");
+const comparisonTable = document.getElementById("comparisonTable"), resultDiv = document.getElementById("result");
+const clearAllBtn = document.getElementById("clearAllBtn"), globalCopyBtn = document.getElementById("globalCopyBtn");
+let selectedLabs = new Set(labsData.map(l => l.name));
+
+function renderLabCheckboxes() {
+  const container = document.getElementById("labCheckboxes");
+  container.innerHTML = "";
+  labsData.forEach(lab => {
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = selectedLabs.has(lab.name);
+    cb.addEventListener("change", (e) => { if(e.target.checked) selectedLabs.add(lab.name); else selectedLabs.delete(lab.name); runOptimization(); renderComparison(); });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(lab.name));
+    container.appendChild(label);
+  });
+}
+
+// Add combo with conflict resolution
+function addCombo(comboObj) {
+  const comboName = comboObj.name;
+  if(selectedItems.some(item => item.type === "combo" && item.name === comboName)) return;
+  
+  // Remove any individual tests that are part of this combo
+  const testsInCombo = comboObj.tests;
+  const updatedItems = selectedItems.filter(item => {
+    if(item.type === "test" && testsInCombo.includes(item.name)) return false;
+    return true;
+  });
+  
+  selectedItems = [...updatedItems, { name: comboName, type: "combo", tests: testsInCombo, mrp: comboObj.mrp, b2b: comboObj.b2b }];
+  updateFlatTests();
+  renderSelected();
+  runOptimization();
+  searchInput.value = "";
+  suggestionsDiv.innerHTML = "";
+  searchInput.focus();
+}
+
+// Add individual test (only if not covered by any combo)
+function addIndividualTest(testName) {
+  if(isTestCoveredByCombo(testName)) {
+    alert(`"${testName}" is already covered by a selected combo. Please remove the combo first to select it individually.`);
+    return;
+  }
+  if(selectedItems.some(item => item.type === "test" && item.name === testName)) return;
+  
+  selectedItems.push({ name: testName, type: "test" });
+  updateFlatTests();
+  renderSelected();
+  runOptimization();
+  searchInput.value = "";
+  suggestionsDiv.innerHTML = "";
+  searchInput.focus();
+}
+
+function removeItem(itemName, itemType) {
+  selectedItems = selectedItems.filter(item => !(item.name === itemName && item.type === itemType));
+  updateFlatTests();
+  renderSelected();
+  runOptimization();
+}
+
+function clearAll() { selectedItems = []; updateFlatTests(); renderSelected(); runOptimization(); }
+
+function renderSelected() {
+  selectedTestsDiv.innerHTML = "";
+  if(selectedItems.length === 0) { 
+    selectedTestsDiv.innerHTML = '<div style="color:#7AB2B2; padding:12px; text-align:center;">No tests or combos selected. Start typing to add items.</div>'; 
+    return; 
+  }
+  
+  selectedItems.forEach(item => {
+    const span = document.createElement("span");
+    if(item.type === "combo") {
+      span.className = "selected-combo";
+      span.innerHTML = `<i class="fas fa-layer-group"></i> ${item.name} <i class="fas fa-times" style="font-size: 10px;"></i>`;
+      span.onclick = (e) => { e.stopPropagation(); removeItem(item.name, "combo"); };
+    } else {
+      span.innerHTML = `<i class="fas fa-flask"></i> ${item.name} <i class="fas fa-times" style="font-size: 10px;"></i>`;
+      span.onclick = (e) => { e.stopPropagation(); removeItem(item.name, "test"); };
     }
-    
-    // ============================================
-    // LAB DATA
-    // ============================================
-    
-    const labs = [
-      {
-        name: "Dr. Ajay Shah Laboratory",
-        tests: [
-          
-  { name: "CBC", mrp: 260, b2b: 90 },
-  { name: "Blood Group", mrp: 150, b2b: null },
-  { name: "ESR", mrp: 120, b2b: 72 },
-  { name: "Fasting Sugar", mrp: 70, b2b: 42 },
-  { name: "PP", mrp: 70, b2b: 42 },
-  { name: "RBS", mrp: 80, b2b: 30 },
-  { name: "FASTING INSULINE", mrp: 850, b2b: 350 },
-  { name: "HBA1C", mrp: 500, b2b: 130 },
-  { name: "LFT", mrp: 850, b2b: 200 },
-  { name: "BILIRUBIN-TOTAL", mrp: 180, b2b: 108 },
-  { name: "BILIRUBIN-DIRECT", mrp: 180, b2b: 108 },
-  { name: "SGPT", mrp: 180, b2b: 40 },
-  { name: "SGOT", mrp: 180, b2b: 40 },
-  { name: "GGT", mrp: 260, b2b: 182 },
-  { name: "RFT", mrp: 950, b2b: null },
-  { name: "CREATININE", mrp: 180, b2b: 50 },
-  { name: "UREA", mrp: 180, b2b: 108 },
-  { name: "BUN", mrp: 180, b2b: 108 },
-  { name: "URIC ACID", mrp: 180, b2b: 50 },
-  { name: "CALCIUM", mrp: 180, b2b: 108 },
-  { name: "LIPID PROFILE", mrp: 550, b2b: 185 },
-  { name: "TOTAL CHOLESTEROL", mrp: 180, b2b: 108 },
-  { name: "HDL", mrp: 200, b2b: 120 },
-  { name: "LDL", mrp: 370, b2b: 222 },
-  { name: "LDH", mrp: 480, b2b: 150 },
-  { name: "ELECTROLYTES", mrp: 450, b2b: 130 },
-  { name: "SODIUM", mrp: 170, b2b: 102 },
-  { name: "CHLORIDES", mrp: 250, b2b: 150 },
-  { name: "BLOOD GROUP", mrp: 170, b2b: null },
-  { name: "PHOSPHORUS", mrp: 180, b2b: 108 },
-  { name: "POTASSIUM", mrp: 170, b2b: 102 },
-  { name: "IRON STUDY", mrp: 700, b2b: 300 },
-  { name: "VIT D3", mrp: 1300, b2b: 250 },
-  { name: "VIT B12", mrp: 850, b2b: 250 },
-  { name: "T3,T4,TSH", mrp: 550, b2b: 110 },
-  { name: "TSH", mrp: 330, b2b: 50 },
-  { name: "FT3,FT4,TSH", mrp: 650, b2b: 200 },
-  { name: "CRP", mrp: 450, b2b: 120 },
-  { name: "HSCRP", mrp: 800, b2b: 350 },
-  { name: "CPK-MP", mrp: 800, b2b: 350 },
-  { name: "CPK-TOTAL", mrp: 450, b2b: 270 },
-  { name: "TROP-I", mrp: 1000, b2b: 750 },
-  { name: "D-DIMEAR", mrp: 1200, b2b: 450 },
-  { name: "PT INR", mrp: 270, b2b: 179 },
-  { name: "APTT", mrp: 400, b2b: 360 },
-  { name: "HIV", mrp: 500, b2b: 350 },
-  { name: "HCV", mrp: 750, b2b: 525 },
-  { name: "HBSAG", mrp: 450, b2b: 315 },
-  { name: "VDRL", mrp: 300, b2b: null },
-  { name: "URINE CULTURE", mrp: 900, b2b: null },
-  { name: "URINE ROUTINE", mrp: 150, b2b: 60 },
-  { name: "STOOL ROUTINE", mrp: 150, b2b: 90 },
-  { name: "RA FACTOR", mrp: 400, b2b: 240 },
-  { name: "MP", mrp: 120, b2b: 72 },
-  { name: "WIDAL", mrp: 250, b2b: 150 },
-  { name: "DENGU NS1", mrp: 950, b2b: 665 },
-  { name: "DENGU IGG", mrp: 950, b2b: 665 },
-  { name: "DENGU IGM", mrp: 950, b2b: 665 },
-  { name: "MP-ANTIGEN", mrp: 450, b2b: 315 },
-  { name: "BETA HCG", mrp: 700, b2b: 200 },
-  { name: "HOMOSYSTINE", mrp: 1300, b2b: null },
-  { name: "CA125(FEMALE)", mrp: 1200, b2b: null },
-  { name: "PSA (MALE)", mrp: 800, b2b: null },
-  { name: "IGE", mrp: 600, b2b: null },
-  { name: "COVID ANTIBODY", mrp: 1000, b2b: 800 },
-  { name: "TYPHI IGM", mrp: 550, b2b: 450 },
-  { name: "LIPASE", mrp: 2000, b2b: 1800 }
-         
-        ],
-        packages: [
-          {name: "Basic Package", tests: ["CBC","Sugar"], mrp: 400, b2b: 180},
-          {name: "Basic Package 2", tests: ["CBC","Sugar","Thyroid"], mrp: 500, b2b: 200},
-        ]
-      },
-      {
-        name: "Dr. Jariwala Laboratory",
-        tests: [
-          {name: "CBC", mrp: 320, b2b: 140},
-          {name: "Vitamin D", mrp: 800, b2b: 400}
-        ],
-        packages: [
-          {name: "Full Body", tests: ["CBC","Vitamin D"], mrp: 900, b2b: 450}
-        ]
-      },
-      {
-        name: "General Diagnostics",
-        tests: [
-          {name: "Sugar", mrp: 210, b2b: 90},
-          {name: "Thyroid", mrp: 480, b2b: 240}
-        ],
-        packages: []
-      },
-      {
-        name: "Trucheck Diagnostics",
-        tests: [
-          {name: "CBC", mrp: 310, b2b: 230},
-          {name: "Vitamin D", mrp: 750, b2b: 350}
-        ],
-        packages: []
-      }
-    ];
-    
-    // Initialize optimizer
-    const optimizer = new LabTestOptimizer(labs);
-    
-    // ============================================
-    // UI STATE MANAGEMENT
-    // ============================================
-    
-    const allTests = [...new Set(labs.flatMap(l => l.tests.map(t => t.name)))].sort();
-    let selected = [];
-    
-    // DOM Elements
-    const searchInput = document.getElementById("search");
-    const suggestions = document.getElementById("suggestions");
-    const selectedTestsDiv = document.getElementById("selectedTests");
-    const comparisonSection = document.getElementById("comparisonSection");
-    const comparisonTable = document.getElementById("comparisonTable");
-    const resultDiv = document.getElementById("result");
-    const clearAllBtn = document.getElementById("clearAllBtn");
-    
-    // Search functionality
-    searchInput.addEventListener("input", () => {
-      const value = searchInput.value.toLowerCase().trim();
-      suggestions.innerHTML = "";
-      
-      if (value === "") return;
-      
-      const filtered = allTests.filter(t => 
-        t.toLowerCase().includes(value) && !selected.includes(t)
-      );
-      
-      if (filtered.length === 0) {
-        const div = document.createElement("div");
-        div.textContent = "No tests found";
-        div.style.color = "#7AB2B2";
-        div.style.cursor = "default";
-        suggestions.appendChild(div);
-        return;
-      }
-      
-      filtered.forEach(test => {
-        const div = document.createElement("div");
-        div.textContent = test;
-        div.onclick = () => addTest(test);
-        suggestions.appendChild(div);
-      });
-    });
-    
-    document.addEventListener('click', (e) => {
-      if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
-        suggestions.innerHTML = "";
-      }
-    });
-    
-    function addTest(test) {
-      if (!selected.includes(test)) {
-        selected.push(test);
-        renderSelected();
-        suggestions.innerHTML = "";
-        searchInput.value = "";
-        runOptimization();
-      }
+    selectedTestsDiv.appendChild(span);
+  });
+}
+
+// Unified search: shows both tests and combos, combos are prioritized and clearly marked
+searchInput.addEventListener("input", () => {
+  const val = searchInput.value.toLowerCase().trim();
+  suggestionsDiv.innerHTML = "";
+  if(!val) return;
+  
+  const allCombos = getAllCombos();
+  const comboMatches = allCombos.filter(combo => combo.name.toLowerCase().includes(val) && !selectedItems.some(s => s.type === "combo" && s.name === combo.name));
+  const testMatches = unifiedItems.filter(item => item.type === "test" && item.name.toLowerCase().includes(val) && !selectedItems.some(s => s.type === "test" && s.name === item.name) && !isTestCoveredByCombo(item.name));
+  
+  // Show combos first
+  comboMatches.forEach(combo => {
+    const div = document.createElement("div");
+    div.className = "suggestion-combo";
+    div.innerHTML = `<i class="fas fa-layer-group"></i> <strong>${combo.name}</strong> <span class="combo-badge">Combo</span> <span style="font-size:11px; color:#7AB2B2;">(includes: ${combo.tests.slice(0,3).join(", ")}${combo.tests.length>3 ? "..." : ""})</span>`;
+    div.onclick = () => addCombo(combo);
+    suggestionsDiv.appendChild(div);
+  });
+  
+  testMatches.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "suggestion-test";
+    div.innerHTML = `<i class="fas fa-flask"></i> ${item.name} <span class="combo-badge" style="background:#7AB2B220;">Test</span>`;
+    div.onclick = () => addIndividualTest(item.name);
+    suggestionsDiv.appendChild(div);
+  });
+  
+  if(comboMatches.length === 0 && testMatches.length === 0) {
+    const div = document.createElement("div");
+    div.textContent = "No tests or combos found";
+    div.style.color = "#7AB2B2";
+    div.style.cursor = "default";
+    suggestionsDiv.appendChild(div);
+  }
+});
+
+document.addEventListener("click", (e) => { if(!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.innerHTML = ""; });
+
+// ========== OPTIMIZATION ENGINE (uses selectedTestsFlat) ==========
+function expandPackageTests(lab, pkg) { 
+  let testsSet = new Set([...pkg.tests]); 
+  if(pkg.combos) pkg.combos.forEach(cn => { const combo = lab.combos.find(c => c.name === cn); if(combo) combo.tests.forEach(t => testsSet.add(t)); }); 
+  return Array.from(testsSet); 
+}
+
+function findCheapestIndividualTest(testName, activeLabsSet) {
+  let best = null, minCost = Infinity;
+  for(const lab of labsData) {
+    if(!activeLabsSet.has(lab.name)) continue;
+    const testObj = lab.tests.find(t => t.name === testName);
+    if(testObj && testObj.b2b !== null && testObj.b2b < minCost) { minCost = testObj.b2b; best = { lab: lab.name, test: testObj, cost: testObj.b2b, type: "Test", name: testName, mrp: testObj.mrp }; }
+  }
+  return best;
+}
+
+function evaluateCombos(remainingSet, activeLabsSet) {
+  const candidates = [];
+  for(const lab of labsData) {
+    if(!activeLabsSet.has(lab.name)) continue;
+    for(const combo of lab.combos) {
+      const covered = combo.tests.filter(t => remainingSet.has(t));
+      if(covered.length === 0) continue;
+      let indivCost = 0; let allExist = true;
+      for(const t of covered) { const testObj = lab.tests.find(ts => ts.name === t); if(testObj && testObj.b2b !== null) indivCost += testObj.b2b; else { allExist = false; break; } }
+      if(!allExist) continue;
+      const savings = indivCost - combo.b2b;
+      if(savings > 0) candidates.push({ lab: lab.name, labRef: lab, type: "Combo", item: combo, coveredTests: covered, coveredCount: covered.length, cost: combo.b2b, mrp: combo.mrp, savings, indivCost });
     }
-    
-    function removeTest(test) {
-      selected = selected.filter(t => t !== test);
-      renderSelected();
-      runOptimization();
+  }
+  candidates.sort((a,b)=>b.savings - a.savings || b.coveredCount - a.coveredCount);
+  return candidates;
+}
+
+function evaluatePackages(remainingSet, activeLabsSet) {
+  const candidates = [];
+  for(const lab of labsData) {
+    if(!activeLabsSet.has(lab.name)) continue;
+    for(const pkg of lab.packages) {
+      const expandedTests = expandPackageTests(lab, pkg);
+      const covered = expandedTests.filter(t => remainingSet.has(t));
+      if(covered.length === 0) continue;
+      let indivCost = 0; let allOk = true;
+      for(const t of covered) { const testObj = lab.tests.find(ts => ts.name === t); if(testObj && testObj.b2b !== null) indivCost += testObj.b2b; else { allOk = false; break; } }
+      if(!allOk) continue;
+      const savings = indivCost - pkg.b2b;
+      if(savings > 0) candidates.push({ lab: lab.name, labRef: lab, type: "Package", item: pkg, coveredTests: covered, coveredCount: covered.length, cost: pkg.b2b, mrp: pkg.mrp, savings, indivCost });
     }
-    
-    function clearAll() {
-      selected = [];
-      renderSelected();
-      runOptimization();
-    }
-    
-    function renderSelected() {
-      selectedTestsDiv.innerHTML = "";
-      
-      if (selected.length === 0) {
-        const emptyMsg = document.createElement("div");
-        emptyMsg.textContent = "No tests selected. Start typing to add tests.";
-        emptyMsg.style.color = "#7AB2B2";
-        emptyMsg.style.fontSize = "14px";
-        emptyMsg.style.padding = "12px";
-        emptyMsg.style.textAlign = "center";
-        selectedTestsDiv.appendChild(emptyMsg);
-        return;
+  }
+  candidates.sort((a,b)=>b.savings - a.savings || b.coveredCount - a.coveredCount);
+  return candidates;
+}
+
+function optimizePlan(userTests, activeLabsSet) {
+  if(!userTests.length) return { items: [], totalB2B:0, totalMRP:0, savings:0, savingsPercent:0, missing:[] };
+  const uniqueTests = [...new Set(userTests)];
+  let remaining = new Set(uniqueTests);
+  const selectedItemsPlan = [];
+  while(remaining.size > 0) {
+    const packageCandidates = evaluatePackages(remaining, activeLabsSet);
+    const comboCandidates = evaluateCombos(remaining, activeLabsSet);
+    const allCandidates = [...packageCandidates, ...comboCandidates];
+    if(allCandidates.length === 0) break;
+    let best = allCandidates.reduce((a,b)=> (a.savings * a.coveredCount) > (b.savings * b.coveredCount) ? a : b, allCandidates[0]);
+    selectedItemsPlan.push({ lab: best.lab, type: best.type, name: best.item.name, cost: best.cost, mrp: best.mrp, coveredTests: best.coveredTests, savings: best.savings, indivCost: best.indivCost });
+    for(let t of best.coveredTests) remaining.delete(t);
+  }
+  const individualItems = [];
+  for(let testName of remaining) {
+    const cheapest = findCheapestIndividualTest(testName, activeLabsSet);
+    if(cheapest) individualItems.push({ lab: cheapest.lab, type: "Test", name: testName, cost: cheapest.cost, mrp: cheapest.test.mrp, coveredTests: [testName] });
+  }
+  const finalItems = [...selectedItemsPlan, ...individualItems];
+  let totalB2B = 0, totalMRP = 0;
+  finalItems.forEach(it => { totalB2B += it.cost; totalMRP += it.mrp; });
+  const savingsTotal = totalMRP - totalB2B;
+  const percent = totalMRP > 0 ? (savingsTotal/totalMRP)*100 : 0;
+  const coveredSet = new Set(); finalItems.forEach(it => it.coveredTests.forEach(t => coveredSet.add(t)));
+  const missing = uniqueTests.filter(t => !coveredSet.has(t));
+  return { items: finalItems, totalB2B: Math.round(totalB2B*100)/100, totalMRP: Math.round(totalMRP*100)/100, savings: Math.round(savingsTotal*100)/100, savingsPercent: Math.round(percent*100)/100, missing };
+}
+
+// Comparison render (same as before, using selectedTestsFlat)
+function renderComparison() {
+  if(selectedTestsFlat.length === 0) { comparisonSection.style.display = "none"; return; }
+  comparisonSection.style.display = "block";
+  let html = `<table class="comparison-table"><thead><tr><th>Lab</th><th>Selected Tests (MRP / B2B)</th><th>Total MRP / B2B</th><th>Combos covering selected</th><th>Packages covering selected</th></tr></thead><tbody>`;
+  for(const lab of labsData) {
+    if(!selectedLabs.has(lab.name)) continue;
+    const selectedInLab = selectedTestsFlat.filter(test => lab.tests.some(t => t.name === test && t.b2b !== null));
+    let sumMRP = 0, sumB2B = 0;
+    const testsHtml = selectedInLab.map(test => { 
+      const tObj = lab.tests.find(tx => tx.name === test); 
+      if(tObj) { sumMRP += tObj.mrp; if(tObj.b2b) sumB2B += tObj.b2b; }
+      return `<span class="test-item">${test} <span style="color:#7AB2B2;">₹${tObj.mrp}</span> / <span class="b2p-highlight">₹${tObj.b2b}</span></span>`;
+    }).join('');
+    const totalCell = `<div><span class="price-mrp" style="text-decoration:none;">MRP: ₹${sumMRP}</span><br><span class="price-b2b">B2B: ₹${sumB2B}</span></div>`;
+    const relevantCombos = lab.combos.filter(combo => combo.tests.some(t => selectedTestsFlat.includes(t))).map(combo => {
+      const covered = combo.tests.filter(t => selectedTestsFlat.includes(t));
+      return `<div><strong>${combo.name}</strong> <span style="color:#7AB2B2;">₹${combo.mrp}</span> / <span class="b2p-highlight">₹${combo.b2b}</span> <i class="fas fa-info-circle info-icon" onclick='showInfo("Combo: ${combo.name}", "${combo.tests.join(", ")}")'></i><div>Covers: ${covered.join(", ")}</div></div>`;
+    }).join('');
+    const relevantPackages = lab.packages.filter(pkg => { const expanded = expandPackageTests(lab, pkg); return expanded.some(t => selectedTestsFlat.includes(t)); }).map(pkg => {
+      const expanded = expandPackageTests(lab, pkg);
+      const covered = expanded.filter(t => selectedTestsFlat.includes(t));
+      return `<div><strong>${pkg.name}</strong> <span style="color:#7AB2B2;">₹${pkg.mrp}</span> / <span class="b2p-highlight">₹${pkg.b2b}</span> <i class="fas fa-info-circle info-icon" onclick='showInfo("Package: ${pkg.name}", "Tests: ${expanded.join(", ")}")'></i><div>Covers: ${covered.join(", ")}</div></div>`;
+    }).join('');
+    html += `<tr><td class="lab-name">${lab.name}</td><td>${testsHtml || "-"}</td><td>${totalCell}</td><td>${relevantCombos || "No combos"}</td><td>${relevantPackages || "No packages"}</td></tr>`;
+  }
+  html += `</tbody></table>`;
+  comparisonTable.innerHTML = html;
+}
+
+function copyToClipboard(text, successMessage) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => alert(successMessage)).catch(() => fallbackCopy(text, successMessage));
+  } else { fallbackCopy(text, successMessage); }
+}
+function fallbackCopy(text, successMessage) {
+  const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.top = '-9999px'; document.body.appendChild(textarea); textarea.select();
+  try { document.execCommand('copy'); alert(successMessage); } catch(err) { alert("Copy failed. Please manually copy."); }
+  document.body.removeChild(textarea);
+}
+function copySelectedNames() {
+  if(selectedTestsFlat.length === 0) { alert("No selections to copy"); return; }
+  const opt = optimizePlan(selectedTestsFlat, selectedLabs);
+  const testNames = opt.items.filter(i => i.type === "Test").map(i => i.name);
+  const comboNames = opt.items.filter(i => i.type === "Combo").map(i => i.name);
+  const pkgNames = opt.items.filter(i => i.type === "Package").map(i => i.name);
+  copyToClipboard([...testNames, ...comboNames, ...pkgNames].join(", "), "Copied selections");
+}
+window.copyLabItems = function(labName) {
+  const opt = optimizePlan(selectedTestsFlat, selectedLabs);
+  const labItems = opt.items.filter(i => i.lab === labName);
+  copyToClipboard(labItems.map(i => i.name).join(", "), `Copied from ${labName}`);
+};
+globalCopyBtn.addEventListener("click", copySelectedNames);
+
+window.showInfo = function(title, body) { document.getElementById("modalTitle").innerText = title; document.getElementById("modalBody").innerHTML = body; document.getElementById("infoModal").style.display = "flex"; };
+window.closeModal = function() { document.getElementById("infoModal").style.display = "none"; };
+
+function runOptimization() {
+  if(selectedTestsFlat.length === 0) {
+    resultDiv.innerHTML = `<div class="empty-state"><i class="fas fa-chart-simple"></i><p>Select tests or combos to see optimization results</p></div>`;
+    renderComparison();
+    return;
+  }
+  const opt = optimizePlan(selectedTestsFlat, selectedLabs);
+  let html = `<div style="margin-bottom:24px;"><strong>Selected Items:</strong><div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:10px;">${selectedItems.map(i => `<span style="background:#EBF4F6; padding:6px 14px; border-radius:20px;">${i.type === "combo" ? "📦 " + i.name : "🔬 " + i.name}</span>`).join('')}</div></div>`;
+  html += `<h4 style="color:#09637E; margin-bottom:16px;"><i class="fas fa-microchip"></i> Optimized Multi-Lab Plan:</h4>`;
+  if(opt.items.length === 0) html += `<div class="empty-state">No coverage possible</div>`;
+  else {
+    const grouped = new Map();
+    opt.items.forEach(item => { if(!grouped.has(item.lab)) grouped.set(item.lab, []); grouped.get(item.lab).push(item); });
+    for(let [labName, items] of grouped.entries()) {
+      html += `<div style="background:#F8FDFE; border-radius:20px; margin-bottom:20px; padding:12px 16px; border:1px solid #D9E9EC;">
+        <div class="lab-header"><strong><i class="fas fa-flask"></i> ${labName}</strong>
+        <button class="lab-copy-btn" onclick="copyLabItems('${labName.replace(/'/g, "\\'")}')"><i class="fas fa-copy"></i> Copy</button></div>`;
+      for(let it of items) {
+        let icon = it.type === "Test" ? '<i class="fas fa-microscope"></i>' : (it.type === "Combo" ? '<i class="fas fa-cubes"></i>' : '<i class="fas fa-box"></i>');
+        html += `<div class="lab-block"><strong>${icon} ${it.type}: ${it.name}</strong><div>MRP: ₹${it.mrp} | <span class="b2p-highlight">B2B: ₹${it.cost}</span></div>${it.type !== "Test" ? `<div style="font-size:12px;">Savings: ₹${it.savings}</div>` : ''}</div>`;
       }
-      
-      selected.forEach(t => {
-        const span = document.createElement("span");
-        span.innerHTML = `${t} <i class="fas fa-times" style="font-size: 10px;"></i>`;
-        span.onclick = () => removeTest(t);
-        selectedTestsDiv.appendChild(span);
-      });
+      html += `</div>`;
     }
-    
-    function renderComparison() {
-      if (selected.length === 0) {
-        comparisonSection.style.display = "none";
-        return;
-      }
-      
-      comparisonSection.style.display = "block";
-      
-      const comparisonData = [];
-      
-      labs.forEach(lab => {
-        const availableTests = [];
-        const unavailableTests = [];
-        
-        selected.forEach(test => {
-          const testObj = lab.tests.find(t => t.name === test);
-          if (testObj) {
-            availableTests.push({...testObj, testName: test});
-          } else {
-            unavailableTests.push(test);
-          }
-        });
-        
-        const applicablePackages = [];
-        lab.packages.forEach(pkg => {
-          const coveredTests = pkg.tests.filter(t => selected.includes(t));
-          if (coveredTests.length > 0) {
-            let individualCost = 0;
-            coveredTests.forEach(t => {
-              const testObj = lab.tests.find(x => x.name === t);
-              if (testObj) individualCost += testObj.b2b;
-            });
-            applicablePackages.push({
-              ...pkg,
-              coveredTests: coveredTests,
-              savings: individualCost - pkg.b2b,
-              individualCost: individualCost
-            });
-          }
-        });
-        
-        const totalIndividualCost = availableTests.reduce((sum, test) => sum + test.b2b, 0);
-        const totalMRP = availableTests.reduce((sum, test) => sum + test.mrp, 0);
-        
-        comparisonData.push({
-          lab: lab.name,
-          availableTests: availableTests,
-          unavailableTests: unavailableTests,
-          packages: applicablePackages,
-          totalIndividualCost: totalIndividualCost,
-          totalMRP: totalMRP,
-          hasPackages: applicablePackages.length > 0
-        });
-      });
-      
-      let html = `
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Lab</th>
-              <th>Available Tests</th>
-              <th>Individual Cost</th>
-              <th>Packages Available</th>
-              <th>Best Package Deal</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      
-      comparisonData.forEach(data => {
-        const testsHtml = data.availableTests.map(test => 
-          `<span class="test-item">${test.testName} (₹${test.b2b})</span>`
-        ).join('');
-        
-        const unavailableHtml = data.unavailableTests.length > 0 ? 
-          `<div style="margin-top: 8px; color: #7AB2B2; font-size: 12px;">
-            <i class="fas fa-times-circle"></i> Unavailable: ${data.unavailableTests.join(', ')}
-          </div>` : '';
-        
-        const packagesHtml = data.packages.length > 0 ?
-          data.packages.map(pkg => 
-            `<div style="margin: 4px 0;">
-              <strong>${pkg.name}</strong>
-              <span class="package-badge">Save ₹${pkg.savings}</span>
-              <div style="font-size: 12px; color: #5A6E7A;">
-                Includes: ${pkg.coveredTests.join(', ')} | Cost: ₹${pkg.b2b}
-              </div>
-            </div>`
-          ).join('') :
-          '<span style="color: #7AB2B2;">No packages available</span>';
-        
-        const bestPackage = data.packages.length > 0 ?
-          data.packages.reduce((best, pkg) => pkg.savings > best.savings ? pkg : best, data.packages[0]) :
-          null;
-        
-        html += `
-          <tr>
-            <td class="lab-name">${data.lab}</td>
-            <td>${testsHtml}${unavailableHtml}</td>
-            <td>
-              <div><span class="price-b2b">₹${data.totalIndividualCost}</span></div>
-              <div class="price-mrp">MRP: ₹${data.totalMRP}</div>
-            </td>
-            <td>${packagesHtml}</td>
-            <td>
-              ${bestPackage ? 
-                `<div>
-                  <strong>${bestPackage.name}</strong>
-                  <div>₹${bestPackage.b2b} <span style="color: #088395;">(Save ₹${bestPackage.savings})</span></div>
-                  <div style="font-size: 12px;">Covers: ${bestPackage.coveredTests.join(', ')}</div>
-                </div>` : 
-                '<span style="color: #7AB2B2;">No packages</span>'
-              }
-            </td>
-          </tr>
-        `;
-      });
-      
-      html += `</tbody></table>`;
-      comparisonTable.innerHTML = html;
-    }
-    
-    function runOptimization() {
-      const result = optimizer.optimize(selected);
-      
-      if (selected.length === 0) {
-        resultDiv.innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-chart-simple"></i>
-            <p>Select tests to see optimization results</p>
-          </div>
-        `;
-        renderComparison();
-        return;
-      }
-      
-      // Display optimization results
-      let html = `
-        <div style="margin-bottom: 24px;">
-          <strong style="color: #09637E; font-size: 16px;">Selected Tests:</strong>
-          <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px;">
-      `;
-      
-      selected.forEach(test => {
-        html += `<span style="background: #EBF4F6; color: #09637E; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;">${test}</span>`;
-      });
-      
-      html += `
-          </div>
-        </div>
-        <h4 style="color: #09637E; margin-bottom: 20px; font-size: 18px;">
-          <i class="fas fa-microchip"></i> AI-Optimized Plan:
-        </h4>
-      `;
-      
-      if (result.finalPlan.length === 0) {
-        html += `<div class="empty-state">No tests available in any lab</div>`;
-      } else {
-        result.finalPlan.forEach(item => {
-          if (item.type === "Package") {
-            html += `
-              <div class="lab-block">
-                <strong><i class="fas fa-flask"></i> ${item.lab}</strong>
-                <div style="font-size: 14px; color: #088395; margin-bottom: 6px;">
-                  <i class="fas fa-cube"></i> Package: ${item.name}
-                </div>
-                <div style="font-size: 13px; color: #7AB2B2;">
-                  Includes: ${item.tests.join(", ")}
-                </div>
-                <div style="font-size: 12px; color: #5A6E7A; margin-top: 8px;">
-                  💰 Savings: ₹${item.savings} (Individual would cost ₹${item.individualCost})
-                </div>
-              </div>
-            `;
-          } else {
-            html += `
-              <div class="lab-block">
-                <strong><i class="fas fa-flask"></i> ${item.lab}</strong>
-                <div style="font-size: 14px; color: #088395;">
-                  <i class="fas fa-microscope"></i> Test: ${item.name}
-                </div>
-                <div style="font-size: 12px; color: #7AB2B2; margin-top: 6px;">
-                  B2B Price: ₹${item.cost} | MRP: ₹${item.mrp}
-                </div>
-              </div>
-            `;
-          }
-        });
-      }
-      
-      html += `
-        <div class="result">
-          <div style="background: #F8FDFE; padding: 20px; border-radius: 16px; margin-top: 20px;">
-            <p style="margin: 10px 0;">
-              <strong>💰 Total MRP:</strong> <span style="color: #7AB2B2;">₹${result.totalMRP.toLocaleString()}</span>
-            </p>
-            <p style="margin: 10px 0;">
-              <strong>✨ Optimized B2B Cost:</strong> <span style="color: #088395; font-size: 18px; font-weight: 700;">₹${result.totalB2B.toLocaleString()}</span>
-            </p>
-            <div class="highlight">
-              <i class="fas fa-tag"></i> Total Savings: ₹${result.savings.toLocaleString()} (${result.savingsPercentage}% off)
-            </div>
-            ${result.missingTests.length > 0 ? `
-              <div style="margin-top: 15px; padding: 10px; background: #FFF3E0; border-radius: 12px; color: #E65100;">
-                <i class="fas fa-exclamation-triangle"></i> Warning: Some tests not available: ${result.missingTests.join(', ')}
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `;
-      
-      resultDiv.innerHTML = html;
-      renderComparison();
-    }
-    
-    // Event Listeners
-    clearAllBtn.addEventListener("click", clearAll);
-    
-    // Initialize
-    renderSelected();
-    runOptimization();
-  </script>
+  }
+  html += `<div class="result"><div style="background:#F8FDFE; padding:20px; border-radius:16px;"><p><strong>💰 Total MRP:</strong> ₹${opt.totalMRP.toLocaleString()}</p><p><strong>✨ Optimized B2B Cost:</strong> <span style="font-size:18px; font-weight:700; color:#088395;">₹${opt.totalB2B.toLocaleString()}</span></p><div class="highlight"><i class="fas fa-tag"></i> Total Savings: ₹${opt.savings.toLocaleString()} (${opt.savingsPercent}% off)</div>${opt.missing.length ? `<div style="margin-top:15px; padding:10px; background:#FFF3E0; border-radius:12px;"><i class="fas fa-exclamation-triangle"></i> Unavailable: ${opt.missing.join(', ')}</div>` : ''}</div></div>`;
+  resultDiv.innerHTML = html;
+  renderComparison();
+}
+
+clearAllBtn.addEventListener("click", clearAll);
+renderLabCheckboxes();
+renderSelected();
+runOptimization();
+</script>
 </body>
 </html>
