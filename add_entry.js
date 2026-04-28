@@ -131,7 +131,6 @@ function parseDateFromSheet(dateValue) {
     }
   }
   
-  // Handle Date objects - extract UTC date parts
   if (dateValue instanceof Date) {
     const year = dateValue.getUTCFullYear();
     const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
@@ -142,62 +141,44 @@ function parseDateFromSheet(dateValue) {
   return dateValue;
 }
 
-// CRITICAL FIX: Parse time from sheet WITHOUT any timezone conversion
-// Time values are stored as simple strings (HH:MM) in Google Sheets
 function parseTimeFromSheet(timeValue) {
   if (!timeValue) return "";
   
-  // If it's already a string in HH:MM format, return as is
   if (typeof timeValue === 'string' && /^\d{2}:\d{2}$/.test(timeValue)) {
     return timeValue;
   }
   
-  // If it's a string that contains time
   if (typeof timeValue === 'string') {
-    // Extract HH:MM pattern from any string
     const match = timeValue.match(/(\d{2}):(\d{2})/);
     if (match) {
       return `${match[1]}:${match[2]}`;
     }
   }
   
-  // CRITICAL: If it's a Date object, extract UTC time parts directly
-  // Google Sheets returns time as Date object with timezone offset
-  // We need to get the actual stored time by using UTC methods
   if (timeValue instanceof Date) {
-    // Get the UTC hours and minutes - this gives us the stored time
     let hours = timeValue.getUTCHours();
     let minutes = timeValue.getUTCMinutes();
-    
-    // Format as HH:MM with leading zeros
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
   
   return "";
 }
 
-// CRITICAL FIX: Format display time without any modification
 function formatDisplayTime(timeValue) {
   if (!timeValue) return "-";
-  
   const parsedTime = parseTimeFromSheet(timeValue);
   if (!parsedTime || parsedTime === "-") return "-";
-  
-  // Return exactly as parsed, already in HH:MM format
   return parsedTime;
 }
 
 function formatDisplayDate(dateValue) {
   if (!dateValue) return "-";
-  
   const parsed = parseDateFromSheet(dateValue);
   if (!parsed || parsed === "-") return "-";
-  
   const parts = parsed.split('-');
   if (parts.length === 3) {
     return `${parts[2]}-${parts[1]}-${parts[0]}`;
   }
-  
   return dateValue;
 }
 
@@ -210,7 +191,7 @@ function sortEntriesByDateAndTime(entries) {
       return dateB.localeCompare(dateA);
     }
     
-    const timeA = parseTimeFromSheet(a.time_of_visit) || "00:00";
+    const timeA = parseTimeFromSheet(b.time_of_visit) || "00:00";
     const timeB = parseTimeFromSheet(b.time_of_visit) || "00:00";
     
     return timeB.localeCompare(timeA);
@@ -248,7 +229,7 @@ const F = {
   ppPhlebotomistField:    () => el("#ppPhlebotomistField"),
   urineField:             () => el("#urineField"),
   phlebotomistInput:      () => el("#phlebotomistInput"),
-  phlebotomistSuggestions:() => el("#phlebotomistSuggestions"),
+  phlebotomistSuggestions:()=> el("#phlebotomistSuggestions"),
   ppPhlebotomistInput:    () => el("#ppPhlebotomistInput"),
   ppPhlebotomistSuggestions:()=> el("#ppPhlebotomistSuggestions"),
   bloodCollected:         () => el("#bloodCollected"),
@@ -295,11 +276,16 @@ const F = {
   clearFilterBtn:         () => el("#clearFilterBtn"),
   showAllToggle:          () => el("#showAllToggle"),
   searchPatientInput:     () => el("#searchPatientInput"),
+  unifiedSearchInput:     () => el("#unifiedSearchInput"),
+  selectedItemsList:      () => el("#selectedItemsList"),
+  bulkAddInput:           () => el("#bulkAddInput"),
+  bulkAddBtn:             () => el("#bulkAddBtn"),
 };
 
 /* ========================= Global state ========================= */
 let selectedTestsByLab    = { 1: [], 2: [], 3: [], 4: [] };
 let selectedPackagesByLab = { 1: [], 2: [], 3: [], 4: [] };
+let packageTestSelections = {}; // Stores which tests are included from packages
 let currentSelectedLab    = "lab1";
 let tubeCountOverrides    = {};
 let serverEntriesCache    = [];
@@ -310,7 +296,6 @@ function labNumFromId(labId) {
 }
 
 /* ========================= De-duplication Logic ========================= */
-// Get all tests from a specific lab (including package tests)
 function getAllTestsForLab(labNum) {
   const labId = `lab${labNum}`;
   const direct = selectedTestsByLab[labNum] || [];
@@ -318,25 +303,26 @@ function getAllTestsForLab(labNum) {
   const fromPkgs = [];
   pkgNames.forEach(n => {
     const pkg = (PACKAGES[labId] || []).find(p => p.name === n);
-    if (pkg) fromPkgs.push(...pkg.tests);
+    if (pkg) {
+      // Check if tests are individually selected from package
+      const includedTests = packageTestSelections[`${labNum}_${n}`] || pkg.tests;
+      fromPkgs.push(...includedTests);
+    }
   });
   return [...new Set([...direct, ...fromPkgs])];
 }
 
-// Get all selected tests across all labs (unique)
 function getAllSelectedTestsAcrossLabs() {
   const all = [];
   for (let i = 1; i <= 4; i++) all.push(...getAllTestsForLab(i));
   return [...new Set(all)];
 }
 
-// Get combined tests list as string
 function getCombinedTestsList() {
   const allTests = getAllSelectedTestsAcrossLabs();
   return allTests.sort().join(", ");
 }
 
-// Get all selected package names across all labs (unique)
 function getAllSelectedPackagesAcrossLabs() {
   const all = [];
   for (let i = 1; i <= 4; i++) {
@@ -345,21 +331,23 @@ function getAllSelectedPackagesAcrossLabs() {
   return [...new Set(all)];
 }
 
-// Get all package-included tests across all labs (unique)
 function getAllPackageTestsAcrossLabs() {
   const all = [];
   for (let i = 1; i <= 4; i++) {
     const labId = `lab${i}`;
     const pkgNames = selectedPackagesByLab[i] || [];
     pkgNames.forEach(n => {
-      const pkg = (PACKAGES[labId] || []).find(p => p.name === n);
-      if (pkg) all.push(...pkg.tests);
+      const includedTests = packageTestSelections[`${i}_${n}`];
+      if (includedTests) all.push(...includedTests);
+      else {
+        const pkg = (PACKAGES[labId] || []).find(p => p.name === n);
+        if (pkg) all.push(...pkg.tests);
+      }
     });
   }
   return [...new Set(all)];
 }
 
-// Check if a test is already selected in ANY lab (individual or package)
 function isTestGloballySelected(testName, currentLabNum) {
   for (let i = 1; i <= 4; i++) {
     if (i !== currentLabNum) {
@@ -372,38 +360,38 @@ function isTestGloballySelected(testName, currentLabNum) {
   return false;
 }
 
-// Remove a test from all other labs (used when selecting individually)
 function removeTestFromOtherLabs(testName, currentLabNum) {
   for (let i = 1; i <= 4; i++) {
     if (i !== currentLabNum) {
       const testIndex = selectedTestsByLab[i].indexOf(testName);
       if (testIndex !== -1) {
         selectedTestsByLab[i].splice(testIndex, 1);
-        const tv = el(`#testsValue${i}`);
-        if (tv) tv.value = selectedTestsByLab[i].join(", ");
       }
       
       const packagesToRemove = [];
       selectedPackagesByLab[i].forEach(pkgName => {
-        const pkg = getPackage(`lab${i}`, pkgName);
-        if (pkg && pkg.tests.includes(testName)) {
+        const includedTests = packageTestSelections[`${i}_${pkgName}`];
+        if (includedTests && includedTests.includes(testName)) {
           packagesToRemove.push(pkgName);
+        } else {
+          const pkg = getPackage(`lab${i}`, pkgName);
+          if (pkg && pkg.tests.includes(testName)) {
+            packagesToRemove.push(pkgName);
+          }
         }
       });
       packagesToRemove.forEach(pkgName => {
         const pkgIndex = selectedPackagesByLab[i].indexOf(pkgName);
         if (pkgIndex !== -1) {
           selectedPackagesByLab[i].splice(pkgIndex, 1);
-          const pv = el(`#packagesValue${i}`);
-          if (pv) pv.value = selectedPackagesByLab[i].join(", ");
-          renderPackagesChips(i);
+          delete packageTestSelections[`${i}_${pkgName}`];
+          renderSelectedItemsDisplay();
         }
       });
     }
   }
 }
 
-// Remove conflicting individual tests when a package is selected
 function removeConflictingIndividualTests(pkg, labNum) {
   const individualTestsToRemove = [];
   for (const test of pkg.tests) {
@@ -423,7 +411,6 @@ function removeConflictingIndividualTests(pkg, labNum) {
   return individualTestsToRemove;
 }
 
-// Update global test set after changes
 function updateGlobalTestSet() {
   globallySelectedTests.clear();
   for (let i = 1; i <= 4; i++) {
@@ -432,8 +419,7 @@ function updateGlobalTestSet() {
   }
 }
 
-/* ========================= Enhanced Tube Calculation (Combined Across Labs) ========================= */
-// Calculate aggregated tube counts across all labs (sum per tube type)
+/* ========================= Enhanced Tube Calculation ========================= */
 function calculateAggregatedTubeCounts() {
   const aggregatedCounts = {};
   
@@ -449,7 +435,6 @@ function calculateAggregatedTubeCounts() {
   return aggregatedCounts;
 }
 
-// Get combined tube counts as formatted string for sheet submission
 function getCombinedTubeCountsString() {
   const counts = calculateAggregatedTubeCounts();
   const entries = Object.entries(counts).filter(([, c]) => c > 0);
@@ -527,7 +512,7 @@ function createStepper(initialValue, minValue, maxValue, onChange) {
   return { container, getValue: () => currentValue, setValue: updateValue };
 }
 
-/* ========================= Tube rendering (Combined View) ========================= */
+/* ========================= Tube rendering ========================= */
 function renderTubes() {
   const container = F.tubeList();
   if (!container) return;
@@ -581,8 +566,6 @@ function renderTubes() {
   });
 }
 
-
-
 /* ========================= Add test with global uniqueness ========================= */
 function addTestWithGlobalCheck(testName, labNum) {
   if (selectedTestsByLab[labNum].includes(testName)) return false;
@@ -594,8 +577,9 @@ function addTestWithGlobalCheck(testName, labNum) {
   
   const currentLabPackages = selectedPackagesByLab[labNum] || [];
   for (const pkgName of currentLabPackages) {
+    const includedTests = packageTestSelections[`${labNum}_${pkgName}`];
     const pkg = getPackage(`lab${labNum}`, pkgName);
-    if (pkg && pkg.tests.includes(testName)) {
+    if (pkg && (includedTests || pkg.tests).includes(testName)) {
       showToast(`"${testName}" is already included in package "${pkgName}". Cannot select individually.`);
       return false;
     }
@@ -604,26 +588,18 @@ function addTestWithGlobalCheck(testName, labNum) {
   selectedTestsByLab[labNum].push(testName);
   removeTestFromOtherLabs(testName, labNum);
   
-  for (let i = 1; i <= 4; i++) {
-    if (i !== labNum) {
-      const msInput = el(`#msInput${i}`);
-      if (msInput && document.activeElement !== msInput) {
-        const filterFn = window[`filterList${i}`];
-        if (filterFn) filterFn(el(`#msInput${i}`)?.value || "");
-      }
-    }
-  }
-  
   updateGlobalTestSet();
   return true;
 }
 
-/* ========================= Add package with global uniqueness ========================= */
-function addPackageWithGlobalCheck(pkg, labNum) {
+/* ========================= Add package with checkbox control ========================= */
+function addPackageWithCheckboxControl(pkg, labNum, selectedTestsFromPackage = null) {
   if (selectedPackagesByLab[labNum].includes(pkg.name)) return false;
   
+  const testsToInclude = selectedTestsFromPackage || pkg.tests;
+  
   const conflictingTests = [];
-  for (const test of pkg.tests) {
+  for (const test of testsToInclude) {
     if (isTestGloballySelected(test, labNum)) {
       conflictingTests.push(test);
     }
@@ -636,51 +612,79 @@ function addPackageWithGlobalCheck(pkg, labNum) {
   
   const removedTests = removeConflictingIndividualTests(pkg, labNum);
   if (removedTests.length > 0) {
-    const tv = el(`#testsValue${labNum}`);
-    if (tv) tv.value = selectedTestsByLab[labNum].join(", ");
+    renderSelectedItemsDisplay();
   }
   
   selectedPackagesByLab[labNum].push(pkg.name);
+  packageTestSelections[`${labNum}_${pkg.name}`] = testsToInclude;
   
-  for (const test of pkg.tests) {
+  for (const test of testsToInclude) {
     removeTestFromOtherLabs(test, labNum);
   }
   
-  for (let i = 1; i <= 4; i++) {
-    if (i !== labNum) {
-      const msInput = el(`#msInput${i}`);
-      if (msInput && document.activeElement !== msInput) {
-        const filterFn = window[`filterList${i}`];
-        if (filterFn) filterFn(el(`#msInput${i}`)?.value || "");
-      }
-    }
-  }
-  
-  renderPackagesChips(labNum);
+  renderSelectedItemsDisplay();
   updateGlobalTestSet();
   return true;
 }
 
-/* ========================= Selected tests / packages display ========================= */
-function renderSelectedTestsDisplay() {
-  const container = F.selectedTestsList();
-  if (!container) return;
-  const labNum = labNumFromId(currentSelectedLab);
-  const tests = selectedTestsByLab[labNum];
+/* ========================= Update package test selection ========================= */
+function updatePackageTestSelection(labNum, packageName, testName, isChecked) {
+  const key = `${labNum}_${packageName}`;
+  let currentTests = packageTestSelections[key] || [];
+  const pkg = getPackage(`lab${labNum}`, packageName);
+  
+  if (!pkg) return;
+  
+  if (isChecked && !currentTests.includes(testName)) {
+    if (isTestGloballySelected(testName, labNum)) {
+      showToast(`"${testName}" is already selected elsewhere. Cannot include in package.`);
+      return;
+    }
+    currentTests.push(testName);
+  } else if (!isChecked && currentTests.includes(testName)) {
+    const testIndex = currentTests.indexOf(testName);
+    currentTests.splice(testIndex, 1);
+    
+    const isTestInOtherPackages = selectedPackagesByLab[labNum].some(pkgName => {
+      if (pkgName === packageName) return false;
+      const otherPkgTests = packageTestSelections[`${labNum}_${pkgName}`] || [];
+      return otherPkgTests.includes(testName);
+    });
+    
+    if (!isTestInOtherPackages && !selectedTestsByLab[labNum].includes(testName)) {
+      removeTestFromOtherLabs(testName, labNum);
+    }
+  }
+  
+  packageTestSelections[key] = currentTests;
+  renderSelectedItemsDisplay();
+  updateAllCalculations();
+}
 
+/* ========================= Selected items display (Unified) ========================= */
+function renderSelectedItemsDisplay() {
+  const container = F.selectedItemsList();
+  if (!container) return;
+  
+  const labNum = labNumFromId(currentSelectedLab);
+  const individualTests = selectedTestsByLab[labNum] || [];
+  const packages = selectedPackagesByLab[labNum] || [];
+  
   container.innerHTML = "";
-  if (!tests.length) {
-    container.innerHTML = '<div class="hint" style="padding:12px;text-align:center;">No tests selected</div>';
+  
+  if (!individualTests.length && !packages.length) {
+    container.innerHTML = '<div class="hint" style="padding:12px;text-align:center;">No tests or packages selected</div>';
     return;
   }
-
-  tests.forEach(test => {
+  
+  // Display individual tests
+  individualTests.forEach(test => {
     const mrp = getTestMRP(currentSelectedLab, test);
     const div = document.createElement("div");
     div.className = "selected-test-item";
     div.innerHTML = `
       <div class="test-info">
-        <div class="test-name">${escapeHtml(test)}</div>
+        <div class="test-name">🧪 ${escapeHtml(test)}</div>
         <div class="test-price">MRP: ${fmtINR(mrp)}</div>
       </div>
       <button class="remove-test-btn" data-test="${escapeHtml(test)}" title="Remove test">❌</button>`;
@@ -689,32 +693,22 @@ function renderSelectedTestsDisplay() {
       const testIndex = selectedTestsByLab[labNum].indexOf(test);
       if (testIndex !== -1) {
         selectedTestsByLab[labNum].splice(testIndex, 1);
-        const tv = el(`#testsValue${labNum}`);
-        if (tv) tv.value = selectedTestsByLab[labNum].join(", ");
         updateGlobalTestSet();
         updateAllCalculations();
+        renderSelectedItemsDisplay();
       }
     });
     container.appendChild(div);
   });
-}
-
-function renderSelectedPackagesDisplay() {
-  const container = F.selectedPackagesList();
-  if (!container) return;
-  const labNum = labNumFromId(currentSelectedLab);
-  const pkgNames = selectedPackagesByLab[labNum];
-  const pkgList = PACKAGES[currentSelectedLab] || [];
-
-  container.innerHTML = "";
-  if (!pkgNames.length) {
-    container.innerHTML = '<div class="hint" style="padding:12px;text-align:center;">No packages selected</div>';
-    return;
-  }
-
-  pkgNames.forEach(pkgName => {
-    const pkg = pkgList.find(p => p.name === pkgName);
+  
+  // Display packages with checkboxes
+  packages.forEach(pkgName => {
+    const pkg = getPackage(currentSelectedLab, pkgName);
     if (!pkg) return;
+    
+    const key = `${labNum}_${pkgName}`;
+    const includedTests = packageTestSelections[key] || pkg.tests;
+    
     const div = document.createElement("div");
     div.className = "selected-package-item";
     div.innerHTML = `
@@ -724,49 +718,271 @@ function renderSelectedPackagesDisplay() {
       </div>
       <div class="package-tests-list">
         <strong>Tests included:</strong>
-        <ul>${pkg.tests.map(t => `<li>${escapeHtml(t)}</li>`).join("")}</ul>
+        <ul>
+          ${pkg.tests.map(t => `
+            <li>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" class="package-test-checkbox" data-package="${escapeHtml(pkgName)}" data-test="${escapeHtml(t)}" ${includedTests.includes(t) ? 'checked' : ''}>
+                <span>${escapeHtml(t)}</span>
+                <span class="test-source" style="margin-left: auto;">MRP: ${fmtINR(getTestMRP(currentSelectedLab, t))}</span>
+              </label>
+            </li>
+          `).join("")}
+        </ul>
       </div>
       <div class="package-price">💰 Package MRP: ${fmtINR(pkg.mrp)}</div>`;
+    
     div.querySelector(".remove-package-btn").addEventListener("click", (e) => {
       e.stopPropagation();
       const pkgIndex = selectedPackagesByLab[labNum].indexOf(pkgName);
       if (pkgIndex !== -1) {
         selectedPackagesByLab[labNum].splice(pkgIndex, 1);
-        const pv = el(`#packagesValue${labNum}`);
-        if (pv) pv.value = selectedPackagesByLab[labNum].join(", ");
-        renderPackagesChips(labNum);
+        delete packageTestSelections[key];
+        renderSelectedItemsDisplay();
         updateGlobalTestSet();
         updateAllCalculations();
       }
     });
+    
+    div.querySelectorAll(".package-test-checkbox").forEach(cb => {
+      cb.addEventListener("change", (e) => {
+        const testName = cb.dataset.test;
+        const isChecked = cb.checked;
+        updatePackageTestSelection(labNum, pkgName, testName, isChecked);
+      });
+    });
+    
     container.appendChild(div);
   });
 }
 
-function renderPackagesChips(labNum) {
-  const chipsContainer = el(`#packagesChips${labNum}`);
-  const packagesInput = el(`#packagesInput${labNum}`);
-  if (!chipsContainer) return;
+/* ========================= Unified Search & Selection ========================= */
+let currentSearchResults = [];
+let currentLabNumForSearch = 1;
 
-  chipsContainer.querySelectorAll(".chip").forEach(c => c.remove());
-
-  selectedPackagesByLab[labNum].forEach(pkg => {
-    const chip = document.createElement("span");
-    chip.className = "chip";
-    chip.innerHTML = `<span>${escapeHtml(pkg)}</span><button title="Remove" aria-label="Remove">&times;</button>`;
-    chip.querySelector("button").addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      const pkgIndex = selectedPackagesByLab[labNum].indexOf(pkg);
-      if (pkgIndex !== -1) {
-        selectedPackagesByLab[labNum].splice(pkgIndex, 1);
-        const pv = el(`#packagesValue${labNum}`);
-        if (pv) pv.value = selectedPackagesByLab[labNum].join(", ");
-        renderPackagesChips(labNum);
-        updateGlobalTestSet();
-        updateAllCalculations();
+function initializeUnifiedSearch() {
+  const searchInput = F.unifiedSearchInput();
+  const resultsContainer = el("#unifiedSearchResults");
+  if (!searchInput || !resultsContainer) return;
+  
+  const updateLabForSearch = () => {
+    currentLabNumForSearch = labNumFromId(currentSelectedLab);
+  };
+  
+  const processingLab = F.processingLab();
+  if (processingLab) {
+    processingLab.addEventListener("change", updateLabForSearch);
+  }
+  updateLabForSearch();
+  
+  function performSearch() {
+    const query = searchInput.value.trim().toLowerCase();
+    resultsContainer.innerHTML = "";
+    
+    if (!query) {
+      resultsContainer.style.display = "none";
+      return;
+    }
+    
+    const labId = `lab${currentLabNumForSearch}`;
+    const tests = TESTS_DATA[labId] || [];
+    const packages = PACKAGES[labId] || [];
+    const selectedTests = selectedTestsByLab[currentLabNumForSearch] || [];
+    const selectedPackages = selectedPackagesByLab[currentLabNumForSearch] || [];
+    const allSelectedTests = getAllSelectedTestsAcrossLabs();
+    
+    const testResults = tests.filter(t => 
+      t.name.toLowerCase().includes(query) && 
+      !selectedTests.includes(t.name) &&
+      !allSelectedTests.includes(t.name)
+    );
+    
+    const packageResults = packages.filter(p => 
+      p.name.toLowerCase().includes(query) && 
+      !selectedPackages.includes(p.name)
+    );
+    
+    currentSearchResults = [...testResults.map(t => ({ type: 'test', data: t })), ...packageResults.map(p => ({ type: 'package', data: p }))];
+    
+    if (currentSearchResults.length === 0) {
+      resultsContainer.innerHTML = '<div class="ms-empty">No matches found</div>';
+      resultsContainer.style.display = "block";
+      return;
+    }
+    
+    resultsContainer.style.display = "block";
+    
+    currentSearchResults.forEach(result => {
+      const item = document.createElement("div");
+      item.className = "ms-item";
+      if (result.type === 'test') {
+        item.innerHTML = `
+          <span>🧪 ${escapeHtml(result.data.name)}</span>
+          <span class="ms-item-price">${fmtINR(result.data.mrp)}</span>
+        `;
+        item.addEventListener("click", () => {
+          addTestWithGlobalCheck(result.data.name, currentLabNumForSearch);
+          searchInput.value = "";
+          resultsContainer.style.display = "none";
+          updateAllCalculations();
+          renderSelectedItemsDisplay();
+        });
+      } else {
+        item.innerHTML = `
+          <span>📦 ${escapeHtml(result.data.name)}</span>
+          <span class="ms-item-price">${fmtINR(result.data.mrp)}</span>
+        `;
+        item.addEventListener("click", () => {
+          showPackageTestSelectionModal(result.data);
+          searchInput.value = "";
+          resultsContainer.style.display = "none";
+        });
       }
+      resultsContainer.appendChild(item);
     });
-    packagesInput ? chipsContainer.insertBefore(chip, packagesInput) : chipsContainer.appendChild(chip);
+  }
+  
+  searchInput.addEventListener("input", performSearch);
+  searchInput.addEventListener("focus", () => {
+    if (searchInput.value.trim()) performSearch();
+  });
+  
+  document.addEventListener("click", (e) => {
+    if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+      resultsContainer.style.display = "none";
+    }
+  });
+}
+
+function showPackageTestSelectionModal(pkg) {
+  const modal = document.createElement("div");
+  modal.className = "package-modal";
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  `;
+  
+  const modalContent = document.createElement("div");
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: auto;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  `;
+  
+  modalContent.innerHTML = `
+    <h3 style="margin-bottom: 16px; color: var(--primary);">📦 ${escapeHtml(pkg.name)}</h3>
+    <p style="margin-bottom: 16px; color: var(--text-medium);">Select tests to include from this package:</p>
+    <div class="package-test-checkboxes" style="margin-bottom: 20px;">
+      ${pkg.tests.map(test => `
+        <label style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #e2e8f0; cursor: pointer;">
+          <input type="checkbox" class="modal-package-test" value="${escapeHtml(test)}" checked>
+          <span style="flex: 1;">${escapeHtml(test)}</span>
+          <span style="color: var(--secondary); font-size: 12px;">${fmtINR(getTestMRP(`lab${currentLabNumForSearch}`, test))}</span>
+        </label>
+      `).join("")}
+    </div>
+    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+      <button class="btn ghost" id="cancelPackageBtn">Cancel</button>
+      <button class="btn primary" id="confirmPackageBtn">Add Package</button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  modal.querySelector("#cancelPackageBtn").addEventListener("click", () => modal.remove());
+  modal.querySelector("#confirmPackageBtn").addEventListener("click", () => {
+    const selectedTests = Array.from(modal.querySelectorAll(".modal-package-test:checked")).map(cb => cb.value);
+    if (selectedTests.length === 0) {
+      showToast("Please select at least one test from the package");
+      return;
+    }
+    addPackageWithCheckboxControl(pkg, currentLabNumForSearch, selectedTests);
+    modal.remove();
+    updateAllCalculations();
+    renderSelectedItemsDisplay();
+  });
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+/* ========================= Bulk Add Feature ========================= */
+function initializeBulkAdd() {
+  const bulkInput = F.bulkAddInput();
+  const bulkBtn = F.bulkAddBtn();
+  if (!bulkInput || !bulkBtn) return;
+  
+  bulkBtn.addEventListener("click", () => {
+    const rawInput = bulkInput.value.trim();
+    if (!rawInput) {
+      showToast("Please enter tests or packages to add");
+      return;
+    }
+    
+    const items = rawInput.split(/[,]+/).map(item => item.trim()).filter(item => item);
+    const labNum = labNumFromId(currentSelectedLab);
+    const labId = `lab${labNum}`;
+    const tests = TESTS_DATA[labId] || [];
+    const packages = PACKAGES[labId] || [];
+    
+    let addedCount = 0;
+    let notFoundCount = 0;
+    const notFoundItems = [];
+    
+    items.forEach(item => {
+      const testMatch = tests.find(t => t.name.toLowerCase() === item.toLowerCase());
+      if (testMatch && !selectedTestsByLab[labNum].includes(testMatch.name) && !isTestGloballySelected(testMatch.name, labNum)) {
+        selectedTestsByLab[labNum].push(testMatch.name);
+        removeTestFromOtherLabs(testMatch.name, labNum);
+        addedCount++;
+        return;
+      }
+      
+      const packageMatch = packages.find(p => p.name.toLowerCase() === item.toLowerCase());
+      if (packageMatch && !selectedPackagesByLab[labNum].includes(packageMatch.name)) {
+        addPackageWithCheckboxControl(packageMatch, labNum, packageMatch.tests);
+        addedCount++;
+        return;
+      }
+      
+      notFoundItems.push(item);
+      notFoundCount++;
+    });
+    
+    if (addedCount > 0) {
+      updateGlobalTestSet();
+      updateAllCalculations();
+      renderSelectedItemsDisplay();
+      showToast(`Added ${addedCount} item(s)`);
+    }
+    
+    if (notFoundCount > 0) {
+      showToast(`Could not find: ${notFoundItems.slice(0, 3).join(", ")}${notFoundCount > 3 ? "..." : ""}`);
+    }
+    
+    bulkInput.value = "";
+  });
+  
+  bulkInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      bulkBtn.click();
+    }
   });
 }
 
@@ -838,7 +1054,7 @@ function updatePaymentFields() {
   if (node) node.addEventListener("input", updatePaymentFields);
 });
 
-/* ========================= B2B Popup with Password Protection ========================= */
+/* ========================= B2B Popup ========================= */
 let b2bPrice = 0;
 
 function showB2BPopup() {
@@ -935,15 +1151,12 @@ function autoPPTime() {
   const ptEl = F.ppTime();
   if (!vtEl || !vtEl.value || !ptEl || ptEl.dataset.manual) return;
   
-  // Parse visit time as simple string (HH:MM) without timezone
   const timeParts = vtEl.value.split(":").map(Number);
   let hours = timeParts[0];
   let minutes = timeParts[1];
   
-  // Add 2 hours for PP time
   hours = (hours + 2) % 24;
   
-  // Format as HH:MM
   ptEl.value = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
@@ -1039,10 +1252,7 @@ function checkTestDetailsCompleted() {
   return false;
 }
 
-function checkVisitScheduled() {
-  const vt = F.visitType(); const vd = F.visitDate(); const vtime = F.visitTime();
-  return !!(vt?.value && vd?.value && vtime?.value);
-}
+function checkVisitScheduled() { const vt = F.visitType(); const vd = F.visitDate(); const vtime = F.visitTime(); return !!(vt?.value && vd?.value && vtime?.value); }
 function checkPhlebotomistAssigned() { const p = F.phlebotomistInput(); return !!(p?.value.trim()); }
 function checkBloodCollectionDone() { const b = F.bloodCollected(); return !!(b?.checked); }
 
@@ -1299,8 +1509,7 @@ function generateReportReceivedList() {
 
 /* ========================= Master update ========================= */
 function updateAllCalculations() {
-  renderSelectedTestsDisplay();
-  renderSelectedPackagesDisplay();
+  renderSelectedItemsDisplay();
   renderTubes();
   updatePaymentFields();
   autoPPTime();
@@ -1453,6 +1662,12 @@ document.addEventListener("click", (e) => {
 
   const ns = F.nameSuggestions(); const pn = F.patientName();
   if (ns && (!pn || !pn.contains(e.target)) && !ns.contains(e.target)) ns.hidden = true;
+  
+  const unifiedResults = el("#unifiedSearchResults");
+  const unifiedInput = F.unifiedSearchInput();
+  if (unifiedResults && (!unifiedInput || !unifiedInput.contains(e.target)) && !unifiedResults.contains(e.target)) {
+    unifiedResults.style.display = "none";
+  }
 });
 
 /* ========================= Generic typeahead factory ========================= */
@@ -1718,7 +1933,7 @@ function renderPagination(totalItems) {
   paginationContainer.appendChild(pageInfo);
 }
 
-/* ========================= In-progress cards with pagination ========================= */
+/* ========================= In-progress cards ========================= */
 function renderInProgress() {
   const listEl = F.inProgressList();
   const emptyEl = F.inProgressEmpty();
@@ -1826,16 +2041,12 @@ function resetLabState() {
   for (let i = 1; i <= 4; i++) {
     selectedTestsByLab[i] = [];
     selectedPackagesByLab[i] = [];
-    const mi = el(`#msInput${i}`); if (mi) mi.value = "";
-    const tv = el(`#testsValue${i}`); if (tv) tv.value = "";
-    const pi = el(`#packagesInput${i}`); if (pi) pi.value = "";
-    const pv = el(`#packagesValue${i}`); if (pv) pv.value = "";
-    renderPackagesChips(i);
+    delete packageTestSelections[`${i}_`];
   }
   tubeCountOverrides = {};
   updateGlobalTestSet();
+  renderSelectedItemsDisplay();
 }
-
 
 function resetPaymentFields() {
   [F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived].forEach(fn => {
@@ -1852,8 +2063,8 @@ function resetCheckboxes() {
 }
 
 function resetMiscFields() {
-  const nullFields = [F.mapLink, F.areaInput, F.careOf, F.doctorName,
-    F.height, F.weight, F.lmpDate, F.clinicalHistory,
+  const nullFields = [F.mapLink, F.areaInput, F.careOf, F.doctorName, F.unifiedSearchInput,
+    F.bulkAddInput, F.height, F.weight, F.lmpDate, F.clinicalHistory,
     F.phlebotomistInput, F.ppPhlebotomistInput, F.visitInstruction];
   nullFields.forEach(fn => { const n = fn(); if (n) n.value = ""; });
   const pt = F.ppTime(); if (pt) { pt.value = ""; delete pt.dataset.manual; }
@@ -1871,7 +2082,6 @@ function fullFormReset() {
 }
 
 /* ========================= Edit / Load for edit ========================= */
-// CRITICAL FIX: Updated to properly handle time values without timezone conversion
 function loadForEdit(entry) {
   if (!entry) return;
 
@@ -1899,6 +2109,7 @@ function loadForEdit(entry) {
   setVal(F.weight, entry.weight);
   setVal(F.clinicalHistory, entry.clinical_history);
 
+  // Load tests and packages
   for (let i = 1; i <= 4; i++) {
     selectedTestsByLab[i] = (entry[`tests_lab${i}`] || "").split(",").map(s => s.trim()).filter(Boolean);
     
@@ -1908,8 +2119,13 @@ function loadForEdit(entry) {
         const parsed = JSON.parse(packagesData);
         if (Array.isArray(parsed)) {
           selectedPackagesByLab[i] = parsed.map(pkg => pkg.name).filter(Boolean);
+          parsed.forEach(pkg => {
+            if (pkg.tests) {
+              packageTestSelections[`${i}_${pkg.name}`] = pkg.tests.split(",").map(t => t.trim()).filter(Boolean);
+            }
+          });
         } else {
-          selectedPackagesByLab[i] = [];
+          selectedPackagesByLab[i] = packagesData.split(",").map(s => s.trim()).filter(Boolean);
         }
       } catch (e) {
         selectedPackagesByLab[i] = packagesData.split(",").map(s => s.trim()).filter(Boolean);
@@ -1917,12 +2133,6 @@ function loadForEdit(entry) {
     } else {
       selectedPackagesByLab[i] = [];
     }
-    
-    const mi = el(`#msInput${i}`); if (mi) mi.value = "";
-    const tv = el(`#testsValue${i}`); if (tv) tv.value = selectedTestsByLab[i].join(", ");
-    const pi = el(`#packagesInput${i}`); if (pi) pi.value = "";
-    const pv = el(`#packagesValue${i}`); if (pv) pv.value = selectedPackagesByLab[i].join(", ");
-    renderPackagesChips(i);
   }
   
   updateGlobalTestSet();
@@ -1938,7 +2148,6 @@ function loadForEdit(entry) {
   dateValue = parseDateFromSheet(dateValue);
   setVal(F.visitDate, dateValue);
 
-  // CRITICAL FIX: Parse time without timezone conversion
   let timeValue = entry.time_of_visit || "";
   timeValue = parseTimeFromSheet(timeValue);
   setVal(F.visitTime, timeValue);
@@ -1950,7 +2159,6 @@ function loadForEdit(entry) {
 
   const ptEl2 = F.ppTime();
   if (ptEl2) {
-    // CRITICAL FIX: Parse PP time without timezone conversion
     const ppTimeValue = entry.pp_time ? parseTimeFromSheet(entry.pp_time) : "";
     ptEl2.value = ppTimeValue;
     if (ppTimeValue) ptEl2.dataset.manual = "1";
@@ -2060,7 +2268,7 @@ if (formEl) {
 
     const data = new FormData(formEl);
     
-    // ========== 1. Lab-wise Tests & Packages (Separate Columns) ==========
+    // Lab-wise Tests & Packages
     for (let i = 1; i <= 4; i++) {
       const individualTests = selectedTestsByLab[i] || [];
       const packageNames = selectedPackagesByLab[i] || [];
@@ -2075,9 +2283,10 @@ if (formEl) {
       packageNames.forEach(pkgName => {
         const pkg = getPackage(`lab${i}`, pkgName);
         if (pkg) {
+          const includedTests = packageTestSelections[`${i}_${pkgName}`] || pkg.tests;
           packagesData.push({
             name: pkgName,
-            tests: pkg.tests.join(", ")
+            tests: includedTests.join(", ")
           });
         }
       });
@@ -2089,7 +2298,7 @@ if (formEl) {
       }
     }
     
-    // ========== 2. Overall Combined Data (All Labs) ==========
+    // Overall Combined Data
     const allIndividualTests = [];
     for (let i = 1; i <= 4; i++) {
       allIndividualTests.push(...(selectedTestsByLab[i] || []));
@@ -2106,12 +2315,12 @@ if (formEl) {
     const combinedTestsList = getAllSelectedTestsAcrossLabs();
     data.set("all_tests_combined", combinedTestsList.join(", "));
     
-    // ========== 3. Combined Test Tubes Data ==========
+    // Test Tubes Data
     const combinedTubeCounts = getCombinedTubeCountsString();
     data.set("combined_tubes", combinedTubeCounts);
     data.set("tube_overrides", JSON.stringify(tubeCountOverrides));
     
-    // ========== 4. Other Form Data ==========
+    // Other Form Data
     data.set("processing_lab", currentSelectedLab);
     data.set("total_mrp", calculateTotalMRP());
     data.set("total_b2b_price", calculateTotalB2B());
@@ -2335,159 +2544,6 @@ function setupEventListeners() {
   }
 }
 
-/* ========================= Multiselect – Tests ========================= */
-function getAlreadySelectedTestsInOtherLabs(currentLabNum) {
-  const set = new Set();
-  for (let i = 1; i <= 4; i++) if (i !== currentLabNum) getAllTestsForLab(i).forEach(t => set.add(t));
-  return set;
-}
-
-function createMultiselectForLab(labNum) {
-  const testsSelect = el(`#testsSelect${labNum}`);
-  const chips = el(`#chips${labNum}`);
-  const msInput = el(`#msInput${labNum}`);
-  const msPopup = el(`#msPopup${labNum}`);
-  const msList = el(`#msList${labNum}`);
-  const msEmpty = el(`#msEmpty${labNum}`);
-  const testsValue = el(`#testsValue${labNum}`);
-  if (!testsSelect || !chips || !msInput || !msPopup || !msList || !msEmpty || !testsValue) return;
-
-  function addTest(t) {
-    if (!t || selectedTestsByLab[labNum].includes(t)) return;
-    
-    if (addTestWithGlobalCheck(t, labNum)) {
-      msInput.value = "";
-      syncTests(true);
-      setTimeout(() => { msInput.focus(); filterList(""); }, 220);
-      updateAllCalculations();
-    }
-  }
-
-  function renderChips() {
-    chips.innerHTML = "";
-    chips.appendChild(msInput);
-    testsValue.value = selectedTestsByLab[labNum].join(", ");
-  }
-
-  const openPopup = () => { if (msPopup.hidden) { msPopup.hidden = false; testsSelect.setAttribute("aria-expanded", "true"); } filterList(msInput.value.trim()); };
-  const closePopup = () => { if (!msPopup.hidden) { msPopup.hidden = true; testsSelect.setAttribute("aria-expanded", "false"); } };
-
-  function filterList(q) {
-    const excluded = new Set([...selectedTestsByLab[labNum], ...getAlreadySelectedTestsInOtherLabs(labNum)]);
-    const testsList = TESTS_DATA[`lab${labNum}`] || [];
-    const items = testsList.filter(t => t.name.toLowerCase().includes((q || "").toLowerCase()) && !excluded.has(t.name));
-    msList.innerHTML = "";
-    msEmpty.hidden = !!items.length;
-    items.forEach(t => {
-      const li = document.createElement("li");
-      li.className = "ms-item";
-      li.innerHTML = `<span>${escapeHtml(t.name)}</span><span class="ms-item-price">${fmtINR(t.mrp)}</span>`;
-      li.addEventListener("pointerdown", ev => { if (ev.pointerType === "mouse" && ev.button === 0) { ev.preventDefault(); ev.stopPropagation(); addTest(t.name); } });
-      li.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); addTest(t.name); });
-      msList.appendChild(li);
-    });
-  }
-
-  function syncTests(keepOpen = false) {
-    renderChips();
-    filterList(msInput.value.trim());
-    if (keepOpen) openPopup(); else if (!msInput.value.trim()) closePopup();
-  }
-
-  testsSelect.addEventListener("pointerdown", () => { msInput.focus(); openPopup(); });
-  msInput.addEventListener("focus", openPopup);
-  msInput.addEventListener("input", (e) => { openPopup(); filterList(e.target.value); });
-  msInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); const first = msList.querySelector(".ms-item"); if (first) addTest(first.querySelector("span:first-child")?.textContent.trim()); return; }
-    if (e.key === "Backspace" && !msInput.value && selectedTestsByLab[labNum].length) {
-      selectedTestsByLab[labNum].pop();
-      syncTests(true);
-      setTimeout(() => { msInput.focus(); filterList(""); }, 220);
-      updateAllCalculations();
-    }
-  });
-  document.addEventListener("click", (e) => { if (!testsSelect.contains(e.target)) closePopup(); });
-  syncTests(false);
-  
-  window[`filterList${labNum}`] = filterList;
-}
-
-function createPackagesMultiselectForLab(labNum) {
-  const packagesSelect = el(`#packagesSelect${labNum}`);
-  const packagesChips = el(`#packagesChips${labNum}`);
-  const packagesInput = el(`#packagesInput${labNum}`);
-  const packagesPopup = el(`#packagesPopup${labNum}`);
-  const pkgList = el(`#packagesList${labNum}`);
-  const packagesEmpty = el(`#packagesEmpty${labNum}`);
-  const packagesValue = el(`#packagesValue${labNum}`);
-  if (!packagesSelect || !packagesChips || !packagesInput || !packagesPopup || !pkgList || !packagesEmpty || !packagesValue) return;
-
-  const available = PACKAGES[`lab${labNum}`] || [];
-
-  function addPackage(pkg) {
-    if (!pkg || selectedPackagesByLab[labNum].includes(pkg.name)) return;
-    
-    if (addPackageWithGlobalCheck(pkg, labNum)) {
-      packagesInput.value = "";
-      syncPackages(true);
-      setTimeout(() => { packagesInput.focus(); filterPkgList(""); }, 220);
-      updateAllCalculations();
-    }
-  }
-
-  function renderChipsLocal() {
-    packagesChips.innerHTML = "";
-    packagesChips.appendChild(packagesInput);
-    packagesValue.value = selectedPackagesByLab[labNum].join(", ");
-  }
-
-  const openPkgPopup = () => { if (packagesPopup.hidden) { packagesPopup.hidden = false; packagesSelect.setAttribute("aria-expanded", "true"); } filterPkgList(packagesInput.value.trim()); };
-  const closePkgPopup = () => { if (!packagesPopup.hidden) { packagesPopup.hidden = true; packagesSelect.setAttribute("aria-expanded", "false"); } };
-
-  function filterPkgList(q) {
-    const activeTests = getAllSelectedTestsAcrossLabs();
-    const items = available.filter(p =>
-      p.name.toLowerCase().includes((q || "").toLowerCase()) &&
-      !selectedPackagesByLab[labNum].includes(p.name) &&
-      !p.tests.some(t => activeTests.includes(t))
-    );
-    pkgList.innerHTML = "";
-    packagesEmpty.hidden = !!items.length;
-    items.forEach(p => {
-      const li = document.createElement("li");
-      li.className = "ms-item";
-      li.innerHTML = `<span>${escapeHtml(p.name)}</span><span class="ms-item-price">${fmtINR(p.mrp)}</span>`;
-      li.addEventListener("pointerdown", ev => { if (ev.pointerType === "mouse" && ev.button === 0) { ev.preventDefault(); ev.stopPropagation(); addPackage(p); } });
-      li.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); addPackage(p); });
-      pkgList.appendChild(li);
-    });
-  }
-
-  function syncPackages(keepOpen = false) {
-    renderChipsLocal();
-    filterPkgList(packagesInput.value.trim());
-    if (keepOpen) openPkgPopup(); else if (!packagesInput.value.trim()) closePkgPopup();
-  }
-
-  packagesSelect.addEventListener("pointerdown", () => { packagesInput.focus(); openPkgPopup(); });
-  packagesInput.addEventListener("focus", openPkgPopup);
-  packagesInput.addEventListener("input", (e) => { openPkgPopup(); filterPkgList(e.target.value); });
-  packagesInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const first = pkgList.querySelector(".ms-item");
-      if (first) { const name = first.querySelector("span:first-child")?.textContent; const p = available.find(x => x.name === name); if (p) addPackage(p); }
-    }
-  });
-  document.addEventListener("click", (e) => { if (!packagesSelect.contains(e.target)) closePkgPopup(); });
-  syncPackages(false);
-}
-
-for (let i = 1; i <= 4; i++) {
-  createMultiselectForLab(i);
-  createPackagesMultiselectForLab(i);
-}
-
 /* ========================= Lab panel selection ========================= */
 const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel") };
 
@@ -2523,6 +2579,8 @@ setDefaults();
 fetchServerList().then(() => {
   renderInProgress();
   setupEventListeners();
+  initializeUnifiedSearch();
+  initializeBulkAdd();
 });
 
 const resetTubeBtn = F.resetTubeBtn();
