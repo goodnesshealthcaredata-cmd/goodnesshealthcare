@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Goodness Health | Pending Tasks Manager</title>
+    <!-- Google Fonts: Rubik + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (Free Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0F3D5E;  /* deep navy primary background */
+            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            color: #1A2C3C;
+            line-height: 1.45;
+        }
+
+        /* smooth scroll + subtle animations */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* main app container */
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px 28px;
+        }
+
+        /* premium header with glassmorphic touch */
+        .health-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 32px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #1ECAD3, #0FA9B2);
+            width: 48px;
+            height: 48px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 20px -10px rgba(0,0,0,0.3);
+        }
+
+        .logo-icon i {
+            font-size: 26px;
+            color: white;
+        }
+
+        .logo-text h1 {
+            font-family: 'Rubik', sans-serif;
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.3px;
+            background: linear-gradient(to right, #FFF, #C0E0FF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.8rem;
+            color: #9DC3E6;
+            font-weight: 500;
+        }
+
+        .badge-premium {
+            background: rgba(30,202,211,0.18);
+            backdrop-filter: blur(4px);
+            padding: 8px 18px;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #D2F0F2;
+            border: 1px solid rgba(30,202,211,0.3);
+        }
+
+        /* main card content area */
+        .dashboard-card {
+            background: #F5F7FA;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        /* filter bar (teal accents) */
+        .filters-section {
+            padding: 24px 28px;
+            background: white;
+            border-bottom: 1px solid #E5EAF0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 170px;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #1F5E7E;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .filter-group input {
+            padding: 12px 16px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 16px;
+            font-family: 'DM Sans', monospace;
+            font-size: 0.9rem;
+            background: #FFFFFF;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .filter-group input:focus {
+            border-color: #1ECAD3;
+            box-shadow: 0 0 0 3px rgba(30,202,211,0.2);
+        }
+
+        .search-wrapper {
+            flex: 2;
+            min-width: 240px;
+            position: relative;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 44px;
+            color: #89A9C9;
+            font-size: 1rem;
+        }
+
+        .search-input {
+            padding: 12px 16px 12px 44px !important;
+            width: 100%;
+        }
+
+        /* primary teal button */
+        .btn-primary {
+            background: linear-gradient(105deg, #1ECAD3, #15B8C0);
+            border: none;
+            padding: 10px 26px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.85rem;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(30,202,211,0.4);
+            filter: brightness(1.02);
+            background: linear-gradient(105deg, #28D7E0, #1ACAD3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #B9CFE4;
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            color: #1F5E7E;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline:hover {
+            background: rgba(30,202,211,0.08);
+            border-color: #1ECAD3;
+            color: #0F3D5E;
+        }
+
+        /* stats row */
+        .stats-row {
+            padding: 18px 28px 0 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: #2A577B;
+            font-weight: 500;
+            background: white;
+        }
+
+        /* table wrapper + modern table */
+        .table-container {
+            overflow-x: auto;
+            padding: 0 24px 28px 24px;
+            background: white;
+            border-radius: 0 0 28px 28px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 18px 16px;
+            background: #F9FBFD;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 600;
+            color: #0F3D5E;
+            border-bottom: 2px solid #E2EBF3;
+            position: sticky;
+            top: 0;
+            background-color: #F9FBFD;
+        }
+
+        .data-table td {
+            padding: 16px 16px;
+            border-bottom: 1px solid #EDF2F7;
+            color: #1F3E54;
+            vertical-align: middle;
+        }
+
+        .data-table tr:hover td {
+            background-color: #F0F9FD;
+            transition: 0.1s;
+        }
+
+        /* status badge */
+        .status-pending {
+            background: #FEF3E2;
+            color: #C46F1A;
+            padding: 6px 14px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            font-family: 'Rubik', monospace;
+        }
+
+        /* card view for mobile */
+        @media (max-width: 780px) {
+            .app-container {
+                padding: 16px;
+            }
+            .filters-section {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 20px;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            .stats-row {
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px 20px;
+            }
+            .data-table, .data-table thead, .data-table tbody, .data-table tr, .data-table th, .data-table td {
+                display: block;
+            }
+            .data-table thead {
+                display: none;
+            }
+            .data-table tr {
+                margin-bottom: 20px;
+                background: white;
+                border-radius: 24px;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+                border: 1px solid #E9F0F5;
+                padding: 8px 0;
+            }
+            .data-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px;
+                border-bottom: 1px solid #F0F4FA;
+                gap: 12px;
+                text-align: right;
+            }
+            .data-table td:before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #1F6E8C;
+                font-family: 'Rubik', sans-serif;
+                font-size: 0.75rem;
+                width: 42%;
+                text-align: left;
+            }
+            .status-pending {
+                justify-content: center;
+            }
+            .table-container {
+                padding: 0 16px 24px 16px;
+            }
+        }
+
+        /* loader and error states */
+        .loader-state, .empty-msg, .error-msg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+            gap: 14px;
+            background: #FBFDFF;
+            border-radius: 28px;
+            color: #2C6283;
+            font-weight: 500;
+        }
+
+        .error-msg {
+            background: #FFF6F0;
+            color: #C4450C;
+        }
+
+        i.fa, i.far, i.fas {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="health-header">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <div class="logo-text">
+                <h1>Goodness Health</h1>
+                <p>Medical internal suite · Pending oversight</p>
+            </div>
+        </div>
+        <div class="badge-premium">
+            <i class="fas fa-shield-alt"></i> HIPAA | Live Sheet
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="filters-section">
+            <div class="filter-group">
+                <label><i class="far fa-calendar-alt"></i> From Date</label>
+                <input type="date" id="fromDateFilter" placeholder="Start date">
+            </div>
+            <div class="filter-group">
+                <label><i class="far fa-calendar-check"></i> To Date</label>
+                <input type="date" id="toDateFilter" placeholder="End date">
+            </div>
+            <div class="search-wrapper">
+                <label><i class="fas fa-search"></i> Global search</label>
+                <input type="text" id="globalSearchInput" class="search-input" placeholder="Search patient, service, ID, amount...">
+            </div>
+            <div>
+                <button class="btn-outline" id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> Reset</button>
+            </div>
+        </div>
+
+        <div class="stats-row" id="statsDisplay">
+            <span><i class="fas fa-spinner fa-pulse"></i> Connecting to sheet...</span>
+            <span><i class="fas fa-filter"></i> Status: <strong style="color:#0F3D5E;">Pending only</strong> (automatic)</span>
+        </div>
+
+        <div class="table-container" id="dynamicTableContainer">
+            <div class="loader-state">
+                <i class="fas fa-sync-alt fa-spin" style="font-size: 32px; color:#1ECAD3;"></i>
+                <p>Fetching medical records from secure sheet</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- CONFIGURATION ----------
+    // PUBLIC GOOGLE SHEET CSV (example with proper pending/paid status, second column date, third column status)
+    // Replace with your own published CSV endpoint (File → Share → Publish to web → CSV)
+    // For demo we use a realistic mock dataset containing ID, Date, Status, Patient, Service, Amount, Notes
+    // This sheet ensures "Pending" entries are shown.
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSP_1ebSEqsx3j6hnm39yDDrgnVpGIKXLghgscZnMb2irSAIZt2EJzLJVB0MhhdxnNl1spVICiwwgBB/pub?gid=0&single=true&output=csv';
+    
+    // Data store
+    let masterSheetData = [];      // raw objects with column keys
+    let filteredPendingData = [];
+
+    // DOM elements
+    const fromDateEl = document.getElementById('fromDateFilter');
+    const toDateEl = document.getElementById('toDateFilter');
+    const globalSearchEl = document.getElementById('globalSearchInput');
+    const resetBtn = document.getElementById('resetFiltersBtn');
+    const containerDiv = document.getElementById('dynamicTableContainer');
+    const statsSpan = document.getElementById('statsDisplay');
+
+    // Helper: parse dates flexibly (ISO, DD/MM/YYYY, MM/DD/YYYY)
+    function parseMedicalDate(dateStr) {
+        if (!dateStr || dateStr.trim() === '') return null;
+        let cleaned = dateStr.toString().trim();
+        let standardDate = new Date(cleaned);
+        if (!isNaN(standardDate.getTime())) return standardDate;
+        if (cleaned.includes('/')) {
+            let parts = cleaned.split('/');
+            if (parts.length === 3) {
+                let day, month, year;
+                if (parseInt(parts[0],10) > 12) {
+                    day = parseInt(parts[0],10);
+                    month = parseInt(parts[1],10) - 1;
+                    year = parseInt(parts[2],10);
+                } else {
+                    month = parseInt(parts[0],10) - 1;
+                    day = parseInt(parts[1],10);
+                    year = parseInt(parts[2],10);
+                }
+                let d = new Date(year, month, day);
+                if (!isNaN(d.getTime())) return d;
+            }
+        }
+        if (cleaned.includes('-')) {
+            let parts = cleaned.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                // yyyy-mm-dd already works
+            } else if (parts.length === 3) {
+                let day = parseInt(parts[0],10);
+                let month = parseInt(parts[1],10)-1;
+                let year = parseInt(parts[2],10);
+                let d = new Date(year, month, day);
+                if (!isNaN(d.getTime())) return d;
+            }
+        }
+        return null;
+    }
+
+    function isWithinDateRange(dateCell, fromDateObj, toDateObj) {
+        if (!dateCell) return false;
+        const rowDate = parseMedicalDate(dateCell);
+        if (!rowDate) return false;
+        if (fromDateObj && rowDate < fromDateObj) return false;
+        if (toDateObj && rowDate > toDateObj) return false;
+        return true;
+    }
+
+    function matchesGlobal(rowObj, term) {
+        if (!term || term.trim() === '') return true;
+        const lowerTerm = term.trim().toLowerCase();
+        for (let key in rowObj) {
+            let val = rowObj[key];
+            if (val !== undefined && val !== null && String(val).toLowerCase().includes(lowerTerm)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Core filter: enforce Pending on status column (3rd column typically)
+    function applyFiltersAndRender() {
+        if (!masterSheetData.length) {
+            filteredPendingData = [];
+            renderTable();
+            updateStatsUI();
+            return;
+        }
+
+        const fromRaw = fromDateEl.value;
+        const toRaw = toDateEl.value;
+        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
+        const toDateObj = toRaw ? new Date(toRaw) : null;
+        const searchTerm = globalSearchEl.value;
+
+        // step1: only keep rows where status === "Pending" (case-insensitive)
+        let pendingRows = masterSheetData.filter(row => {
+            let statusVal = (row.status || '').toString().trim().toLowerCase();
+            return statusVal === 'pending';
+        });
+
+        // step2: date filtering on date column (2nd semantic)
+        let dateFiltered = pendingRows.filter(row => {
+            return isWithinDateRange(row.date, fromDateObj, toDateObj);
+        });
+
+        // step3: global search across all fields
+        let finalFiltered = dateFiltered.filter(row => matchesGlobal(row, searchTerm));
+        filteredPendingData = finalFiltered;
+        renderTable();
+        updateStatsUI();
+    }
+
+    function updateStatsUI() {
+        if (!masterSheetData.length) {
+            statsSpan.innerHTML = `<span><i class="fas fa-database"></i> No data loaded</span><span><i class="fas fa-check-circle"></i> Pending filter active</span>`;
+            return;
+        }
+        const totalPendingRaw = masterSheetData.filter(r => (r.status || '').toLowerCase() === 'pending').length;
+        const shown = filteredPendingData.length;
+        statsSpan.innerHTML = `<span><i class="fas fa-clinic-medical"></i> Showing ${shown} of ${totalPendingRaw} pending cases | Total records: ${masterSheetData.length}</span>
+                               <span><i class="fas fa-chart-line"></i> Medical-grade filter · <i class="fas fa-hourglass-half"></i> Pending only</span>`;
+    }
+
+    // Render table with modern cards fallback
+    function renderTable() {
+        if (!masterSheetData.length && filteredPendingData.length === 0 && !document.querySelector('.loader-state')) {
+            // still loading handled
+        }
+        if (filteredPendingData.length === 0 && masterSheetData.length > 0) {
+            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-inbox" style="font-size: 2rem; color:#1ECAD3;"></i><br />No pending records match the filters. Adjust date or search.</div>`;
+            return;
+        }
+        if (filteredPendingData.length === 0 && masterSheetData.length === 0) {
+            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-cloud-download-alt"></i><br />Waiting for Google Sheet data. Ensure published CSV is accessible.</div>`;
+            return;
+        }
+
+        // get columns from first object
+        let columns = Object.keys(filteredPendingData[0]);
+        let html = `<table class="data-table"><thead><tr>`;
+        columns.forEach(col => {
+            let displayHeader = col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1');
+            html += `<th>${displayHeader}</th>`;
+        });
+        html += `</tr></thead><tbody>`;
+        
+        for (let row of filteredPendingData) {
+            html += `<tr>`;
+            columns.forEach(col => {
+                let cellVal = row[col] !== undefined && row[col] !== null ? row[col] : '—';
+                let isStatusColumn = col.toLowerCase() === 'status';
+                let content = '';
+                if (isStatusColumn) {
+                    content = `<span class="status-pending"><i class="fas fa-clock"></i> ${cellVal}</span>`;
+                } else {
+                    content = cellVal;
+                }
+                let labelAttr = `data-label="${col.charAt(0).toUpperCase() + col.slice(1)}"`;
+                html += `<td ${labelAttr}>${content}</td>`;
+            });
+            html += `</tr>`;
+        }
+        html += `</tbody></table>`;
+        containerDiv.innerHTML = html;
+    }
+
+    // CSV parsing with dynamic column mapping (detect date & status columns by index fallback)
+    function csvToObjects(csvString) {
+        const lines = csvString.split(/\r?\n/);
+        if (lines.length < 2) return [];
+        let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim() === '') continue;
+            let values = [];
+            let inQuote = false;
+            let current = '';
+            for (let ch of lines[i]) {
+                if (ch === '"') {
+                    inQuote = !inQuote;
+                } else if (ch === ',' && !inQuote) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            values.push(current.trim());
+            if (values.length < headers.length) {
+                while (values.length < headers.length) values.push('');
+            }
+            let obj = {};
+            headers.forEach((h, idx) => {
+                let rawVal = values[idx] ? values[idx].replace(/^"|"$/g, '') : '';
+                obj[h] = rawVal;
+            });
+            // Guarantee date and status fields mapping (2nd column is date, 3rd column is status)
+            // Use robust fallback: if explicit date/status columns missing, use index 1,2
+            let dateKey = headers[1] || (headers.find(h => /date/i.test(h)) || headers[1]);
+            let statusKey = headers[2] || (headers.find(h => /status/i.test(h)) || headers[2]);
+            if (dateKey) obj.date = obj[dateKey];
+            else obj.date = '';
+            if (statusKey) obj.status = obj[statusKey];
+            else obj.status = '';
+            rows.push(obj);
+        }
+        return rows;
+    }
+
+    // Fetch and load sheet data
+    async function loadSheetData() {
+        containerDiv.innerHTML = `<div class="loader-state"><i class="fas fa-spinner fa-pulse" style="font-size: 36px; color:#1ECAD3;"></i><p>Loading secure medical records ...</p></div>`;
+        try {
+            const response = await fetch(SHEET_CSV_URL, { cache: "no-store" });
+            if (!response.ok) throw new Error(`HTTP ${response.status} - Sheet unavailable`);
+            const csvText = await response.text();
+            if (!csvText.trim()) throw new Error("Empty CSV data");
+            const parsed = csvToObjects(csvText);
+            if (parsed.length === 0) throw new Error("No rows found in sheet");
+            masterSheetData = parsed;
+            // reset filter inputs
+            fromDateEl.value = '';
+            toDateEl.value = '';
+            globalSearchEl.value = '';
+            applyFiltersAndRender();
+        } catch (err) {
+            console.error(err);
+            containerDiv.innerHTML = `<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> <strong>Could not fetch Google Sheet</strong><br />Ensure sheet is published as CSV. CORS/public access needed.<br />Details: ${err.message}</div>`;
+            statsSpan.innerHTML = `<span><i class="fas fa-ban"></i> Data error</span><span>Check link or network</span>`;
+            masterSheetData = [];
+            filteredPendingData = [];
+        }
+    }
+
+    // event listeners
+    function bindEvents() {
+        fromDateEl.addEventListener('change', () => applyFiltersAndRender());
+        toDateEl.addEventListener('change', () => applyFiltersAndRender());
+        globalSearchEl.addEventListener('input', () => applyFiltersAndRender());
+        resetBtn.addEventListener('click', () => {
+            fromDateEl.value = '';
+            toDateEl.value = '';
+            globalSearchEl.value = '';
+            applyFiltersAndRender();
+        });
+    }
+
+    function init() {
+        bindEvents();
+        loadSheetData();
+    }
+    init();
+</script>
+</body>
+</html>
