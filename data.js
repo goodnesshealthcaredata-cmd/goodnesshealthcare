@@ -650,6 +650,13 @@ const PACKAGES = {
   lab2: [
   ],
   lab3: [
+    { name: "GD Life A1", tests: ["Iron Study", "RFT", "CBC", "LFT", "Lipid Profile", "T3  T4  TSH"], mrp: 1400, b2b: 295 },
+    { name: "GD Life A3", tests: ["FBS", "LFT", "Lipid Profile", "TSH", "CBC", "RFT"], mrp: 1200, b2b: 230 },
+    { name: "GD Wellness 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "Vit D3", "Vit B12", "T3  T4  TSH"], mrp: 1800, b2b: 600 },
+    { name: "ALPHA WELLNESS 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "RFT", "Vit D3", "Vit B12", "CBC", "ESR", "CRP", "T3  T4  TSH"], mrp: 2150, b2b: 750 },
+    { name: "COMPREHENSIVE FULL BODY CHECKUP", tests: ["CBC", "Vit B12", "Vit D3", "HBsAg", "Urine Routine", "Peripheral Smear", "ESR", "Electrolytes", "Iron Study", "LFT", "Lipid Profile", "CRP"], mrp: , b2b:  },
+    { name: "GD WELLNESS 15.1", tests: ["Iron Study", "LFT", "Lipid Profile", "T3  T4  TSH", "RFT"], mrp: 1000, b2b: 550 },
+    { name: "GOODNESS A1", tests: ["CBC", "FBS", "PP", "HbA1C", "Total TFT", "Iron Study", "Vit D3", "Vit B12", "Lipid Profile", "LFT", "RFT"], mrp: 2500, b2b: 1200 }
   ],
   lab4: [
   ]
