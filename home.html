@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Background</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      width: 100%;
+    }
+
+    #bg {
+      height: 100vh;
+      width: 100%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 0.5s ease-in-out;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="bg"></div>
+
+  <script>
+    // Desktop Images
+    const desktopImages = [
+      "https://lh3.googleusercontent.com/d/1F3CzRut9Ypz9C-jucNaaJN-9bQCXbezu=s0",
+      "https://lh3.googleusercontent.com/d/1zcVLGV8KdKDRxvG_1KRi_3g0zU6pPh8y=s0",
+      "https://lh3.googleusercontent.com/d/1Mdrbj6oYvsq6H0HjgVJ-jgkU_MqF1z3G=s0",
+      "https://lh3.googleusercontent.com/d/1Fef25nKLGhFcbY-xQKzU0U1v3pOWsdjK=s0",
+      "https://lh3.googleusercontent.com/d/1sJBRjZQu_0dRhuRgsZn6Y94COxYMq-f_=s0"
+    ];
+
+    // Mobile Images
+    const mobileImages = [
+      "https://lh3.googleusercontent.com/d/1flDb66i1-la3clcZEOf3iMszl-FuHNgc=s0",
+      "https://lh3.googleusercontent.com/d/1iowMKvwBFCVnP7o0qjPcASCMDo-6ABCe=s0",
+      "https://lh3.googleusercontent.com/d/1EKhhBy9k6ufCOqqzUwopANbHOmccg-a8=s0",
+      "https://lh3.googleusercontent.com/d/1ah5N9D4dLUW9sKMwYh_a3gH_OkoOKqyY=s0",
+      "https://lh3.googleusercontent.com/d/1g2R_HkFWy1jJOJgIYc-CQ7tzR13v1UIQ=s0"
+    ];
+
+    function getRandomImage(images) {
+      return images[Math.floor(Math.random() * images.length)];
+    }
+
+    function setBackground() {
+      const isMobile = window.innerWidth <= 768;
+      const selectedImage = isMobile 
+        ? getRandomImage(mobileImages) 
+        : getRandomImage(desktopImages);
+
+      document.getElementById("bg").style.backgroundImage = `url('${selectedImage}')`;
+    }
+
+    // Set background on load
+    setBackground();
+
+    // Update on screen resize
+    window.addEventListener("resize", setBackground);
+  </script>
+
+</body>
+</html>
