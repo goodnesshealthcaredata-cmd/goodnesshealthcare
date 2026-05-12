@@ -1,5 +1,5 @@
 /* ========================= Main Application Logic ========================= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyadiJCsMlBzqFpnsmXWwdVuXKE1ysSUkYkTSHGG4amYoxtk0aaBoYiaSlCREGvcA9h8w/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyDmbMPeyIDX8oGFexMVyp51dneDhoyDB4DSJ-wcCDtxWfOfy8wlu6y3My5Wg1rRIcR/exec";
 
 /* ========================= Helpers & UI ========================= */
 const el = (q) => document.querySelector(q);
@@ -132,9 +132,9 @@ function parseDateFromSheet(dateValue) {
   }
   
   if (dateValue instanceof Date) {
-    const year = dateValue.getUTCFullYear();
-    const month = String(dateValue.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(dateValue.getUTCDate()).padStart(2, '0');
+    const year = dateValue.getFullYear();
+    const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+    const day = String(dateValue.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
   
@@ -156,8 +156,8 @@ function parseTimeFromSheet(timeValue) {
   }
   
   if (timeValue instanceof Date) {
-    let hours = timeValue.getUTCHours();
-    let minutes = timeValue.getUTCMinutes();
+    let hours = timeValue.getHours();
+    let minutes = timeValue.getMinutes();
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
   
@@ -191,11 +191,181 @@ function sortEntriesByDateAndTime(entries) {
       return dateB.localeCompare(dateA);
     }
     
-    const timeA = parseTimeFromSheet(b.time_of_visit) || "00:00";
+    const timeA = parseTimeFromSheet(a.time_of_visit) || "00:00";
     const timeB = parseTimeFromSheet(b.time_of_visit) || "00:00";
     
-    return timeB.localeCompare(timeA);
+    return timeA.localeCompare(timeB);
   });
+}
+
+/* ========================= Visit Schedule Modal ========================= */
+function showVisitSchedule(selectedDate) {
+  if (!selectedDate) {
+    showToast("Please select a visit date first");
+    return;
+  }
+  
+  const filteredEntries = serverEntriesCache.filter(entry => {
+    const entryDate = parseDateFromSheet(entry.date);
+    return entryDate === selectedDate;
+  });
+  
+  if (filteredEntries.length === 0) {
+    showToast(`No visits scheduled for ${formatDisplayDate(selectedDate)}`);
+    return;
+  }
+  
+  const modal = document.createElement("div");
+  modal.className = "visit-schedule-modal";
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement("div");
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 20px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease;
+  `;
+  
+  const scheduleItems = [];
+  
+  filteredEntries.forEach(entry => {
+    const visitTime = parseTimeFromSheet(entry.time_of_visit);
+    const ppTime = parseTimeFromSheet(entry.pp_time);
+    const patientName = entry.patient_name || "Unknown Patient";
+    const phlebotomist = entry.phlebotomist || "Not Assigned";
+    const ppPhlebotomist = entry.pp_phlebotomist || "Not Assigned";
+    const entryId = entry.id;
+    
+    if (visitTime) {
+      scheduleItems.push({
+        type: "visit",
+        time: visitTime,
+        sortTime: visitTime,
+        patientName: patientName,
+        phlebotomist: phlebotomist,
+        ppTime: null,
+        ppPhlebotomist: null,
+        entryId: entryId
+      });
+    }
+    
+    if (ppTime) {
+      scheduleItems.push({
+        type: "pp",
+        time: ppTime,
+        sortTime: ppTime,
+        patientName: patientName,
+        phlebotomist: ppPhlebotomist,
+        ppTime: ppTime,
+        ppPhlebotomist: ppPhlebotomist,
+        entryId: entryId
+      });
+    }
+  });
+  
+  scheduleItems.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+  
+  const displayDate = formatDisplayDate(selectedDate);
+  
+  modalContent.innerHTML = `
+    <div style="padding: 24px; border-bottom: 2px solid rgba(122, 178, 178, 0.2); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #09637E 0%, #088395 100%); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0;">
+          📅 Visit Schedule
+        </h2>
+        <p style="color: #4a6a73; margin-top: 8px; font-size: 0.875rem;">${displayDate}</p>
+      </div>
+      <button class="close-modal-btn" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7a9aa3; padding: 8px; width: 40px; height: 40px; border-radius: 50%; transition: all 0.3s ease;">&times;</button>
+    </div>
+    <div style="padding: 24px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid rgba(122, 178, 178, 0.3); font-weight: 700; color: #09637E;">
+        <span style="width: 20%;">Time</span>
+        <span style="width: 40%;">Patient Name</span>
+        <span style="width: 40%;">Phlebotomist</span>
+      </div>
+      <div id="scheduleList">
+        ${scheduleItems.map(item => `
+          <div class="schedule-item ${item.type}" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(122, 178, 178, 0.15); transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='rgba(9,99,126,0.03)'" onmouseout="this.style.backgroundColor='transparent'">
+            <span style="width: 20%; font-weight: 600; color: #088395;">
+              ${item.type === 'pp' ? '🔄 ' : '🩺 '}${item.time}
+            </span>
+            <span style="width: 40%; color: #1a2e35;">${escapeHtml(item.patientName)}</span>
+            <span style="width: 40%; color: #4a6a73;">${escapeHtml(item.phlebotomist)}</span>
+          </div>
+        `).join("")}
+      </div>
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 2px solid rgba(122, 178, 178, 0.2);">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-block; width: 20px; height: 20px; background: #088395; border-radius: 4px;"></span>
+            <span style="font-size: 0.813rem; color: #4a6a73;">Regular Visit</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-block; width: 20px; height: 20px; background: #7AB2B2; border-radius: 4px;"></span>
+            <span style="font-size: 0.813rem; color: #4a6a73;">PP (Post Prandial) Visit</span>
+          </div>
+        </div>
+        <p style="font-size: 0.75rem; color: #7a9aa3; margin-top: 16px; text-align: center;">
+          Total: ${scheduleItems.length} schedule item(s) for ${displayDate}
+        </p>
+      </div>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  if (!document.querySelector("#modalAnimationStyle")) {
+    const style = document.createElement("style");
+    style.id = "modalAnimationStyle";
+    style.textContent = `
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .schedule-item:last-child {
+        border-bottom: none;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  const closeBtn = modal.querySelector(".close-modal-btn");
+  closeBtn.addEventListener("click", () => modal.remove());
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  
+  const keyHandler = (e) => {
+    if (e.key === "Escape") {
+      modal.remove();
+      document.removeEventListener("keydown", keyHandler);
+    }
+  };
+  document.addEventListener("keydown", keyHandler);
 }
 
 /* ========================= Field accessors ========================= */
@@ -220,9 +390,11 @@ const F = {
   careOf:                 () => el("#careOf"),
   careOfSuggestions:      () => el("#careOfSuggestions"),
   processingLab:          () => el("#processingLab"),
+  selectCenter:           () => el("#selectCenter"),
   visitType:              () => el("#visitType"),
   visitDate:              () => el("#visitDate"),
   visitTime:              () => el("#visitTime"),
+  seeScheduleBtn:         () => el("#seeScheduleBtn"),
   ppTime:                 () => el("#ppTime"),
   ppTimeField:            () => el("#ppTimeField"),
   ppCollectionField:      () => el("#ppCollectionField"),
@@ -236,8 +408,11 @@ const F = {
   urineCollected:         () => el("#urineCollected"),
   ppCollected:            () => el("#ppCollected"),
   sampleSent:             () => el("#sampleSent"),
+  urineSent:              () => el("#urineSent"),
+  ppSent:                 () => el("#ppSent"),
   visitInstruction:       () => el("#visitInstruction"),
   reportDeliveryRequired: () => el("#reportDeliveryRequired"),
+  billRequired:           () => el("#billRequired"),
   reportReceivedData:     () => el("#reportReceivedData"),
   reportReceivedList:     () => el("#reportReceivedList"),
   reportOnlineSent:       () => el("#reportOnlineSent"),
@@ -280,12 +455,14 @@ const F = {
   selectedItemsList:      () => el("#selectedItemsList"),
   bulkAddInput:           () => el("#bulkAddInput"),
   bulkAddBtn:             () => el("#bulkAddBtn"),
+  urineSentField:         () => el("#urineSentField"),
+  ppSentField:            () => el("#ppSentField"),
 };
 
 /* ========================= Global state ========================= */
 let selectedTestsByLab    = { 1: [], 2: [], 3: [], 4: [] };
 let selectedPackagesByLab = { 1: [], 2: [], 3: [], 4: [] };
-let packageTestSelections = {}; // Stores which tests are included from packages
+let packageTestSelections = {};
 let currentSelectedLab    = "lab1";
 let tubeCountOverrides    = {};
 let serverEntriesCache    = [];
@@ -304,7 +481,6 @@ function getAllTestsForLab(labNum) {
   pkgNames.forEach(n => {
     const pkg = (PACKAGES[labId] || []).find(p => p.name === n);
     if (pkg) {
-      // Check if tests are individually selected from package
       const includedTests = packageTestSelections[`${labNum}_${n}`] || pkg.tests;
       fromPkgs.push(...includedTests);
     }
@@ -435,10 +611,33 @@ function calculateAggregatedTubeCounts() {
   return aggregatedCounts;
 }
 
+function calculateTubeCountsPerLab() {
+  const perLabCounts = { 1: {}, 2: {}, 3: {}, 4: {} };
+  
+  for (let i = 1; i <= 4; i++) {
+    const tests = getAllTestsForLab(i);
+    perLabCounts[i] = calculateUniqueTubeCountsPerLab(tests);
+  }
+  
+  return perLabCounts;
+}
+
 function getCombinedTubeCountsString() {
   const counts = calculateAggregatedTubeCounts();
   const entries = Object.entries(counts).filter(([, c]) => c > 0);
   return entries.map(([tube, count]) => `${tube}: ${count}`).join(", ");
+}
+
+function getPerLabTubeCountsString() {
+  const perLabCounts = calculateTubeCountsPerLab();
+  const result = { 1: "", 2: "", 3: "", 4: "" };
+  
+  for (let i = 1; i <= 4; i++) {
+    const entries = Object.entries(perLabCounts[i]).filter(([, c]) => c > 0);
+    result[i] = entries.length ? entries.map(([tube, count]) => `${tube}: ${count}`).join(", ") : "-";
+  }
+  
+  return result;
 }
 
 function getAutoTubeCounts() {
@@ -677,7 +876,6 @@ function renderSelectedItemsDisplay() {
     return;
   }
   
-  // Display individual tests
   individualTests.forEach(test => {
     const mrp = getTestMRP(currentSelectedLab, test);
     const div = document.createElement("div");
@@ -701,7 +899,6 @@ function renderSelectedItemsDisplay() {
     container.appendChild(div);
   });
   
-  // Display packages with checkboxes
   packages.forEach(pkgName => {
     const pkg = getPackage(currentSelectedLab, pkgName);
     if (!pkg) return;
@@ -826,6 +1023,8 @@ function initializeUnifiedSearch() {
           resultsContainer.style.display = "none";
           updateAllCalculations();
           renderSelectedItemsDisplay();
+          // FIX 1: Auto-focus back to search input after selection
+          searchInput.focus();
         });
       } else {
         item.innerHTML = `
@@ -833,7 +1032,10 @@ function initializeUnifiedSearch() {
           <span class="ms-item-price">${fmtINR(result.data.mrp)}</span>
         `;
         item.addEventListener("click", () => {
-          showPackageTestSelectionModal(result.data);
+          showPackageTestSelectionModal(result.data, () => {
+            // FIX 1: Auto-focus callback after package selection
+            searchInput.focus();
+          });
           searchInput.value = "";
           resultsContainer.style.display = "none";
         });
@@ -854,7 +1056,7 @@ function initializeUnifiedSearch() {
   });
 }
 
-function showPackageTestSelectionModal(pkg) {
+function showPackageTestSelectionModal(pkg, onCloseCallback) {
   const modal = document.createElement("div");
   modal.className = "package-modal";
   modal.style.cssText = `
@@ -903,7 +1105,11 @@ function showPackageTestSelectionModal(pkg) {
   modal.appendChild(modalContent);
   document.body.appendChild(modal);
   
-  modal.querySelector("#cancelPackageBtn").addEventListener("click", () => modal.remove());
+  modal.querySelector("#cancelPackageBtn").addEventListener("click", () => {
+    modal.remove();
+    if (onCloseCallback) onCloseCallback();
+  });
+  
   modal.querySelector("#confirmPackageBtn").addEventListener("click", () => {
     const selectedTests = Array.from(modal.querySelectorAll(".modal-package-test:checked")).map(cb => cb.value);
     if (selectedTests.length === 0) {
@@ -914,10 +1120,14 @@ function showPackageTestSelectionModal(pkg) {
     modal.remove();
     updateAllCalculations();
     renderSelectedItemsDisplay();
+    if (onCloseCallback) onCloseCallback();
   });
   
   modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.remove();
+    if (e.target === modal) {
+      modal.remove();
+      if (onCloseCallback) onCloseCallback();
+    }
   });
 }
 
@@ -1011,6 +1221,34 @@ function calculateTotalB2B() {
     });
   }
   return total;
+}
+
+// FIX 3: Function to get per-lab MRP totals (for backend storage)
+function calculatePerLabMRP() {
+  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  for (let i = 1; i <= 4; i++) {
+    const labId = `lab${i}`;
+    selectedTestsByLab[i].forEach(t => { perLabTotals[i] += getTestMRP(labId, t); });
+    selectedPackagesByLab[i].forEach(n => {
+      const pkg = getPackage(labId, n);
+      if (pkg) perLabTotals[i] += pkg.mrp;
+    });
+  }
+  return perLabTotals;
+}
+
+// FIX 3: Function to get per-lab B2B totals (for backend storage)
+function calculatePerLabB2B() {
+  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  for (let i = 1; i <= 4; i++) {
+    const labId = `lab${i}`;
+    selectedTestsByLab[i].forEach(t => { perLabTotals[i] += getTestB2B(labId, t); });
+    selectedPackagesByLab[i].forEach(n => {
+      const pkg = getPackage(labId, n);
+      if (pkg) perLabTotals[i] += pkg.b2b;
+    });
+  }
+  return perLabTotals;
 }
 
 function updatePaymentFields() {
@@ -1135,12 +1373,19 @@ function updateConditionalVisitFields() {
   toggleDisplay(F.ppCollectionField, hasPP);
   toggleDisplay(F.ppPhlebotomistField, hasPP);
   toggleDisplay(F.urineField, hasUrine);
+  toggleDisplay(F.urineSentField, hasUrine);
+  toggleDisplay(F.ppSentField, hasPP);
 
   if (hasPP) {
     autoPPTime();
   } else {
     const pt = F.ppTime(); if (pt) pt.value = "";
     const pp = F.ppPhlebotomistInput(); if (pp) pp.value = "";
+    const ppSent = F.ppSent(); if (ppSent) ppSent.checked = false;
+  }
+  
+  if (!hasUrine) {
+    const urineSent = F.urineSent(); if (urineSent) urineSent.checked = false;
   }
 }
 
@@ -1177,6 +1422,33 @@ function updateAddressRequirement() {
 
 const vtSelect = F.visitType();
 if (vtSelect) vtSelect.addEventListener("change", updateAddressRequirement);
+
+/* ========================= Visit Schedule Button Setup ========================= */
+function setupVisitScheduleButton() {
+  const scheduleBtn = F.seeScheduleBtn();
+  const visitDateInput = F.visitDate();
+  
+  if (!scheduleBtn || !visitDateInput) return;
+  
+  scheduleBtn.disabled = !visitDateInput.value;
+  scheduleBtn.style.opacity = visitDateInput.value ? "1" : "0.5";
+  scheduleBtn.style.cursor = visitDateInput.value ? "pointer" : "not-allowed";
+  
+  visitDateInput.addEventListener("change", () => {
+    const hasDate = !!visitDateInput.value;
+    scheduleBtn.disabled = !hasDate;
+    scheduleBtn.style.opacity = hasDate ? "1" : "0.5";
+    scheduleBtn.style.cursor = hasDate ? "pointer" : "not-allowed";
+  });
+  
+  scheduleBtn.addEventListener("click", () => {
+    if (visitDateInput.value) {
+      showVisitSchedule(visitDateInput.value);
+    } else {
+      showToast("Please select a visit date first");
+    }
+  });
+}
 
 /* ========================= Form Validation ========================= */
 function validateRequiredFields() {
@@ -1267,14 +1539,29 @@ function checkPPCollectionDone() {
   return !!(F.ppCollected()?.checked);
 }
 function checkSampleSentForProcessing() { return !!(F.sampleSent()?.checked); }
+function checkUrineSentForProcessing() {
+  const allTests = getAllSelectedTestsAcrossLabs();
+  const hasUrine = allTests.includes("Urine") || allTests.some(t => getTubeTypesForTest(t).includes("Urine"));
+  if (!hasUrine) return true;
+  return !!(F.urineSent()?.checked);
+}
+function checkPPSentForProcessing() {
+  if (!getAllSelectedTestsAcrossLabs().includes("PP")) return true;
+  return !!(F.ppSent()?.checked);
+}
 
+// FIX 4: Improved report received check - ensures it works with "Select All" checkbox
 function checkReportReceived() {
   const rdEl = F.reportReceivedData();
   if (!rdEl?.value) return false;
   try {
     const checked = JSON.parse(rdEl.value);
     const allTests = getAllSelectedTestsAcrossLabs();
-    return allTests.length > 0 && Object.keys(checked).length === allTests.length;
+    // If no tests, report received is not applicable
+    if (allTests.length === 0) return true;
+    // Check if all tests have report received marked
+    const allTestsReceived = allTests.length > 0 && Object.keys(checked).length === allTests.length;
+    return allTestsReceived;
   } catch { return false; }
 }
 function checkReportOnlineSent() { return !!(F.reportOnlineSent()?.checked); }
@@ -1301,6 +1588,12 @@ function updateProgressBar() {
 
   steps.push(
     { name: "Sample Sent", done: checkSampleSentForProcessing() },
+  );
+  
+  if (hasUrine) steps.push({ name: "Urine Sent", done: checkUrineSentForProcessing() });
+  if (allTests.includes("PP")) steps.push({ name: "PP Sent", done: checkPPSentForProcessing() });
+  
+  steps.push(
     { name: "Report Received", done: checkReportReceived() },
     { name: "Report Online Sent", done: checkReportOnlineSent() },
   );
@@ -1328,7 +1621,7 @@ function updateProgressBar() {
 
 [F.patientName, F.age, F.gender, F.contact, F.visitType, F.visitDate, F.visitTime,
   F.phlebotomistInput, F.bloodCollected, F.urineCollected, F.ppCollected, F.sampleSent,
-  F.reportOnlineSent, F.reportDelivered, F.reportDeliveryRequired].forEach(fn => {
+  F.urineSent, F.ppSent, F.reportOnlineSent, F.reportDelivered, F.reportDeliveryRequired].forEach(fn => {
   const node = fn();
   if (node) { node.addEventListener("input", updateProgressBar); node.addEventListener("change", updateProgressBar); }
 });
@@ -1390,6 +1683,12 @@ function getCurrentStage(entry) {
 
   stages.push(
     { name: "Sample Sent", check: () => entry.sample_sent === "true" },
+  );
+  
+  if (hasUrine) stages.push({ name: "Urine Sent", check: () => entry.urine_sent === "true" });
+  if (hasPP) stages.push({ name: "PP Sent", check: () => entry.pp_sent === "true" });
+
+  stages.push(
     {
       name: "Report Received", check: () => {
         if (!entry.report_received_data) return false;
@@ -1443,6 +1742,8 @@ function getCompletionPercentage(entry) {
   if (hasPP) inc(entry.pp_collected === "true");
 
   inc(entry.sample_sent === "true");
+  if (hasUrine) inc(entry.urine_sent === "true");
+  if (hasPP) inc(entry.pp_sent === "true");
 
   if (entry.report_received_data) {
     try {
@@ -1483,10 +1784,17 @@ function generateReportReceivedList() {
   const selectAllCb = selectAllDiv.querySelector("#select_all_reports");
   selectAllCb.addEventListener("change", () => {
     const cbs = container.querySelectorAll(".report-checkbox");
-    allTests.forEach(t => { selectAllCb.checked ? (checkedTests[t] = true) : delete checkedTests[t]; });
-    cbs.forEach(cb => { cb.checked = selectAllCb.checked; });
+    if (selectAllCb.checked) {
+      // Check all tests
+      allTests.forEach(t => { checkedTests[t] = true; });
+      cbs.forEach(cb => { cb.checked = true; });
+    } else {
+      // Uncheck all tests
+      allTests.forEach(t => { delete checkedTests[t]; });
+      cbs.forEach(cb => { cb.checked = false; });
+    }
     if (storedEl) storedEl.value = JSON.stringify(checkedTests);
-    updateProgressBar();
+    updateProgressBar(); // FIX 4: Update progress bar when "Select All" changes
   });
   container.appendChild(selectAllDiv);
 
@@ -1501,7 +1809,7 @@ function generateReportReceivedList() {
       if (storedEl) storedEl.value = JSON.stringify(checkedTests);
       const allNow = Array.from(container.querySelectorAll(".report-checkbox")).every(c => c.checked);
       if (selectAllCb) selectAllCb.checked = allNow;
-      updateProgressBar();
+      updateProgressBar(); // FIX 4: Update progress bar when individual checkbox changes
     });
     container.appendChild(item);
   });
@@ -2056,7 +2364,8 @@ function resetPaymentFields() {
 
 function resetCheckboxes() {
   [F.bloodCollected, F.urineCollected, F.ppCollected, F.sampleSent,
-    F.reportDeliveryRequired, F.reportOnlineSent, F.reportDelivered].forEach(fn => {
+   F.urineSent, F.ppSent, F.reportDeliveryRequired, F.billRequired,
+   F.reportOnlineSent, F.reportDelivered].forEach(fn => {
     const n = fn(); if (n) n.checked = false;
   });
   const rrd = F.reportReceivedData(); if (rrd) rrd.value = "";
@@ -2070,6 +2379,8 @@ function resetMiscFields() {
   const pt = F.ppTime(); if (pt) { pt.value = ""; delete pt.dataset.manual; }
   const ei = F.editId(); if (ei) ei.value = "";
   const sc = F.submitContent(); if (sc) sc.textContent = "Submit Entry";
+  const scEl = F.selectCenter(); if (scEl) scEl.value = "Borivali";
+  const vtElReset = F.visitType(); if (vtElReset) vtElReset.value = "";
 }
 
 function fullFormReset() {
@@ -2108,8 +2419,14 @@ function loadForEdit(entry) {
   setVal(F.height, entry.height);
   setVal(F.weight, entry.weight);
   setVal(F.clinicalHistory, entry.clinical_history);
+  
+  if (entry.select_center) setVal(F.selectCenter, entry.select_center);
+  
+  const setBool = (fn, val) => { const n = fn(); if (n) n.checked = val === "true" || val === "on" || val === true; };
+  setBool(F.urineSent, entry.urine_sent);
+  setBool(F.ppSent, entry.pp_sent);
+  setBool(F.billRequired, entry.bill_required);
 
-  // Load tests and packages
   for (let i = 1; i <= 4; i++) {
     selectedTestsByLab[i] = (entry[`tests_lab${i}`] || "").split(",").map(s => s.trim()).filter(Boolean);
     
@@ -2165,7 +2482,6 @@ function loadForEdit(entry) {
     else delete ptEl2.dataset.manual;
   }
 
-  const setBool = (fn, val) => { const n = fn(); if (n) n.checked = val === "true" || val === "on" || val === true; };
   setBool(F.bloodCollected, entry.blood_collected);
   setBool(F.urineCollected, entry.urine_collected);
   setBool(F.ppCollected, entry.pp_collected);
@@ -2268,7 +2584,6 @@ if (formEl) {
 
     const data = new FormData(formEl);
     
-    // Lab-wise Tests & Packages
     for (let i = 1; i <= 4; i++) {
       const individualTests = selectedTestsByLab[i] || [];
       const packageNames = selectedPackagesByLab[i] || [];
@@ -2298,7 +2613,6 @@ if (formEl) {
       }
     }
     
-    // Overall Combined Data
     const allIndividualTests = [];
     for (let i = 1; i <= 4; i++) {
       allIndividualTests.push(...(selectedTestsByLab[i] || []));
@@ -2315,15 +2629,31 @@ if (formEl) {
     const combinedTestsList = getAllSelectedTestsAcrossLabs();
     data.set("all_tests_combined", combinedTestsList.join(", "));
     
-    // Test Tubes Data
     const combinedTubeCounts = getCombinedTubeCountsString();
     data.set("combined_tubes", combinedTubeCounts);
     data.set("tube_overrides", JSON.stringify(tubeCountOverrides));
     
-    // Other Form Data
+    const perLabTubeCounts = getPerLabTubeCountsString();
+    data.set("lab1_tubes", perLabTubeCounts[1]);
+    data.set("lab2_tubes", perLabTubeCounts[2]);
+    data.set("lab3_tubes", perLabTubeCounts[3]);
+    data.set("lab4_tubes", perLabTubeCounts[4]);
+    
     data.set("processing_lab", currentSelectedLab);
     data.set("total_mrp", calculateTotalMRP());
     data.set("total_b2b_price", calculateTotalB2B());
+
+    // FIX 3: Add per-lab MRP and B2B values for backend storage (not displayed in UI)
+    const perLabMRP = calculatePerLabMRP();
+    const perLabB2B = calculatePerLabB2B();
+    data.set("lab1_total_mrp", perLabMRP[1]);
+    data.set("lab2_total_mrp", perLabMRP[2]);
+    data.set("lab3_total_mrp", perLabMRP[3]);
+    data.set("lab4_total_mrp", perLabMRP[4]);
+    data.set("lab1_total_b2b", perLabB2B[1]);
+    data.set("lab2_total_b2b", perLabB2B[2]);
+    data.set("lab3_total_b2b", perLabB2B[3]);
+    data.set("lab4_total_b2b", perLabB2B[4]);
 
     const crEl = F.costRaw(); if (crEl) data.set("cost", crEl.value);
     const discEl = F.discount(); if (discEl) data.set("discount", discEl.value);
@@ -2345,6 +2675,7 @@ if (formEl) {
     data.set("phlebotomist", (F.phlebotomistInput()?.value || ""));
     data.set("pp_phlebotomist", (F.ppPhlebotomistInput()?.value || ""));
     data.set("visit_instruction", (F.visitInstruction()?.value || ""));
+    data.set("select_center", (F.selectCenter()?.value || "Borivali"));
     
     const userName = getCurrentUserName();
     data.set("created_by", userName);
@@ -2355,7 +2686,10 @@ if (formEl) {
     boolSet("urine_collected", F.urineCollected);
     boolSet("pp_collected", F.ppCollected);
     boolSet("sample_sent", F.sampleSent);
+    boolSet("urine_sent", F.urineSent);
+    boolSet("pp_sent", F.ppSent);
     boolSet("report_delivery_required", F.reportDeliveryRequired);
+    boolSet("bill_required", F.billRequired);
     boolSet("report_online_sent", F.reportOnlineSent);
     boolSet("report_delivered", F.reportDelivered);
 
@@ -2435,6 +2769,10 @@ function setDefaults() {
   const vdEl2 = F.visitDate(); if (vdEl2) vdEl2.value = `${yyyy}-${mm}-${dd}`;
   const vtEl3 = F.visitTime(); if (vtEl3) vtEl3.value = `${hh}:${mi}`;
 
+  const billReq = F.billRequired(); if (billReq) billReq.checked = false;
+  
+  const scEl = F.selectCenter(); if (scEl && !scEl.value) scEl.value = "Borivali";
+
   autoPPTime();
   renderTubes();
   const dobEl2 = F.dob(); const ageEl2 = F.age();
@@ -2445,9 +2783,11 @@ function setDefaults() {
   updatePaymentFields();
   updateProgressBar();
   updateGlobalTestSet();
+  
+  setupVisitScheduleButton();
 }
 
-/* ========================= Patient name auto-suggest ========================= */
+/* ========================= Patient name auto-suggest - FIX 2: Remove duplicates ========================= */
 const nameSuggestionsEl = F.nameSuggestions();
 let debounceTimer;
 
@@ -2467,11 +2807,22 @@ async function fetchSuggestions(q) {
     if (!res.ok) throw new Error("bad status");
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) { if (nameSuggestionsEl) { nameSuggestionsEl.hidden = true; nameSuggestionsEl.innerHTML = ""; } return; }
+    
+    // FIX 2: Remove duplicate patient names by using a Map
+    const uniquePatients = new Map();
+    data.forEach(p => {
+      const patientName = p.patient_name || "";
+      if (patientName && !uniquePatients.has(patientName)) {
+        uniquePatients.set(patientName, p);
+      }
+    });
+    
     if (nameSuggestionsEl) {
       nameSuggestionsEl.innerHTML = "";
-      data.forEach(p => {
+      // Show only unique patient names
+      uniquePatients.forEach((p, name) => {
         const d = document.createElement("div");
-        d.textContent = p.patient_name || "";
+        d.textContent = name;
         d.addEventListener("click", () => selectPatient(p));
         nameSuggestionsEl.appendChild(d);
       });
@@ -2513,6 +2864,12 @@ function selectPatient(p) {
   setVal2(F.phlebotomistInput, p.phlebotomist);
   setVal2(F.ppPhlebotomistInput, p.pp_phlebotomist);
   setVal2(F.visitInstruction, p.visit_instruction);
+  setVal2(F.selectCenter, p.select_center);
+  
+  const setBool2 = (fn, val) => { const n = fn(); if (n) n.checked = val === "true" || val === true; };
+  setBool2(F.urineSent, p.urine_sent);
+  setBool2(F.ppSent, p.pp_sent);
+  setBool2(F.billRequired, p.bill_required);
 
   if (p.tube_overrides) tubeCountOverrides = safeJSONParse(p.tube_overrides, {});
   if (p.discount) { const n = F.discount(); if (n) n.value = p.discount; }
