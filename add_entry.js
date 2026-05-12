@@ -1321,7 +1321,7 @@ function hideB2BPopup() {
 function verifyB2BPassword() {
   const passwordInput = F.b2bPassword();
   const enteredPassword = passwordInput?.value || "";
-  const correctPassword = "gnh142";
+  const correctPassword = "gnh123";
   const errorDiv = F.b2bError();
   const b2bAmountDiv = F.b2bAmount();
   
