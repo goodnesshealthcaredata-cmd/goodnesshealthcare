@@ -173,7 +173,7 @@ body {
   }
 }
 
-/* Control Bar - New styles for toggle, search, pagination */
+/* Control Bar */
 .control-bar {
   display: flex;
   flex-wrap: wrap;
@@ -537,7 +537,7 @@ body {
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  padding-bottom: 6rem;
+  padding-bottom: 0rem;
   border-top: 2px solid rgba(122, 178, 178, 0.2);
   position: relative;
   z-index: 5;
@@ -1605,6 +1605,16 @@ body {
           <div class="accordion-content">
             <div class="card-body">
               <div class="grid cols-3">
+                <!-- NEW: Select Center Dropdown -->
+                <div class="field">
+                  <label>Select Center</label>
+                  <select id="selectCenter" name="select_center">
+                    <option value="Borivali">Borivali</option>
+                    <option value="Kandivali">Kandivali</option>
+                    <option value="Charkop">Charkop</option>
+                  </select>
+                </div>
+
                 <div class="field">
                   <label class="req">Visit Type</label>
                   <select id="visitType" name="visit_type" required>
@@ -1619,6 +1629,16 @@ body {
                   <label class="req">Date of Visit</label>
                   <input type="date" name="date" id="visitDate" required />
                 </div>
+                <!-- In Visit Details section, after the Date of Visit field -->
+<div class="field">
+  <label class="req">See Visit Schedule</label>
+  <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+    <input type="date" name="date" id="visitDate" required style="flex: 1;" />
+    <button type="button" id="seeScheduleBtn" class="btn ghost" style="padding: 0.625rem 1rem; white-space: nowrap;">
+      📅 See Visit Schedule
+    </button>
+  </div>
+</div>
 
                 <div class="field">
                   <label class="req">Time of Visit</label>
@@ -1678,6 +1698,24 @@ body {
                   </div>
                 </div>
 
+                <!-- NEW: Urine Sent for Processing Toggle -->
+                <div class="field" id="urineSentField" style="display: none;">
+                  <label>Urine Sent for Processing</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="urineSent" name="urine_sent" />
+                    <label for="urineSent">Yes</label>
+                  </div>
+                </div>
+
+                <!-- NEW: PP Sent for Processing Toggle -->
+                <div class="field" id="ppSentField" style="display: none;">
+                  <label>PP Sent for Processing</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="ppSent" name="pp_sent" />
+                    <label for="ppSent">Yes</label>
+                  </div>
+                </div>
+
                 <div class="span-all field">
                   <label>Visit Instruction</label>
                   <textarea name="visit_instruction" id="visitInstruction" rows="2" placeholder="Any special instructions for the visit..."></textarea>
@@ -1701,6 +1739,15 @@ body {
                   <div class="toggle-switch">
                     <input type="checkbox" id="reportDeliveryRequired" name="report_delivery_required" />
                     <label for="reportDeliveryRequired">Yes</label>
+                  </div>
+                </div>
+
+                <!-- NEW: Bill Required Toggle -->
+                <div class="field">
+                  <label>Bill Required</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="billRequired" name="bill_required" />
+                    <label for="billRequired">Yes</label>
                   </div>
                 </div>
 
