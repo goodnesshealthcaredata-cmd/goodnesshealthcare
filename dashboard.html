@@ -489,6 +489,11 @@ const USERS = {
     sections: ["Home Page", "Add Entry", "Visit Schedule", "Pending Payment", "Expense Tracking"],
     canEdit: false
   },
+  "sumityelaye3@gmail.com": {
+    displayName: "Sumit",
+    sections: ["Home Page", "Add Entry", "Visit Schedule", "Test Reports", "Pending Payment", "Expense Tracking"],
+    canEdit: true
+  },
   "shugenor@gmail.com": {
     displayName: "Soni",
     sections: ["Home Page", "Add Entry", "Visit Schedule", "Price Comparison", "Test Reports", "Pending Payment", "Data Sheets", "Data Analysis", "TRF Maker", "Expense Tracking", "Promotion Material"],
@@ -714,48 +719,20 @@ function switchToSection(sectionName) {
   return false;
 }
 
-/* ===== PRELOAD TEST REPORTS IN BACKGROUND ===== */
-async function preloadTestReports() {
+/* ===== PRELOAD TEST REPORTS IN BACKGROUND (without switching to it) ===== */
+async function preloadTestReportsInBackground() {
   const testReportsSection = "Test Reports";
   const testReportsFile = "test_reports.html";
   
   if (currentUserData && currentUserData.sections.includes(testReportsSection)) {
-    console.log("🔄 Preloading Test Reports section in background...");
-    // Create pane quietly without switching
-    const paneInfo = await ensureSectionPane(testReportsSection, testReportsFile);
-    if (paneInfo) {
-      console.log("✅ Test Reports preloaded successfully");
-    }
+    console.log("🔄 Preloading Test Reports section in background (not switching)...");
+    // Create pane quietly without switching to it
+    await ensureSectionPane(testReportsSection, testReportsFile);
+    console.log("✅ Test Reports preloaded successfully in background");
   }
 }
 
-/* ===== INITIALIZE ALL AUTHORIZED SECTIONS IN BACKGROUND (for faster switching) ===== */
-async function preloadAuthorizedSections() {
-  if (!currentUserData) return;
-  
-  const sectionsToPreload = currentUserData.sections.filter(s => s !== "Home Page");
-  // Preload first 3 sections for better performance, but Test Reports is priority already handled separately
-  for (const section of sectionsToPreload.slice(0, 3)) {
-    const fileMapLocal = {
-      "Add Entry": "add_entry.html",
-      "Visit Schedule": "visit_schedule.html",
-      "Price Comparison": "price_comparison.html",
-      "Test Reports": "test_reports.html",
-      "Pending Payment": "pending_payment.html",
-      "Data Sheets": "data_sheets.html",
-      "Data Analysis": "data_analysis.html",
-      "TRF Maker": "trf_maker.html",
-      "Expense Tracking": "expense_tracking.html",
-      "Promotion Material": "promotion_material.html"
-    };
-    const fileName = fileMapLocal[section] || `${section.toLowerCase().replace(/ /g, '_')}.html`;
-    if (section !== "Test Reports") { // Already preloaded separately
-      ensureSectionPane(section, fileName).catch(e => console.log(`Preload ${section} skipped`, e));
-    }
-  }
-}
-
-/* ===== RESET AND INIT DASHBOARD WITH PERSISTENT SECTIONS ===== */
+/* ===== INITIALIZE DASHBOARD - DEFAULT TO HOME PAGE ===== */
 async function resetAndInitDashboard(userData) {
   currentUserData = userData;
   if (currentUserEmail) loginIdEl.innerText = currentUserEmail;
@@ -768,7 +745,7 @@ async function resetAndInitDashboard(userData) {
   
   // Build all section panes based on user permissions
   const sectionButtons = Array.from(navMenu.querySelectorAll(".nav-item"));
-  let firstVisibleSection = null;
+  let homePageSection = null;
   
   for (const btn of sectionButtons) {
     const section = btn.getAttribute("data-section");
@@ -776,9 +753,9 @@ async function resetAndInitDashboard(userData) {
     const hasAccess = currentUserData.sections.includes(section);
     
     if (hasAccess) {
-      if (!firstVisibleSection) firstVisibleSection = section;
+      if (section === "Home Page") homePageSection = section;
       btn.style.display = "flex";
-      // Create pane but not yet visible (background create)
+      // Create pane in background but not yet visible
       ensureSectionPane(section, file).catch(e => console.log(`Error creating pane for ${section}`, e));
       
       // Re-attach click event
@@ -795,20 +772,20 @@ async function resetAndInitDashboard(userData) {
     }
   }
   
-  // Preload Test Reports explicitly after panes creation starts
+  // Preload Test Reports in background (silent, doesn't switch view)
   setTimeout(async () => {
-    await preloadTestReports();
-    await preloadAuthorizedSections();
+    await preloadTestReportsInBackground();
   }, 500);
   
-  // Wait a bit for first pane creation then switch to Test Reports as default
+  // AFTER all panes are created, switch to Home Page (default)
   setTimeout(async () => {
-    // Default to Test Reports if user has access, else first visible
-    let defaultSection = "Test Reports";
-    if (!currentUserData.sections.includes(defaultSection)) {
-      defaultSection = firstVisibleSection || "Home Page";
+    if (homePageSection && currentUserData.sections.includes(homePageSection)) {
+      await switchToSection(homePageSection);
+    } else {
+      // Fallback to first available section if Home Page not accessible
+      const firstAvailable = currentUserData.sections[0];
+      if (firstAvailable) await switchToSection(firstAvailable);
     }
-    await switchToSection(defaultSection);
   }, 800);
 }
 
@@ -879,7 +856,7 @@ window.addEventListener('pageshow', (event) => {
   if (event.persisted) window.location.reload();
 });
 
-console.log("✅ Dashboard with PERSISTENT SECTIONS: Each section keeps its state when switching. Test Reports preloaded on startup.");
+console.log("✅ Dashboard with PERSISTENT SECTIONS | Default: Home Page | Test Reports preloaded in background silently.");
 </script>
 </body>
 </html>
