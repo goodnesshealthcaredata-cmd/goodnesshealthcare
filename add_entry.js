@@ -1,5 +1,5 @@
 /* ========================= Main Application Logic ========================= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyDmbMPeyIDX8oGFexMVyp51dneDhoyDB4DSJ-wcCDtxWfOfy8wlu6y3My5Wg1rRIcR/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1mDJHlb3KOTAEuuaqysykhJU7iJXTkVO4rRD-ZJbOAa9j7ugtrC-NsK0n2cA7Pgc/exec";
 
 /* ========================= Helpers & UI ========================= */
 const el = (q) => document.querySelector(q);
