@@ -12,11 +12,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
 <style>
-  /* =========================================================
-     DESIGN SYSTEM: MEDICAL-GRADE | DEEP BLUE + TEAL
-     SINGLE COLUMN VERTICAL LAYOUT - NO GRID BETWEEN SECTIONS
-  ========================================================= */
-
   * {
     margin: 0;
     padding: 0;
@@ -25,7 +20,7 @@
 
   body {
     background: #0F3D5E;
-    font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     color: #1A2C3E;
     line-height: 1.5;
   }
@@ -44,13 +39,6 @@
     background-clip: text;
     color: transparent;
     margin-bottom: 8px;
-    letter-spacing: -0.3px;
-  }
-
-  .header p {
-    color: rgba(255,255,255,0.75);
-    font-size: 15px;
-    font-weight: 450;
   }
 
   .container {
@@ -64,11 +52,6 @@
     .header h1 { font-size: 26px; }
   }
 
-  .app-top {
-    margin-bottom: 28px;
-  }
-
-  /* VERTICAL STACK - NO GRID */
   .vertical-stack {
     display: flex;
     flex-direction: column;
@@ -78,14 +61,9 @@
   .card {
     background: #FFFFFF;
     border-radius: 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
     padding: 24px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     width: 100%;
-  }
-
-  .card:hover {
-    box-shadow: 0 20px 32px -12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(30, 202, 211, 0.2);
   }
 
   .section-title {
@@ -97,7 +75,6 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    letter-spacing: -0.2px;
   }
 
   .section-title i {
@@ -113,7 +90,6 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 15px;
     transition: all 0.2s;
-    background: #FFFFFF;
     outline: none;
   }
 
@@ -129,7 +105,7 @@
     padding: 12px 20px;
     border-radius: 14px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    transition: all 0.2s;
     font-size: 14px;
     display: inline-flex;
     align-items: center;
@@ -140,13 +116,11 @@
   .btn-primary {
     background: linear-gradient(105deg, #1ECAD3 0%, #12A7B0 100%);
     color: white;
-    box-shadow: 0 2px 6px rgba(30, 202, 211, 0.2);
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 20px -8px rgba(30, 202, 211, 0.4);
-    filter: brightness(1.02);
   }
 
   .btn-secondary {
@@ -157,7 +131,6 @@
 
   .btn-secondary:hover {
     background: #E6EDF5;
-    transform: translateY(-1px);
   }
 
   .btn-danger {
@@ -168,7 +141,6 @@
 
   .btn-danger:hover {
     background: #FFE4E0;
-    transform: translateY(-1px);
   }
 
   .btn-lab-copy {
@@ -178,15 +150,12 @@
     padding: 6px 14px;
     font-size: 12px;
     border-radius: 40px;
-    transition: all 0.2s;
     cursor: pointer;
   }
 
   .btn-lab-copy:hover {
     background: #1ECAD3;
     color: white;
-    border-color: #1ECAD3;
-    transform: translateY(-1px);
   }
 
   .checkbox-grid {
@@ -196,7 +165,7 @@
   }
 
   .item-list {
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     padding-right: 6px;
   }
@@ -216,8 +185,6 @@
   .checkbox-item:hover {
     border-color: #1ECAD3;
     background: #F9FDFF;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.02);
-    transform: translateX(2px);
   }
 
   .checkbox-item input {
@@ -225,7 +192,6 @@
     height: 20px;
     accent-color: #1ECAD3;
     cursor: pointer;
-    pointer-events: auto;
   }
 
   .selected-items {
@@ -246,7 +212,6 @@
     font-size: 13px;
     font-weight: 600;
     border: 1px solid #CBF0F2;
-    transition: all 0.1s;
   }
 
   .chip button {
@@ -255,14 +220,6 @@
     font-size: 18px;
     cursor: pointer;
     color: #D97706;
-    display: flex;
-    align-items: center;
-    transition: transform 0.1s;
-  }
-
-  .chip button:hover {
-    transform: scale(1.15);
-    color: #B91C1C;
   }
 
   .lab-block {
@@ -271,7 +228,6 @@
     margin-bottom: 28px;
     overflow: hidden;
     border: 1px solid #EFF3F8;
-    transition: all 0.2s;
   }
 
   .lab-header {
@@ -282,23 +238,12 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .lab-header:hover {
-    background: #FAFDFF;
   }
 
   .lab-header h2 {
     font-size: 22px;
     font-weight: 700;
     color: #0F3D5E;
-    margin: 0;
-  }
-
-  .accordion-icon {
-    color: #1ECAD3;
-    font-size: 22px;
   }
 
   .accordion-section {
@@ -314,34 +259,21 @@
     font-weight: 600;
     font-size: 16px;
     color: #1D4E6E;
-    transition: background 0.2s;
-  }
-
-  .section-header:hover {
-    background: #F2F8FC;
   }
 
   .section-arrow {
-    font-size: 14px;
     transition: transform 0.2s;
     color: #1ECAD3;
   }
 
   .section-content {
     padding: 20px 24px;
-    background: #FFFFFF;
     display: none;
     border-top: 1px solid #F0F4FA;
-    animation: fadeSlide 0.25s ease;
   }
 
   .section-content.open {
     display: block;
-  }
-
-  @keyframes fadeSlide {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
   }
 
   .entity-grid {
@@ -370,7 +302,6 @@
     border-radius: 40px;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.3px;
   }
 
   .badge.test { background: #E2F0FA; color: #186C8C; }
@@ -379,7 +310,7 @@
 
   .price-block { margin-top: 16px; }
   .b2b-highlight { background: #F2FCF9; border: 1px solid #C8F0E8; border-radius: 16px; padding: 12px; margin-top: 8px; }
-  .b2b-price { font-size: 24px; font-weight: 800; color: #1B8B7A; font-family: 'Rubik', monospace; }
+  .b2b-price { font-size: 24px; font-weight: 800; color: #1B8B7A; }
 
   .info-btn {
     background: #F5F9FE;
@@ -390,10 +321,8 @@
     font-weight: 600;
     margin-top: 14px;
     cursor: pointer;
-    transition: 0.2s;
     color: #22668D;
   }
-  .info-btn:hover { background: #E5F0FA; color: #1ECAD3; }
 
   .optimized-item {
     background: #FFFFFF;
@@ -401,15 +330,12 @@
     padding: 20px;
     border: 1px solid #EDF2F9;
     margin-bottom: 12px;
-    transition: 0.15s;
   }
 
-  /* Results row - two cards side by side only for Optimized Plan and Financial Summary */
   .results-two-columns {
     display: grid;
     grid-template-columns: 1fr 340px;
     gap: 28px;
-    margin-top: 0;
   }
 
   .summary-box {
@@ -419,27 +345,72 @@
     text-align: center;
     border: 1px solid #E9F0F5;
   }
-  .big { font-size: 32px; font-weight: 800; font-family: 'Rubik', monospace; color: #0F3D5E; }
+
+  .big { font-size: 32px; font-weight: 800; color: #0F3D5E; }
   .savings { color: #1A8F7A; }
 
+  /* FIXED MODAL - WITH SCROLLING */
   .modal {
     position: fixed;
     inset: 0;
-    background: rgba(15, 61, 94, 0.75);
-    backdrop-filter: blur(6px);
+    background: rgba(15, 61, 94, 0.85);
+    backdrop-filter: blur(8px);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 20px;
   }
   .modal.active { display: flex; }
   .modal-content {
     background: white;
     max-width: 650px;
-    width: 90%;
-    border-radius: 32px;
-    padding: 28px;
-    animation: fadeSlide 0.2s;
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 28px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #E9EFF6;
+    background: white;
+    flex-shrink: 0;
+  }
+  .modal-header h2 {
+    font-family: 'Rubik', sans-serif;
+    font-size: 20px;
+    color: #0F3D5E;
+    margin: 0;
+  }
+  .modal-header button {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #64748B;
+    transition: color 0.2s;
+  }
+  .modal-header button:hover {
+    color: #DC2626;
+  }
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-body ul {
+    padding-left: 20px;
+    margin: 10px 0;
+  }
+  .modal-body li {
+    margin: 6px 0;
+    color: #334155;
   }
 
   .toast {
@@ -451,16 +422,10 @@
     padding: 12px 24px;
     border-radius: 60px;
     font-weight: 600;
-    backdrop-filter: blur(8px);
     display: none;
     z-index: 9999;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
   }
   .toast.show { display: block; }
-
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #EFF3F8; border-radius: 8px; }
-  ::-webkit-scrollbar-thumb { background: #B0CCDA; border-radius: 8px; }
 
   .lab-grouping-section {
     margin-top: 24px;
@@ -473,7 +438,6 @@
     padding: 18px;
     margin-bottom: 20px;
     border: 1px solid #E9F0F5;
-    transition: 0.1s;
   }
   .lab-group-header {
     display: flex;
@@ -486,23 +450,25 @@
     font-size: 18px;
     font-weight: 700;
     color: #0F3D5E;
-    font-family: 'Rubik', sans-serif;
   }
   .lab-items-list {
     padding-left: 20px;
     margin: 12px 0 8px;
   }
-  .lab-items-list li {
-    margin: 6px 0;
-    color: #2C4C6E;
-  }
 
   @media (max-width: 768px) {
-    .card { padding: 18px; }
-    .section-header, .lab-header { padding: 14px 18px; }
     .results-two-columns {
       grid-template-columns: 1fr;
       gap: 20px;
+    }
+    .modal-content {
+      max-width: 95%;
+    }
+    .modal-header {
+      padding: 16px 20px;
+    }
+    .modal-body {
+      padding: 20px;
     }
   }
 
@@ -517,44 +483,57 @@
       flex-direction: column;
     }
   }
+
+  .loading-overlay {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
+    margin-right: 8px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .muted {
+    color: #64748B;
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="app-top header">
+  <div class="header">
     <h1><i class="fas fa-microscope" style="color:#1ECAD3; margin-right: 12px;"></i> Test Price Comparison</h1>
   </div>
 
-  <!-- VERTICAL STACK - NO GRID BETWEEN SECTIONS -->
   <div class="vertical-stack">
-    
-    <!-- Section 1: Select Diagnostics -->
     <div class="card">
       <div class="section-title"><i class="fas fa-flask"></i> Select Tests/Combos/Packages</div>
       <input type="text" id="searchInput" class="search" placeholder="Search tests, combos, packages..." autocomplete="off" />
       <div class="search-actions">
-        <button class="btn btn-primary" id="optimizeBtn" style="flex:1;"><i class="fas fa-chart-line"></i> Optimize Plannig</button>
+        <button class="btn btn-primary" id="optimizeBtn" style="flex:1;"><i class="fas fa-chart-line"></i> Optimize Planning</button>
         <button class="btn btn-danger" id="clearAllBtn" style="flex:1;"><i class="fas fa-eraser"></i> Clear All</button>
       </div>
       <div id="selectionList" class="item-list checkbox-grid"></div>
       <div id="selectedItemsContainer" class="selected-items"></div>
     </div>
 
-    <!-- Section 2: Lab Filters -->
     <div class="card">
       <div class="section-title"><i class="fas fa-microscope"></i> Lab Filters</div>
       <div id="labFilters" class="checkbox-grid"></div>
     </div>
 
-    <!-- Section 3: Comparison View -->
-    <div class="card">
+    <div class="card" id="comparisonCard" style="display: none;">
       <div class="section-title"><i class="fas fa-chart-simple"></i> Comparison View</div>
       <div id="comparisonView"></div>
     </div>
 
-    <!-- Section 4: Optimized Plan + Financial Summary (side by side only these two) -->
-    <div class="results-two-columns">
+    <div class="results-two-columns" id="resultsSection" style="display: none;">
       <div class="card" style="margin:0; padding:24px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 8px;">
           <div class="section-title" style="margin-bottom: 0;"><i class="fas fa-chart-pie"></i> Optimized Plan</div>
@@ -566,22 +545,36 @@
       <div class="card" style="margin:0; padding:24px;">
         <div class="section-title"><i class="fas fa-coins"></i> Financial Summary</div>
         <div class="summary" style="display: flex; flex-direction: column; gap: 18px;">
-          <div class="summary-box"><h3 style="font-weight: 500;">Total MRP</h3><div class="big" id="totalMRP">₹0</div></div>
-          <div class="summary-box"><h3 style="font-weight: 500;">Total B2B</h3><div class="big savings" id="totalB2B">₹0</div></div>
-          <div class="summary-box"><h3 style="font-weight: 500;">Total Savings</h3><div class="big savings" id="totalSavings">₹0</div></div>
+          <div class="summary-box"><h3>Total MRP</h3><div class="big" id="totalMRP">₹0</div></div>
+          <div class="summary-box"><h3>Total B2B</h3><div class="big savings" id="totalB2B">₹0</div></div>
+          <div class="summary-box"><h3>Total Savings</h3><div class="big savings" id="totalSavings">₹0</div></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal & Toast -->
-<div class="modal" id="infoModal"><div class="modal-content"><div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 16px;"><h2 id="modalTitle" style="font-family: Rubik;"></h2><button class="close-btn" id="closeModal" style="background: none; border: none; font-size: 28px; cursor: pointer;">&times;</button></div><div id="modalBody"></div></div></div>
-<div class="toast" id="toast"><i class="fas fa-check-circle" style="margin-right: 8px;"></i> Copied</div>
+<!-- FIXED MODAL WITH PROPER SCROLLING -->
+<div class="modal" id="infoModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <button id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i> Copied</div>
 
 <script>
-  // DATA
-  const labsData = [
+// ============================================================
+// COMPLETE LABS DATA (Abbreviated for brevity - full data structure)
+// ============================================================
+
+const labsData = 
+
+  [
     {
   name: "Dr. Ajay Shah Laboratory",
 
@@ -745,7 +738,7 @@
     { id: "GOODNESS_BB_FEMALE_AS", name: "GOODNESS BB FEMALE", type: "package", contains: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)"], mrp: 3500, b2b: 1500 },
     { id: "GOODNESS_BA_MALE_AS", name: "GOODNESS BA MALE", type: "package", contains: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "PSA (Male)"], mrp: 3500, b2b: 1400 },
     { id: "GOODNESS_C_AS", name: "GOODNESS C", type: "package", contains: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
-    { id: "GOODNES_F_AS", name: "GOODNES F", type: "package", contains: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
+    { id: "GOODNESS_F_AS", name: "GOODNES F", type: "package", contains: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
     { id: "GODNESS_3H_AS", name: "GODNESS 3H ", type: "package", contains: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
     { id: "FEVER_PROFILE_AS", name: "FEVER PROFILE", type: "package", contains: ["CBC", "ESR", "SGPT", "SGOT", "CRP", "Dengue NSI", "Maleria Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 }
   ]
@@ -1079,207 +1072,502 @@
 }
   ];
 
-  let normalizedEntities = [], selectedItems = [], optimizedPlan = [];
-  let selectedLabs = new Set([labsData[0].name]);
 
-  function currency(v) { return "₹" + Number(v).toLocaleString(); }
-  function unique(arr) { return [...new Set(arr)]; }
-  function uniqueById(arr){ const map = new Map(); arr.forEach(item=> map.set(item.id,item)); return [...map.values()]; }
-  
-  function showToast(msg) { 
-    const t = document.getElementById("toast"); 
-    t.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 8px;"></i> ${msg}`; 
-    t.classList.add("show"); 
-    setTimeout(() => t.classList.remove("show"), 2000); 
-  }
-  
-  function focusSearchInput(){ document.getElementById("searchInput").focus(); }
+// ============================================================
+// APPLICATION LOGIC
+// ============================================================
 
-  async function copyToClipboard(text, successMessage) {
-    if (!text || text.trim() === "") {
-      showToast("Nothing to copy");
-      return false;
-    }
+let normalizedEntities = [];
+let selectedItems = [];
+let optimizedPlan = [];
+let selectedLabs = new Set([labsData[0].name]);
+let isOptimizing = false;
+
+function currency(v) { return (v !== null && v !== undefined) ? "₹" + Number(v).toLocaleString() : "₹0"; }
+function unique(arr) { return [...new Set(arr)]; }
+function uniqueById(arr) { const map = new Map(); arr.forEach(item => map.set(item.id, item)); return [...map.values()]; }
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function focusSearchInput() { 
+  document.getElementById("searchInput").focus();
+}
+
+function clearSearchInput() {
+  const searchInput = document.getElementById("searchInput");
+  searchInput.value = "";
+  searchInput.focus();
+  renderSelectionList();
+}
+
+async function copyToClipboard(text, successMessage) {
+  if (!text || text.trim() === "") { showToast("Nothing to copy"); return false; }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(successMessage || "Copied successfully");
+    return true;
+  } catch (err) {
     try {
-      await navigator.clipboard.writeText(text);
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.top = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
       showToast(successMessage || "Copied successfully");
       return true;
-    } catch (err) {
-      try {
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.style.position = "fixed";
-        textarea.style.top = "-9999px";
-        document.body.appendChild(textarea);
-        textarea.select();
-        const success = document.execCommand("copy");
-        textarea.remove();
-        if (success) {
-          showToast(successMessage || "Copied successfully");
-          return true;
-        } else {
-          showToast("Copy failed. Please try again.");
-          return false;
-        }
-      } catch (fallbackErr) {
-        showToast("Copy failed. Please manually select and copy.");
-        return false;
-      }
+    } catch (e) {
+      showToast("Copy failed");
+      return false;
     }
   }
+}
 
-  function buildLabLookup(lab){ const lookup={}; [...lab.tests,...lab.combos,...lab.packages].forEach(i=>{ lookup[i.id]=i; lookup[i.name]=i; }); return lookup; }
-  function normalizeEntity(entity, lookup){ const visited=new Set(); function expand(item){ if(!item||visited.has(item.id)) return []; visited.add(item.id); if(item.type==="test") return [item.name]; let res=[]; (item.contains||[]).forEach(name=>{ const child=lookup[name]||Object.values(lookup).find(x=>x.name===name); if(child){ if(child.type==="test") res.push(child.name); else res.push(...expand(child)); } else res.push(name); }); return res; } return {...entity, covers:unique(expand(entity))}; }
-  function buildNormalizedEntities(){ normalizedEntities=[]; labsData.forEach(lab=>{ const lookup=buildLabLookup(lab); [...lab.tests,...lab.combos,...lab.packages].forEach(e=>{ normalizedEntities.push({...normalizeEntity(e,lookup), lab:lab.name}); }); }); }
-  function getAllSelectableItems(){ const map=new Map(); normalizedEntities.forEach(e=>{ const key=e.name+"_"+e.type; if(!map.has(key)) map.set(key,{name:e.name,type:e.type,covers:e.covers}); }); return [...map.values()]; }
-  function getRequiredTests(){ let tests=[]; selectedItems.forEach(item=>{ const ent=normalizedEntities.find(x=>x.name===item.name && x.type===item.type); if(ent) tests.push(...ent.covers); }); return unique(tests); }
+function buildLabLookup(lab) {
+  const lookup = {};
+  [...lab.tests, ...lab.combos, ...lab.packages].forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
+  return lookup;
+}
 
-  function toggleItemSelection(item, isChecked) {
-    if(isChecked) {
-      if(!selectedItems.some(x=> x.name===item.name && x.type===item.type)) selectedItems.push(item);
-    } else {
-      selectedItems = selectedItems.filter(x=> !(x.name===item.name && x.type===item.type));
-    }
-    renderSelectionList();
-    renderSelectedItems();
-    renderComparisonView();
-    optimizePlan();
-  }
-
-  function renderSelectionList(){ 
-    const container=document.getElementById("selectionList"); 
-    const search=document.getElementById("searchInput").value.toLowerCase(); 
-    const items=getAllSelectableItems().filter(i=>i.name.toLowerCase().includes(search)); 
-    container.innerHTML=""; 
-    items.forEach(item=>{ 
-      const checked=selectedItems.some(x=>x.name===item.name && x.type===item.type); 
-      const div=document.createElement("div"); 
-      div.className="checkbox-item"; 
-      div.innerHTML=`<input type="checkbox" ${checked?"checked":""}><div><strong>${item.name}</strong><div class="muted" style="font-size:12px;">${item.type.toUpperCase()}</div></div>`; 
-      const chk=div.querySelector("input");
-      div.addEventListener("click", (e) => {
-        if(e.target.tagName === 'INPUT' || e.target.closest('input')) return;
-        const newChecked = !chk.checked;
-        chk.checked = newChecked;
-        toggleItemSelection(item, newChecked);
-        focusSearchInput();
-      });
-      chk.addEventListener("change", (e) => {
-        e.stopPropagation();
-        toggleItemSelection(item, chk.checked);
-        focusSearchInput();
-      });
-      container.appendChild(div); 
-    }); 
-  }
-
-  function renderSelectedItems(){ const cont=document.getElementById("selectedItemsContainer"); cont.innerHTML=""; selectedItems.forEach(item=>{ const chip=document.createElement("div"); chip.className="chip"; chip.innerHTML=`${item.name}<button>&times;</button>`; chip.querySelector("button").addEventListener("click",()=>{ selectedItems=selectedItems.filter(x=>!(x.name===item.name && x.type===item.type)); renderSelectionList(); renderSelectedItems(); renderComparisonView(); optimizePlan(); focusSearchInput(); }); cont.appendChild(chip); }); }
-  
-  function renderLabFilters(){ const cont=document.getElementById("labFilters"); cont.innerHTML=""; labsData.forEach(lab=>{ const checked=selectedLabs.has(lab.name); const div=document.createElement("div"); div.className="checkbox-item"; div.innerHTML=`<input type="checkbox" ${checked?"checked":""}><div>${lab.name}</div>`; div.querySelector("input").addEventListener("change",e=>{ if(e.target.checked) selectedLabs.add(lab.name); else selectedLabs.delete(lab.name); renderComparisonView(); optimizePlan(); }); cont.appendChild(div); }); }
-  
-  function renderEntityCard(entity){ return `<div class="entity-card" data-entity-name="${entity.name}" data-entity-type="${entity.type}"><div style="display:flex;justify-content:space-between;"><h4 style="font-weight:600;">${entity.name}</h4><span class="badge ${entity.type}">${entity.type}</span></div><div class="price-block"><div style="display:flex;justify-content:space-between;"><span>MRP</span><span>${currency(entity.mrp)}</span></div><div class="b2b-highlight"><div style="display:flex;justify-content:space-between;"><span>B2B PRICE</span><span class="b2b-price">${currency(entity.b2b)}</span></div></div></div>${entity.type!=="test"?`<button class="info-btn" data-id="${entity.id}"><i class="fas fa-info-circle"></i> Details</button>`:""}</div>`; }
-  
-  function attachAccordionEvents(){ document.querySelectorAll(".section-header").forEach(h=>{ h.removeEventListener("click", toggleSection); h.addEventListener("click", toggleSection); }); }
-  function toggleSection(e){ const header=e.currentTarget; const content=header.nextElementSibling; if(content&&content.classList.contains("section-content")){ const arrow=header.querySelector(".section-arrow"); content.classList.toggle("open"); if(arrow) arrow.style.transform=content.classList.contains("open")?"rotate(180deg)":"rotate(0deg)"; } }
-  
-  function renderComparisonView(){ const container=document.getElementById("comparisonView"); container.innerHTML=""; const required=getRequiredTests(); if(required.length===0){ container.innerHTML=`<div class="muted" style="padding:24px;text-align:center;">Select tests to see lab comparison</div>`; return; }
-    const visible=labsData.filter(l=>selectedLabs.has(l.name));
-    visible.forEach(lab=>{ const entities=normalizedEntities.filter(x=>x.lab===lab.name&&x.covers.some(t=>required.includes(t))); const tests=entities.filter(x=>x.type==="test"), combos=entities.filter(x=>x.type==="combo"), packages=entities.filter(x=>x.type==="package"); const block=document.createElement("div"); block.className="lab-block"; block.innerHTML=`<div class="lab-header"><h2><i class="fas fa-hospital-user" style="color:#1ECAD3; margin-right:8px;"></i>${lab.name}</h2><span class="accordion-icon"><i class="fas fa-chevron-down"></i></span></div><div class="lab-body"><div class="accordion-section"><div class="section-header"><span><i class="fas fa-vial"></i> Individual Tests (${tests.length})</span><span class="section-arrow">▼</span></div><div class="section-content"><div class="entity-grid">${tests.map(renderEntityCard).join("")}</div></div></div><div class="accordion-section"><div class="section-header"><span><i class="fas fa-puzzle-piece"></i> Combos (${combos.length})</span><span class="section-arrow">▼</span></div><div class="section-content"><div class="entity-grid">${combos.map(renderEntityCard).join("")}</div></div></div><div class="accordion-section"><div class="section-header"><span><i class="fas fa-cubes"></i> Packages (${packages.length})</span><span class="section-arrow">▼</span></div><div class="section-content"><div class="entity-grid">${packages.map(renderEntityCard).join("")}</div></div></div></div>`; container.appendChild(block); });
-    attachAccordionEvents(); 
-    attachInfoButtons(); 
-    attachComparisonCardClick(); 
-  }
-  
-  function attachComparisonCardClick() {
-    document.querySelectorAll(".entity-card").forEach(card => {
-      card.removeEventListener("click", comparisonCardHandler);
-      card.addEventListener("click", comparisonCardHandler);
+function normalizeEntity(entity, lookup) {
+  if (!entity) return entity;
+  const visited = new Set();
+  function expand(item) {
+    if (!item || visited.has(item.id)) return [];
+    visited.add(item.id);
+    if (item.type === "test") return [item.name];
+    let res = [];
+    (item.contains || []).forEach(name => {
+      const child = lookup[name] || Object.values(lookup).find(x => x && x.name === name);
+      if (child) {
+        if (child.type === "test") res.push(child.name);
+        else res.push(...expand(child));
+      } else res.push(name);
     });
+    return res;
   }
-  function comparisonCardHandler(e) {
-    if(e.target.closest('.info-btn')) return;
-    const card = e.currentTarget;
-    const name = card.getAttribute("data-entity-name");
-    const type = card.getAttribute("data-entity-type");
-    if(name && type) {
-      const selectableItem = getAllSelectableItems().find(i => i.name === name && i.type === type);
-      if(selectableItem) {
-        const isSelected = selectedItems.some(x=> x.name === selectableItem.name && x.type === selectableItem.type);
-        toggleItemSelection(selectableItem, !isSelected);
-      }
-    }
-  }
-  
-  function attachInfoButtons(){ document.querySelectorAll(".info-btn").forEach(btn=>{ btn.addEventListener("click",(e)=>{ e.stopPropagation(); const entity=normalizedEntities.find(e=>e.id===btn.dataset.id); if(entity) openModal(entity); }); }); }
-  function openModal(entity){ document.getElementById("modalTitle").innerHTML=entity.name; document.getElementById("modalBody").innerHTML=`<div><strong>Type:</strong> ${entity.type}</div><div><strong>MRP:</strong> ${currency(entity.mrp)}</div><div class="b2b-highlight" style="margin:12px 0"><strong>B2B:</strong> ${currency(entity.b2b)}</div>${entity.contains?`<div><strong>Contains:</strong><ul>${entity.contains.map(c=>`<li>${c}</li>`).join("")}</ul></div>`:""}<div><strong>Expanded Tests:</strong><ul>${entity.covers.map(c=>`<li>${c}</li>`).join("")}</ul></div>`; document.getElementById("infoModal").classList.add("active"); }
-  document.getElementById("closeModal").addEventListener("click",()=>document.getElementById("infoModal").classList.remove("active"));
+  return { ...entity, covers: unique(expand(entity)) };
+}
 
-  function optimizePlan(){ const req=getRequiredTests(); if(req.length===0){ optimizedPlan=[]; updateTotals(0,0); document.getElementById("optimizedResults").innerHTML=`<div class="muted">Select items to view optimized plan</div>`; return; }
-    let entities=normalizedEntities.filter(x=>selectedLabs.has(x.lab)).filter(e=>e.covers.some(t=>req.includes(t))); const bitMap={}; req.forEach((t,i)=>bitMap[t]=i); const maskEnt=entities.map(e=>{ let mask=0; e.covers.forEach(t=>{ if(bitMap.hasOwnProperty(t)) mask|=(1<<bitMap[t]); }); return {...e,mask}; }); const target=(1<<req.length)-1; const dp=Array(target+1).fill(Infinity); const parent=Array(target+1).fill(null); dp[0]=0; for(let cur=0;cur<=target;cur++){ if(dp[cur]===Infinity)continue; maskEnt.forEach(e=>{ const nxt=cur|e.mask; const newCost=dp[cur]+e.b2b; if(newCost<dp[nxt]){ dp[nxt]=newCost; parent[nxt]={prevMask:cur,entity:e}; } }); } if(dp[target]===Infinity){ document.getElementById("optimizedResults").innerHTML=`<div class="muted">Insufficient coverage</div>`; return; } let cur=target, chosen=[]; while(cur!==0){ const step=parent[cur]; if(!step)break; chosen.push(step.entity); cur=step.prevMask; } optimizedPlan=uniqueById(chosen.reverse()); renderOptimizedPlan(); }
-
-  function renderOptimizedPlan(){ 
-    const cont=document.getElementById("optimizedResults"); 
-    cont.innerHTML=""; 
-    if(!optimizedPlan.length)return; 
-    let totalMRP=0,totalB2B=0,group={}; 
-    optimizedPlan.forEach(i=>{ totalMRP+=i.mrp; totalB2B+=i.b2b; if(!group[i.lab])group[i.lab]=[]; group[i.lab].push(i); }); 
-    const listDiv=document.createElement("div"); 
-    optimizedPlan.forEach(item=>{ const el=document.createElement("div"); el.className="optimized-item"; el.innerHTML=`<div style="display:flex;justify-content:space-between;"><div><strong style="font-size:16px;">${item.name}</strong><div class="muted">${item.lab}</div></div><span class="badge ${item.type}">${item.type}</span></div><div class="covered-tests" style="font-size:13px;"><i class="fas fa-dna"></i> Covers: ${item.covers.join(", ")}</div><div class="price-block" style="margin-top:12px;"><div>MRP ${currency(item.mrp)}</div><div class="b2b-highlight">B2B ${currency(item.b2b)}</div></div>`; listDiv.appendChild(el); }); 
-    cont.appendChild(listDiv); 
-    const groupDiv=document.createElement("div"); groupDiv.className="lab-grouping-section"; 
-    groupDiv.innerHTML="<h4 style='font-weight:600; margin-bottom:16px;'><i class='fas fa-building'></i> Lab-wise Grouping with Copy</h4>"; 
-    Object.entries(group).forEach(([lab,items])=>{ 
-      const cardDiv=document.createElement("div"); cardDiv.className="lab-group-card"; 
-      const itemNames = items.map(i => i.name);
-      const uniqueNames = [...new Set(itemNames)];
-      const copyText = uniqueNames.join(", ");
-      cardDiv.innerHTML=`<div class="lab-group-header"><span class="lab-group-title"><i class="fas fa-flask" style="color:#1ECAD3;"></i> ${lab}</span><button class="btn-lab-copy copy-lab-btn" data-lab="${lab}" data-copy-text="${copyText.replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Copy Items (${items.length})</button></div><ul class="lab-items-list">${items.map(i=>`<li>${i.name}</li>`).join("")}</ul>`; 
-      groupDiv.appendChild(cardDiv); 
-    }); 
-    cont.appendChild(groupDiv); 
-    updateTotals(totalMRP,totalB2B); 
-    
-    document.querySelectorAll('.copy-lab-btn').forEach(btn => {
-      btn.removeEventListener('click', handleLabCopy);
-      btn.addEventListener('click', handleLabCopy);
+function buildNormalizedEntities() {
+  normalizedEntities = [];
+  labsData.forEach(lab => {
+    const lookup = buildLabLookup(lab);
+    [...lab.tests, ...lab.combos, ...lab.packages].forEach(e => {
+      if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name });
     });
-  }
-  
-  function handleLabCopy(e) {
-    e.stopPropagation();
-    const btn = e.currentTarget;
-    const labName = btn.getAttribute('data-lab');
-    const copyText = btn.getAttribute('data-copy-text');
-    if (copyText && copyText.trim()) {
-      copyToClipboard(copyText, `Copied ${labName} items`);
-    } else {
-      showToast(`No items to copy for ${labName}`);
-    }
-  }
+  });
+}
 
-  function updateTotals(mrp,b2b){ document.getElementById("totalMRP").innerHTML=currency(mrp); document.getElementById("totalB2B").innerHTML=currency(b2b); document.getElementById("totalSavings").innerHTML=currency(mrp-b2b); }
+function getAllSelectableItems() {
+  const map = new Map();
+  normalizedEntities.forEach(e => {
+    const key = e.name + "_" + e.type;
+    if (!map.has(key)) map.set(key, { name: e.name, type: e.type, covers: e.covers });
+  });
+  return [...map.values()];
+}
 
-  document.getElementById("copyAllBtn").addEventListener("click", async () => { 
-    if(optimizedPlan.length === 0){ 
-      showToast("Nothing to copy"); 
-      return; 
-    } 
-    const allItemNames = unique(optimizedPlan.map(x => x.name));
-    const text = allItemNames.join(", ");
-    copyToClipboard(text, "Copied all lab items");
+function getRequiredTests() {
+  let tests = [];
+  selectedItems.forEach(item => {
+    const ent = normalizedEntities.find(x => x.name === item.name && x.type === item.type);
+    if (ent && ent.covers) tests.push(...ent.covers);
+  });
+  return unique(tests);
+}
+
+function toggleItemSelection(item, isChecked) {
+  if (isChecked) {
+    if (!selectedItems.some(x => x.name === item.name && x.type === item.type)) selectedItems.push(item);
+  } else {
+    selectedItems = selectedItems.filter(x => !(x.name === item.name && x.type === item.type));
+  }
+  renderSelectionList();
+  renderSelectedItems();
+  clearSearchInput();
+}
+
+function renderSelectionList() {
+  const container = document.getElementById("selectionList");
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const items = getAllSelectableItems().filter(i => i.name.toLowerCase().includes(search));
+  container.innerHTML = "";
+  items.forEach(item => {
+    const checked = selectedItems.some(x => x.name === item.name && x.type === item.type);
+    const div = document.createElement("div");
+    div.className = "checkbox-item";
+    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div><strong>${item.name}</strong><div style="font-size:12px; color:#64748b;">${item.type.toUpperCase()}</div></div>`;
+    const chk = div.querySelector("input");
+    div.addEventListener("click", (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.closest('input')) return;
+      const newChecked = !chk.checked;
+      chk.checked = newChecked;
+      toggleItemSelection(item, newChecked);
+    });
+    chk.addEventListener("change", (e) => {
+      e.stopPropagation();
+      toggleItemSelection(item, chk.checked);
+    });
+    container.appendChild(div);
+  });
+}
+
+function renderSelectedItems() {
+  const cont = document.getElementById("selectedItemsContainer");
+  cont.innerHTML = "";
+  selectedItems.forEach(item => {
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.innerHTML = `${item.name}<button>&times;</button>`;
+    chip.querySelector("button").addEventListener("click", () => {
+      selectedItems = selectedItems.filter(x => !(x.name === item.name && x.type === item.type));
+      renderSelectionList();
+      renderSelectedItems();
+    });
+    cont.appendChild(chip);
+  });
+}
+
+function renderLabFilters() {
+  const cont = document.getElementById("labFilters");
+  cont.innerHTML = "";
+  labsData.forEach(lab => {
+    const checked = selectedLabs.has(lab.name);
+    const div = document.createElement("div");
+    div.className = "checkbox-item";
+    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div>${lab.name}</div>`;
+    div.querySelector("input").addEventListener("change", e => {
+      if (e.target.checked) {
+        selectedLabs.add(lab.name);
+      } else {
+        selectedLabs.delete(lab.name);
+      }
+      // Re-render comparison if it's visible
+      if (document.getElementById("comparisonCard").style.display === "block") {
+        renderComparisonViewOnly();
+      }
+    });
+    cont.appendChild(div);
+  });
+}
+
+function renderEntityCard(entity) {
+  if (!entity) return '';
+  return `<div class="entity-card" data-entity-name="${entity.name}" data-entity-type="${entity.type}">
+    <div style="display:flex;justify-content:space-between;">
+      <h4>${entity.name}</h4>
+      <span class="badge ${entity.type}">${entity.type}</span>
+    </div>
+    <div class="price-block">
+      <div style="display:flex;justify-content:space-between;"><span>MRP</span><span>${currency(entity.mrp)}</span></div>
+      <div class="b2b-highlight"><div style="display:flex;justify-content:space-between;"><span>B2B PRICE</span><span class="b2b-price">${currency(entity.b2b)}</span></div></div>
+    </div>
+    ${entity.type !== "test" ? `<button class="info-btn" data-id="${entity.id}"><i class="fas fa-info-circle"></i> Details</button>` : ""}
+  </div>`;
+}
+
+function openModal(entity) {
+  document.getElementById("modalTitle").innerHTML = entity.name;
+  document.getElementById("modalBody").innerHTML = `
+    <div style="margin-bottom: 12px;"><strong>Type:</strong> ${entity.type}</div>
+    <div style="margin-bottom: 12px;"><strong>MRP:</strong> ${currency(entity.mrp)}</div>
+    <div class="b2b-highlight" style="margin-bottom: 16px;"><strong>B2B:</strong> ${currency(entity.b2b)}</div>
+    ${entity.contains ? `<div style="margin-bottom: 12px;"><strong>Contains:</strong><ul>${entity.contains.map(c => `<li>${c}</li>`).join("")}</ul></div>` : ""}
+    <div><strong>Expanded Tests:</strong><ul>${entity.covers.map(c => `<li>${c}</li>`).join("")}</ul></div>
+  `;
+  document.getElementById("infoModal").classList.add("active");
+}
+
+document.getElementById("closeModal").addEventListener("click", () => document.getElementById("infoModal").classList.remove("active"));
+// Close modal when clicking outside
+document.getElementById("infoModal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("infoModal")) {
+    document.getElementById("infoModal").classList.remove("active");
+  }
+});
+
+function attachInfoButtons() {
+  document.querySelectorAll(".info-btn").forEach(btn => {
+    btn.removeEventListener("click", infoClickHandler);
+    btn.addEventListener("click", infoClickHandler);
+  });
+}
+
+function infoClickHandler(e) {
+  e.stopPropagation();
+  const entity = normalizedEntities.find(ent => ent.id === e.currentTarget.dataset.id);
+  if (entity) openModal(entity);
+}
+
+function attachComparisonCardClick() {
+  document.querySelectorAll(".entity-card").forEach(card => {
+    card.removeEventListener("click", comparisonCardHandler);
+    card.addEventListener("click", comparisonCardHandler);
+  });
+}
+
+function comparisonCardHandler(e) {
+  if (e.target.closest('.info-btn')) return;
+  const card = e.currentTarget;
+  const name = card.getAttribute("data-entity-name");
+  const type = card.getAttribute("data-entity-type");
+  const selectableItem = getAllSelectableItems().find(i => i.name === name && i.type === type);
+  if (selectableItem) {
+    const isSelected = selectedItems.some(x => x.name === selectableItem.name && x.type === selectableItem.type);
+    toggleItemSelection(selectableItem, !isSelected);
+  }
+}
+
+function renderComparisonViewOnly() {
+  const container = document.getElementById("comparisonView");
+  container.innerHTML = "";
+  const required = getRequiredTests();
+  if (required.length === 0) {
+    container.innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">Select tests then click Optimize Planning</div>`;
+    return;
+  }
+  const visible = labsData.filter(l => selectedLabs.has(l.name));
+  if (visible.length === 0) {
+    container.innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">Please select at least one lab from Lab Filters</div>`;
+    return;
+  }
+  visible.forEach(lab => {
+    const entities = normalizedEntities.filter(x => x.lab === lab.name && x.covers && x.covers.some(t => required.includes(t)));
+    const tests = entities.filter(x => x.type === "test");
+    const combos = entities.filter(x => x.type === "combo");
+    const packages = entities.filter(x => x.type === "package");
+    const block = document.createElement("div");
+    block.className = "lab-block";
+    block.innerHTML = `
+      <div class="lab-header">
+        <h2><i class="fas fa-hospital-user" style="color:#1ECAD3;"></i> ${lab.name}</h2>
+        <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
+      </div>
+      <div class="lab-body">
+        <div class="accordion-section">
+          <div class="section-header"><span>🧪 Individual Tests (${tests.length})</span><span class="section-arrow">▼</span></div>
+          <div class="section-content"><div class="entity-grid">${tests.map(renderEntityCard).join("")}</div></div>
+        </div>
+        <div class="accordion-section">
+          <div class="section-header"><span>⚡ Combos (${combos.length})</span><span class="section-arrow">▼</span></div>
+          <div class="section-content"><div class="entity-grid">${combos.map(renderEntityCard).join("")}</div></div>
+        </div>
+        <div class="accordion-section">
+          <div class="section-header"><span>📦 Packages (${packages.length})</span><span class="section-arrow">▼</span></div>
+          <div class="section-content"><div class="entity-grid">${packages.map(renderEntityCard).join("")}</div></div>
+        </div>
+      </div>
+    `;
+    container.appendChild(block);
   });
   
-  document.getElementById("searchInput").addEventListener("input",renderSelectionList);
-  document.getElementById("optimizeBtn").addEventListener("click",optimizePlan);
-  document.getElementById("clearAllBtn").addEventListener("click",()=>{ selectedItems=[]; document.getElementById("searchInput").value=""; renderSelectionList(); renderSelectedItems(); renderComparisonView(); optimizePlan(); focusSearchInput(); });
+  document.querySelectorAll(".section-header").forEach(header => {
+    header.removeEventListener("click", accordionToggle);
+    header.addEventListener("click", accordionToggle);
+  });
+  attachInfoButtons();
+  attachComparisonCardClick();
+}
+
+function accordionToggle(e) {
+  const header = e.currentTarget;
+  const content = header.nextElementSibling;
+  const arrow = header.querySelector(".section-arrow");
+  if (content.classList.contains("open")) {
+    content.classList.remove("open");
+    if (arrow) arrow.style.transform = "rotate(0deg)";
+  } else {
+    content.classList.add("open");
+    if (arrow) arrow.style.transform = "rotate(180deg)";
+  }
+}
+
+function updateTotals(mrp, b2b) {
+  document.getElementById("totalMRP").innerHTML = currency(mrp);
+  document.getElementById("totalB2B").innerHTML = currency(b2b);
+  document.getElementById("totalSavings").innerHTML = currency(mrp - b2b);
+}
+
+function renderOptimizedPlan() {
+  const cont = document.getElementById("optimizedResults");
+  cont.innerHTML = "";
+  if (!optimizedPlan.length) return;
+  let totalMRP = 0, totalB2B = 0, group = {};
+  optimizedPlan.forEach(i => {
+    totalMRP += (i.mrp || 0);
+    totalB2B += (i.b2b || 0);
+    if (!group[i.lab]) group[i.lab] = [];
+    group[i.lab].push(i);
+  });
+  const listDiv = document.createElement("div");
+  optimizedPlan.forEach(item => {
+    const el = document.createElement("div");
+    el.className = "optimized-item";
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;">
+        <div><strong>${item.name}</strong><div class="muted">${item.lab}</div></div>
+        <span class="badge ${item.type}">${item.type}</span>
+      </div>
+      <div style="font-size:13px; margin-top:8px;"><i class="fas fa-dna"></i> Covers: ${(item.covers || []).join(", ")}</div>
+      <div class="price-block"><div>MRP ${currency(item.mrp)}</div><div class="b2b-highlight">B2B ${currency(item.b2b)}</div></div>
+    `;
+    listDiv.appendChild(el);
+  });
+  cont.appendChild(listDiv);
+  const groupDiv = document.createElement("div");
+  groupDiv.className = "lab-grouping-section";
+  groupDiv.innerHTML = "<h4><i class='fas fa-building'></i> Lab-wise Grouping</h4>";
+  Object.entries(group).forEach(([lab, items]) => {
+    const cardDiv = document.createElement("div");
+    cardDiv.className = "lab-group-card";
+    const itemNames = [...new Set(items.map(i => i.name))];
+    const copyText = itemNames.join(", ");
+    cardDiv.innerHTML = `
+      <div class="lab-group-header">
+        <span class="lab-group-title"><i class="fas fa-flask" style="color:#1ECAD3;"></i> ${lab}</span>
+        <button class="btn-lab-copy copy-lab-btn" data-lab="${lab}" data-copy-text="${copyText.replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Copy Items (${items.length})</button>
+      </div>
+      <ul class="lab-items-list">${items.map(i => `<li>${i.name}</li>`).join("")}</ul>
+    `;
+    groupDiv.appendChild(cardDiv);
+  });
+  cont.appendChild(groupDiv);
+  updateTotals(totalMRP, totalB2B);
+  document.querySelectorAll('.copy-lab-btn').forEach(btn => {
+    btn.removeEventListener('click', handleLabCopy);
+    btn.addEventListener('click', handleLabCopy);
+  });
+}
+
+function handleLabCopy(e) {
+  e.stopPropagation();
+  const labName = e.currentTarget.getAttribute('data-lab');
+  const copyText = e.currentTarget.getAttribute('data-copy-text');
+  if (copyText && copyText.trim()) copyToClipboard(copyText, `Copied ${labName} items`);
+  else showToast(`No items to copy for ${labName}`);
+}
+
+function optimizePlan() {
+  if (isOptimizing) return;
+  isOptimizing = true;
+  const btn = document.getElementById("optimizeBtn");
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="loading-overlay"></span> Optimizing...';
+  btn.style.opacity = "0.7";
+  btn.style.pointerEvents = "none";
   
-  buildNormalizedEntities(); 
-  renderSelectionList(); 
-  renderSelectedItems(); 
-  renderLabFilters(); 
-  renderComparisonView(); 
-  optimizePlan(); 
+  setTimeout(() => {
+    try {
+      const required = getRequiredTests();
+      if (required.length === 0) {
+        optimizedPlan = [];
+        updateTotals(0, 0);
+        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">Select items to view optimized plan</div>`;
+        document.getElementById("comparisonCard").style.display = "block";
+        document.getElementById("resultsSection").style.display = "grid";
+        renderComparisonViewOnly();
+        isOptimizing = false;
+        btn.innerHTML = originalHtml;
+        btn.style.opacity = "1";
+        btn.style.pointerEvents = "auto";
+        return;
+      }
+      
+      renderComparisonViewOnly();
+      document.getElementById("comparisonCard").style.display = "block";
+      
+      // CRITICAL FIX: Only include entities from selected labs
+      let entities = normalizedEntities.filter(x => selectedLabs.has(x.lab));
+      entities = entities.filter(e => e.covers && e.covers.some(t => required.includes(t)));
+      
+      const bitMap = {};
+      required.forEach((t, i) => bitMap[t] = i);
+      const maskEnt = entities.map(e => {
+        let mask = 0;
+        if (e.covers) e.covers.forEach(t => { if (bitMap.hasOwnProperty(t)) mask |= (1 << bitMap[t]); });
+        return { ...e, mask };
+      });
+      const target = (1 << required.length) - 1;
+      const dp = Array(target + 1).fill(Infinity);
+      const parent = Array(target + 1).fill(null);
+      dp[0] = 0;
+      for (let cur = 0; cur <= target; cur++) {
+        if (dp[cur] === Infinity) continue;
+        maskEnt.forEach(e => {
+          const nxt = cur | e.mask;
+          const newCost = dp[cur] + e.b2b;
+          if (newCost < dp[nxt]) {
+            dp[nxt] = newCost;
+            parent[nxt] = { prevMask: cur, entity: e };
+          }
+        });
+      }
+      if (dp[target] === Infinity) {
+        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">⚠️ Insufficient coverage - selected tests cannot be covered by items from selected labs</div>`;
+        document.getElementById("resultsSection").style.display = "grid";
+        isOptimizing = false;
+        btn.innerHTML = originalHtml;
+        btn.style.opacity = "1";
+        btn.style.pointerEvents = "auto";
+        return;
+      }
+      let cur = target, chosen = [];
+      while (cur !== 0) {
+        const step = parent[cur];
+        if (!step) break;
+        chosen.push(step.entity);
+        cur = step.prevMask;
+      }
+      optimizedPlan = uniqueById(chosen.reverse());
+      renderOptimizedPlan();
+      document.getElementById("resultsSection").style.display = "grid";
+    } catch (e) {
+      console.error(e);
+      showToast("Error during optimization");
+    } finally {
+      isOptimizing = false;
+      btn.innerHTML = originalHtml;
+      btn.style.opacity = "1";
+      btn.style.pointerEvents = "auto";
+    }
+  }, 50);
+}
+
+document.getElementById("copyAllBtn").addEventListener("click", async () => {
+  if (optimizedPlan.length === 0) { showToast("Nothing to copy"); return; }
+  const text = [...new Set(optimizedPlan.map(x => x.name))].join(", ");
+  copyToClipboard(text, "Copied all lab items");
+});
+
+document.getElementById("searchInput").addEventListener("input", renderSelectionList);
+document.getElementById("optimizeBtn").addEventListener("click", optimizePlan);
+document.getElementById("clearAllBtn").addEventListener("click", () => {
+  selectedItems = [];
+  document.getElementById("searchInput").value = "";
+  renderSelectionList();
+  renderSelectedItems();
+  document.getElementById("comparisonCard").style.display = "none";
+  document.getElementById("resultsSection").style.display = "none";
+  optimizedPlan = [];
+  updateTotals(0, 0);
   focusSearchInput();
+});
+
+buildNormalizedEntities();
+renderSelectionList();
+renderSelectedItems();
+renderLabFilters();
+focusSearchInput();
+document.getElementById("comparisonCard").style.display = "none";
+document.getElementById("resultsSection").style.display = "none";
 </script>
 </body>
 </html>
