@@ -233,6 +233,33 @@ body {
   position: relative;
 }
 
+/* Container for tab panes - multiple sections preserved */
+.sections-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.section-pane {
+  width: 100%;
+  height: 100%;
+  display: none;
+  position: relative;
+  overflow: auto;
+}
+
+.section-pane.active-pane {
+  display: block;
+}
+
+.section-pane iframe {
+  width: 100%;
+  height: calc(100vh - 70px);
+  border: none;
+  background: white;
+  display: block;
+}
+
 /* Home Page Welcome Styling */
 .home-welcome {
   padding: 40px 30px;
@@ -377,15 +404,6 @@ body {
 .mobile-overlay.active {
   display: block;
 }
-
-/* Iframe seamless integration */
-.dynamic-view iframe {
-  width: 100%;
-  height: calc(100vh - 70px);
-  border: none;
-  background: white;
-  display: block;
-}
 </style>
 </head>
 <body>
@@ -409,8 +427,6 @@ body {
       <button class="nav-item" data-section="Pending Payment" data-file="pending_payment.html">💳 Pending Payment</button>
       <button class="nav-item" data-section="Data Sheets" data-file="data_sheets.html">📊 Data Sheets</button>
       <button class="nav-item" data-section="Data Analysis" data-file="data_analysis.html">📈 Data Analysis</button>
-      
-      <!-- THREE NEW SECTIONS ADDED -->
       <button class="nav-item" data-section="TRF Maker" data-file="trf_maker.html">📝 TRF Maker</button>
       <button class="nav-item" data-section="Expense Tracking" data-file="expense_tracking.html">💰 Expense Tracking</button>
       <button class="nav-item" data-section="Promotion Material" data-file="promotion_material.html">🎯 Promotion Material</button>
@@ -451,7 +467,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-/* ===== USERS DATABASE (ROLE SYSTEM) WITH NEW SECTIONS ADDED ===== */
+/* ===== USERS DATABASE (ROLE SYSTEM) ===== */
 const USERS = {
   "kaushalachrekar@gmail.com": {
     displayName: "Kaushal",
@@ -477,11 +493,6 @@ const USERS = {
     displayName: "Soni",
     sections: ["Home Page", "Add Entry", "Visit Schedule", "Price Comparison", "Test Reports", "Pending Payment", "Data Sheets", "Data Analysis", "TRF Maker", "Expense Tracking", "Promotion Material"],
     canEdit: true
-  },
-  "sumityelaye3@gmail.com": {
-    displayName: "SUMIT",
-    sections: ["Home Page", "Add Entry", "Visit Schedule", "Test Reports", "Pending Payment", "Expense Tracking"],
-    canEdit: true
   }
 };
 
@@ -498,105 +509,34 @@ const topbarLogo = document.getElementById("topbarLogo");
 
 let currentUserData = null;
 let currentUserEmail = null;
-let currentSection = null;
-let currentIframe = null;
+let currentActiveSection = null;
 
-/* ===== FIX LOGO WITH EXTERNAL IMAGE ===== */
+// Storage for all section panes (persistent iframes/content)
+let sectionPanes = new Map(); // key: sectionName, value: { element: div, iframe: iframe (optional), content: html (for home/demo) }
+let sectionsContainer = null;
+
+/* ===== FIX LOGO ===== */
 if (topbarLogo) {
   const logoUrl = "https://lh3.googleusercontent.com/d/1viGx6qVjAgEowFtmOJziX-NdhYArt4BM";
   const img = new Image();
   img.onload = () => { topbarLogo.src = logoUrl; };
-  img.onerror = () => { console.log("Using fallback logo - GH text remains"); };
+  img.onerror = () => { console.log("Using fallback logo"); };
   img.src = logoUrl;
 }
 
-/* ===== COMPLETE CLEANUP FUNCTION (DESTROYS IFRAME & RESETS VIEW) ===== */
-function completeCleanup() {
-  if (currentIframe) {
-    currentIframe.src = 'about:blank';
-    currentIframe.remove();
-    currentIframe = null;
-  }
+/* ===== CREATE SECTIONS CONTAINER ===== */
+function initSectionsContainer() {
+  if (sectionsContainer) return;
+  sectionsContainer = document.createElement('div');
+  sectionsContainer.className = 'sections-container';
   dynamicView.innerHTML = '';
-  const allScripts = document.querySelectorAll('script');
-  allScripts.forEach(script => {
-    if (script.id && script.id.startsWith('dynamic-script-')) script.remove();
-  });
-  const allStyles = document.querySelectorAll('style');
-  allStyles.forEach(style => {
-    if (style.id && style.id.startsWith('dynamic-style-')) style.remove();
-  });
+  dynamicView.appendChild(sectionsContainer);
 }
 
-/* ===== LOAD CONTENT USING IFRAME (FRESH INSTANCE EVERY TIME) ===== */
-function loadContentWithIframe(fileName, sectionName) {
-  completeCleanup();
-  const iframe = document.createElement('iframe');
-  iframe.style.width = '100%';
-  iframe.style.height = 'calc(100vh - 70px)';
-  iframe.style.border = 'none';
-  iframe.style.backgroundColor = 'white';
-  iframe.style.display = 'block';
-  const cacheBuster = `?nocache=${Date.now()}`;
-  iframe.src = fileName + cacheBuster;
-  currentIframe = iframe;
-  dynamicView.appendChild(iframe);
-  console.log(`✅ Loaded ${sectionName} via iframe: ${fileName}`);
-}
-
-/* ===== HOME PAGE INTERNAL DISPLAY ===== */
-function showHomePage() {
-  completeCleanup();
-  const homeHTML = `
-    <div class="home-welcome">
-      <div class="welcome-icon">🏥</div>
-      <h1>Welcome to Goodness Healthcare</h1>
-      <p>Your comprehensive healthcare management dashboard. Access patient records, visit schedules, financial data, TRF Maker, Expense Tracking, and analytics all in one place.</p>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-number">📋</div><div class="stat-label">Patient Records</div></div>
-        <div class="stat-card"><div class="stat-number">📅</div><div class="stat-label">Appointments</div></div>
-        <div class="stat-card"><div class="stat-number">💰</div><div class="stat-label">Revenue Tracked</div></div>
-        <div class="stat-card"><div class="stat-number">📊</div><div class="stat-label">Data Insights</div></div>
-        <div class="stat-card"><div class="stat-number">📝</div><div class="stat-label">TRF Maker</div></div>
-        <div class="stat-card"><div class="stat-number">💸</div><div class="stat-label">Expense Tracking</div></div>
-      </div>
-    </div>
-  `;
-  dynamicView.innerHTML = homeHTML;
-}
-
-/* ===== LOAD HTML FILE WITH FALLBACK ===== */
-async function loadHtmlFile(fileName, sectionName) {
-  if (sectionName === "Home Page") {
-    try {
-      const cacheBuster = `?t=${Date.now()}`;
-      const response = await fetch(fileName + cacheBuster);
-      if (response.ok) {
-        const htmlContent = await response.text();
-        if (htmlContent && htmlContent.trim().length > 0) {
-          loadContentWithIframe(fileName, sectionName);
-          return;
-        }
-      }
-    } catch (e) {}
-    showHomePage();
-    return;
-  }
-  
-  if (!fileName) {
-    showDemoContent(sectionName);
-    return;
-  }
-  loadContentWithIframe(fileName, sectionName);
-}
-
-/* ===== DEMO CONTENT FOR MISSING FILES (Enhanced for 3 new modules) ===== */
-function showDemoContent(sectionName) {
-  completeCleanup();
-  
-  // Specific rich demo for new sections to make them functional out-of-box
+/* ===== GENERATE DEMO CONTENT HTML (For missing files) ===== */
+function generateDemoContent(sectionName) {
   if (sectionName === "TRF Maker") {
-    const trfDemo = `
+    return `
       <div style="padding: 30px; max-width: 900px; margin: 0 auto;">
         <h2 style="color: #09637E; margin-bottom: 20px;">📝 TRF Maker (Test Requisition Form)</h2>
         <div style="background: #EBF4F6; border-radius: 24px; padding: 24px;">
@@ -604,24 +544,21 @@ function showDemoContent(sectionName) {
           <div style="background: white; border-radius: 16px; padding: 20px; margin-top: 16px;">
             <h3 style="color: #055060;">Quick TRF Preview</h3>
             <form style="margin-top: 20px;">
-              <label style="display: block; margin-bottom: 12px;">Patient Name: <input type="text" style="width: 100%; padding: 8px; border-radius: 12px; border: 1px solid #ccc;" placeholder="Enter name"></label>
+              <label style="display: block; margin-bottom: 12px;">Patient Name: <input type="text" style="width: 100%; padding: 8px; border-radius: 12px; border: 1px solid #ccc;"></label>
               <label style="display: block; margin-bottom: 12px;">Test Required: <select style="width: 100%; padding: 8px; border-radius: 12px;"><option>Complete Blood Count</option><option>Lipid Profile</option><option>Liver Function</option></select></label>
               <button style="background: #088395; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer;">Generate TRF</button>
             </form>
             <div class="instruction-box" style="margin-top: 24px;">
               <h4>📁 To fully activate TRF Maker:</h4>
-              <p>Create <strong>trf_maker.html</strong> in the same directory with your custom form and logic. The system loads it instantly.</p>
+              <p>Create <strong>trf_maker.html</strong> in the same directory.</p>
             </div>
           </div>
         </div>
       </div>
     `;
-    dynamicView.innerHTML = trfDemo;
-    return;
   }
-  
   if (sectionName === "Expense Tracking") {
-    const expenseDemo = `
+    return `
       <div style="padding: 30px; max-width: 900px; margin: 0 auto;">
         <h2 style="color: #09637E; margin-bottom: 20px;">💰 Expense Tracking Module</h2>
         <div style="background: #EBF4F6; border-radius: 24px; padding: 24px;">
@@ -634,142 +571,248 @@ function showDemoContent(sectionName) {
               <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px;">Staff Salaries</td><td style="padding: 8px;">45,000</td></tr>
               <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px;">Utilities</td><td style="padding: 8px;">8,200</td></tr>
             </table>
-            <div class="instruction-box" style="margin-top: 24px;">
-              <h4>📁 To fully activate Expense Tracking:</h4>
-              <p>Create <strong>expense_tracking.html</strong> with charts, forms, and database integration. This demo will be replaced automatically.</p>
-            </div>
           </div>
         </div>
       </div>
     `;
-    dynamicView.innerHTML = expenseDemo;
-    return;
   }
-  
   if (sectionName === "Promotion Material") {
-    const promoDemo = `
+    return `
       <div style="padding: 30px; max-width: 900px; margin: 0 auto;">
         <h2 style="color: #09637E; margin-bottom: 20px;">🎯 Promotion Material Hub</h2>
         <div style="background: #EBF4F6; border-radius: 24px; padding: 24px;">
           <p style="margin-bottom: 20px;">Manage healthcare campaigns, digital flyers, social media content, and patient awareness material.</p>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 20px; margin: 20px 0;">
-            <div style="background: white; border-radius: 16px; padding: 16px; text-align: center;"><span style="font-size: 32px;">🖼️</span><h4>Flyer Templates</h4><small>Health camp designs</small></div>
-            <div style="background: white; border-radius: 16px; padding: 16px; text-align: center;"><span style="font-size: 32px;">📱</span><h4>Social Posts</h4><small>Ready-to-use graphics</small></div>
-            <div style="background: white; border-radius: 16px; padding: 16px; text-align: center;"><span style="font-size: 32px;">📧</span><h4>Email Campaigns</h4><small>Patient newsletters</small></div>
-          </div>
-          <div class="instruction-box">
-            <h4>📁 To fully activate Promotion Material:</h4>
-            <p>Create <strong>promotion_material.html</strong> with media gallery, uploads, or links to resources.</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 20px;">
+            <div style="background: white; border-radius: 16px; padding: 16px; text-align: center;"><span style="font-size: 32px;">🖼️</span><h4>Flyer Templates</h4></div>
+            <div style="background: white; border-radius: 16px; padding: 16px; text-align: center;"><span style="font-size: 32px;">📱</span><h4>Social Posts</h4></div>
           </div>
         </div>
       </div>
     `;
-    dynamicView.innerHTML = promoDemo;
-    return;
   }
-  
-  const demoContent = `
+  if (sectionName === "Home Page") {
+    return `
+      <div class="home-welcome">
+        <div class="welcome-icon">🏥</div>
+        <h1>Welcome to Goodness Healthcare</h1>
+        <p>Your comprehensive healthcare management dashboard. Access patient records, visit schedules, financial data, TRF Maker, Expense Tracking, and analytics all in one place.</p>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number">📋</div><div class="stat-label">Patient Records</div></div>
+          <div class="stat-card"><div class="stat-number">📅</div><div class="stat-label">Appointments</div></div>
+          <div class="stat-card"><div class="stat-number">💰</div><div class="stat-label">Revenue Tracked</div></div>
+          <div class="stat-card"><div class="stat-number">📊</div><div class="stat-label">Data Insights</div></div>
+        </div>
+      </div>
+    `;
+  }
+  return `
     <div class="error-message">
       <div style="font-size: 48px; margin-bottom: 20px;">📄</div>
       <h3>${sectionName}</h3>
       <p style="color: #5a7c82; margin-bottom: 16px;">Content for ${sectionName} will appear here.</p>
       <div class="instruction-box">
         <h4 style="color: #09637E; margin-bottom: 12px;">📁 Setup Instructions:</h4>
-        <p>Create <strong>${getFileNameForSection(sectionName)}</strong> in the same folder as this dashboard.</p>
-        <p style="margin-top: 10px;">Add your HTML content to that file and it will load automatically.</p>
+        <p>Create <strong>${sectionName.toLowerCase().replace(/ /g, '_')}.html</strong> in the same folder.</p>
       </div>
     </div>
   `;
-  dynamicView.innerHTML = demoContent;
 }
 
-function getFileNameForSection(sectionName) {
-  const fileMap = {
-    "Home Page": "home.html",
-    "Add Entry": "add_entry.html",
-    "Visit Schedule": "visit_schedule.html",
-    "Price Comparison": "price_comparison.html",
-    "Test Reports": "test_reports.html",
-    "Pending Payment": "pending_payment.html",
-    "Data Sheets": "data_sheets.html",
-    "Data Analysis": "data_analysis.html",
-    "TRF Maker": "trf_maker.html",
-    "Expense Tracking": "expense_tracking.html",
-    "Promotion Material": "promotion_material.html"
-  };
-  return fileMap[sectionName] || `${sectionName.toLowerCase().replace(/ /g, '_')}.html`;
-}
-
-/* ===== NAVIGATION - FULL RELOAD OF CONTENT ===== */
-function navigateToSection(section, fileName) {
-  if (!currentUserData || !currentUserData.sections.includes(section)) {
-    alert("Access Denied: You don't have permission to view this section.");
-    return;
+/* ===== LOAD OR CREATE SECTION PANE (PERSISTENT) ===== */
+async function ensureSectionPane(sectionName, fileName) {
+  if (sectionPanes.has(sectionName)) {
+    return sectionPanes.get(sectionName);
   }
-  currentSection = section;
-  const allButtons = document.querySelectorAll(".nav-item");
-  allButtons.forEach(btn => {
-    const btnSection = btn.getAttribute("data-section");
-    if (btnSection === section) btn.classList.add("active");
-    else btn.classList.remove("active");
-  });
-  loadHtmlFile(fileName, section);
+  
+  // Create new pane
+  const paneDiv = document.createElement('div');
+  paneDiv.className = 'section-pane';
+  paneDiv.setAttribute('data-section', sectionName);
+  
+  // Show loading indicator inside pane
+  paneDiv.innerHTML = '<div class="loading-spinner"></div>';
+  sectionsContainer.appendChild(paneDiv);
+  
+  // For Home Page or if file fetch fails, use demo content
+  if (sectionName === "Home Page") {
+    try {
+      const cacheBuster = `?t=${Date.now()}`;
+      const response = await fetch(fileName + cacheBuster);
+      if (response.ok) {
+        const html = await response.text();
+        if (html && html.trim().length > 0) {
+          const iframe = document.createElement('iframe');
+          iframe.style.width = '100%';
+          iframe.style.height = 'calc(100vh - 70px)';
+          iframe.style.border = 'none';
+          iframe.src = fileName + `?persist=${Date.now()}`;
+          paneDiv.innerHTML = '';
+          paneDiv.appendChild(iframe);
+          sectionPanes.set(sectionName, { element: paneDiv, type: 'iframe', iframe: iframe });
+          return sectionPanes.get(sectionName);
+        }
+      }
+    } catch(e) {}
+    paneDiv.innerHTML = generateDemoContent(sectionName);
+    sectionPanes.set(sectionName, { element: paneDiv, type: 'html' });
+    return sectionPanes.get(sectionName);
+  }
+  
+  // For all other sections, try to load the HTML file via iframe
+  try {
+    const cacheBuster = `?t=${Date.now()}`;
+    const response = await fetch(fileName + cacheBuster);
+    if (response.ok) {
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = 'calc(100vh - 70px)';
+      iframe.style.border = 'none';
+      iframe.src = fileName + `?persist=${Date.now()}`;
+      paneDiv.innerHTML = '';
+      paneDiv.appendChild(iframe);
+      sectionPanes.set(sectionName, { element: paneDiv, type: 'iframe', iframe: iframe });
+    } else {
+      paneDiv.innerHTML = generateDemoContent(sectionName);
+      sectionPanes.set(sectionName, { element: paneDiv, type: 'html' });
+    }
+  } catch (error) {
+    paneDiv.innerHTML = generateDemoContent(sectionName);
+    sectionPanes.set(sectionName, { element: paneDiv, type: 'html' });
+  }
+  
+  return sectionPanes.get(sectionName);
 }
 
-/* ===== RESET DASHBOARD AFTER AUTH ===== */
-function resetAndInitDashboard(userData) {
-  currentSection = null;
-  completeCleanup();
-  dynamicView.innerHTML = '<div class="loading-spinner"></div>';
-  const allButtons = document.querySelectorAll(".nav-item");
-  allButtons.forEach(btn => btn.classList.remove("active"));
+/* ===== SWITCH TO SECTION (Preserves state) ===== */
+function switchToSection(sectionName) {
+  if (!currentUserData || !currentUserData.sections.includes(sectionName)) {
+    alert("Access Denied: You don't have permission to view this section.");
+    return false;
+  }
+  
+  // Hide all panes
+  const allPanes = document.querySelectorAll('.section-pane');
+  allPanes.forEach(pane => {
+    pane.classList.remove('active-pane');
+  });
+  
+  // Show target pane
+  const paneInfo = sectionPanes.get(sectionName);
+  if (paneInfo) {
+    paneInfo.element.classList.add('active-pane');
+    currentActiveSection = sectionName;
+    
+    // Update active button style
+    const allButtons = document.querySelectorAll(".nav-item");
+    allButtons.forEach(btn => {
+      const btnSection = btn.getAttribute("data-section");
+      if (btnSection === sectionName) btn.classList.add("active");
+      else btn.classList.remove("active");
+    });
+    return true;
+  }
+  return false;
+}
+
+/* ===== PRELOAD TEST REPORTS IN BACKGROUND ===== */
+async function preloadTestReports() {
+  const testReportsSection = "Test Reports";
+  const testReportsFile = "test_reports.html";
+  
+  if (currentUserData && currentUserData.sections.includes(testReportsSection)) {
+    console.log("🔄 Preloading Test Reports section in background...");
+    // Create pane quietly without switching
+    const paneInfo = await ensureSectionPane(testReportsSection, testReportsFile);
+    if (paneInfo) {
+      console.log("✅ Test Reports preloaded successfully");
+    }
+  }
+}
+
+/* ===== INITIALIZE ALL AUTHORIZED SECTIONS IN BACKGROUND (for faster switching) ===== */
+async function preloadAuthorizedSections() {
+  if (!currentUserData) return;
+  
+  const sectionsToPreload = currentUserData.sections.filter(s => s !== "Home Page");
+  // Preload first 3 sections for better performance, but Test Reports is priority already handled separately
+  for (const section of sectionsToPreload.slice(0, 3)) {
+    const fileMapLocal = {
+      "Add Entry": "add_entry.html",
+      "Visit Schedule": "visit_schedule.html",
+      "Price Comparison": "price_comparison.html",
+      "Test Reports": "test_reports.html",
+      "Pending Payment": "pending_payment.html",
+      "Data Sheets": "data_sheets.html",
+      "Data Analysis": "data_analysis.html",
+      "TRF Maker": "trf_maker.html",
+      "Expense Tracking": "expense_tracking.html",
+      "Promotion Material": "promotion_material.html"
+    };
+    const fileName = fileMapLocal[section] || `${section.toLowerCase().replace(/ /g, '_')}.html`;
+    if (section !== "Test Reports") { // Already preloaded separately
+      ensureSectionPane(section, fileName).catch(e => console.log(`Preload ${section} skipped`, e));
+    }
+  }
+}
+
+/* ===== RESET AND INIT DASHBOARD WITH PERSISTENT SECTIONS ===== */
+async function resetAndInitDashboard(userData) {
   currentUserData = userData;
   if (currentUserEmail) loginIdEl.innerText = currentUserEmail;
   userNameEl.innerText = userData.displayName;
-  setupSidebarFresh();
-}
-
-/* ===== REFRESH SIDEBAR WITH PERMISSIONS & EVENT HANDLERS ===== */
-function setupSidebarFresh() {
-  const buttons = Array.from(navMenu.querySelectorAll(".nav-item"));
-  let firstVisibleSection = null;
-  let firstVisibleFile = null;
   
-  buttons.forEach(btn => {
+  // Reset containers
+  initSectionsContainer();
+  sectionPanes.clear();
+  sectionsContainer.innerHTML = '';
+  
+  // Build all section panes based on user permissions
+  const sectionButtons = Array.from(navMenu.querySelectorAll(".nav-item"));
+  let firstVisibleSection = null;
+  
+  for (const btn of sectionButtons) {
     const section = btn.getAttribute("data-section");
     const file = btn.getAttribute("data-file");
-    const hasAccess = currentUserData && currentUserData.sections.includes(section);
+    const hasAccess = currentUserData.sections.includes(section);
+    
     if (hasAccess) {
+      if (!firstVisibleSection) firstVisibleSection = section;
       btn.style.display = "flex";
-      if (!firstVisibleSection) {
-        firstVisibleSection = section;
-        firstVisibleFile = file;
-      }
+      // Create pane but not yet visible (background create)
+      ensureSectionPane(section, file).catch(e => console.log(`Error creating pane for ${section}`, e));
+      
+      // Re-attach click event
       const newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
-      newBtn.addEventListener("click", (e) => {
+      newBtn.addEventListener("click", async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const sec = newBtn.getAttribute("data-section");
-        const fname = newBtn.getAttribute("data-file");
-        navigateToSection(sec, fname);
+        await switchToSection(section);
         if (window.innerWidth <= 768) closeSidebarMobile();
       });
     } else {
       btn.style.display = "none";
     }
-  });
-  
-  if (firstVisibleSection && firstVisibleFile) {
-    setTimeout(() => {
-      navigateToSection(firstVisibleSection, firstVisibleFile);
-    }, 100);
-  } else {
-    showHomePage();
   }
+  
+  // Preload Test Reports explicitly after panes creation starts
+  setTimeout(async () => {
+    await preloadTestReports();
+    await preloadAuthorizedSections();
+  }, 500);
+  
+  // Wait a bit for first pane creation then switch to Test Reports as default
+  setTimeout(async () => {
+    // Default to Test Reports if user has access, else first visible
+    let defaultSection = "Test Reports";
+    if (!currentUserData.sections.includes(defaultSection)) {
+      defaultSection = firstVisibleSection || "Home Page";
+    }
+    await switchToSection(defaultSection);
+  }, 800);
 }
 
-/* ===== MOBILE SIDEBAR CONTROLS ===== */
+/* ===== MOBILE SIDEBAR ===== */
 function closeSidebarMobile() {
   if (window.innerWidth <= 768) {
     sidebar.classList.remove("open");
@@ -785,7 +828,6 @@ function openSidebarMobile() {
   }
 }
 
-/* ===== MENU TOGGLE EVENT ===== */
 if (menuToggle) {
   const newToggle = menuToggle.cloneNode(true);
   menuToggle.parentNode.replaceChild(newToggle, menuToggle);
@@ -808,14 +850,13 @@ window.addEventListener("resize", () => {
 
 /* ===== AUTHENTICATION ===== */
 onAuthStateChanged(auth, (user) => {
-  console.log("Auth state:", user ? user.email : "No user");
   if (!user) {
     window.location.href = "login.html";
     return;
   }
   const userData = USERS[user.email];
   if (!userData) {
-    alert("Unauthorized Access: Your email is not registered.");
+    alert("Unauthorized Access");
     signOut(auth).then(() => { window.location.href = "login.html"; });
     return;
   }
@@ -823,39 +864,22 @@ onAuthStateChanged(auth, (user) => {
   resetAndInitDashboard(userData);
 });
 
-/* ===== LOGOUT WITH CLEANUP ===== */
+/* ===== LOGOUT ===== */
 if (logoutBtn) {
   const freshLogout = logoutBtn.cloneNode(true);
   logoutBtn.parentNode.replaceChild(freshLogout, logoutBtn);
   freshLogout.addEventListener("click", async (e) => {
     e.preventDefault();
-    completeCleanup();
-    currentUserData = null;
-    currentUserEmail = null;
-    currentSection = null;
-    currentIframe = null;
-    dynamicView.innerHTML = '<div class="loading-spinner"></div>';
-    try {
-      await signOut(auth);
-      window.location.href = "login.html";
-    } catch (error) {
-      window.location.href = "login.html";
-    }
+    await signOut(auth);
+    window.location.href = "login.html";
   });
 }
 
-// Clean any legacy conflicting IDs
-['dashboard', 'patients', 'reports', 'settings'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.remove();
-});
-
-// Prevent bfcache issues: reload if page restored from cache
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) window.location.reload();
 });
 
-console.log("✅ Goodness Healthcare Dashboard - Now includes TRF Maker, Expense Tracking, Promotion Material modules.");
+console.log("✅ Dashboard with PERSISTENT SECTIONS: Each section keeps its state when switching. Test Reports preloaded on startup.");
 </script>
 </body>
 </html>
