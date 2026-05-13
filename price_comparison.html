@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Goodness Healthcare | Lab Test Optimizer - Premium Edition</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Pathology Lab Optimizer | Medical Intelligence</title>
 
-<!-- Google Fonts: Rubik for headings, DM Sans for body -->
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Google Fonts: Rubik (Headings) + DM Sans (Body) -->
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Font Awesome 6 (Free Icons) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
 <style>
+  /* =========================================================
+     DESIGN SYSTEM: MEDICAL-GRADE | DEEP BLUE + TEAL
+     SINGLE COLUMN VERTICAL LAYOUT - NO GRID BETWEEN SECTIONS
+  ========================================================= */
+
   * {
     margin: 0;
     padding: 0;
@@ -19,1232 +24,1262 @@
   }
 
   body {
-    font-family: 'DM Sans', sans-serif;
-    background: #F0F4F8;
+    background: #0F3D5E;
+    font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: #1A2C3E;
     line-height: 1.5;
   }
 
-  /* Typography */
   h1, h2, h3, h4, .heading-font {
     font-family: 'Rubik', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
-  /* Top Navigation - Deep Navy Blue */
-  .top-nav {
-    background: #0F3D5E;
-    padding: 20px 32px;
-    margin-bottom: 32px;
-    box-shadow: 0 4px 20px rgba(15, 61, 94, 0.12);
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .page-title h1 {
-    font-size: 1.8rem;
+  .header h1 {
+    font-size: 32px;
     font-weight: 700;
-    color: white;
+    background: linear-gradient(135deg, #FFFFFF 0%, #D4F1F4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
     letter-spacing: -0.3px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
   }
 
-  .page-title h1 i {
-    background: rgba(30, 202, 211, 0.2);
-    padding: 10px;
-    border-radius: 14px;
-    font-size: 1.4rem;
-    color: #1ECAD3;
+  .header p {
+    color: rgba(255,255,255,0.75);
+    font-size: 15px;
+    font-weight: 450;
   }
 
-  .page-title p {
-    color: rgba(255,255,255,0.8);
-    font-size: 0.9rem;
-    margin-top: 8px;
-    font-weight: 400;
-  }
-
-  /* Content container */
-  .content-container {
+  .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 24px 28px;
   }
 
-  /* Card styling */
-  .card {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
-    padding: 28px 32px;
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .header h1 { font-size: 26px; }
+  }
+
+  .app-top {
     margin-bottom: 28px;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(30, 202, 211, 0.1);
+  }
+
+  /* VERTICAL STACK - NO GRID */
+  .vertical-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    padding: 24px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
   }
 
   .card:hover {
-    box-shadow: 0 12px 40px rgba(15, 61, 94, 0.08);
-    transform: translateY(-2px);
+    box-shadow: 0 20px 32px -12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(30, 202, 211, 0.2);
   }
 
-  .card h3 {
-    font-size: 1.4rem;
+  .section-title {
+    font-size: 18px;
     font-weight: 600;
+    font-family: 'Rubik', sans-serif;
     color: #0F3D5E;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #1ECAD3;
+    gap: 10px;
+    letter-spacing: -0.2px;
   }
 
-  .card h3 i {
+  .section-title i {
     color: #1ECAD3;
-    font-size: 1.3rem;
+    font-size: 20px;
   }
 
-  /* Input fields */
-  .input-group {
-    margin-bottom: 24px;
-  }
-
-  .input-label {
-    font-weight: 600;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #0F3D5E;
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  .search-input {
+  .search {
     width: 100%;
     padding: 14px 18px;
-    font-size: 1rem;
+    border-radius: 16px;
+    border: 1.5px solid #E5EAF0;
     font-family: 'DM Sans', sans-serif;
-    border: 1.5px solid #E2E8F0;
-    border-radius: 14px;
-    background: white;
-    transition: all 0.2s ease;
+    font-size: 15px;
+    transition: all 0.2s;
+    background: #FFFFFF;
     outline: none;
-    color: #1A2C3E;
   }
 
-  .search-input:focus {
+  .search:focus {
     border-color: #1ECAD3;
     box-shadow: 0 0 0 4px rgba(30, 202, 211, 0.15);
   }
 
-  /* Suggestions dropdown */
-  .suggestions {
-    background: white;
-    border-radius: 16px;
-    margin-top: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    max-height: 280px;
-    overflow-y: auto;
-    z-index: 100;
-    position: relative;
-    border: 1px solid #E2E8F0;
-  }
-
-  .suggestions div {
-    padding: 12px 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-left: 3px solid transparent;
-  }
-
-  .suggestions div:hover {
-    background: #F0F7FA;
-    border-left-color: #1ECAD3;
-  }
-
-  .suggestion-combo {
-    background: #F9FDFF;
-  }
-  .suggestion-combo i { color: #1ECAD3; }
-  .combo-badge {
-    background: rgba(30, 202, 211, 0.15);
-    color: #0F3D5E;
-    font-size: 0.7rem;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin-left: 8px;
-    font-weight: 600;
-  }
-
-  /* Selected items chips */
-  .selected-tests {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin: 20px 0 16px;
-    min-height: 60px;
-  }
-
-  .selected-tests span {
-    background: linear-gradient(135deg, #F0F7FA 0%, #E8F1F5 100%);
-    color: #0F3D5E;
-    padding: 8px 18px;
-    border-radius: 40px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid rgba(30, 202, 211, 0.3);
-  }
-
-  .selected-tests span:hover {
-    background: white;
-    border-color: #1ECAD3;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(30, 202, 211, 0.2);
-  }
-
-  .selected-combo {
-    background: linear-gradient(135deg, #E0F5F7 0%, #D0EEF0 100%) !important;
-    border-left: 3px solid #1ECAD3 !important;
-  }
-
-  /* Buttons */
-  .btn-primary {
-    background: linear-gradient(135deg, #1ECAD3 0%, #16B5BD 100%);
+  .btn {
     border: none;
-    color: white;
-    padding: 10px 24px;
-    border-radius: 40px;
+    font-family: 'DM Sans', sans-serif;
     font-weight: 600;
-    font-size: 0.85rem;
+    padding: 12px 20px;
+    border-radius: 14px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    font-size: 14px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    box-shadow: 0 2px 8px rgba(30, 202, 211, 0.3);
+  }
+
+  .btn-primary {
+    background: linear-gradient(105deg, #1ECAD3 0%, #12A7B0 100%);
+    color: white;
+    box-shadow: 0 2px 6px rgba(30, 202, 211, 0.2);
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(30, 202, 211, 0.4);
+    box-shadow: 0 12px 20px -8px rgba(30, 202, 211, 0.4);
     filter: brightness(1.02);
   }
 
   .btn-secondary {
-    background: transparent;
-    border: 1.5px solid #1ECAD3;
-    color: #0F3D5E;
-    padding: 10px 20px;
-    border-radius: 40px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+    background: #F0F4F9;
+    color: #1A4A6F;
+    border: 1px solid #E2E8F0;
   }
 
   .btn-secondary:hover {
-    background: rgba(30, 202, 211, 0.1);
+    background: #E6EDF5;
     transform: translateY(-1px);
   }
 
-  /* Comparison section */
-  .comparison-section {
-    background: white;
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 28px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(30, 202, 211, 0.15);
-    transition: all 0.3s ease;
+  .btn-danger {
+    background: #FEF3F2;
+    color: #C2410C;
+    border: 1px solid #FFD9D4;
   }
 
-  .comparison-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #0F3D5E;
+  .btn-danger:hover {
+    background: #FFE4E0;
+    transform: translateY(-1px);
+  }
+
+  .btn-lab-copy {
+    background: #EFF9FC;
+    border: 1px solid #CBF0F2;
+    color: #0F5C70;
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 40px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .btn-lab-copy:hover {
+    background: #1ECAD3;
+    color: white;
+    border-color: #1ECAD3;
+    transform: translateY(-1px);
+  }
+
+  .checkbox-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .item-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+
+  .checkbox-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #1ECAD3;
-    flex-wrap: wrap;
-  }
-
-  /* Table styling */
-  .comparison-table-wrapper {
-    overflow-x: auto;
-  }
-
-  .comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-    min-width: 900px;
-  }
-
-  .comparison-table th {
-    text-align: left;
-    padding: 14px 12px;
-    background: #F0F7FA;
-    color: #0F3D5E;
-    font-weight: 700;
-    font-family: 'Rubik', sans-serif;
-    border-bottom: 2px solid #1ECAD3;
-  }
-
-  .comparison-table td {
-    padding: 16px 12px;
-    border-bottom: 1px solid #E8EEF3;
-    vertical-align: top;
-    transition: background 0.2s;
-  }
-
-  .comparison-table tr:hover td {
-    background: #F9FDFF;
-  }
-
-  .lab-name {
-    font-weight: 800;
-    color: #0F3D5E;
-    background: #F8FCFE;
-  }
-
-  .test-item {
-    background: #F0F7FA;
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 30px;
-    margin: 4px 6px 4px 0;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
-
-  .price-b2b {
-    font-weight: 800;
-    color: #1ECAD3;
-    font-size: 1rem;
-    background: rgba(30, 202, 211, 0.12);
-    padding: 2px 8px;
-    border-radius: 20px;
-    display: inline-block;
-  }
-
-  .b2p-highlight {
-    font-weight: 800;
-    color: #1ECAD3;
-    background: rgba(30, 202, 211, 0.12);
-    display: inline-block;
-    padding: 2px 6px;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #FFFFFF;
+    border: 1px solid #EDF2F7;
     border-radius: 16px;
-    font-size: 0.85rem;
-  }
-
-  .info-icon {
-    margin-left: 8px;
-    color: #1ECAD3;
+    transition: all 0.2s;
     cursor: pointer;
-    transition: opacity 0.2s;
   }
-  .info-icon:hover { opacity: 0.7; }
 
-  /* Lab block in results */
-  .lab-block {
+  .checkbox-item:hover {
+    border-color: #1ECAD3;
     background: #F9FDFF;
-    border-left: 4px solid #1ECAD3;
-    padding: 16px 18px;
-    margin-bottom: 14px;
-    border-radius: 16px;
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+    transform: translateX(2px);
   }
-  .lab-block:hover {
-    background: white;
-    box-shadow: 0 4px 12px rgba(15, 61, 94, 0.08);
-    transform: translateX(4px);
+
+  .checkbox-item input {
+    width: 20px;
+    height: 20px;
+    accent-color: #1ECAD3;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .selected-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .chip {
+    background: #EFF9FC;
+    color: #0F5C70;
+    border-radius: 40px;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #CBF0F2;
+    transition: all 0.1s;
+  }
+
+  .chip button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #D97706;
+    display: flex;
+    align-items: center;
+    transition: transform 0.1s;
+  }
+
+  .chip button:hover {
+    transform: scale(1.15);
+    color: #B91C1C;
+  }
+
+  .lab-block {
+    background: #FFFFFF;
+    border-radius: 20px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    border: 1px solid #EFF3F8;
+    transition: all 0.2s;
   }
 
   .lab-header {
+    padding: 20px 24px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #ECF3F9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .lab-header:hover {
+    background: #FAFDFF;
+  }
+
+  .lab-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0F3D5E;
+    margin: 0;
+  }
+
+  .accordion-icon {
+    color: #1ECAD3;
+    font-size: 22px;
+  }
+
+  .accordion-section {
+    border-bottom: 1px solid #F0F4FA;
+  }
+
+  .section-header {
+    padding: 16px 24px;
+    background: #FBFDFF;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 16px;
+    color: #1D4E6E;
+    transition: background 0.2s;
+  }
+
+  .section-header:hover {
+    background: #F2F8FC;
+  }
+
+  .section-arrow {
+    font-size: 14px;
+    transition: transform 0.2s;
+    color: #1ECAD3;
+  }
+
+  .section-content {
+    padding: 20px 24px;
+    background: #FFFFFF;
+    display: none;
+    border-top: 1px solid #F0F4FA;
+    animation: fadeSlide 0.25s ease;
+  }
+
+  .section-content.open {
+    display: block;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .entity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  .entity-card {
+    background: #FFFFFF;
+    border-radius: 18px;
+    padding: 18px;
+    border: 1px solid #E9EFF6;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .entity-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 18px -12px rgba(0, 0, 0, 0.1);
+    border-color: #B9E6EA;
+  }
+
+  .badge {
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .badge.test { background: #E2F0FA; color: #186C8C; }
+  .badge.combo { background: #E3F1FD; color: #2C6B9E; }
+  .badge.package { background: #E0F5F0; color: #1C6E5C; }
+
+  .price-block { margin-top: 16px; }
+  .b2b-highlight { background: #F2FCF9; border: 1px solid #C8F0E8; border-radius: 16px; padding: 12px; margin-top: 8px; }
+  .b2b-price { font-size: 24px; font-weight: 800; color: #1B8B7A; font-family: 'Rubik', monospace; }
+
+  .info-btn {
+    background: #F5F9FE;
+    border: none;
+    width: 100%;
+    padding: 10px;
+    border-radius: 14px;
+    font-weight: 600;
+    margin-top: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #22668D;
+  }
+  .info-btn:hover { background: #E5F0FA; color: #1ECAD3; }
+
+  .optimized-item {
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid #EDF2F9;
+    margin-bottom: 12px;
+    transition: 0.15s;
+  }
+
+  /* Results row - two cards side by side only for Optimized Plan and Financial Summary */
+  .results-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 28px;
+    margin-top: 0;
+  }
+
+  .summary-box {
+    background: #F9FCFE;
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid #E9F0F5;
+  }
+  .big { font-size: 32px; font-weight: 800; font-family: 'Rubik', monospace; color: #0F3D5E; }
+  .savings { color: #1A8F7A; }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 61, 94, 0.75);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: white;
+    max-width: 650px;
+    width: 90%;
+    border-radius: 32px;
+    padding: 28px;
+    animation: fadeSlide 0.2s;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: #1A4E6E;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 60px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    display: none;
+    z-index: 9999;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  }
+  .toast.show { display: block; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #EFF3F8; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb { background: #B0CCDA; border-radius: 8px; }
+
+  .lab-grouping-section {
+    margin-top: 24px;
+    border-top: 2px solid #ECF3F9;
+    padding-top: 20px;
+  }
+  .lab-group-card {
+    background: #FBFDFF;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 20px;
+    border: 1px solid #E9F0F5;
+    transition: 0.1s;
+  }
+  .lab-group-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     margin-bottom: 12px;
   }
-
-  .highlight {
-    background: linear-gradient(135deg, #F0F7FA, #E8F1F5);
-    padding: 16px 20px;
-    border-radius: 16px;
-    margin-top: 20px;
+  .lab-group-title {
+    font-size: 18px;
     font-weight: 700;
     color: #0F3D5E;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    font-family: 'Rubik', sans-serif;
+  }
+  .lab-items-list {
+    padding-left: 20px;
+    margin: 12px 0 8px;
+  }
+  .lab-items-list li {
+    margin: 6px 0;
+    color: #2C4C6E;
   }
 
-  /* Lab checkboxes */
-  .lab-checkboxes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 8px;
-  }
-  .lab-checkboxes label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    color: #0F3D5E;
-    cursor: pointer;
-    padding: 6px 12px;
-    background: #F5F7FA;
-    border-radius: 40px;
-    transition: all 0.2s;
-  }
-  .lab-checkboxes label:hover {
-    background: #E8F1F5;
-  }
-  .lab-checkboxes input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: #1ECAD3;
-  }
-
-  /* Modal */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(15, 61, 94, 0.6);
-    backdrop-filter: blur(4px);
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  .modal-content {
-    background: white;
-    border-radius: 24px;
-    padding: 28px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 70vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-    animation: fadeInUp 0.2s ease;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #8AA0B5;
-  }
-
-  /* Responsive */
   @media (max-width: 768px) {
-    .top-nav { padding: 16px 20px; }
-    .page-title h1 { font-size: 1.4rem; }
-    .content-container { padding: 0 16px; }
-    .card { padding: 20px; }
-    .card h3 { font-size: 1.2rem; }
-    .comparison-table th, 
-    .comparison-table td { padding: 10px 8px; font-size: 0.75rem; }
+    .card { padding: 18px; }
+    .section-header, .lab-header { padding: 14px 18px; }
+    .results-two-columns {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
   }
 
-  /* Micro-animations */
-  .fade-in {
-    animation: fadeIn 0.3s ease;
+  .search-actions {
+    display: flex;
+    gap: 12px;
+    margin: 16px 0 20px;
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 480px) {
+    .search-actions {
+      flex-direction: column;
+    }
   }
 </style>
 </head>
 <body>
-<div class="top-nav">
-  <div class="page-title">
-    <h1><i class="fas fa-chart-line"></i> Test Price Optimizer</h1>
-    <p>Intelligent lab test combination & cost optimization engine</p>
-  </div>
-</div>
 
-<div class="content-container">
-  <div class="card fade-in">
-    <h3><i class="fas fa-search"></i> Select Tests & Combos</h3>
-    <div class="input-group">
-      <label class="input-label">Search for tests or combos</label>
-      <input type="text" id="search" class="search-input" placeholder="e.g., CBC, Sugar, Diabetic Combo, Vital Check...">
-      <div class="suggestions" id="suggestions"></div>
+<div class="container">
+  <div class="app-top header">
+    <h1><i class="fas fa-microscope" style="color:#1ECAD3; margin-right: 12px;"></i> Test Price Comparison</h1>
+  </div>
+
+  <!-- VERTICAL STACK - NO GRID BETWEEN SECTIONS -->
+  <div class="vertical-stack">
+    
+    <!-- Section 1: Select Diagnostics -->
+    <div class="card">
+      <div class="section-title"><i class="fas fa-flask"></i> Select Tests/Combos/Packages</div>
+      <input type="text" id="searchInput" class="search" placeholder="Search tests, combos, packages..." autocomplete="off" />
+      <div class="search-actions">
+        <button class="btn btn-primary" id="optimizeBtn" style="flex:1;"><i class="fas fa-chart-line"></i> Optimize Plannig</button>
+        <button class="btn btn-danger" id="clearAllBtn" style="flex:1;"><i class="fas fa-eraser"></i> Clear All</button>
+      </div>
+      <div id="selectionList" class="item-list checkbox-grid"></div>
+      <div id="selectedItemsContainer" class="selected-items"></div>
     </div>
-    <div class="selected-tests" id="selectedTests"></div>
-    <button class="btn-secondary" id="clearAllBtn"><i class="fas fa-trash-alt"></i> Clear All Selections</button>
-  </div>
 
-  <div class="card fade-in">
-    <h3><i class="fas fa-check-square"></i> Labs Selection</h3>
-    <div id="labCheckboxes" class="lab-checkboxes"></div>
-  </div>
-
-  <div id="comparisonSection" class="comparison-section fade-in" style="display: none;">
-    <div class="comparison-title">
-      <i class="fas fa-chart-simple"></i> <span>Available Options Comparison</span>
-      <button id="globalCopyBtn" class="btn-secondary" style="margin-left:auto; padding:6px 16px;"><i class="fas fa-copy"></i> Copy All Selected</button>
+    <!-- Section 2: Lab Filters -->
+    <div class="card">
+      <div class="section-title"><i class="fas fa-microscope"></i> Lab Filters</div>
+      <div id="labFilters" class="checkbox-grid"></div>
     </div>
-    <div class="comparison-table-wrapper"><div id="comparisonTable"></div></div>
-  </div>
 
-  <div class="card fade-in">
-    <h3><i class="fas fa-chart-line"></i> Optimized Plan</h3>
-    <div id="result"></div>
-  </div>
-</div>
+    <!-- Section 3: Comparison View -->
+    <div class="card">
+      <div class="section-title"><i class="fas fa-chart-simple"></i> Comparison View</div>
+      <div id="comparisonView"></div>
+    </div>
 
-<div id="infoModal" class="modal"><div class="modal-content"><h3 id="modalTitle" style="color:#0F3D5E;"></h3><div id="modalBody" style="margin-top:16px;"></div><button class="btn-primary" style="margin-top:20px;" onclick="closeModal()">Close</button></div></div>
+    <!-- Section 4: Optimized Plan + Financial Summary (side by side only these two) -->
+    <div class="results-two-columns">
+      <div class="card" style="margin:0; padding:24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 8px;">
+          <div class="section-title" style="margin-bottom: 0;"><i class="fas fa-chart-pie"></i> Optimized Plan</div>
+          <button class="btn btn-secondary" id="copyAllBtn" style="padding: 8px 18px;"><i class="fas fa-copy"></i> Copy All Labs</button>
+        </div>
+        <div id="optimizedResults" style="margin-top: 16px;"></div>
+      </div>
 
-<script>
-// ========================= DATA STRUCTURE =========================
-const labsData = 
-[
-  {
-    name: "Dr. Ajay Shah Laboratory",
-    tests: [{ name: "CBC", mrp: 280, b2b: 80 },
-{ name: "Blood Group", mrp: 170, b2b: 90 },
-{ name: "ESR", mrp: 140, b2b: 60 },
-{ name: "FBS", mrp: 80, b2b: 30 },
-{ name: "PP", mrp: 80, b2b: 30 },
-{ name: "RBS", mrp: 80, b2b: 30 },
-{ name: "Fasting Insuline", mrp: 800, b2b: 350 },
-{ name: "HbA1C", mrp: 500, b2b: 130 },
-{ name: "Bilirubin-Total", mrp: 180, b2b: 108 },
-{ name: "Bilirubin-Direct", mrp: 160, b2b: 96 },
-{ name: "SGPT", mrp: 180, b2b: 40 },
-{ name: "SGOT", mrp: 180, b2b: 40 },
-{ name: "GGT", mrp: 140, b2b: 30 },
-{ name: "Creatinine", mrp: 180, b2b: 50 },
-{ name: "Urea", mrp: 180, b2b: 108 },
-{ name: "BUN", mrp: 180, b2b: 108 },
-{ name: "Uric Acid", mrp: 180, b2b: 50 },
-{ name: "Calcium", mrp: 180, b2b: 108 },
-{ name: "Lipid Profile", mrp: 550, b2b: 185 },
-{ name: "Total Cholestrol", mrp: 180, b2b: 108 },
-{ name: "HDL", mrp: 200, b2b: 120 },
-{ name: "LDL", mrp: 370, b2b: 222 },
-{ name: "LDH", mrp: 500, b2b: 150 },
-{ name: "Sodium", mrp: 170, b2b: 102 },
-{ name: "Chlorides", mrp: 150, b2b: 90 },
-{ name: "Phosphorous", mrp: 180, b2b: 108 },
-{ name: "Potassium", mrp: 170, b2b: 102 },
-{ name: "Iron Study", mrp: 700, b2b: 300 },
-{ name: "Vit D3", mrp: 1400, b2b: 250 },
-{ name: "Vit B12", mrp: 850, b2b: 250 },
-{ name: "TSH", mrp: 330, b2b: 50 },
-{ name: "CRP", mrp: 450, b2b: 150 },
-{ name: "HSCRP", mrp: 850, b2b: 350 },
-{ name: "CPK-MB", mrp: 700, b2b: 420 },
-{ name: "CPK-Total", mrp: 500, b2b: 300 },
-{ name: "Trop-I", mrp: 1000, b2b: 750 },
-{ name: "D-Dimer", mrp: 1200, b2b: 500 },
-{ name: "PT INR", mrp: 300, b2b: 120 },
-{ name: "ApTT", mrp: 550, b2b: 330 },
-{ name: "HIV", mrp: 500, b2b: 350 },
-{ name: "HCV", mrp: 750, b2b: 525 },
-{ name: "HBsAg", mrp: 1400, b2b: 1120 },
-{ name: "VDRL", mrp: 300, b2b: 180 },
-{ name: "Urine Culture", mrp: 950, b2b: 400 },
-{ name: "Urine Routine", mrp: 150, b2b: 60 },
-{ name: "RA Factor", mrp: 450, b2b: 270 },
-{ name: "MP", mrp: 120, b2b: 72 },
-{ name: "Widal", mrp: 250, b2b: 150 },
-{ name: "Dengue NSI", mrp: 950, b2b: 300 },
-{ name: "Dengue IGG", mrp: 800, b2b: 300 },
-{ name: "Dengue IGM", mrp: 800, b2b: 350 },
-{ name: "MP-Antigen", mrp: 450, b2b: 315 },
-{ name: "Beta HCG", mrp: 800, b2b: 200 },
-{ name: "Homocysten", mrp: 1350, b2b: 500 },
-{ name: "CA125 (Female)", mrp: 1200, b2b: 500 },
-{ name: "PSA (Male)", mrp: 850, b2b: 350 },
-{ name: "IGE", mrp: 900, b2b: 400 },
-{ name: "Trop-T", mrp: 1500, b2b: 1050 },
-{ name: "Anti CCP", mrp: 1450, b2b: 650 },
-{ name: "ANA", mrp: 950, b2b: 500 },
-{ name: "Total Protien", mrp: 250, b2b: 80 },
-{ name: "Covid Antibody", mrp: 1000, b2b: 500 },
-{ name: "FNAC", mrp: 1500, b2b: 1050 },
-{ name: "PP Insuline", mrp: 800, b2b: 560 },
-{ name: "CEA", mrp: 800, b2b: 400 },
-{ name: "AFPL", mrp: 900, b2b: 450 },
-{ name: "Hb Electrophoresis", mrp: 800, b2b: 450 },
-{ name: "FT3", mrp: 260, b2b: 80 },
-{ name: "FT4", mrp: 260, b2b: 80 },
-{ name: "Urine Protein Creatinine Ratio", mrp: 400, b2b: 240 },
-{ name: "Protein with A/G Ratio", mrp: 250, b2b: 80 },
-{ name: "Lypase", mrp: 700, b2b: 300 },
-{ name: "Estradiol", mrp: 750, b2b: 300 },
-{ name: "PUS Culture (Aerobic)", mrp: 950, b2b: 400 },
-{ name: "FT3  FT4", mrp: 520, b2b: 160 },
-{ name: "Fecal Calprotectin", mrp: 2800, b2b: 2240 },
-{ name: "Blood Culture 1 SE", mrp: 1500, b2b: 800 },
-{ name: "NT-Pro BNP", mrp: 2500, b2b: 1100 },
-{ name: "Total TFT", mrp: 550, b2b: 110 },
-{ name: "HBS Antigen", mrp: 500, b2b: 350 },
-{ name: "Mantoux Test", mrp: 150, b2b: 135 },
-{ name: "Reticulate Count", mrp: 350, b2b: 210 },
-{ name: "Direct Coombs Test", mrp: 500, b2b: 150 },
-{ name: "Microalbuminuria", mrp: 580, b2b: 250 },
-{ name: "Total Testosteron", mrp: 750, b2b: 350 },
-{ name: "Free Testosteron", mrp: 1550, b2b: 750 },
-{ name: "Protein C", mrp: 4500, b2b: 4050 },
-{ name: "Protein S", mrp: 4500, b2b: 4050 },
-{ name: "Lupus Anticoagulant", mrp: 1800, b2b: 800 },
-{ name: "Fibrinogen Level", mrp: 800, b2b: 400 },
-{ name: "Anti dsDNA NCX", mrp: 1650, b2b: 1000 },
-{ name: "Apolipoprotein A-1 & B", mrp: 1100, b2b: 770 },
-{ name: "Folic Acid Level", mrp: 1100, b2b: 500 },
-{ name: "Allergy Comprehensive", mrp: 5500, b2b: 3850 },
-{ name: "Maleria Antigen", mrp: 450, b2b: 315 },
-{ name: "Urine Glucose (Fasting)", mrp: 50, b2b: 30 },
-{ name: "Factor V", mrp: 5500, b2b: 4400 },
-{ name: "Ferritine", mrp: 900, b2b: 400 },
-{ name: "HAV", mrp: 1200, b2b: 550 },
-{ name: "HEV", mrp: 1500, b2b: 600 },
-{ name: "RA Test", mrp: 450, b2b: 270 },
-{ name: "Iron Profile with Ferritine", mrp: null, b2b: null },
-{ name: "Allergy Drug Test", mrp: 7500, b2b: 5250 },
-{ name: "IGA TTG", mrp: 750, b2b: 500 },
-{ name: "Peripheral Smear", mrp: 100, b2b: 60 },
-{ name: "PTT", mrp: 550, b2b: 330 },
-{ name: "Cortisol 8 AM", mrp: 800, b2b: 350 },
-{ name: "H. Pylori Stool", mrp: 1200, b2b: 960 },
-{ name: "Chikungunya IgG", mrp: 900, b2b: 810 },
-{ name: "FBA", mrp: null, b2b: null },
-{ name: "Protein Electrophoresis", mrp: 1100, b2b: 500 },
-{ name: "Sputum TB Culture & ABS", mrp: 150, b2b: 90 },
-{ name: "Complement C3 & C4", mrp: null, b2b: null },
-{ name: "DHEAS", mrp: 1100, b2b: 600 },
-{ name: "DHEA", mrp: 3000, b2b: 2100 },
-{ name: "Torch Complex", mrp: 2800, b2b: 1200 },
-{ name: "Zinc Level", mrp: 2200, b2b: 1980 },
-{ name: "Magnesium", mrp: 400, b2b: 280 },
-{ name: "Estrogen", mrp: null, b2b: null },
-{ name: "C-Peptide Random", mrp: 1150, b2b: 550 },
-{ name: "B2 Glycoprotein 1 IgG", mrp: 1200, b2b: 500 },
-{ name: "Karyotyping - Husband", mrp: 4000, b2b: 2800 },
-{ name: "Karyotyping - Wife", mrp: 4000, b2b: 2800 },
-{ name: "Influenza Screening for ABF", mrp: null, b2b: null },
-{ name: "PSA Free & Total", mrp: 850, b2b: 350 },
-{ name: "LH", mrp: 520, b2b: 180 },
-{ name: "FSH", mrp: 520, b2b: 180 },
-{ name: "Semen Analysis", mrp: 1100, b2b: 770 },
-{ name: "Alkaline Phosphatase", mrp: null, b2b: null },
-{ name: "Globulin", mrp: null, b2b: null },
-{ name: "BUN / Creatinine Ratio", mrp: null, b2b: null },
-{ name: "Urea/G Ratio", mrp: null, b2b: null },
-{ name: "T3", mrp: null, b2b: null },
-{ name: "T4", mrp: null, b2b: null },
-{ name: "Stool  Routine", mrp: 150, b2b: 90 },
-{ name: "Albumin", mrp: 400, b2b: 320 },
-{ name: "Billirubin Indirect", mrp: null, b2b: null },
-{ name: "Bicarbonate", mrp: null, b2b: null }],
-combos: [
-      { name: "LFT", tests: ["Bilirubin-Total", "Bilirubin-Direct", "Billirubin Indirect", "SGPT", "SGOT", "Alkaline Phosphatase", "GGT", "Total Protien", "Albumin", "Globulin", "Protein with A/G Ratio"], mrp: 850, b2b: 220 },
-      { name: "RFT", tests: ["BUN", "Urea", "Uric Acid", "Calcium", "Phosphorous", "Sodium", "Potassium", "Chlorides", "Bicarbonate", "Creatinine"], mrp: 1100, b2b: 990 },
-      { name: "Electrolytes", tests: ["Sodium", "Potassium", "Chlorides", "Bicarbonate"], mrp: 450, b2b: 130 },
-      { name: "Triple H", tests: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
-      { name: "Total TFT", tests: ["T3", "T4", "TSH"], mrp: 550, b2b: 110 },
-      { name: "Free TFT", tests: ["FT3", "FT4", "TSH"], mrp: 650, b2b: 220 }
-    ],
-    packages: [
-      { name: "GOODNESS E", tests: ["FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Uric Acid"], mrp: 1000, b2b: 450 },
-      { name: "GOODNESS G", tests: ["CBC", "FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Total TFT", "Uric Acid"], mrp: 1500, b2b: 550 },
-      { name: "GOODNESS BB FEMALE", tests: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)", "Iron Study"], mrp: 3500, b2b: 1500 },
-      { name: "GOODNESS BA MALE", tests: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "Iron Study", "PSA (Male)"], mrp: 3500, b2b: 1400 },
-      { name: "GOODNESS C", tests: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
-      { name: "GOODNES F", tests: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
-      { name: "GODNESS 3H ", tests: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
-      { name: "FEVER PROFILE", tests: ["CBC", "ESR", "SGPT", "SGOT", "CRP", "Dengue NSI", "Maleria Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 }
-    ]
-  },
-  {
-    name: "Dr. Jariwala Laboratory",
-    tests: [{ name: "CBC", mrp: 280, b2b: 168 }, { name: "Blood Group", mrp: 150, b2b: 90 }, { name: "ESR", mrp: 90, b2b: 54 }, { name: "FBS", mrp: 70, b2b: 46 }, { name: "PP", mrp: 70, b2b: 46 }, { name: "RBS", mrp: 70, b2b: 46 }, { name: "Fasting Insuline", mrp: 715, b2b: 501 }, { name: "HbA1C", mrp: 520, b2b: 338 }, { name: "Bilirubin-Total", mrp: 200, b2b: 120 }, { name: "Bilirubin-Direct", mrp: 200, b2b: 120 }, { name: "SGPT", mrp: 180, b2b: 108 }, { name: "SGOT", mrp: 180, b2b: 108 }, { name: "GGT", mrp: 200, b2b: 126 }, { name: "Creatinine", mrp: 180, b2b: 108 }, { name: "Urea", mrp: 180, b2b: 108 }, { name: "BUN", mrp: null, b2b: null }, { name: "Uric Acid", mrp: 180, b2b: 108 }, { name: "Calcium", mrp: 275, b2b: 176 }, { name: "Lipid Profile", mrp: 550, b2b: 352 }, { name: "Total Cholestrol", mrp: 180, b2b: 108 }, { name: "HDL", mrp: 180, b2b: 106 }, { name: "LDL", mrp: 320, b2b: 224 }, { name: "LDH", mrp: 350, b2b: 263 }, { name: "Sodium", mrp: null, b2b: null }, { name: "Chlorides", mrp: null, b2b: null }, { name: "Phosphorous", mrp: null, b2b: null }, { name: "Potassium", mrp: null, b2b: null }, { name: "Iron Study", mrp: 520, b2b: 333 }, { name: "Vit D3", mrp: 1500, b2b: 450 }, { name: "Vit B12", mrp: 950, b2b: 285 }, { name: "T3  T4  TSH", mrp: 580, b2b: 232 }, { name: "TSH", mrp: 320, b2b: 128 }, { name: "FT3  FT4  TSH", mrp: 680, b2b: 272 }, { name: "CRP", mrp: 500, b2b: 225 }, { name: "HSCRP", mrp: 700, b2b: 420 }, { name: "CPK-MB", mrp: 850, b2b: 536 }, { name: "CPK-Total", mrp: 380, b2b: 236 }, { name: "Trop-I", mrp: 770, b2b: 539 }, { name: "D-Dimer", mrp: 1150, b2b: 736 }, { name: "PT INR", mrp: 300, b2b: 195 }, { name: "ApTT", mrp: 400, b2b: 240 }, { name: "HIV", mrp: 400, b2b: 280 }, { name: "HCV", mrp: 750, b2b: 600 }, { name: "HBsAg", mrp: 900, b2b: 612 }, { name: "VDRL", mrp: 165, b2b: 106 }, { name: "Triple H Package", mrp: null, b2b: null }, { name: "Urine Culture", mrp: 800, b2b: 560 }, { name: "Urine Routine", mrp: 110, b2b: 70 }, { name: "RA Factor", mrp: 275, b2b: 176 }, { name: "MP", mrp: 180, b2b: 106 }, { name: "Widal", mrp: 165, b2b: 106 }, { name: "Dengue NSI", mrp: 880, b2b: 563 }, { name: "Dengue IGG", mrp: 880, b2b: 563 }, { name: "Dengue IGM", mrp: 880, b2b: 563 }, { name: "MP-Antigen", mrp: 500, b2b: 315 }, { name: "Beta HCG", mrp: 500, b2b: 355 }, { name: "Homocysten", mrp: 1200, b2b: 744 }, { name: "CA125 (Female)", mrp: 1050, b2b: 863 }, { name: "PSA (Male)", mrp: 1450, b2b: 1001 }, { name: "IGE", mrp: 770, b2b: 539 }, { name: "Trop-T", mrp: 770, b2b: 539 }, { name: "Anti CCP", mrp: 1250, b2b: 813 }, { name: "ANA", mrp: 950, b2b: 599 }, { name: "Total Protien", mrp: 200, b2b: 120 }, 
-    { name: "Covid Antibody", mrp: 500, b2b: 350 }, { name: "FNAC", mrp: 800, b2b: 560 }, { name: "PP Insuline", mrp: 715, b2b: 501 }, { name: "CEA", mrp: 850, b2b: 578 }, { name: "AFPL", mrp: 700, b2b: 462 }, { name: "Hb Electrophoresis", mrp: null, b2b: null }, { name: "FT3", mrp: 240, b2b: 120 }, { name: "FT4", mrp: 240, b2b: 120 }, { name: "Urine Protein Creatinine Ratio", mrp: null, b2b: null }, { name: "Protein with A/G Ratio", mrp: null, b2b: null }, { name: "Lypase", mrp: 700, b2b: 490 }, { name: "Estradiol", mrp: 600, b2b: 414 }, { name: "PUS Culture (Aerobic)", mrp: 800, b2b: 560 }, { name: "FT3  FT4", mrp: 480, b2b: 240 }, { name: "Fecal Calprotectin", mrp: 3000, b2b: 1920 }, { name: "Blood Culture 1 SE", mrp: 1050, b2b: 735 }, { name: "NT-Pro BNP", mrp: 2035, b2b: 1302 }, { name: "Total TFT", mrp: 580, b2b: 232 }, { name: "HBS Antigen", mrp: null, b2b: null }, { name: "Mantoux Test", mrp: 120, b2b: 71 }, { name: "Reticulate Count", mrp: 180, b2b: 108 }, { name: "Direct Coombs Test", mrp: 300, b2b: 177 }, { name: "Microalbuminuria", mrp: 550, b2b: 352 }, { name: "Total Testosteron", mrp: 600, b2b: 426 }, { name: "Free Testosteron", mrp: 1600, b2b: 1440 }, { name: "Protein C", mrp: 3300, b2b: 2640 }, { name: "Protein S", mrp: 3300, b2b: 2640 }, { name: "Lupus Anticoagulant", mrp: null, b2b: null }, { name: "Fibrinogen Level", mrp: 700, b2b: 420 }, { name: "Anti dsDNA NCX", mrp: 935, b2b: 598 }, { name: "Apolipoprotein A-1 & B", mrp: 700, b2b: 385 }, { name: "Folic Acid Level", mrp: 900, b2b: 612 }, { name: "Allergy Comprehensive", mrp: null, b2b: null }, { name: "Maleria Antigen", mrp: 500, b2b: 315 }, { name: "Urine Glucose (Fasting)", mrp: null, b2b: null }, { name: "Factor V", mrp: null, b2b: null }, { name: "Ferritine", mrp: 750, b2b: 525 }, { name: "HAV", mrp: 950, b2b: 665 }, { name: "HEV", mrp: 1050, b2b: 693 }, { name: "RA Test", mrp: 275, b2b: 176 }, { name: "Iron Profile with Ferritine", mrp: null, b2b: null }, { name: "Allergy Drug Test", mrp: null, b2b: null }, { name: "IGA TTG", mrp: 1430, b2b: 1001 }, { name: "Peripheral Smear", mrp: null, b2b: null }, { name: "PTT", mrp: 300, b2b: 195 }, { name: "Cortisol 8 AM", mrp: 600, b2b: 434 }, { name: "H. Pylori Stool", mrp: 750, b2b: 458 }, { name: "Chikungunya IgG", mrp: null, b2b: null }, { name: "FBA", mrp: null, b2b: null }, { name: "Protein Electrophoresis", mrp: 950, b2b: 608 }, { name: "Sputum TB Culture & ABS", mrp: 800, b2b: 560 }, { name: "Complement C3 & C4", mrp: null, b2b: null }, { name: "DHEAS", mrp: 850, b2b: 587 }, { name: "DHEA", mrp: null, b2b: null }, { name: "Torch Complex", mrp: null, b2b: null }, { name: "Zinc Level", mrp: null, b2b: null }, { name: "Magnesium", mrp: 450, b2b: 284 }, { name: "Estrogen", mrp: null, b2b: null }, { name: "C-Peptide Random", mrp: null, b2b: null }, 
-    { name: "B2 Glycoprotein 1 IgG", mrp: null, b2b: null }, { name: "Karyotyping - Husband", mrp: null, b2b: null }, { name: "Karyotyping - Wife", mrp: null, b2b: null }, { name: "Influenza Screening for ABF", mrp: 1650, b2b: 1056 }, { name: "PSA Free & Total", mrp: 1450, b2b: 1001 }, { name: "LH", mrp: 525, b2b: 263 }, { name: "FSH", mrp: 525, b2b: 263 }, { name: "Semen Analysis", mrp: 300, b2b: 300 }, { name: "Alkaline Phosphatase", mrp: null, b2b: null }, { name: "Globulin", mrp: null, b2b: null }, { name: "BUN / Creatinine Ratio", mrp: null, b2b: null }, { name: "Urea/G Ratio", mrp: null, b2b: null }, { name: "T3", mrp: null, b2b: null }, { name: "T4", mrp: null, b2b: null }, { name: "Stool  Routine", mrp: 110, b2b: 70 }, { name: "Albumin", mrp: null, b2b: null }, { name: "Billirubin Indirect", mrp: null, b2b: null }, { name: "Bicarbonate", mrp: null, b2b: null }],
-    combos: [],
-    packages: []
-  },
-  {
-    name: "General Diagnostics",
-    tests: [{ name: "CBC", mrp: 190, b2b: 60 }, { name: "Blood Group", mrp: 220, b2b: 50 }, { name: "ESR", mrp: 200, b2b: 50 }, { name: "FBS", mrp: 70, b2b: 15 }, { name: "PP", mrp: 70, b2b: 15 }, { name: "RBS", mrp: 70, b2b: 15 }, { name: "Fasting Insuline", mrp: 770, b2b: 150 }, { name: "HbA1C", mrp: 495, b2b: 60 }, { name: "Bilirubin-Total", mrp: 130, b2b: 22 }, { name: "Bilirubin-Direct", mrp: 130, b2b: 24 }, { name: "SGPT", mrp: 190, b2b: 24 }, { name: "SGOT", mrp: 190, b2b: 22 }, { name: "GGT", mrp: 242, b2b: 60 }, { name: "Creatinine", mrp: 180, b2b: 22 }, { name: "Urea", mrp: 165, b2b: 25 }, { name: "BUN", mrp: 220, b2b: 60 }, { name: "Uric Acid", mrp: 220, b2b: 22 }, { name: "Calcium", mrp: 176, b2b: 22 }, { name: "Lipid Profile", mrp: 715, b2b: 100 }, { name: "Total Cholestrol", mrp: 180, b2b: 10 }, { name: "HDL", mrp: 180, b2b: 10 }, { name: "LDL", mrp: 300, b2b: 50 }, { name: "LDH", mrp: 363, b2b: 60 }, { name: "Sodium", mrp: 275, b2b: 40 }, { name: "Chlorides", mrp: 275, b2b: 40 }, { name: "Phosphorous", mrp: 275, b2b: 40 }, { name: "Potassium", mrp: 220, b2b: 40 }, { name: "Iron Study", mrp: 660, b2b: 150 }, { name: "Vit D3", mrp: 1280, b2b: 200 }, { name: "Vit B12", mrp: 990, b2b: 160 }, { name: "T3  T4  TSH", mrp: 495, b2b: 60 }, { name: "TSH", mrp: 275, b2b: 20 }, { name: "FT3  FT4  TSH", mrp: 1045, b2b: 140 }, { name: "CRP", mrp: 495, b2b: 150 }, { name: "HSCRP", mrp: 750, b2b: 175 }, { name: "CPK-MB", mrp: 715, b2b: 200 }, { name: "CPK-Total", mrp: 385, b2b: 125 }, { name: "Trop-I", mrp: 1200, b2b: 650 }, { name: "D-Dimer", mrp: 1650, b2b: 375 }, { name: "PT INR", mrp: 450, b2b: 105 }, { name: "ApTT", mrp: 418, b2b: 200 }, { name: "HIV", mrp: 475, b2b: 120 }, { name: "HCV", mrp: 935, b2b: 99 }, { name: "HBsAg", mrp: 450, b2b: 250 }, { name: "VDRL", mrp: 220, b2b: 75 }, { name: "Triple H Package", mrp: 1730, b2b: 350 }, { name: "Urine Culture", mrp: 950, b2b: 120 }, { name: "Urine Routine", mrp: 300, b2b: 100 }, { name: "RA Factor", mrp: 495, b2b: 200 }, { name: "MP", mrp: 275, b2b: 100 }, { name: "Widal", mrp: 330, b2b: 60 }, { name: "Dengue NSI", mrp: 660, b2b: 250 }, { name: "Dengue IGG", mrp: 660, b2b: 275 }, { name: "Dengue IGM", mrp: 660, b2b: 275 }, { name: "MP-Antigen", mrp: 700, b2b: 100 }, { name: "Beta HCG", mrp: 550, b2b: 160 }, { name: "Homocysten", mrp: 1155, b2b: 400 }, { name: "CA125 (Female)", mrp: 1155, b2b: 350 }, { name: "PSA (Male)", mrp: 935, b2b: 300 }, { name: "IGE", mrp: 825, b2b: 195 }, { name: "Trop-T", mrp: 1800, b2b: 700 }, { name: "Anti CCP", mrp: 1375, b2b: 385 }, { name: "ANA", mrp: 750, b2b: 175 }, { name: "Total Protien", mrp: 200, b2b: 22 }, { name: "Covid Antibody", mrp: 700, b2b: 270 }, 
-    { name: "FNAC", mrp: 1150, b2b: 330 }, { name: "PP Insuline", mrp: 770, b2b: 150 }, { name: "CEA", mrp: 715, b2b: 250 }, { name: "AFPL", mrp: 750, b2b: 295 }, { name: "Hb Electrophoresis", mrp: 600, b2b: 315 }, { name: "FT3", mrp: 275, b2b: 60 }, { name: "FT4", mrp: 300, b2b: 60 }, { name: "Urine Protein Creatinine Ratio", mrp: 900, b2b: 150 }, { name: "Protein with A/G Ratio", mrp: 400, b2b: 150 }, { name: "Lypase", mrp: 620, b2b: 120 }, { name: "Estradiol", mrp: 605, b2b: 165 }, { name: "PUS Culture (Aerobic)", mrp: 1455, b2b: 945 }, { name: "FT3  FT4", mrp: 575, b2b: 120 }, { name: "Fecal Calprotectin", mrp: 3630, b2b: 2340 }, { name: "Blood Culture 1 SE", mrp: 1045, b2b: 530 }, { name: "NT-Pro BNP", mrp: 3450, b2b: 2500 }, { name: "Total TFT", mrp: 495, b2b: 60 }, { name: "HBS Antigen", mrp: 450, b2b: 250 }, { name: "Mantoux Test", mrp: null, b2b: null }, { name: "Reticulate Count", mrp: 550, b2b: 20 }, { name: "Direct Coombs Test", mrp: 825, b2b: 160 }, { name: "Microalbuminuria", mrp: 800, b2b: 350 }, { name: "Total Testosteron", mrp: 605, b2b: 100 }, { name: "Free Testosteron", mrp: 1485, b2b: 340 }, { name: "Protein C", mrp: 5350, b2b: 2600 }, { name: "Protein S", mrp: 4950, b2b: 2600 }, { name: "Lupus Anticoagulant", mrp: 2650, b2b: 600 }, { name: "Fibrinogen Level", mrp: 1250, b2b: 900 }, { name: "Anti dsDNA NCX", mrp: 1650, b2b: 200 }, { name: "Apolipoprotein A-1 & B", mrp: null, b2b: null }, { name: "Folic Acid Level", mrp: 1045, b2b: 160 }, { name: "Allergy Comprehensive", mrp: null, b2b: null }, { name: "Maleria Antigen", mrp: 700, b2b: 100 }, { name: "Urine Glucose (Fasting)", mrp: 70, b2b: 25 }, { name: "Factor V", mrp: 7086, b2b: 4200 }, { name: "Ferritine", mrp: 800, b2b: 160 }, { name: "HAV", mrp: 880, b2b: 275 }, { name: "HEV", mrp: 1210, b2b: 375 }, { name: "RA Test", mrp: 495, b2b: 200 }, { name: "Iron Profile with Ferritine", mrp: null, b2b: null }, { name: "Allergy Drug Test", mrp: 5900, b2b: 1700 }, { name: "IGA TTG", mrp: 1210, b2b: 280 }, { name: "Peripheral Smear", mrp: 300, b2b: 100 }, { name: "PTT", mrp: 450, b2b: 105 }, { name: "Cortisol 8 AM", mrp: 605, b2b: 295 }, { name: "H. Pylori Stool", mrp: 1500, b2b: 1200 }, { name: "Chikungunya IgG", mrp: 825, b2b: 500 }, { name: "FBA", mrp: null, b2b: null }, { name: "Protein Electrophoresis", mrp: 660, b2b: 350 }, { name: "Sputum TB Culture & ABS", mrp: null, b2b: null }, { name: "Complement C3 & C4", mrp: null, b2b: null }, { name: "DHEAS", mrp: 1045, b2b: 275 }, { name: "DHEA", mrp: 2965, b2b: 2150 }, { name: "Torch Complex", mrp: 1430, b2b: 800 }, { name: "Zinc Level", mrp: 880, b2b: 460 }, { name: "Magnesium", mrp: 440, b2b: 50 }, { name: "Estrogen", mrp: null, b2b: null }, { name: "C-Peptide Random", mrp: null, b2b: null }, { name: "B2 Glycoprotein 1 IgG", mrp: 1100, b2b: 660 }, { name: "Karyotyping - Husband", mrp: 4400, b2b: 1500 }, 
-    { name: "Karyotyping - Wife", mrp: 4400, b2b: 1500 }, { name: "Influenza Screening for ABF", mrp: null, b2b: null }, { name: "PSA Free & Total", mrp: 1760, b2b: 465 }, { name: "LH", mrp: 495, b2b: 100 }, { name: "FSH", mrp: 495, b2b: 100 }, { name: "Semen Analysis", mrp: null, b2b: null }, { name: "Alkaline Phosphatase", mrp: null, b2b: null }, { name: "Globulin", mrp: null, b2b: null }, { name: "BUN / Creatinine Ratio", mrp: null, b2b: null }, { name: "Urea/G Ratio", mrp: null, b2b: null }, { name: "T3", mrp: null, b2b: null }, { name: "T4", mrp: null, b2b: null }, { name: "Stool  Routine", mrp: 220, b2b: 60 }, { name: "Albumin", mrp: null, b2b: null }, { name: "Billirubin Indirect", mrp: null, b2b: null }, { name: "Bicarbonate", mrp: null, b2b: null }],
-    combos: [{ name: "LFT", tests: ["Bilirubin-Total", "Bilirubin-Direct", "SGOT", "SGPT", "Total Protien", "Protein with A/G Ratio", "GGT", "Alkaline Phosphatase", "Globulin", "Albumin", "Billirubin Indirect"], mrp: 1045, b2b: 150 },
-    { name: "RFT", tests: ["BUN", "Calcium", "Albumin", "Creatinine", "Phosphorous", "Uric Acid", "Globulin", "Sodium", "Potassium", "Chlorides", "BUN / Creatinine Ratio", "Urea"], mrp: 1150, b2b: 863 },
-    { name: "Electrolytes", tests: ["Sodium", "Potassium", "Chlorides"], mrp: 520, b2b: 100 },
-    { name: "Total TFT", tests: ["T3", "T4", "TSH"], mrp: 495, b2b: 60 },
-    { name: "Free TFT", tests: ["FT3", "FT4", "TSH"], mrp: 1045, b2b: 140 },
-    { name: "Triple H", tests: ["HCV", "HBsAg", "HIV"], mrp: 1730, b2b: 350 }],
-    packages: [
-      { name: "GD Life A1", tests: ["Iron Study", "RFT", "CBC", "LFT", "Lipid Profile", "T3  T4  TSH"], mrp: 1400, b2b: 295 },
-      { name: "GD Life A3", tests: ["FBS", "LFT", "Lipid Profile", "TSH", "CBC", "RFT"], mrp: 1200, b2b: 230 },
-      { name: "GD Wellness 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "Vit D3", "Vit B12", "T3  T4  TSH"], mrp: 1800, b2b: 600 },
-      { name: "ALPHA WELLNESS 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "RFT", "Vit D3", "Vit B12", "CBC", "ESR", "CRP", "T3  T4  TSH"], mrp: 2150, b2b: 750 },
-      { name: "COMPREHENSIVE FULL BODY CHECKUP", tests: ["CBC", "Vit B12", "Vit D3", "HBsAg", "Urine Routine", "Peripheral Smear", "ESR", "Electrolytes", "Iron Study", "LFT", "Lipid Profile", "CRP"], mrp: 2000, b2b: 1050 },
-      { name: "GD WELLNESS 15.1", tests: ["Iron Study", "LFT", "Lipid Profile", "T3  T4  TSH", "RFT"], mrp: 1000, b2b: 550 }
-    ]
-  },
-  {
-    name: "Trucheck Diagnostics",
-    tests: [],
-    combos: [],
-    packages: []
-  }
-];
-
-// Global state
-let selectedItems = []; // { name, type, tests (for combos) }
-let selectedTestsFlat = [];
-let selectedLabs = new Set(labsData.map(l => l.name));
-
-// Helper functions
-function updateFlatTests() {
-  const testsSet = new Set();
-  selectedItems.forEach(item => {
-    if(item.type === "test") testsSet.add(item.name);
-    else if(item.type === "combo" && item.tests) item.tests.forEach(t => testsSet.add(t));
-  });
-  selectedTestsFlat = Array.from(testsSet);
-}
-
-function isTestCoveredByCombo(testName) {
-  return selectedItems.some(item => item.type === "combo" && item.tests && item.tests.includes(testName));
-}
-
-function getAllCombos() {
-  const combosMap = new Map();
-  labsData.forEach(lab => {
-    lab.combos.forEach(combo => { 
-      if(!combosMap.has(combo.name)) combosMap.set(combo.name, { ...combo, labName: lab.name });
-    });
-  });
-  return Array.from(combosMap.values());
-}
-
-// Clear search input and suggestions after selection
-function clearSearchAndFocus() {
-  const searchInputElem = document.getElementById("search");
-  const suggestionsElem = document.getElementById("suggestions");
-  searchInputElem.value = "";
-  suggestionsElem.innerHTML = "";
-  searchInputElem.focus();
-}
-
-function addCombo(comboObj) {
-  if(selectedItems.some(item => item.type === "combo" && item.name === comboObj.name)) {
-    clearSearchAndFocus();
-    return;
-  }
-  // Remove any individual tests that are part of this combo
-  const updatedItems = selectedItems.filter(item => !(item.type === "test" && comboObj.tests.includes(item.name)));
-  selectedItems = [...updatedItems, { name: comboObj.name, type: "combo", tests: comboObj.tests, mrp: comboObj.mrp, b2b: comboObj.b2b }];
-  updateFlatTests();
-  renderSelected();
-  runOptimization();
-  clearSearchAndFocus();
-}
-
-function addIndividualTest(testName) {
-  if(isTestCoveredByCombo(testName)) { 
-    alert(`"${testName}" is already covered by a selected combo. Please remove the combo first to select it individually.`);
-    clearSearchAndFocus();
-    return; 
-  }
-  if(selectedItems.some(item => item.type === "test" && item.name === testName)) {
-    clearSearchAndFocus();
-    return;
-  }
-  selectedItems.push({ name: testName, type: "test" });
-  updateFlatTests();
-  renderSelected();
-  runOptimization();
-  clearSearchAndFocus();
-}
-
-function removeItem(name, type) {
-  selectedItems = selectedItems.filter(item => !(item.name === name && item.type === type));
-  updateFlatTests();
-  renderSelected();
-  runOptimization();
-}
-
-function clearAll() { 
-  selectedItems = []; 
-  updateFlatTests(); 
-  renderSelected(); 
-  runOptimization(); 
-}
-
-function renderSelected() {
-  const container = document.getElementById("selectedTests");
-  container.innerHTML = "";
-  if(selectedItems.length === 0) {
-    container.innerHTML = '<div style="color:#8AA0B5; padding:12px; text-align:center;">No tests or combos selected. Start typing to add items.</div>';
-    return;
-  }
-  selectedItems.forEach(item => {
-    const span = document.createElement("span");
-    if(item.type === "combo") {
-      span.className = "selected-combo";
-      span.innerHTML = `<i class="fas fa-layer-group"></i> ${item.name} <i class="fas fa-times" style="font-size: 10px;"></i>`;
-      span.onclick = () => removeItem(item.name, "combo");
-    } else {
-      span.innerHTML = `<i class="fas fa-flask"></i> ${item.name} <i class="fas fa-times" style="font-size: 10px;"></i>`;
-      span.onclick = () => removeItem(item.name, "test");
-    }
-    container.appendChild(span);
-  });
-}
-
-// Search functionality with proper reset
-const searchInputElem = document.getElementById("search");
-const suggestionsDiv = document.getElementById("suggestions");
-
-searchInputElem.addEventListener("input", () => {
-  const val = searchInputElem.value.toLowerCase().trim();
-  suggestionsDiv.innerHTML = "";
-  if(!val) return;
-  
-  const combos = getAllCombos().filter(c => c.name.toLowerCase().includes(val) && !selectedItems.some(s => s.type === "combo" && s.name === c.name));
-  const tests = [...new Set(labsData.flatMap(l => l.tests.map(t => t.name)))].filter(t => 
-    t.toLowerCase().includes(val) && 
-    !selectedItems.some(s => s.type === "test" && s.name === t) && 
-    !isTestCoveredByCombo(t)
-  );
-  
-  combos.forEach(combo => {
-    const div = document.createElement("div");
-    div.className = "suggestion-combo";
-    div.innerHTML = `<i class="fas fa-layer-group"></i> <strong>${combo.name}</strong> <span class="combo-badge">Combo</span> <span style="font-size:11px;">(${combo.tests.slice(0,2).join(", ")}${combo.tests.length>2?"...":""})</span>`;
-    div.onclick = (e) => {
-      e.stopPropagation();
-      addCombo(combo);
-    };
-    suggestionsDiv.appendChild(div);
-  });
-  
-  tests.forEach(test => {
-    const div = document.createElement("div");
-    div.innerHTML = `<i class="fas fa-flask"></i> ${test} <span class="combo-badge">Test</span>`;
-    div.onclick = (e) => {
-      e.stopPropagation();
-      addIndividualTest(test);
-    };
-    suggestionsDiv.appendChild(div);
-  });
-  
-  if(!combos.length && !tests.length) suggestionsDiv.innerHTML = '<div style="color:#8AA0B5;">No results found</div>';
-});
-
-// Close suggestions when clicking outside
-document.addEventListener("click", (e) => { 
-  if(!searchInputElem.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-    suggestionsDiv.innerHTML = "";
-  }
-});
-
-// ========== OPTIMIZATION ENGINE - TRUE COST MINIMIZATION ==========
-
-// Get all available tests from a package (expand combos inside)
-function expandPackageTests(lab, pkg) {
-  let testsSet = new Set([...pkg.tests]);
-  if(pkg.combos) {
-    pkg.combos.forEach(cn => {
-      const combo = lab.combos.find(c => c.name === cn);
-      if(combo) combo.tests.forEach(t => testsSet.add(t));
-    });
-  }
-  return Array.from(testsSet);
-}
-
-// Get cheapest individual test across all selected labs
-function getCheapestTestOption(testName, activeLabs) {
-  let best = null;
-  let minCost = Infinity;
-  for(const lab of labsData) {
-    if(!activeLabs.has(lab.name)) continue;
-    const test = lab.tests.find(t => t.name === testName);
-    if(test && test.b2b !== null && test.b2b < minCost) {
-      minCost = test.b2b;
-      best = {
-        lab: lab.name,
-        testName: testName,
-        cost: test.b2b,
-        mrp: test.mrp,
-        type: "Test"
-      };
-    }
-  }
-  return best;
-}
-
-// Get all combo options for given tests
-function getAllComboOptions(activeLabs) {
-  const combos = [];
-  for(const lab of labsData) {
-    if(!activeLabs.has(lab.name)) continue;
-    for(const combo of lab.combos) {
-      combos.push({
-        lab: lab.name,
-        name: combo.name,
-        tests: combo.tests,
-        cost: combo.b2b,
-        mrp: combo.mrp,
-        type: "Combo",
-        savings: null
-      });
-    }
-  }
-  return combos;
-}
-
-// Get all package options for given tests
-function getAllPackageOptions(activeLabs) {
-  const packages = [];
-  for(const lab of labsData) {
-    if(!activeLabs.has(lab.name)) continue;
-    for(const pkg of lab.packages) {
-      const expandedTests = expandPackageTests(lab, pkg);
-      packages.push({
-        lab: lab.name,
-        name: pkg.name,
-        tests: expandedTests,
-        cost: pkg.b2b,
-        mrp: pkg.mrp,
-        type: "Package",
-        savings: null
-      });
-    }
-  }
-  return packages;
-}
-
-// Find optimal combination using intelligent greedy algorithm
-function findOptimalCombination(requiredTests, activeLabs) {
-  const requiredSet = new Set(requiredTests);
-  if(requiredSet.size === 0) return { items: [], totalCost: 0, totalMRP: 0 };
-  
-  // Get all available options (tests, combos, packages)
-  const testOptions = [];
-  for(const test of requiredTests) {
-    const cheapest = getCheapestTestOption(test, activeLabs);
-    if(cheapest) {
-      testOptions.push({
-        lab: cheapest.lab,
-        name: cheapest.testName,
-        tests: [cheapest.testName],
-        cost: cheapest.cost,
-        mrp: cheapest.mrp,
-        type: "Test",
-        coverage: 1,
-        coverageSet: new Set([cheapest.testName])
-      });
-    }
-  }
-  
-  const comboOptions = getAllComboOptions(activeLabs).map(combo => ({
-    ...combo,
-    coverage: combo.tests.filter(t => requiredSet.has(t)).length,
-    coverageSet: new Set(combo.tests.filter(t => requiredSet.has(t)))
-  })).filter(c => c.coverage > 0);
-  
-  const packageOptions = getAllPackageOptions(activeLabs).map(pkg => ({
-    ...pkg,
-    coverage: pkg.tests.filter(t => requiredSet.has(t)).length,
-    coverageSet: new Set(pkg.tests.filter(t => requiredSet.has(t)))
-  })).filter(p => p.coverage > 0);
-  
-  // Combine all options
-  let allOptions = [...testOptions, ...comboOptions, ...packageOptions];
-  if(allOptions.length === 0) return { items: [], totalCost: 0, totalMRP: 0 };
-  
-  // Calculate cost per covered test for sorting
-  allOptions.forEach(opt => {
-    opt.costPerCovered = opt.cost / opt.coverage;
-  });
-  
-  // Sort by best value: higher coverage with lower cost per test
-  allOptions.sort((a, b) => {
-    if(a.coverage !== b.coverage) return b.coverage - a.coverage;
-    return a.costPerCovered - b.costPerCovered;
-  });
-  
-  // Greedy algorithm with lookahead for optimal selection
-  let remaining = new Set(requiredTests);
-  const selectedItemsList = [];
-  let maxIterations = 50;
-  
-  while(remaining.size > 0 && maxIterations-- > 0) {
-    let bestOption = null;
-    let bestScore = -Infinity;
-    
-    for(const opt of allOptions) {
-      const covered = opt.tests.filter(t => remaining.has(t)).length;
-      if(covered === 0) continue;
-      
-      const coverageRatio = covered / remaining.size;
-      const costPerCovered = opt.cost / covered;
-      const score = (covered * 100) - (costPerCovered * 2);
-      
-      if(score > bestScore) {
-        bestScore = score;
-        bestOption = { ...opt, coveredTests: opt.tests.filter(t => remaining.has(t)), coveredCount: covered };
-      }
-    }
-    
-    if(!bestOption) break;
-    
-    selectedItemsList.push({
-      lab: bestOption.lab,
-      type: bestOption.type,
-      name: bestOption.name,
-      cost: bestOption.cost,
-      mrp: bestOption.mrp,
-      coveredTests: bestOption.coveredTests,
-      individualCost: null,
-      savings: null
-    });
-    
-    bestOption.coveredTests.forEach(t => remaining.delete(t));
-  }
-  
-  // Calculate totals
-  let totalB2B = 0;
-  let totalMRP = 0;
-  
-  for(const item of selectedItemsList) {
-    totalB2B += item.cost;
-    totalMRP += item.mrp;
-    
-    let indivCost = 0;
-    for(const test of item.coveredTests) {
-      const cheapest = getCheapestTestOption(test, activeLabs);
-      if(cheapest) indivCost += cheapest.cost;
-    }
-    item.individualCost = indivCost;
-    item.savings = indivCost - item.cost;
-  }
-  
-  return {
-    items: selectedItemsList,
-    totalB2B: Math.round(totalB2B * 100) / 100,
-    totalMRP: Math.round(totalMRP * 100) / 100,
-    savings: Math.round((totalMRP - totalB2B) * 100) / 100,
-    savingsPercent: totalMRP > 0 ? Math.round(((totalMRP - totalB2B) / totalMRP) * 10000) / 100 : 0
-  };
-}
-
-function runOptimization() {
-  if(selectedTestsFlat.length === 0) {
-    document.getElementById("result").innerHTML = `<div class="empty-state"><i class="fas fa-chart-simple"></i><p>Select tests or combos to see optimization results</p></div>`;
-    renderComparison();
-    return;
-  }
-  
-  const result = findOptimalCombination(selectedTestsFlat, selectedLabs);
-  
-  let html = `<div><strong>Selected Items:</strong><div style="margin:12px 0; display:flex; flex-wrap:wrap; gap:8px;">${selectedItems.map(i => `<span style="background:#F0F7FA; padding:4px 12px; border-radius:20px;">${i.type==="combo"?"📦 ":"🔬 "}${i.name}</span>`).join('')}</div></div>`;
-  html += `<h4 style="color:#0F3D5E; margin:20px 0 16px;"><i class="fas fa-microchip"></i> Optimized Plan (Lowest B2B Cost)</h4>`;
-  
-  if(!result.items.length) {
-    html += `<div class="empty-state">No coverage possible with selected labs</div>`;
-  } else {
-    const grouped = new Map();
-    result.items.forEach(item => {
-      if(!grouped.has(item.lab)) grouped.set(item.lab, []);
-      grouped.get(item.lab).push(item);
-    });
-    
-    for(let [labName, items] of grouped.entries()) {
-      html += `<div style="background:#F8FCFE; border-radius:20px; margin-bottom:20px; padding:16px; border:1px solid #E2E8F0;">
-        <div class="lab-header">
-          <strong style="font-size:1rem; color:#0F3D5E;"><i class="fas fa-flask"></i> ${labName}</strong>
-          <button class="btn-secondary" style="padding:4px 12px;" onclick="copyLabItems('${labName.replace(/'/g, "\\'")}')"><i class="fas fa-copy"></i> Copy</button>
-        </div>`;
-      
-      items.forEach(item => {
-        const icon = item.type === "Test" ? "🔬" : (item.type === "Combo" ? "📦" : "📦");
-        html += `<div class="lab-block">
-          <strong>${icon} ${item.type}: ${item.name}</strong>
-          <div>MRP: ₹${item.mrp} | <span class="b2p-highlight">B2B: ₹${item.cost}</span></div>
-          <div style="font-size:12px; color:#7AB2B2;">Covers: ${item.coveredTests.join(", ")}</div>
-          ${item.savings > 0 ? `<div style="font-size:12px; color:#1ECAD3;">💰 Savings: ₹${item.savings} vs individual</div>` : ''}
-        </div>`;
-      });
-      html += `</div>`;
-    }
-  }
-  
-  html += `<div class="result">
-    <div style="background:#F5F7FA; padding:20px; border-radius:16px;">
-      <p><strong>💰 Total MRP:</strong> ₹${result.totalMRP.toLocaleString()}</p>
-      <p><strong>✨ Optimized B2B Cost:</strong> <span style="font-size:20px; font-weight:800; color:#1ECAD3;">₹${result.totalB2B.toLocaleString()}</span></p>
-      <div class="highlight">
-        <i class="fas fa-tag"></i> Total Savings: ₹${result.savings.toLocaleString()} (${result.savingsPercent}% off)
+      <div class="card" style="margin:0; padding:24px;">
+        <div class="section-title"><i class="fas fa-coins"></i> Financial Summary</div>
+        <div class="summary" style="display: flex; flex-direction: column; gap: 18px;">
+          <div class="summary-box"><h3 style="font-weight: 500;">Total MRP</h3><div class="big" id="totalMRP">₹0</div></div>
+          <div class="summary-box"><h3 style="font-weight: 500;">Total B2B</h3><div class="big savings" id="totalB2B">₹0</div></div>
+          <div class="summary-box"><h3 style="font-weight: 500;">Total Savings</h3><div class="big savings" id="totalSavings">₹0</div></div>
+        </div>
       </div>
     </div>
-  </div>`;
+  </div>
+</div>
+
+<!-- Modal & Toast -->
+<div class="modal" id="infoModal"><div class="modal-content"><div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 16px;"><h2 id="modalTitle" style="font-family: Rubik;"></h2><button class="close-btn" id="closeModal" style="background: none; border: none; font-size: 28px; cursor: pointer;">&times;</button></div><div id="modalBody"></div></div></div>
+<div class="toast" id="toast"><i class="fas fa-check-circle" style="margin-right: 8px;"></i> Copied</div>
+
+<script>
+  // DATA
+  const labsData = [
+    {
+  name: "Dr. Ajay Shah Laboratory",
+
+  tests: [
+    { id: "CBC_AS", name: "CBC", type: "test", mrp: 300, b2b: 80 },
+    { id: "BLOOD_GROUP_AS", name: "Blood Group", type: "test", mrp: 180, b2b: 70 },
+    { id: "ESR_AS", name: "ESR", type: "test", mrp: 150, b2b: 60 },
+    { id: "FBS_AS", name: "FBS", type: "test", mrp: 80, b2b: 30 },
+    { id: "PP_AS", name: "PP", type: "test", mrp: 80, b2b: 30 },
+    { id: "RBS_AS", name: "RBS", type: "test", mrp: 80, b2b: 30 },
+    { id: "FASTING_INSULINE_AS", name: "Fasting Insuline", type: "test", mrp: 800, b2b: 350 },
+    { id: "HBA1C_AS", name: "HbA1C", type: "test", mrp: 550, b2b: 130 },
+    { id: "BILIRUBIN_TOTAL_AS", name: "Bilirubin-Total", type: "test", mrp: 190, b2b: 96 },
+    { id: "BILIRUBIN_DIRECT_AS", name: "Bilirubin-Direct", type: "test", mrp: 190, b2b: 96 },
+    { id: "SGPT_AS", name: "SGPT", type: "test", mrp: 190, b2b: 40 },
+    { id: "SGOT_AS", name: "SGOT", type: "test", mrp: 190, b2b: 40 },
+    { id: "GGT_AS", name: "GGT", type: "test", mrp: 280, b2b: 182 },
+    { id: "CREATININE_AS", name: "Creatinine", type: "test", mrp: 190, b2b: 50 },
+    { id: "UREA_AS", name: "Urea", type: "test", mrp: 190, b2b: 108 },
+    { id: "BUN_AS", name: "BUN", type: "test", mrp: 190, b2b: 108 },
+    { id: "URIC_ACID_AS", name: "Uric Acid", type: "test", mrp: 190, b2b: 50 },
+    { id: "CALCIUM_AS", name: "Calcium", type: "test", mrp: 190, b2b: 114 },
+    { id: "LIPID_PROFILE_AS", name: "Lipid Profile", type: "test", mrp: 600, b2b: 185 },
+    { id: "TOTAL_CHOLESTROL_AS", name: "Total Cholestrol", type: "test", mrp: 190, b2b: 108 },
+    { id: "HDL_AS", name: "HDL", type: "test", mrp: 220, b2b: 132 },
+    { id: "LDL_AS", name: "LDL", type: "test", mrp: 400, b2b: 240 },
+    { id: "LDH_AS", name: "LDH", type: "test", mrp: 500, b2b: 150 },
+    { id: "SODIUM_AS", name: "Sodium", type: "test", mrp: 180, b2b: 108 },
+    { id: "CHLORIDES_AS", name: "Chlorides", type: "test", mrp: 150, b2b: 90 },
+    { id: "PHOSPHOROUS_AS", name: "Phosphorous", type: "test", mrp: 190, b2b: 114 },
+    { id: "POTASSIUM_AS", name: "Potassium", type: "test", mrp: 180, b2b: 108 },
+    { id: "IRON_STUDY_AS", name: "Iron Study", type: "test", mrp: 800, b2b: 300 },
+    { id: "VIT_D3_AS", name: "Vit D3", type: "test", mrp: 1300, b2b: 250 },
+    { id: "VIT_B12_AS", name: "Vit B12", type: "test", mrp: 850, b2b: 250 },
+    { id: "TSH_AS", name: "TSH", type: "test", mrp: 370, b2b: 50 },
+    { id: "CRP_AS", name: "CRP", type: "test", mrp: 450, b2b: 150 },
+    { id: "HSCRP_AS", name: "HSCRP", type: "test", mrp: 850, b2b: 350 },
+    { id: "CPK_MB_AS", name: "CPK-MB", type: "test", mrp: 850, b2b: 350 },
+    { id: "CPK_TOTAL_AS", name: "CPK-Total", type: "test", mrp: 550, b2b: 300 },
+    { id: "TROPI_AS", name: "Trop-I", type: "test", mrp: 1200, b2b: 750 },
+    { id: "D_DIMER_AS", name: "D-Dimer", type: "test", mrp: 1200, b2b: 500 },
+    { id: "PT_INR_AS", name: "PT INR", type: "test", mrp: 330, b2b: 120 },
+    { id: "APTT_AS", name: "ApTT", type: "test", mrp: 600, b2b: 330 },
+    { id: "HIV_AS", name: "HIV", type: "test", mrp: 600, b2b: 350 },
+    { id: "HCV_AS", name: "HCV", type: "test", mrp: 900, b2b: 525 },
+    { id: "HBSAG_AS", name: "HBsAg", type: "test", mrp: 550, b2b: 440 },
+    { id: "VDRL_AS", name: "VDRL", type: "test", mrp: 370, b2b: 180 },
+    { id: "URINE_CULTURE_AS", name: "Urine Culture", type: "test", mrp: 950, b2b: 400 },
+    { id: "URINE_ROUTINE_AS", name: "Urine Routine", type: "test", mrp: 160, b2b: 60 },
+    { id: "RA_FACTOR_AS", name: "RA Factor", type: "test", mrp: 500, b2b: 270 },
+    { id: "MP_AS", name: "MP", type: "test", mrp: 120, b2b: 72 },
+    { id: "WIDAL_AS", name: "Widal", type: "test", mrp: 250, b2b: 150 },
+    { id: "DENGUE_NSI_AS", name: "Dengue NSI", type: "test", mrp: 800, b2b: 300 },
+    { id: "DENGUE_IGG_AS", name: "Dengue IGG", type: "test", mrp: 800, b2b: 300 },
+    { id: "DENGUE_IGM_AS", name: "Dengue IGM", type: "test", mrp: 800, b2b: 350 },
+    { id: "MP_ANTIGEN_AS", name: "MP-Antigen", type: "test", mrp: 450, b2b: 315 },
+    { id: "BETA_HCG_AS", name: "Beta HCG", type: "test", mrp: 850, b2b: 200 },
+    { id: "HOMOCYSTEN_AS", name: "Homocysten", type: "test", mrp: 1450, b2b: 500 },
+    { id: "CA125_FEMALE_AS", name: "CA125 (Female)", type: "test", mrp: 1200, b2b: 500 },
+    { id: "PSA_MALE_AS", name: "PSA (Male)", type: "test", mrp: 900, b2b: 350 },
+    { id: "IGE_AS", name: "IGE", type: "test", mrp: 950, b2b: 400 },
+    { id: "TROPT_AS", name: "Trop-T", type: "test", mrp: 1500, b2b: 1050 },
+    { id: "ANTI_CCP_AS", name: "Anti CCP", type: "test", mrp: 1550, b2b: 650 },
+    { id: "ANA_AS", name: "ANA", type: "test", mrp: 950, b2b: 500 },
+    { id: "TOTAL_PROTIEN_AS", name: "Total Protien", type: "test", mrp: 250, b2b: 80 },
+    { id: "COVID_ANTIBODY_AS", name: "Covid Antibody", type: "test", mrp: 1000, b2b: 500 },
+    { id: "FNAC_AS", name: "FNAC", type: "test", mrp: 1500, b2b: 1050 },
+    { id: "PP_INSULINE_AS", name: "PP Insuline", type: "test", mrp: 850, b2b: 560 },
+    { id: "CEA_AS", name: "CEA", type: "test", mrp: 800, b2b: 400 },
+    { id: "AFPL_AS", name: "AFPL", type: "test", mrp: 900, b2b: 450 },
+    { id: "HB_ELECTROPHORESIS_AS", name: "Hb Electrophoresis", type: "test", mrp: 950, b2b: 450 },
+    { id: "FT3_AS", name: "FT3", type: "test", mrp: 280, b2b: 80 },
+    { id: "FT4_AS", name: "FT4", type: "test", mrp: 280, b2b: 80 },
+    { id: "URINE_PROTEIN_CREATININE_RATIO_AS", name: "Urine Protein Creatinine Ratio", type: "test", mrp: 420, b2b: 240 },
+    { id: "PROTEIN_WITH_AG_RATIO_AS", name: "Protein with A/G Ratio", type: "test", mrp: 250, b2b: 80 },
+    { id: "LIPASE_AS", name: "Lipase", type: "test", mrp: 750, b2b: 300 },
+    { id: "ESTRADIOL_AS", name: "Estradiol", type: "test", mrp: 780, b2b: 300 },
+    { id: "PUS_CULTURE_AEROBIC_AS", name: "PUS Culture (Aerobic)", type: "test", mrp: 950, b2b: 400 },
+    { id: "FT3_FT4_AS", name: "FT3  FT4", type: "test", mrp: 560, b2b: 160 },
+    { id: "FECAL_CALPROTECTIN_AS", name: "Fecal Calprotectin", type: "test", mrp: 2800, b2b: 2240 },
+    { id: "BLOOD_CULTURE_1_SE_AS", name: "Blood Culture 1 SE", type: "test", mrp: 1500, b2b: 800 },
+    { id: "NT_PRO_BNP_AS", name: "NT-Pro BNP", type: "test", mrp: 2500, b2b: 1100 },
+    { id: "HBS_ANTIGEN_AS", name: "HBS Antigen", type: "test", mrp: 550, b2b: 350 },
+    { id: "MANTOUX_TEST_AS", name: "Mantoux Test", type: "test", mrp: 150, b2b: 135 },
+    { id: "RETICULATE_COUNT_AS", name: "Reticulate Count", type: "test", mrp: 400, b2b: 210 },
+    { id: "DIRECT_COOMBS_TEST_AS", name: "Direct Coombs Test", type: "test", mrp: 550, b2b: 150 },
+    { id: "MICROALBUMINURIA_AS", name: "Microalbuminuria", type: "test", mrp: 620, b2b: 250 },
+    { id: "TOTAL_TESTOSTERON_AS", name: "Total Testosteron", type: "test", mrp: 780, b2b: 350 },
+    { id: "FREE_TESTOSTERON_AS", name: "Free Testosteron", type: "test", mrp: 1550, b2b: 750 },
+    { id: "PROTEIN_C_AS", name: "Protein C", type: "test", mrp: 4500, b2b: 4050 },
+    { id: "PROTEIN_S_AS", name: "Protein S", type: "test", mrp: 4500, b2b: 4050 },
+    { id: "LUPUS_ANTICOAGULANT_AS", name: "Lupus Anticoagulant", type: "test", mrp: 1800, b2b: 800 },
+    { id: "FIBRINOGEN_LEVEL_AS", name: "Fibrinogen Level", type: "test", mrp: 850, b2b: 400 },
+    { id: "ANTI_DSDNA_NCX_AS", name: "Anti dsDNA NCX", type: "test", mrp: 1750, b2b: 1000 },
+    { id: "APOLIPOPROTEIN_A1_B_AS", name: "Apolipoprotein A-1 & B", type: "test", mrp: 1100, b2b: 770 },
+    { id: "FOLIC_ACID_LEVEL_AS", name: "Folic Acid Level", type: "test", mrp: 1100, b2b: 500 },
+    { id: "ALLERGY_COMPREHENSIVE_AS", name: "Allergy Comprehensive", type: "test", mrp: 5500, b2b: 3850 },
+    { id: "MALERIA_ANTIGEN_AS", name: "Maleria Antigen", type: "test", mrp: 450, b2b: 315 },
+    { id: "URINE_GLUCOSE_FASTING_AS", name: "Urine Glucose (Fasting)", type: "test", mrp: 50, b2b: 30 },
+    { id: "FACTOR_V_AS", name: "Factor V", type: "test", mrp: 5500, b2b: 4400 },
+    { id: "FERRITINE_AS", name: "Ferritine", type: "test", mrp: 950, b2b: 400 },
+    { id: "HAV_AS", name: "HAV", type: "test", mrp: 1200, b2b: 550 },
+    { id: "HEV_AS", name: "HEV", type: "test", mrp: 1500, b2b: 600 },
+    { id: "RA_TEST_AS", name: "RA Test", type: "test", mrp: 500, b2b: 270 },
+    { id: "IRON_PROFILE_WITH_FERRITINE_AS", name: "Iron Profile with Ferritine", type: "test", mrp: null, b2b: null },
+    { id: "ALLERGY_DRUG_TEST_AS", name: "Allergy Drug Test", type: "test", mrp: 7500, b2b: 5250 },
+    { id: "IGA_TTG_AS", name: "IGA TTG", type: "test", mrp: 800, b2b: 500 },
+    { id: "PERIPHERAL_SMEAR_AS", name: "Peripheral Smear", type: "test", mrp: 150, b2b: 60 },
+    { id: "PTT_AS", name: "PTT", type: "test", mrp: 600, b2b: 330 },
+    { id: "CORTISOL_8_AM_AS", name: "Cortisol 8 AM", type: "test", mrp: 850, b2b: 350 },
+    { id: "H_PYLORI_STOOL_AS", name: "H. Pylori Stool", type: "test", mrp: 1250, b2b: 960 },
+    { id: "CHIKUNGUNYA_IGG_AS", name: "Chikungunya IgG", type: "test", mrp: 900, b2b: 810 },
+    { id: "FBA_AS", name: "FBA", type: "test", mrp: null, b2b: null },
+    { id: "PROTEIN_ELECTROPHORESIS_AS", name: "Protein Electrophoresis", type: "test", mrp: 1200, b2b: 500 },
+    { id: "SPUTUM_TB_CULTURE_ABS_AS", name: "Sputum TB Culture & ABS", type: "test", mrp: 150, b2b: 90 },
+    { id: "COMPLEMENT_C3_C4_AS", name: "Complement C3 & C4", type: "test", mrp: null, b2b: null },
+    { id: "DHEAS_AS", name: "DHEAS", type: "test", mrp: 1150, b2b: 600 },
+    { id: "DHEA_AS", name: "DHEA", type: "test", mrp: 3000, b2b: 2100 },
+    { id: "TORCH_COMPLEX_AS", name: "Torch Complex", type: "test", mrp: 2800, b2b: 1200 },
+    { id: "ZINC_LEVEL_AS", name: "Zinc Level", type: "test", mrp: 2200, b2b: 1980 },
+    { id: "MAGNESIUM_AS", name: "Magnesium", type: "test", mrp: 400, b2b: 280 },
+    { id: "ESTROGEN_AS", name: "Estrogen", type: "test", mrp: null, b2b: null },
+    { id: "C_PEPTIDE_RANDOM_AS", name: "C-Peptide Random", type: "test", mrp: 1150, b2b: 550 },
+    { id: "B2_GLYCOPROTEIN_1_IGG_AS", name: "B2 Glycoprotein 1 IgG", type: "test", mrp: 1200, b2b: 500 },
+    { id: "KARYOTYPING_HUSBAND_AS", name: "Karyotyping - Husband", type: "test", mrp: 4000, b2b: 2800 },
+    { id: "KARYOTYPING_WIFE_AS", name: "Karyotyping - Wife", type: "test", mrp: 4000, b2b: 2800 },
+    { id: "INFLUENZA_SCREENING_FOR_ABF_AS", name: "Influenza Screening for ABF", type: "test", mrp: null, b2b: null },
+    { id: "PSA_FREE_TOTAL_AS", name: "PSA Free & Total", type: "test", mrp: 850, b2b: 350 },
+    { id: "LH_AS", name: "LH", type: "test", mrp: 550, b2b: 180 },
+    { id: "FSH_AS", name: "FSH", type: "test", mrp: 550, b2b: 180 },
+    { id: "SEMEN_ANALYSIS_AS", name: "Semen Analysis", type: "test", mrp: 1100, b2b: 770 },
+    { id: "ALKALINE_PHOSPHATASE_AS", name: "Alkaline Phosphatase", type: "test", mrp: null, b2b: null },
+    { id: "GLOBULIN_AS", name: "Globulin", type: "test", mrp: null, b2b: null },
+    { id: "BUN_CREATININE_RATIO_AS", name: "BUN / Creatinine Ratio", type: "test", mrp: null, b2b: null },
+    { id: "UREA_G_RATIO_AS", name: "Urea/G Ratio", type: "test", mrp: null, b2b: null },
+    { id: "T3_AS", name: "T3", type: "test", mrp: 250, b2b: null },
+    { id: "T4_AS", name: "T4", type: "test", mrp: 250, b2b: null },
+    { id: "STOOL_ROUTINE_AS", name: "Stool Routine", type: "test", mrp: 170, b2b: 90 },
+    { id: "ALBUMIN_AS", name: "Albumin", type: "test", mrp: 400, b2b: 320 },
+    { id: "BILLIRUBIN_INDIRECT_AS", name: "Billirubin Indirect", type: "test", mrp: null, b2b: null },
+    { id: "BICARBONATE_AS", name: "Bicarbonate", type: "test", mrp: null, b2b: null },
+    { id: "AMYLASE_AS", name: "Amylase", type: "test", mrp: 700, b2b: 275 },
+    { id: "ACTH_AS", name: "ACTH", type: "test", mrp: 1800, b2b: null },
+    { id: "THROAT_SWAB_C_S_AS", name: "Throat Swab C/S", type: "test", mrp: 950, b2b: 400 },
+    { id: "ASO_TITER_AS", name: "ASO Titer", type: "test", mrp: 650, b2b: 390 }
+  ],
+
+  combos: [
+    { id: "LFT_AS", name: "LFT", type: "combo", contains: ["Bilirubin-Total", "Bilirubin-Direct", "Billirubin Indirect", "SGPT", "SGOT", "Alkaline Phosphatase", "GGT", "Total Protien", "Albumin", "Globulin", "Protein with A/G Ratio"], mrp: 850, b2b: 220 },
+    { id: "RFT_AS", name: "RFT", type: "combo", contains: ["BUN", "Urea", "Uric Acid", "Calcium", "Phosphorous", "Sodium", "Potassium", "Chlorides", "Bicarbonate", "Creatinine"], mrp: 1100, b2b: 990 },
+    { id: "ELECTROLYTES_AS", name: "Electrolytes", type: "combo", contains: ["Sodium", "Potassium", "Chlorides", "Bicarbonate"], mrp: 450, b2b: 130 },
+    { id: "TRIPLE_H_AS", name: "Triple H", type: "combo", contains: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
+    { id: "TOTAL_TFT_AS", name: "Total TFT", type: "combo", contains: ["T3", "T4", "TSH"], mrp: 550, b2b: 110 },
+    { id: "FREE_TFT_AS", name: "Free TFT", type: "combo", contains: ["FT3", "FT4", "TSH"], mrp: 650, b2b: 220 }
+  ],
+
+  packages: [
+    { id: "GOODNESS_A1_AS", name: "GOODNESS A1", type: "package", contains: ["CBC", "FBS", "PP", "HbA1C", "Total TFT", "Iron Study", "Vit D3", "Vit B12", "Lipid Profile", "LFT", "RFT"], mrp: 2500, b2b: 1200 },
+    { id: "GOODNESS_E_AS", name: "GOODNESS E", type: "package", contains: ["FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Uric Acid", "CBC"], mrp: 1000, b2b: 450 },
+    { id: "GOODNESS_G_AS", name: "GOODNESS G", type: "package", contains: ["CBC", "FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Total TFT", "Uric Acid"], mrp: 1500, b2b: 550 },
+    { id: "GOODNESS_BB_FEMALE_AS", name: "GOODNESS BB FEMALE", type: "package", contains: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)"], mrp: 3500, b2b: 1500 },
+    { id: "GOODNESS_BA_MALE_AS", name: "GOODNESS BA MALE", type: "package", contains: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "PSA (Male)"], mrp: 3500, b2b: 1400 },
+    { id: "GOODNESS_C_AS", name: "GOODNESS C", type: "package", contains: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
+    { id: "GOODNES_F_AS", name: "GOODNES F", type: "package", contains: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
+    { id: "GODNESS_3H_AS", name: "GODNESS 3H ", type: "package", contains: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
+    { id: "FEVER_PROFILE_AS", name: "FEVER PROFILE", type: "package", contains: ["CBC", "ESR", "SGPT", "SGOT", "CRP", "Dengue NSI", "Maleria Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 }
+  ]
+},
+
+
+  {
+  name: "Dr. Jariwala Laboratory",
+
+  tests: [
+    { id: "CBC_J", name: "CBC", type: "test", mrp: 280, b2b: 168 },
+    { id: "BLOOD_GROUP_J", name: "Blood Group", type: "test", mrp: 150, b2b: 90 },
+    { id: "ESR_J", name: "ESR", type: "test", mrp: 90, b2b: 54 },
+    { id: "FBS_J", name: "FBS", type: "test", mrp: 70, b2b: 46 },
+    { id: "PP_J", name: "PP", type: "test", mrp: 70, b2b: 46 },
+    { id: "RBS_J", name: "RBS", type: "test", mrp: 70, b2b: 46 },
+    { id: "FASTING_INSULINE_J", name: "Fasting Insuline", type: "test", mrp: 715, b2b: 501 },
+    { id: "HBA1C_J", name: "HbA1C", type: "test", mrp: 520, b2b: 338 },
+    { id: "LFT_J", name: "LFT", type: "test", mrp: 900, b2b: 585 },
+    { id: "BILIRUBIN_TOTAL_J", name: "Bilirubin-Total", type: "test", mrp: 200, b2b: 120 },
+    { id: "BILIRUBIN_DIRECT_J", name: "Bilirubin-Direct", type: "test", mrp: 200, b2b: 120 },
+    { id: "SGPT_J", name: "SGPT", type: "test", mrp: 180, b2b: 108 },
+    { id: "SGOT_J", name: "SGOT", type: "test", mrp: 180, b2b: 108 },
+    { id: "GGT_J", name: "GGT", type: "test", mrp: 200, b2b: 126 },
+    { id: "RFT_J", name: "RFT", type: "test", mrp: 1350, b2b: 878 },
+    { id: "CREATININE_J", name: "Creatinine", type: "test", mrp: 180, b2b: 108 },
+    { id: "UREA_J", name: "Urea", type: "test", mrp: 180, b2b: 108 },
+    { id: "BUN_J", name: "BUN", type: "test", mrp: null, b2b: null },
+    { id: "URIC_ACID_J", name: "Uric Acid", type: "test", mrp: 180, b2b: 108 },
+    { id: "CALCIUM_J", name: "Calcium", type: "test", mrp: 275, b2b: 176 },
+    { id: "LIPID_PROFILE_J", name: "Lipid Profile", type: "test", mrp: 550, b2b: 352 },
+    { id: "TOTAL_CHOLESTROL_J", name: "Total Cholestrol", type: "test", mrp: 180, b2b: 108 },
+    { id: "HDL_J", name: "HDL", type: "test", mrp: 180, b2b: 106 },
+    { id: "LDL_J", name: "LDL", type: "test", mrp: 320, b2b: 224 },
+    { id: "LDH_J", name: "LDH", type: "test", mrp: 350, b2b: 263 },
+    { id: "ELECTROLYTES_J", name: "Electrolytes", type: "test", mrp: 400, b2b: 240 },
+    { id: "SODIUM_J", name: "Sodium", type: "test", mrp: null, b2b: null },
+    { id: "CHLORIDES_J", name: "Chlorides", type: "test", mrp: null, b2b: null },
+    { id: "PHOSPHOROUS_J", name: "Phosphorous", type: "test", mrp: null, b2b: null },
+    { id: "POTASSIUM_J", name: "Potassium", type: "test", mrp: null, b2b: null },
+    { id: "IRON_STUDY_J", name: "Iron Study", type: "test", mrp: 520, b2b: 333 },
+    { id: "VIT_D3_J", name: "Vit D3", type: "test", mrp: 1500, b2b: 450 },
+    { id: "VIT_B12_J", name: "Vit B12", type: "test", mrp: 950, b2b: 285 },
+    { id: "TOTAL_TFT_J", name: "Total TFT", type: "test", mrp: 580, b2b: 232 },
+    { id: "TSH_J", name: "TSH", type: "test", mrp: 320, b2b: 128 },
+    { id: "FREE_TFT_J", name: "Free TFT", type: "test", mrp: 680, b2b: 272 },
+    { id: "CRP_J", name: "CRP", type: "test", mrp: 500, b2b: 225 },
+    { id: "HSCRP_J", name: "HSCRP", type: "test", mrp: 700, b2b: 420 },
+    { id: "CPK_MB_J", name: "CPK-MB", type: "test", mrp: 850, b2b: 536 },
+    { id: "CPK_TOTAL_J", name: "CPK-Total", type: "test", mrp: 380, b2b: 236 },
+    { id: "TROPI_J", name: "Trop-I", type: "test", mrp: 770, b2b: 539 },
+    { id: "D_DIMER_J", name: "D-Dimer", type: "test", mrp: 1150, b2b: 736 },
+    { id: "PT_INR_J", name: "PT INR", type: "test", mrp: 300, b2b: 195 },
+    { id: "APTT_J", name: "ApTT", type: "test", mrp: 400, b2b: 240 },
+    { id: "HIV_J", name: "HIV", type: "test", mrp: 400, b2b: 280 },
+    { id: "HCV_J", name: "HCV", type: "test", mrp: 750, b2b: 600 },
+    { id: "HBSAG_J", name: "HBsAg", type: "test", mrp: null, b2b: null },
+    { id: "VDRL_J", name: "VDRL", type: "test", mrp: 165, b2b: 106 },
+    { id: "TRIPLE_H_J", name: "Triple H", type: "test", mrp: null, b2b: null },
+    { id: "URINE_CULTURE_J", name: "Urine Culture", type: "test", mrp: 800, b2b: 560 },
+    { id: "URINE_ROUTINE_J", name: "Urine Routine", type: "test", mrp: 110, b2b: 70 },
+    { id: "RA_FACTOR_J", name: "RA Factor", type: "test", mrp: 275, b2b: 176 },
+    { id: "MP_J", name: "MP", type: "test", mrp: 180, b2b: 106 },
+    { id: "WIDAL_J", name: "Widal", type: "test", mrp: 165, b2b: 106 },
+    { id: "DENGUE_NSI_J", name: "Dengue NSI", type: "test", mrp: 880, b2b: 563 },
+    { id: "DENGUE_IGG_J", name: "Dengue IGG", type: "test", mrp: 880, b2b: 563 },
+    { id: "DENGUE_IGM_J", name: "Dengue IGM", type: "test", mrp: 880, b2b: 563 },
+    { id: "MP_ANTIGEN_J", name: "MP-Antigen", type: "test", mrp: 500, b2b: 315 },
+    { id: "BETA_HCG_J", name: "Beta HCG", type: "test", mrp: 500, b2b: 355 },
+    { id: "HOMOCYSTEN_J", name: "Homocysten", type: "test", mrp: 1200, b2b: 744 },
+    { id: "CA125_FEMALE_J", name: "CA125 (Female)", type: "test", mrp: 1050, b2b: 683 },
+    { id: "PSA_MALE_J", name: "PSA (Male)", type: "test", mrp: 1450, b2b: 1001 },
+    { id: "IGE_J", name: "IGE", type: "test", mrp: 770, b2b: 539 },
+    { id: "TROPT_J", name: "Trop-T", type: "test", mrp: 770, b2b: 539 },
+    { id: "ANTI_CCP_J", name: "Anti CCP", type: "test", mrp: 1250, b2b: 813 },
+    { id: "ANA_J", name: "ANA", type: "test", mrp: 950, b2b: 599 },
+    { id: "TOTAL_PROTIEN_J", name: "Total Protien", type: "test", mrp: 200, b2b: 120 },
+    { id: "COVID_ANTIBODY_J", name: "Covid Antibody", type: "test", mrp: 500, b2b: 350 },
+    { id: "FNAC_J", name: "FNAC", type: "test", mrp: 800, b2b: 560 },
+    { id: "PP_INSULINE_J", name: "PP Insuline", type: "test", mrp: 715, b2b: 501 },
+    { id: "CEA_J", name: "CEA", type: "test", mrp: 850, b2b: 578 },
+    { id: "AFPL_J", name: "AFPL", type: "test", mrp: 700, b2b: 462 },
+    { id: "HB_ELECTROPHORESIS_J", name: "Hb Electrophoresis", type: "test", mrp: null, b2b: null },
+    { id: "FT3_J", name: "FT3", type: "test", mrp: 240, b2b: 120 },
+    { id: "FT4_J", name: "FT4", type: "test", mrp: 240, b2b: 120 },
+    { id: "URINE_PROTEIN_CREATININE_RATIO_J", name: "Urine Protein Creatinine Ratio", type: "test", mrp: null, b2b: null },
+    { id: "PROTEIN_WITH_AG_RATIO_J", name: "Protein with A/G Ratio", type: "test", mrp: null, b2b: null },
+    { id: "LIPASE_J", name: "Lipase", type: "test", mrp: 700, b2b: 490 },
+    { id: "ESTRADIOL_J", name: "Estradiol", type: "test", mrp: 600, b2b: 414 },
+    { id: "PUS_CULTURE_AEROBIC_J", name: "PUS Culture (Aerobic)", type: "test", mrp: 800, b2b: 560 },
+    { id: "FT3_FT4_J", name: "FT3  FT4", type: "test", mrp: 480, b2b: 240 },
+    { id: "FECAL_CALPROTECTIN_J", name: "Fecal Calprotectin", type: "test", mrp: 3000, b2b: 1920 },
+    { id: "BLOOD_CULTURE_1_SE_J", name: "Blood Culture 1 SE", type: "test", mrp: 1050, b2b: 735 },
+    { id: "NT_PRO_BNP_J", name: "NT-Pro BNP", type: "test", mrp: 2035, b2b: 1302 },
+    { id: "HBS_ANTIGEN_J", name: "HBS Antigen", type: "test", mrp: null, b2b: null },
+    { id: "MANTOUX_TEST_J", name: "Mantoux Test", type: "test", mrp: 120, b2b: 71 },
+    { id: "RETICULATE_COUNT_J", name: "Reticulate Count", type: "test", mrp: 180, b2b: 108 },
+    { id: "DIRECT_COOMBS_TEST_J", name: "Direct Coombs Test", type: "test", mrp: 300, b2b: 177 },
+    { id: "MICROALBUMINURIA_J", name: "Microalbuminuria", type: "test", mrp: 550, b2b: 352 },
+    { id: "TOTAL_TESTOSTERON_J", name: "Total Testosteron", type: "test", mrp: 600, b2b: 426 },
+    { id: "FREE_TESTOSTERON_J", name: "Free Testosteron", type: "test", mrp: 1600, b2b: 1440 },
+    { id: "PROTEIN_C_J", name: "Protein C", type: "test", mrp: 3300, b2b: 2640 },
+    { id: "PROTEIN_S_J", name: "Protein S", type: "test", mrp: 3300, b2b: 2640 },
+    { id: "LUPUS_ANTICOAGULANT_J", name: "Lupus Anticoagulant", type: "test", mrp: null, b2b: null },
+    { id: "FIBRINOGEN_LEVEL_J", name: "Fibrinogen Level", type: "test", mrp: 700, b2b: 420 },
+    { id: "ANTI_DSDNA_NCX_J", name: "Anti dsDNA NCX", type: "test", mrp: 935, b2b: 598 },
+    { id: "APOLIPOPROTEIN_A1_B_J", name: "Apolipoprotein A-1 & B", type: "test", mrp: 700, b2b: 385 },
+    { id: "FOLIC_ACID_LEVEL_J", name: "Folic Acid Level", type: "test", mrp: 900, b2b: 612 },
+    { id: "ALLERGY_COMPREHENSIVE_J", name: "Allergy Comprehensive", type: "test", mrp: null, b2b: null },
+    { id: "MALERIA_ANTIGEN_J", name: "Maleria Antigen", type: "test", mrp: 500, b2b: 315 },
+    { id: "URINE_GLUCOSE_FASTING_J", name: "Urine Glucose (Fasting)", type: "test", mrp: null, b2b: null },
+    { id: "FACTOR_V_J", name: "Factor V", type: "test", mrp: null, b2b: null },
+    { id: "FERRITINE_J", name: "Ferritine", type: "test", mrp: 750, b2b: 525 },
+    { id: "HAV_J", name: "HAV", type: "test", mrp: 950, b2b: 665 },
+    { id: "HEV_J", name: "HEV", type: "test", mrp: 1050, b2b: 693 },
+    { id: "RA_TEST_J", name: "RA Test", type: "test", mrp: 275, b2b: 176 },
+    { id: "IRON_PROFILE_WITH_FERRITINE_J", name: "Iron Profile with Ferritine", type: "test", mrp: null, b2b: null },
+    { id: "ALLERGY_DRUG_TEST_J", name: "Allergy Drug Test", type: "test", mrp: null, b2b: null },
+    { id: "IGA_TTG_J", name: "IGA TTG", type: "test", mrp: 1430, b2b: 1001 },
+    { id: "PERIPHERAL_SMEAR_J", name: "Peripheral Smear", type: "test", mrp: null, b2b: null },
+    { id: "PTT_J", name: "PTT", type: "test", mrp: 300, b2b: 195 },
+    { id: "CORTISOL_8_AM_J", name: "Cortisol 8 AM", type: "test", mrp: 600, b2b: 434 },
+    { id: "H_PYLORI_STOOL_J", name: "H. Pylori Stool", type: "test", mrp: 750, b2b: 458 },
+    { id: "CHIKUNGUNYA_IGG_J", name: "Chikungunya IgG", type: "test", mrp: null, b2b: null },
+    { id: "FBA_J", name: "FBA", type: "test", mrp: null, b2b: null },
+    { id: "PROTEIN_ELECTROPHORESIS_J", name: "Protein Electrophoresis", type: "test", mrp: 950, b2b: 608 },
+    { id: "SPUTUM_TB_CULTURE_ABS_J", name: "Sputum TB Culture & ABS", type: "test", mrp: 800, b2b: 560 },
+    { id: "COMPLEMENT_C3_C4_J", name: "Complement C3 & C4", type: "test", mrp: null, b2b: null },
+    { id: "DHEAS_J", name: "DHEAS", type: "test", mrp: 850, b2b: 587 },
+    { id: "DHEA_J", name: "DHEA", type: "test", mrp: null, b2b: null },
+    { id: "TORCH_COMPLEX_J", name: "Torch Complex", type: "test", mrp: null, b2b: null },
+    { id: "ZINC_LEVEL_J", name: "Zinc Level", type: "test", mrp: null, b2b: null },
+    { id: "MAGNESIUM_J", name: "Magnesium", type: "test", mrp: 450, b2b: 284 },
+    { id: "ESTROGEN_J", name: "Estrogen", type: "test", mrp: null, b2b: null },
+    { id: "C_PEPTIDE_RANDOM_J", name: "C-Peptide Random", type: "test", mrp: null, b2b: null },
+    { id: "B2_GLYCOPROTEIN_1_IGG_J", name: "B2 Glycoprotein 1 IgG", type: "test", mrp: null, b2b: null },
+    { id: "KARYOTYPING_HUSBAND_J", name: "Karyotyping - Husband", type: "test", mrp: null, b2b: null },
+    { id: "KARYOTYPING_WIFE_J", name: "Karyotyping - Wife", type: "test", mrp: null, b2b: null },
+    { id: "INFLUENZA_SCREENING_FOR_ABF_J", name: "Influenza Screening for ABF", type: "test", mrp: 1650, b2b: 1056 },
+    { id: "PSA_FREE_TOTAL_J", name: "PSA Free & Total", type: "test", mrp: 1450, b2b: 1001 },
+    { id: "LH_J", name: "LH", type: "test", mrp: 525, b2b: 263 },
+    { id: "FSH_J", name: "FSH", type: "test", mrp: 525, b2b: 263 },
+    { id: "SEMEN_ANALYSIS_J", name: "Semen Analysis", type: "test", mrp: 300, b2b: 300 },
+    { id: "ALKALINE_PHOSPHATASE_J", name: "Alkaline Phosphatase", type: "test", mrp: null, b2b: null },
+    { id: "GLOBULIN_J", name: "Globulin", type: "test", mrp: null, b2b: null },
+    { id: "BUN_CREATININE_RATIO_J", name: "BUN / Creatinine Ratio", type: "test", mrp: null, b2b: null },
+    { id: "UREA_G_RATIO_J", name: "Urea/G Ratio", type: "test", mrp: null, b2b: null },
+    { id: "T3_J", name: "T3", type: "test", mrp: null, b2b: null },
+    { id: "T4_J", name: "T4", type: "test", mrp: null, b2b: null },
+    { id: "STOOL_ROUTINE_J", name: "Stool Routine", type: "test", mrp: 110, b2b: 70 },
+    { id: "ALBUMIN_J", name: "Albumin", type: "test", mrp: null, b2b: null },
+    { id: "BILLIRUBIN_INDIRECT_J", name: "Billirubin Indirect", type: "test", mrp: null, b2b: null },
+    { id: "BICARBONATE_J", name: "Bicarbonate", type: "test", mrp: null, b2b: null },
+    { id: "AMYLASE_J", name: "Amylase", type: "test", mrp: null, b2b: null },
+    { id: "ACTH_J", name: "ACTH", type: "test", mrp: null, b2b: null },
+    { id: "THROAT_SWAB_C_S_J", name: "Throat Swab C/S", type: "test", mrp: null, b2b: null },
+    { id: "ASO_TITER_J", name: "ASO Titer", type: "test", mrp: null, b2b: null }
+  ],
+
+  combos: [],
+
+  packages: []
+},
+
+{
+  name: "General Diagnostics",
+
+  tests: [
+    { id: "CBC_GD", name: "CBC", type: "test", mrp: 190, b2b: 60 },
+    { id: "BLOOD_GROUP_GD", name: "Blood Group", type: "test", mrp: 220, b2b: 50 },
+    { id: "ESR_GD", name: "ESR", type: "test", mrp: 200, b2b: 50 },
+    { id: "FBS_GD", name: "FBS", type: "test", mrp: 70, b2b: 15 },
+    { id: "PP_GD", name: "PP", type: "test", mrp: 70, b2b: 15 },
+    { id: "RBS_GD", name: "RBS", type: "test", mrp: 70, b2b: 15 },
+    { id: "FASTING_INSULINE_GD", name: "Fasting Insuline", type: "test", mrp: 770, b2b: 150 },
+    { id: "HBA1C_GD", name: "HbA1C", type: "test", mrp: 495, b2b: 60 },
+    { id: "BILIRUBIN_TOTAL_GD", name: "Bilirubin-Total", type: "test", mrp: 130, b2b: 22 },
+    { id: "BILIRUBIN_DIRECT_GD", name: "Bilirubin-Direct", type: "test", mrp: 130, b2b: 24 },
+    { id: "SGPT_GD", name: "SGPT", type: "test", mrp: 190, b2b: 24 },
+    { id: "SGOT_GD", name: "SGOT", type: "test", mrp: 190, b2b: 22 },
+    { id: "GGT_GD", name: "GGT", type: "test", mrp: 242, b2b: 60 },
+    { id: "CREATININE_GD", name: "Creatinine", type: "test", mrp: 180, b2b: 22 },
+    { id: "UREA_GD", name: "Urea", type: "test", mrp: 165, b2b: 25 },
+    { id: "BUN_GD", name: "BUN", type: "test", mrp: 220, b2b: 60 },
+    { id: "URIC_ACID_GD", name: "Uric Acid", type: "test", mrp: 220, b2b: 22 },
+    { id: "CALCIUM_GD", name: "Calcium", type: "test", mrp: 176, b2b: 22 },
+    { id: "LIPID_PROFILE_GD", name: "Lipid Profile", type: "test", mrp: 715, b2b: 100 },
+    { id: "TOTAL_CHOLESTROL_GD", name: "Total Cholestrol", type: "test", mrp: 180, b2b: 10 },
+    { id: "HDL_GD", name: "HDL", type: "test", mrp: 180, b2b: 10 },
+    { id: "LDL_GD", name: "LDL", type: "test", mrp: 300, b2b: 50 },
+    { id: "LDH_GD", name: "LDH", type: "test", mrp: 363, b2b: 60 },
+    { id: "SODIUM_GD", name: "Sodium", type: "test", mrp: 275, b2b: 40 },
+    { id: "CHLORIDES_GD", name: "Chlorides", type: "test", mrp: 275, b2b: 40 },
+    { id: "PHOSPHOROUS_GD", name: "Phosphorous", type: "test", mrp: 275, b2b: 40 },
+    { id: "POTASSIUM_GD", name: "Potassium", type: "test", mrp: 220, b2b: 40 },
+    { id: "IRON_STUDY_GD", name: "Iron Study", type: "test", mrp: 660, b2b: 150 },
+    { id: "VIT_D3_GD", name: "Vit D3", type: "test", mrp: 1280, b2b: 200 },
+    { id: "VIT_B12_GD", name: "Vit B12", type: "test", mrp: 990, b2b: 160 },
+    { id: "TSH_GD", name: "TSH", type: "test", mrp: 275, b2b: 20 },
+    { id: "CRP_GD", name: "CRP", type: "test", mrp: 495, b2b: 150 },
+    { id: "HSCRP_GD", name: "HSCRP", type: "test", mrp: 750, b2b: 175 },
+    { id: "CPK_MB_GD", name: "CPK-MB", type: "test", mrp: 715, b2b: 200 },
+    { id: "CPK_TOTAL_GD", name: "CPK-Total", type: "test", mrp: 385, b2b: 125 },
+    { id: "TROPI_GD", name: "Trop-I", type: "test", mrp: 1200, b2b: 650 },
+    { id: "D_DIMER_GD", name: "D-Dimer", type: "test", mrp: 1650, b2b: 375 },
+    { id: "PT_INR_GD", name: "PT INR", type: "test", mrp: 450, b2b: 105 },
+    { id: "APTT_GD", name: "ApTT", type: "test", mrp: 418, b2b: 200 },
+    { id: "HIV_GD", name: "HIV", type: "test", mrp: 475, b2b: 120 },
+    { id: "HCV_GD", name: "HCV", type: "test", mrp: 935, b2b: 99 },
+    { id: "HBSAG_GD", name: "HBsAg", type: "test", mrp: 450, b2b: 250 },
+    { id: "VDRL_GD", name: "VDRL", type: "test", mrp: 220, b2b: 75 },
+    { id: "URINE_CULTURE_GD", name: "Urine Culture", type: "test", mrp: 950, b2b: 120 },
+    { id: "URINE_ROUTINE_GD", name: "Urine Routine", type: "test", mrp: 300, b2b: 100 },
+    { id: "RA_FACTOR_GD", name: "RA Factor", type: "test", mrp: 495, b2b: 200 },
+    { id: "MP_GD", name: "MP", type: "test", mrp: 275, b2b: 100 },
+    { id: "WIDAL_GD", name: "Widal", type: "test", mrp: 330, b2b: 60 },
+    { id: "DENGUE_NSI_GD", name: "Dengue NSI", type: "test", mrp: 660, b2b: 250 },
+    { id: "DENGUE_IGG_GD", name: "Dengue IGG", type: "test", mrp: 660, b2b: 275 },
+    { id: "DENGUE_IGM_GD", name: "Dengue IGM", type: "test", mrp: 660, b2b: 275 },
+    { id: "MP_ANTIGEN_GD", name: "MP-Antigen", type: "test", mrp: 700, b2b: 100 },
+    { id: "BETA_HCG_GD", name: "Beta HCG", type: "test", mrp: 550, b2b: 160 },
+    { id: "HOMOCYSTEN_GD", name: "Homocysten", type: "test", mrp: 1155, b2b: 400 },
+    { id: "CA125_FEMALE_GD", name: "CA125 (Female)", type: "test", mrp: 1155, b2b: 350 },
+    { id: "PSA_MALE_GD", name: "PSA (Male)", type: "test", mrp: 935, b2b: 300 },
+    { id: "IGE_GD", name: "IGE", type: "test", mrp: 825, b2b: 195 },
+    { id: "TROPT_GD", name: "Trop-T", type: "test", mrp: 1800, b2b: 700 },
+    { id: "ANTI_CCP_GD", name: "Anti CCP", type: "test", mrp: 1375, b2b: 385 },
+    { id: "ANA_GD", name: "ANA", type: "test", mrp: 750, b2b: 175 },
+    { id: "TOTAL_PROTIEN_GD", name: "Total Protien", type: "test", mrp: 200, b2b: 22 },
+    { id: "COVID_ANTIBODY_GD", name: "Covid Antibody", type: "test", mrp: 700, b2b: 270 },
+    { id: "FNAC_GD", name: "FNAC", type: "test", mrp: 1150, b2b: 330 },
+    { id: "PP_INSULINE_GD", name: "PP Insuline", type: "test", mrp: 770, b2b: 150 },
+    { id: "CEA_GD", name: "CEA", type: "test", mrp: 715, b2b: 250 },
+    { id: "AFPL_GD", name: "AFPL", type: "test", mrp: 750, b2b: 295 },
+    { id: "HB_ELECTROPHORESIS_GD", name: "Hb Electrophoresis", type: "test", mrp: 600, b2b: 315 },
+    { id: "FT3_GD", name: "FT3", type: "test", mrp: 275, b2b: 60 },
+    { id: "FT4_GD", name: "FT4", type: "test", mrp: 300, b2b: 60 },
+    { id: "URINE_PROTEIN_CREATININE_RATIO_GD", name: "Urine Protein Creatinine Ratio", type: "test", mrp: 900, b2b: 150 },
+    { id: "PROTEIN_WITH_AG_RATIO_GD", name: "Protein with A/G Ratio", type: "test", mrp: 400, b2b: 150 },
+    { id: "LIPASE_GD", name: "Lipase", type: "test", mrp: 620, b2b: 120 },
+    { id: "ESTRADIOL_GD", name: "Estradiol", type: "test", mrp: 605, b2b: 165 },
+    { id: "PUS_CULTURE_AEROBIC_GD", name: "PUS Culture (Aerobic)", type: "test", mrp: 1455, b2b: 945 },
+    { id: "FT3_FT4_GD", name: "FT3  FT4", type: "test", mrp: 575, b2b: 120 },
+    { id: "FECAL_CALPROTECTIN_GD", name: "Fecal Calprotectin", type: "test", mrp: 3630, b2b: 2340 },
+    { id: "BLOOD_CULTURE_1_SE_GD", name: "Blood Culture 1 SE", type: "test", mrp: 1045, b2b: 530 },
+    { id: "NT_PRO_BNP_GD", name: "NT-Pro BNP", type: "test", mrp: 3450, b2b: 2500 },
+    { id: "HBS_ANTIGEN_GD", name: "HBS Antigen", type: "test", mrp: 450, b2b: 250 },
+    { id: "MANTOUX_TEST_GD", name: "Mantoux Test", type: "test", mrp: null, b2b: null },
+    { id: "RETICULATE_COUNT_GD", name: "Reticulate Count", type: "test", mrp: 550, b2b: 20 },
+    { id: "DIRECT_COOMBS_TEST_GD", name: "Direct Coombs Test", type: "test", mrp: 825, b2b: 160 },
+    { id: "MICROALBUMINURIA_GD", name: "Microalbuminuria", type: "test", mrp: 800, b2b: 350 },
+    { id: "TOTAL_TESTOSTERON_GD", name: "Total Testosteron", type: "test", mrp: 605, b2b: 100 },
+    { id: "FREE_TESTOSTERON_GD", name: "Free Testosteron", type: "test", mrp: 1485, b2b: 340 },
+    { id: "PROTEIN_C_GD", name: "Protein C", type: "test", mrp: 5350, b2b: 2600 },
+    { id: "PROTEIN_S_GD", name: "Protein S", type: "test", mrp: 4950, b2b: 2600 },
+    { id: "LUPUS_ANTICOAGULANT_GD", name: "Lupus Anticoagulant", type: "test", mrp: 2650, b2b: 600 },
+    { id: "FIBRINOGEN_LEVEL_GD", name: "Fibrinogen Level", type: "test", mrp: 1250, b2b: 900 },
+    { id: "ANTI_DSDNA_NCX_GD", name: "Anti dsDNA NCX", type: "test", mrp: 1650, b2b: 200 },
+    { id: "APOLIPOPROTEIN_A1_B_GD", name: "Apolipoprotein A-1 & B", type: "test", mrp: null, b2b: null },
+    { id: "FOLIC_ACID_LEVEL_GD", name: "Folic Acid Level", type: "test", mrp: 1045, b2b: 160 },
+    { id: "ALLERGY_COMPREHENSIVE_GD", name: "Allergy Comprehensive", type: "test", mrp: null, b2b: null },
+    { id: "MALERIA_ANTIGEN_GD", name: "Maleria Antigen", type: "test", mrp: 700, b2b: 100 },
+    { id: "URINE_GLUCOSE_FASTING_GD", name: "Urine Glucose (Fasting)", type: "test", mrp: 70, b2b: 25 },
+    { id: "FACTOR_V_GD", name: "Factor V", type: "test", mrp: 7086, b2b: 4200 },
+    { id: "FERRITINE_GD", name: "Ferritine", type: "test", mrp: 800, b2b: 160 },
+    { id: "HAV_GD", name: "HAV", type: "test", mrp: 880, b2b: 275 },
+    { id: "HEV_GD", name: "HEV", type: "test", mrp: 1210, b2b: 375 },
+    { id: "RA_TEST_GD", name: "RA Test", type: "test", mrp: 495, b2b: 200 },
+    { id: "IRON_PROFILE_WITH_FERRITINE_GD", name: "Iron Profile with Ferritine", type: "test", mrp: null, b2b: null },
+    { id: "ALLERGY_DRUG_TEST_GD", name: "Allergy Drug Test", type: "test", mrp: 5900, b2b: 1700 },
+    { id: "IGA_TTG_GD", name: "IGA TTG", type: "test", mrp: 1210, b2b: 280 },
+    { id: "PERIPHERAL_SMEAR_GD", name: "Peripheral Smear", type: "test", mrp: 300, b2b: 100 },
+    { id: "PTT_GD", name: "PTT", type: "test", mrp: 450, b2b: 105 },
+    { id: "CORTISOL_8_AM_GD", name: "Cortisol 8 AM", type: "test", mrp: 605, b2b: 295 },
+    { id: "H_PYLORI_STOOL_GD", name: "H. Pylori Stool", type: "test", mrp: 1500, b2b: 1200 },
+    { id: "CHIKUNGUNYA_IGG_GD", name: "Chikungunya IgG", type: "test", mrp: 825, b2b: 500 },
+    { id: "FBA_GD", name: "FBA", type: "test", mrp: null, b2b: null },
+    { id: "PROTEIN_ELECTROPHORESIS_GD", name: "Protein Electrophoresis", type: "test", mrp: 660, b2b: 350 },
+    { id: "SPUTUM_TB_CULTURE_ABS_GD", name: "Sputum TB Culture & ABS", type: "test", mrp: null, b2b: null },
+    { id: "COMPLEMENT_C3_C4_GD", name: "Complement C3 & C4", type: "test", mrp: null, b2b: null },
+    { id: "DHEAS_GD", name: "DHEAS", type: "test", mrp: 1045, b2b: 275 },
+    { id: "DHEA_GD", name: "DHEA", type: "test", mrp: 2965, b2b: 2150 },
+    { id: "TORCH_COMPLEX_GD", name: "Torch Complex", type: "test", mrp: 1430, b2b: 800 },
+    { id: "ZINC_LEVEL_GD", name: "Zinc Level", type: "test", mrp: 880, b2b: 460 },
+    { id: "MAGNESIUM_GD", name: "Magnesium", type: "test", mrp: 440, b2b: 50 },
+    { id: "ESTROGEN_GD", name: "Estrogen", type: "test", mrp: null, b2b: null },
+    { id: "C_PEPTIDE_RANDOM_GD", name: "C-Peptide Random", type: "test", mrp: null, b2b: null },
+    { id: "B2_GLYCOPROTEIN_1_IGG_GD", name: "B2 Glycoprotein 1 IgG", type: "test", mrp: 1100, b2b: 660 },
+    { id: "KARYOTYPING_HUSBAND_GD", name: "Karyotyping - Husband", type: "test", mrp: 4400, b2b: 1500 },
+    { id: "KARYOTYPING_WIFE_GD", name: "Karyotyping - Wife", type: "test", mrp: 4400, b2b: 1500 },
+    { id: "INFLUENZA_SCREENING_FOR_ABF_GD", name: "Influenza Screening for ABF", type: "test", mrp: null, b2b: null },
+    { id: "PSA_FREE_TOTAL_GD", name: "PSA Free & Total", type: "test", mrp: 1760, b2b: 465 },
+    { id: "LH_GD", name: "LH", type: "test", mrp: 495, b2b: 100 },
+    { id: "FSH_GD", name: "FSH", type: "test", mrp: 495, b2b: 100 },
+    { id: "SEMEN_ANALYSIS_GD", name: "Semen Analysis", type: "test", mrp: null, b2b: null },
+    { id: "ALKALINE_PHOSPHATASE_GD", name: "Alkaline Phosphatase", type: "test", mrp: null, b2b: null },
+    { id: "GLOBULIN_GD", name: "Globulin", type: "test", mrp: null, b2b: null },
+    { id: "BUN_CREATININE_RATIO_GD", name: "BUN / Creatinine Ratio", type: "test", mrp: null, b2b: null },
+    { id: "UREA_G_RATIO_GD", name: "Urea/G Ratio", type: "test", mrp: null, b2b: null },
+    { id: "T3_GD", name: "T3", type: "test", mrp: null, b2b: null },
+    { id: "T4_GD", name: "T4", type: "test", mrp: null, b2b: null },
+    { id: "STOOL_ROUTINE_GD", name: "Stool Routine", type: "test", mrp: 220, b2b: 60 },
+    { id: "ALBUMIN_GD", name: "Albumin", type: "test", mrp: null, b2b: null },
+    { id: "BILLIRUBIN_INDIRECT_GD", name: "Billirubin Indirect", type: "test", mrp: null, b2b: null },
+    { id: "BICARBONATE_GD", name: "Bicarbonate", type: "test", mrp: null, b2b: null },
+    { id: "AMYLASE_GD", name: "Amylase", type: "test", mrp: null, b2b: null },
+    { id: "ACTH_GD", name: "ACTH", type: "test", mrp: null, b2b: null },
+    { id: "THROAT_SWAB_C_S_GD", name: "Throat Swab C/S", type: "test", mrp: null, b2b: null },
+    { id: "ASO_TITER_GD", name: "ASO Titer", type: "test", mrp: null, b2b: null }
+  ],
+
+  combos: [
+    { id: "LFT_GD", name: "LFT", type: "combo", contains: ["Bilirubin-Total", "Bilirubin-Direct", "SGOT", "SGPT", "Total Protien", "Protein with A/G Ratio", "GGT", "Alkaline Phosphatase", "Globulin", "Albumin", "Billirubin Indirect"], mrp: 1045, b2b: 150 },
+    { id: "RFT_GD", name: "RFT", type: "combo", contains: ["BUN", "Calcium", "Albumin", "Creatinine", "Phosphorous", "Uric Acid", "Globulin", "Sodium", "Potassium", "Chlorides", "BUN / Creatinine Ratio", "Urea"], mrp: 1150, b2b: 863 },
+    { id: "ELECTROLYTES_GD", name: "Electrolytes", type: "combo", contains: ["Sodium", "Potassium", "Chlorides"], mrp: 520, b2b: 100 },
+    { id: "TOTAL_TFT_GD", name: "Total TFT", type: "combo", contains: ["T3", "T4", "TSH"], mrp: 495, b2b: 60 },
+    { id: "FREE_TFT_GD", name: "Free TFT", type: "combo", contains: ["FT3", "FT4", "TSH"], mrp: 1045, b2b: 140 },
+    { id: "TRIPLE_H_GD", name: "Triple H", type: "combo", contains: ["HCV", "HBsAg", "HIV"], mrp: 1730, b2b: 350 }
+  ],
+
+  packages: [
+    { id: "GD_LIFE_A1_GD", name: "GD Life A1", type: "package", contains: ["Iron Study", "RFT", "CBC", "LFT", "Lipid Profile", "Total TFT"], mrp: 1400, b2b: 295 },
+    { id: "GD_LIFE_A3_GD", name: "GD Life A3", type: "package", contains: ["FBS", "LFT", "Lipid Profile", "TSH", "CBC", "RFT"], mrp: 1200, b2b: 230 },
+    { id: "GD_WELLNESS_1_3_GD", name: "GD Wellness 1.3", type: "package", contains: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "Vit D3", "Vit B12", "Total TFT"], mrp: 1800, b2b: 600 },
+    { id: "ALPHA_WELLNESS_1_3_GD", name: "ALPHA WELLNESS 1.3", type: "package", contains: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "RFT", "Vit D3", "Vit B12", "CBC", "ESR", "CRP", "Total TFT"], mrp: 2150, b2b: 750 },
+    { id: "COMPREHENSIVE_FULL_BODY_CHECKUP_GD", name: "COMPREHENSIVE FULL BODY CHECKUP", type: "package", contains: ["CBC", "Vit B12", "Vit D3", "HBsAg", "Urine Routine", "Peripheral Smear", "ESR", "Electrolytes", "Iron Study", "LFT", "Lipid Profile", "CRP"], mrp: 2000, b2b: 1050 },
+    { id: "GD_WELLNESS_15_1_GD", name: "GD WELLNESS 15.1", type: "package", contains: ["Iron Study", "LFT", "Lipid Profile", "RFT", "Total TFT"], mrp: 1000, b2b: 550 },
+    { id: "GD_LIFE_A6_GD", name: "GD LIFE - A6", type: "package", contains: ["Homocysten", "Iron Study", "LFT", "Lipid Profile", "Total TFT", "HbA1C", "RFT", "Vit B12", "Vit D3"], mrp: 1800, b2b: 750 },
+    { id: "SUMMER_HEALTH_PACKAGE_GD", name: "Summer Health Package", type: "package", contains: ["Iron Study", "Total TFT", "LFT", "HbA1C", "RFT", "Vit D3", "Vit B12", "Lipid Profile", "Electrolytes", "CBC", "Urine Routine"], mrp: 2000, b2b: 700 }
+  ]
+}
+  ];
+
+  let normalizedEntities = [], selectedItems = [], optimizedPlan = [];
+  let selectedLabs = new Set([labsData[0].name]);
+
+  function currency(v) { return "₹" + Number(v).toLocaleString(); }
+  function unique(arr) { return [...new Set(arr)]; }
+  function uniqueById(arr){ const map = new Map(); arr.forEach(item=> map.set(item.id,item)); return [...map.values()]; }
   
-  document.getElementById("result").innerHTML = html;
-  renderComparison();
-}
-
-// Comparison table rendering
-function renderComparison() {
-  if(selectedTestsFlat.length === 0) { 
-    document.getElementById("comparisonSection").style.display = "none"; 
-    return; 
+  function showToast(msg) { 
+    const t = document.getElementById("toast"); 
+    t.innerHTML = `<i class="fas fa-check-circle" style="margin-right: 8px;"></i> ${msg}`; 
+    t.classList.add("show"); 
+    setTimeout(() => t.classList.remove("show"), 2000); 
   }
-  document.getElementById("comparisonSection").style.display = "block";
   
-  let html = `<div class="comparison-table-wrapper"><table class="comparison-table"><thead>
-    <tr><th>Lab</th><th>Selected Tests (MRP / B2B)</th><th>Total MRP / B2B</th><th>Combos</th><th>Packages</th></tr>
-  </thead><tbody>`;
+  function focusSearchInput(){ document.getElementById("searchInput").focus(); }
+
+  async function copyToClipboard(text, successMessage) {
+    if (!text || text.trim() === "") {
+      showToast("Nothing to copy");
+      return false;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(successMessage || "Copied successfully");
+      return true;
+    } catch (err) {
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const success = document.execCommand("copy");
+        textarea.remove();
+        if (success) {
+          showToast(successMessage || "Copied successfully");
+          return true;
+        } else {
+          showToast("Copy failed. Please try again.");
+          return false;
+        }
+      } catch (fallbackErr) {
+        showToast("Copy failed. Please manually select and copy.");
+        return false;
+      }
+    }
+  }
+
+  function buildLabLookup(lab){ const lookup={}; [...lab.tests,...lab.combos,...lab.packages].forEach(i=>{ lookup[i.id]=i; lookup[i.name]=i; }); return lookup; }
+  function normalizeEntity(entity, lookup){ const visited=new Set(); function expand(item){ if(!item||visited.has(item.id)) return []; visited.add(item.id); if(item.type==="test") return [item.name]; let res=[]; (item.contains||[]).forEach(name=>{ const child=lookup[name]||Object.values(lookup).find(x=>x.name===name); if(child){ if(child.type==="test") res.push(child.name); else res.push(...expand(child)); } else res.push(name); }); return res; } return {...entity, covers:unique(expand(entity))}; }
+  function buildNormalizedEntities(){ normalizedEntities=[]; labsData.forEach(lab=>{ const lookup=buildLabLookup(lab); [...lab.tests,...lab.combos,...lab.packages].forEach(e=>{ normalizedEntities.push({...normalizeEntity(e,lookup), lab:lab.name}); }); }); }
+  function getAllSelectableItems(){ const map=new Map(); normalizedEntities.forEach(e=>{ const key=e.name+"_"+e.type; if(!map.has(key)) map.set(key,{name:e.name,type:e.type,covers:e.covers}); }); return [...map.values()]; }
+  function getRequiredTests(){ let tests=[]; selectedItems.forEach(item=>{ const ent=normalizedEntities.find(x=>x.name===item.name && x.type===item.type); if(ent) tests.push(...ent.covers); }); return unique(tests); }
+
+  function toggleItemSelection(item, isChecked) {
+    if(isChecked) {
+      if(!selectedItems.some(x=> x.name===item.name && x.type===item.type)) selectedItems.push(item);
+    } else {
+      selectedItems = selectedItems.filter(x=> !(x.name===item.name && x.type===item.type));
+    }
+    renderSelectionList();
+    renderSelectedItems();
+    renderComparisonView();
+    optimizePlan();
+  }
+
+  function renderSelectionList(){ 
+    const container=document.getElementById("selectionList"); 
+    const search=document.getElementById("searchInput").value.toLowerCase(); 
+    const items=getAllSelectableItems().filter(i=>i.name.toLowerCase().includes(search)); 
+    container.innerHTML=""; 
+    items.forEach(item=>{ 
+      const checked=selectedItems.some(x=>x.name===item.name && x.type===item.type); 
+      const div=document.createElement("div"); 
+      div.className="checkbox-item"; 
+      div.innerHTML=`<input type="checkbox" ${checked?"checked":""}><div><strong>${item.name}</strong><div class="muted" style="font-size:12px;">${item.type.toUpperCase()}</div></div>`; 
+      const chk=div.querySelector("input");
+      div.addEventListener("click", (e) => {
+        if(e.target.tagName === 'INPUT' || e.target.closest('input')) return;
+        const newChecked = !chk.checked;
+        chk.checked = newChecked;
+        toggleItemSelection(item, newChecked);
+        focusSearchInput();
+      });
+      chk.addEventListener("change", (e) => {
+        e.stopPropagation();
+        toggleItemSelection(item, chk.checked);
+        focusSearchInput();
+      });
+      container.appendChild(div); 
+    }); 
+  }
+
+  function renderSelectedItems(){ const cont=document.getElementById("selectedItemsContainer"); cont.innerHTML=""; selectedItems.forEach(item=>{ const chip=document.createElement("div"); chip.className="chip"; chip.innerHTML=`${item.name}<button>&times;</button>`; chip.querySelector("button").addEventListener("click",()=>{ selectedItems=selectedItems.filter(x=>!(x.name===item.name && x.type===item.type)); renderSelectionList(); renderSelectedItems(); renderComparisonView(); optimizePlan(); focusSearchInput(); }); cont.appendChild(chip); }); }
   
-  for(const lab of labsData) {
-    if(!selectedLabs.has(lab.name)) continue;
-    const sel = selectedTestsFlat.filter(t => lab.tests.some(labT => labT.name === t && labT.b2b !== null));
-    let sumMRP = 0, sumB2B = 0;
-    const testsHtml = sel.map(t => { 
-      const obj = lab.tests.find(lt => lt.name === t); 
-      if(obj) { sumMRP += obj.mrp; sumB2B += obj.b2b; } 
-      return `<span class="test-item">${t} <span style="color:#7AB2B2;">₹${obj.mrp}</span> / <span class="b2p-highlight">₹${obj.b2b}</span></span>`;
-    }).join('');
-    
-    const combosHtml = lab.combos.filter(c => c.tests.some(t => selectedTestsFlat.includes(t)))
-      .map(c => `<div><strong>${c.name}</strong> <span style="color:#7AB2B2;">₹${c.mrp}</span> / <span class="b2p-highlight">₹${c.b2b}</span> <i class="fas fa-info-circle info-icon" onclick='showInfo("${c.name}", "Tests: ${c.tests.join(", ")}")'></i></div>`).join('') || "-";
-    
-    const pkgsHtml = lab.packages.filter(p => expandPackageTests(lab, p).some(t => selectedTestsFlat.includes(t)))
-      .map(p => `<div><strong>${p.name}</strong> <span style="color:#7AB2B2;">₹${p.mrp}</span> / <span class="b2p-highlight">₹${p.b2b}</span> <i class="fas fa-info-circle info-icon" onclick='showInfo("${p.name}", "Tests: ${expandPackageTests(lab, p).join(", ")}")'></i></div>`).join('') || "-";
-    
-    html += `<tr>
-      <td class="lab-name">${lab.name}</td>
-      <td>${testsHtml || "-"}</td>
-      <td><div>MRP: ₹${sumMRP}</div><div><span class="price-b2b">B2B: ₹${sumB2B}</span></div></td>
-      <td>${combosHtml}</td>
-      <td>${pkgsHtml}</td>
-    </tr>`;
+  function renderLabFilters(){ const cont=document.getElementById("labFilters"); cont.innerHTML=""; labsData.forEach(lab=>{ const checked=selectedLabs.has(lab.name); const div=document.createElement("div"); div.className="checkbox-item"; div.innerHTML=`<input type="checkbox" ${checked?"checked":""}><div>${lab.name}</div>`; div.querySelector("input").addEventListener("change",e=>{ if(e.target.checked) selectedLabs.add(lab.name); else selectedLabs.delete(lab.name); renderComparisonView(); optimizePlan(); }); cont.appendChild(div); }); }
+  
+  function renderEntityCard(entity){ return `<div class="entity-card" data-entity-name="${entity.name}" data-entity-type="${entity.type}"><div style="display:flex;justify-content:space-between;"><h4 style="font-weight:600;">${entity.name}</h4><span class="badge ${entity.type}">${entity.type}</span></div><div class="price-block"><div style="display:flex;justify-content:space-between;"><span>MRP</span><span>${currency(entity.mrp)}</span></div><div class="b2b-highlight"><div style="display:flex;justify-content:space-between;"><span>B2B PRICE</span><span class="b2b-price">${currency(entity.b2b)}</span></div></div></div>${entity.type!=="test"?`<button class="info-btn" data-id="${entity.id}"><i class="fas fa-info-circle"></i> Details</button>`:""}</div>`; }
+  
+  function attachAccordionEvents(){ document.querySelectorAll(".section-header").forEach(h=>{ h.removeEventListener("click", toggleSection); h.addEventListener("click", toggleSection); }); }
+  function toggleSection(e){ const header=e.currentTarget; const content=header.nextElementSibling; if(content&&content.classList.contains("section-content")){ const arrow=header.querySelector(".section-arrow"); content.classList.toggle("open"); if(arrow) arrow.style.transform=content.classList.contains("open")?"rotate(180deg)":"rotate(0deg)"; } }
+  
+  function renderComparisonView(){ const container=document.getElementById("comparisonView"); container.innerHTML=""; const required=getRequiredTests(); if(required.length===0){ container.innerHTML=`<div class="muted" style="padding:24px;text-align:center;">Select tests to see lab comparison</div>`; return; }
+    const visible=labsData.filter(l=>selectedLabs.has(l.name));
+    visible.forEach(lab=>{ const entities=normalizedEntities.filter(x=>x.lab===lab.name&&x.covers.some(t=>required.includes(t))); const tests=entities.filter(x=>x.type==="test"), combos=entities.filter(x=>x.type==="combo"), packages=entities.filter(x=>x.type==="package"); const block=document.createElement("div"); block.className="lab-block"; block.innerHTML=`<div class="lab-header"><h2><i class="fas fa-hospital-user" style="color:#1ECAD3; margin-right:8px;"></i>${lab.name}</h2><span class="accordion-icon"><i class="fas fa-chevron-down"></i></span></div><div class="lab-body"><div class="accordion-section"><div class="section-header"><span><i class="fas fa-vial"></i> Individual Tests (${tests.length})</span><span class="section-arrow">▼</span></div><div class="section-content"><div class="entity-grid">${tests.map(renderEntityCard).join("")}</div></div></div><div class="accordion-section"><div class="section-header"><span><i class="fas fa-puzzle-piece"></i> Combos (${combos.length})</span><span class="section-arrow">▼</span></div><div class="section-content"><div class="entity-grid">${combos.map(renderEntityCard).join("")}</div></div></div><div class="accordion-section"><div class="section-header"><span><i class="fas fa-cubes"></i> Packages (${packages.length})</span><span class="section-arrow">▼</span></div><div class="section-content"><div class="entity-grid">${packages.map(renderEntityCard).join("")}</div></div></div></div>`; container.appendChild(block); });
+    attachAccordionEvents(); 
+    attachInfoButtons(); 
+    attachComparisonCardClick(); 
   }
-  html += `</tbody></td></div>`;
-  document.getElementById("comparisonTable").innerHTML = html;
-}
-
-// Copy utilities
-function copyToClipboard(text, msg) {
-  if(navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => alert(msg)).catch(() => fallbackCopy(text, msg));
-  } else {
-    fallbackCopy(text, msg);
-  }
-}
-
-function fallbackCopy(text, msg) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.top = '-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  try {
-    document.execCommand('copy');
-    alert(msg);
-  } catch(e) {
-    alert("Copy failed");
-  }
-  document.body.removeChild(ta);
-}
-
-function copyGlobal() {
-  if(!selectedTestsFlat.length) return alert("No selections");
-  const result = findOptimalCombination(selectedTestsFlat, selectedLabs);
-  const items = result.items.map(i => i.name).join(", ");
-  copyToClipboard(items, "Copied: " + items);
-}
-
-window.copyLabItems = function(labName) {
-  const result = findOptimalCombination(selectedTestsFlat, selectedLabs);
-  const items = result.items.filter(i => i.lab === labName).map(i => i.name).join(", ");
-  copyToClipboard(items, `Copied from ${labName}: ${items}`);
-};
-
-// Modal functions
-window.showInfo = function(title, body) { 
-  document.getElementById("modalTitle").innerText = title; 
-  document.getElementById("modalBody").innerHTML = body; 
-  document.getElementById("infoModal").style.display = "flex"; 
-};
-window.closeModal = () => document.getElementById("infoModal").style.display = "none";
-
-// Lab checkboxes
-function renderLabCheckboxes() {
-  const container = document.getElementById("labCheckboxes");
-  container.innerHTML = "";
-  labsData.forEach(lab => {
-    const label = document.createElement("label");
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = selectedLabs.has(lab.name);
-    cb.addEventListener("change", (e) => { 
-      if(e.target.checked) selectedLabs.add(lab.name); 
-      else selectedLabs.delete(lab.name); 
-      runOptimization(); 
-      renderComparison(); 
+  
+  function attachComparisonCardClick() {
+    document.querySelectorAll(".entity-card").forEach(card => {
+      card.removeEventListener("click", comparisonCardHandler);
+      card.addEventListener("click", comparisonCardHandler);
     });
-    label.appendChild(cb);
-    label.appendChild(document.createTextNode(lab.name));
-    container.appendChild(label);
+  }
+  function comparisonCardHandler(e) {
+    if(e.target.closest('.info-btn')) return;
+    const card = e.currentTarget;
+    const name = card.getAttribute("data-entity-name");
+    const type = card.getAttribute("data-entity-type");
+    if(name && type) {
+      const selectableItem = getAllSelectableItems().find(i => i.name === name && i.type === type);
+      if(selectableItem) {
+        const isSelected = selectedItems.some(x=> x.name === selectableItem.name && x.type === selectableItem.type);
+        toggleItemSelection(selectableItem, !isSelected);
+      }
+    }
+  }
+  
+  function attachInfoButtons(){ document.querySelectorAll(".info-btn").forEach(btn=>{ btn.addEventListener("click",(e)=>{ e.stopPropagation(); const entity=normalizedEntities.find(e=>e.id===btn.dataset.id); if(entity) openModal(entity); }); }); }
+  function openModal(entity){ document.getElementById("modalTitle").innerHTML=entity.name; document.getElementById("modalBody").innerHTML=`<div><strong>Type:</strong> ${entity.type}</div><div><strong>MRP:</strong> ${currency(entity.mrp)}</div><div class="b2b-highlight" style="margin:12px 0"><strong>B2B:</strong> ${currency(entity.b2b)}</div>${entity.contains?`<div><strong>Contains:</strong><ul>${entity.contains.map(c=>`<li>${c}</li>`).join("")}</ul></div>`:""}<div><strong>Expanded Tests:</strong><ul>${entity.covers.map(c=>`<li>${c}</li>`).join("")}</ul></div>`; document.getElementById("infoModal").classList.add("active"); }
+  document.getElementById("closeModal").addEventListener("click",()=>document.getElementById("infoModal").classList.remove("active"));
+
+  function optimizePlan(){ const req=getRequiredTests(); if(req.length===0){ optimizedPlan=[]; updateTotals(0,0); document.getElementById("optimizedResults").innerHTML=`<div class="muted">Select items to view optimized plan</div>`; return; }
+    let entities=normalizedEntities.filter(x=>selectedLabs.has(x.lab)).filter(e=>e.covers.some(t=>req.includes(t))); const bitMap={}; req.forEach((t,i)=>bitMap[t]=i); const maskEnt=entities.map(e=>{ let mask=0; e.covers.forEach(t=>{ if(bitMap.hasOwnProperty(t)) mask|=(1<<bitMap[t]); }); return {...e,mask}; }); const target=(1<<req.length)-1; const dp=Array(target+1).fill(Infinity); const parent=Array(target+1).fill(null); dp[0]=0; for(let cur=0;cur<=target;cur++){ if(dp[cur]===Infinity)continue; maskEnt.forEach(e=>{ const nxt=cur|e.mask; const newCost=dp[cur]+e.b2b; if(newCost<dp[nxt]){ dp[nxt]=newCost; parent[nxt]={prevMask:cur,entity:e}; } }); } if(dp[target]===Infinity){ document.getElementById("optimizedResults").innerHTML=`<div class="muted">Insufficient coverage</div>`; return; } let cur=target, chosen=[]; while(cur!==0){ const step=parent[cur]; if(!step)break; chosen.push(step.entity); cur=step.prevMask; } optimizedPlan=uniqueById(chosen.reverse()); renderOptimizedPlan(); }
+
+  function renderOptimizedPlan(){ 
+    const cont=document.getElementById("optimizedResults"); 
+    cont.innerHTML=""; 
+    if(!optimizedPlan.length)return; 
+    let totalMRP=0,totalB2B=0,group={}; 
+    optimizedPlan.forEach(i=>{ totalMRP+=i.mrp; totalB2B+=i.b2b; if(!group[i.lab])group[i.lab]=[]; group[i.lab].push(i); }); 
+    const listDiv=document.createElement("div"); 
+    optimizedPlan.forEach(item=>{ const el=document.createElement("div"); el.className="optimized-item"; el.innerHTML=`<div style="display:flex;justify-content:space-between;"><div><strong style="font-size:16px;">${item.name}</strong><div class="muted">${item.lab}</div></div><span class="badge ${item.type}">${item.type}</span></div><div class="covered-tests" style="font-size:13px;"><i class="fas fa-dna"></i> Covers: ${item.covers.join(", ")}</div><div class="price-block" style="margin-top:12px;"><div>MRP ${currency(item.mrp)}</div><div class="b2b-highlight">B2B ${currency(item.b2b)}</div></div>`; listDiv.appendChild(el); }); 
+    cont.appendChild(listDiv); 
+    const groupDiv=document.createElement("div"); groupDiv.className="lab-grouping-section"; 
+    groupDiv.innerHTML="<h4 style='font-weight:600; margin-bottom:16px;'><i class='fas fa-building'></i> Lab-wise Grouping with Copy</h4>"; 
+    Object.entries(group).forEach(([lab,items])=>{ 
+      const cardDiv=document.createElement("div"); cardDiv.className="lab-group-card"; 
+      const itemNames = items.map(i => i.name);
+      const uniqueNames = [...new Set(itemNames)];
+      const copyText = uniqueNames.join(", ");
+      cardDiv.innerHTML=`<div class="lab-group-header"><span class="lab-group-title"><i class="fas fa-flask" style="color:#1ECAD3;"></i> ${lab}</span><button class="btn-lab-copy copy-lab-btn" data-lab="${lab}" data-copy-text="${copyText.replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Copy Items (${items.length})</button></div><ul class="lab-items-list">${items.map(i=>`<li>${i.name}</li>`).join("")}</ul>`; 
+      groupDiv.appendChild(cardDiv); 
+    }); 
+    cont.appendChild(groupDiv); 
+    updateTotals(totalMRP,totalB2B); 
+    
+    document.querySelectorAll('.copy-lab-btn').forEach(btn => {
+      btn.removeEventListener('click', handleLabCopy);
+      btn.addEventListener('click', handleLabCopy);
+    });
+  }
+  
+  function handleLabCopy(e) {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const labName = btn.getAttribute('data-lab');
+    const copyText = btn.getAttribute('data-copy-text');
+    if (copyText && copyText.trim()) {
+      copyToClipboard(copyText, `Copied ${labName} items`);
+    } else {
+      showToast(`No items to copy for ${labName}`);
+    }
+  }
+
+  function updateTotals(mrp,b2b){ document.getElementById("totalMRP").innerHTML=currency(mrp); document.getElementById("totalB2B").innerHTML=currency(b2b); document.getElementById("totalSavings").innerHTML=currency(mrp-b2b); }
+
+  document.getElementById("copyAllBtn").addEventListener("click", async () => { 
+    if(optimizedPlan.length === 0){ 
+      showToast("Nothing to copy"); 
+      return; 
+    } 
+    const allItemNames = unique(optimizedPlan.map(x => x.name));
+    const text = allItemNames.join(", ");
+    copyToClipboard(text, "Copied all lab items");
   });
-}
-
-// Event listeners
-document.getElementById("clearAllBtn").addEventListener("click", clearAll);
-document.getElementById("globalCopyBtn").addEventListener("click", copyGlobal);
-
-// Initialize
-renderLabCheckboxes();
-renderSelected();
-runOptimization();
+  
+  document.getElementById("searchInput").addEventListener("input",renderSelectionList);
+  document.getElementById("optimizeBtn").addEventListener("click",optimizePlan);
+  document.getElementById("clearAllBtn").addEventListener("click",()=>{ selectedItems=[]; document.getElementById("searchInput").value=""; renderSelectionList(); renderSelectedItems(); renderComparisonView(); optimizePlan(); focusSearchInput(); });
+  
+  buildNormalizedEntities(); 
+  renderSelectionList(); 
+  renderSelectedItems(); 
+  renderLabFilters(); 
+  renderComparisonView(); 
+  optimizePlan(); 
+  focusSearchInput();
 </script>
 </body>
 </html>
