@@ -69,6 +69,12 @@
       100% { transform: rotate(360deg); }
     }
 
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
     .fade-in-up {
       animation: fadeInUp 0.6s ease-out;
     }
@@ -141,6 +147,34 @@
       font-size: clamp(13px, 3vw, 14px);
       color: rgba(255, 255, 255, 0.9);
       font-weight: 400;
+    }
+
+    /* Auto-refresh status bar */
+    .auto-refresh-status {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+      border-radius: 40px;
+      padding: 6px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: white;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+
+    .auto-refresh-status i {
+      font-size: 12px;
+      animation: pulse 2s infinite;
+    }
+
+    .refresh-countdown {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-family: monospace;
+      font-size: 11px;
     }
 
     /* Content Container */
@@ -480,7 +514,6 @@
       overflow-wrap: break-word;
     }
 
-    /* FIXED: Report Footer - Mobile Responsive Layout */
     .report-footer {
       display: flex;
       justify-content: space-between;
@@ -493,15 +526,14 @@
       flex-wrap: wrap;
     }
 
-    /* FIXED: File Info Container */
     .file-info {
       display: flex;
       align-items: center;
       gap: 8px;
       flex: 1;
-      min-width: 0; /* Allows flex item to shrink below content size */
+      min-width: 0;
       overflow: hidden;
-      max-width: calc(100% - 100px); /* Leaves space for button */
+      max-width: calc(100% - 100px);
     }
 
     .file-info i {
@@ -510,7 +542,6 @@
       flex-shrink: 0;
     }
 
-    /* FIXED: Filename with truncation */
     .filename {
       font-size: 13px;
       color: #4A5B6E;
@@ -521,7 +552,6 @@
       min-width: 0;
     }
 
-    /* FIXED: View Button */
     .btn-view {
       background: linear-gradient(135deg, #088395, #09637E);
       color: white;
@@ -552,7 +582,6 @@
       font-weight: 600;
     }
 
-    /* Empty State */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -700,20 +729,17 @@
         padding: 16px;
       }
 
-      /* FIXED: Mobile layout for report footer */
       .report-footer {
         flex-direction: row;
         align-items: center;
         gap: 12px;
       }
 
-      /* FIXED: File info takes remaining space */
       .file-info {
         max-width: calc(100% - 90px);
         flex: 1;
       }
 
-      /* FIXED: Ensure filename truncates properly on mobile */
       .filename {
         max-width: 100%;
         white-space: nowrap;
@@ -721,7 +747,6 @@
         text-overflow: ellipsis;
       }
 
-      /* FIXED: Button remains visible and properly sized */
       .btn-view {
         flex-shrink: 0;
         padding: 8px 14px;
@@ -743,7 +768,6 @@
       }
     }
 
-    /* FIXED: Extra small devices (phones under 480px) */
     @media (max-width: 480px) {
       .page-title h1 {
         font-size: 20px;
@@ -771,7 +795,6 @@
         font-size: 15px;
       }
 
-      /* FIXED: Further optimize for very small screens */
       .report-footer {
         gap: 8px;
       }
@@ -799,14 +822,13 @@
       }
     }
 
-    /* Touch Device Optimizations */
     @media (hover: none) and (pointer: coarse) {
       .btn-primary, .btn-secondary, .tab-button, .btn-view {
         min-height: 48px;
       }
 
       .filter-input {
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
       }
     }
   </style>
@@ -837,6 +859,11 @@
       <div class="page-title">
         <h1>Patient Reports Dashboard</h1>
         <p>Last 15 days reports from diagnostic laboratories</p>
+        <div class="auto-refresh-status">
+          <i class="fas fa-sync-alt"></i>
+          <span>Auto-refresh every 5 minutes</span>
+          <span class="refresh-countdown" id="countdownTimer">04:59</span>
+        </div>
       </div>
     </div>
 
@@ -857,7 +884,6 @@
 
       <!-- Dr. Ajay Shah Tab -->
       <div id="dr-ajay-shah" class="tab-content active">
-        <!-- Filter Card -->
         <div class="filter-card">
           <div class="filter-grid">
             <div class="filter-group">
@@ -879,7 +905,6 @@
           </div>
         </div>
 
-        <!-- Stats Cards -->
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-info">
@@ -901,10 +926,7 @@
           </div>
         </div>
 
-        <!-- Reports Container -->
         <div id="reportContainerAjay" class="reports-grid"></div>
-        
-        <!-- Empty State -->
         <div id="noResultsAjay" class="empty-state" style="display: none;">
           <i class="fas fa-folder-open"></i>
           <h3>No reports found</h3>
@@ -914,7 +936,6 @@
 
       <!-- Dr. Jariwala Tab -->
       <div id="dr-jariwala" class="tab-content">
-        <!-- Filter Card -->
         <div class="filter-card">
           <div class="filter-grid">
             <div class="filter-group">
@@ -936,7 +957,6 @@
           </div>
         </div>
 
-        <!-- Stats Cards -->
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-info">
@@ -958,10 +978,7 @@
           </div>
         </div>
 
-        <!-- Reports Container -->
         <div id="reportContainerJariwala" class="reports-grid"></div>
-        
-        <!-- Empty State -->
         <div id="noResultsJariwala" class="empty-state" style="display: none;">
           <i class="fas fa-folder-open"></i>
           <h3>No reports found</h3>
@@ -972,34 +989,21 @@
   </div>
 
   <script>
-    // Web App URLs
     const WEB_APP_URLS = {
       'dr-ajay-shah': 'https://script.google.com/macros/s/AKfycbzJAa7e9lEIl-nUPnSZ-yQa2qeXUVISEyfJHlNBE-cvrzY5vRyG4Eory7bikNnnc2OD/exec',
       'dr-jariwala': 'https://script.google.com/macros/s/AKfycby8rNXc3hl6zbd3ZaAwuSDNqh-t1Uf93XIqbId2-ZMrIx3NzI-yrkpQ404H-FBlSASsqw/exec'
     };
     
-    // Store data for each tab
     const tabData = {
-      'dr-ajay-shah': {
-        allReports: [],
-        filteredReports: [],
-        currentSearch: '',
-        currentDate: '',
-        isLoading: false
-      },
-      'dr-jariwala': {
-        allReports: [],
-        filteredReports: [],
-        currentSearch: '',
-        currentDate: '',
-        isLoading: false
-      }
+      'dr-ajay-shah': { allReports: [], filteredReports: [], currentSearch: '', currentDate: '', isLoading: false },
+      'dr-jariwala': { allReports: [], filteredReports: [], currentSearch: '', currentDate: '', isLoading: false }
     };
     
     let activeTab = 'dr-ajay-shah';
     let startTime = null;
+    let refreshTimer = null;
+    let countdownInterval = null;
 
-    // Format date
     function formatDate(dateString) {
       if (!dateString) return 'Date not available';
       try {
@@ -1077,9 +1081,7 @@
     function filterReports(tabId) {
       const data = tabData[tabId];
       if (!data.allReports.length) return;
-      
       let filtered = [...data.allReports];
-      
       if (data.currentSearch) {
         const searchLower = data.currentSearch.toLowerCase();
         filtered = filtered.filter(report => {
@@ -1088,11 +1090,9 @@
           return subject.includes(searchLower) || filename.includes(searchLower);
         });
       }
-      
       if (data.currentDate) {
         filtered = filtered.filter(report => getDateOnly(report.date) === data.currentDate);
       }
-      
       data.filteredReports = filtered;
       displayReports(tabId);
     }
@@ -1124,36 +1124,77 @@
       filterReports(tabId);
     }
     
-    async function reloadTab(tabId) {
+    async function reloadTab(tabId, showOverlay = false) {
       const data = tabData[tabId];
       if (data.isLoading) return;
-      
       data.isLoading = true;
       const reloadBtn = document.getElementById(tabId === 'dr-ajay-shah' ? 'reloadAjay' : 'reloadJariwala');
       if (reloadBtn) reloadBtn.style.opacity = '0.7';
       
-      if (tabId === activeTab) {
+      if (showOverlay && tabId === activeTab) {
         const overlay = document.getElementById('loadingOverlay');
         overlay.style.display = 'flex';
-        startTime = Date.now();
       }
       
       try {
-        data.allReports = [];
-        data.filteredReports = [];
-        await fetchReports(tabId, WEB_APP_URLS[tabId], true);
-        clearFilters(tabId);
+        const response = await fetch(WEB_APP_URLS[tabId]);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const fetchedData = await response.json();
+        let reports = [];
+        if (Array.isArray(fetchedData)) reports = fetchedData;
+        else if (fetchedData.files && Array.isArray(fetchedData.files)) reports = fetchedData.files;
+        else if (fetchedData.success && fetchedData.files) reports = fetchedData.files;
+        
+        data.allReports = reports;
+        filterReports(tabId);
       } catch (error) {
         console.error(`Error reloading ${tabId}:`, error);
       } finally {
         data.isLoading = false;
         if (reloadBtn) reloadBtn.style.opacity = '1';
-        if (tabId === activeTab) {
+        if (showOverlay && tabId === activeTab) {
           setTimeout(() => {
             document.getElementById('loadingOverlay').style.display = 'none';
           }, 500);
         }
       }
+    }
+
+    async function silentRefreshAllTabs() {
+      console.log('Auto-refreshing reports in background...');
+      await Promise.all([
+        reloadTab('dr-ajay-shah', false),
+        reloadTab('dr-jariwala', false)
+      ]);
+      console.log('Auto-refresh completed at:', new Date().toLocaleTimeString());
+    }
+
+    function startAutoRefresh() {
+      if (refreshTimer) clearInterval(refreshTimer);
+      if (countdownInterval) clearInterval(countdownInterval);
+      
+      let remainingSeconds = 300;
+      const countdownElement = document.getElementById('countdownTimer');
+      
+      const updateCountdown = () => {
+        const mins = Math.floor(remainingSeconds / 60);
+        const secs = remainingSeconds % 60;
+        if (countdownElement) {
+          countdownElement.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        if (remainingSeconds <= 0) {
+          remainingSeconds = 300;
+        } else {
+          remainingSeconds--;
+        }
+      };
+      
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
+      
+      refreshTimer = setInterval(() => {
+        silentRefreshAllTabs();
+      }, 300000);
     }
 
     function displayReports(tabId) {
@@ -1214,49 +1255,11 @@
       });
     }
 
-    async function fetchReports(tabId, url, isReload = false) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const data = await response.json();
-        let reports = [];
-        if (Array.isArray(data)) reports = data;
-        else if (data.files && Array.isArray(data.files)) reports = data.files;
-        else if (data.success && data.files) reports = data.files;
-        
-        tabData[tabId].allReports = reports;
-        tabData[tabId].filteredReports = [...reports];
-        
-        if (tabData[tabId].currentSearch || tabData[tabId].currentDate) {
-          filterReports(tabId);
-        } else {
-          displayReports(tabId);
-        }
-        return true;
-      } catch (error) {
-        console.error(`Error fetching reports for ${tabId}:`, error);
-        if (!isReload) {
-          const container = document.getElementById(`reportContainer${tabId === 'dr-ajay-shah' ? 'Ajay' : 'Jariwala'}`);
-          if (container) {
-            container.innerHTML = `<div class="error-message" style="background:#FEE2E2; padding:20px; border-radius:12px; color:#DC2626; text-align:center;">Failed to load reports. Please try again later.</div>`;
-          }
-        }
-        return false;
-      }
-    }
-
     async function loadAllTabs() {
-      startTime = Date.now();
-      let loaded = 0;
-      const total = 2;
-      
-      await fetchReports('dr-ajay-shah', WEB_APP_URLS['dr-ajay-shah']);
-      loaded++;
-      
-      await fetchReports('dr-jariwala', WEB_APP_URLS['dr-jariwala']);
-      loaded++;
-      
+      await Promise.all([
+        reloadTab('dr-ajay-shah', true),
+        reloadTab('dr-jariwala', true)
+      ]);
       setTimeout(() => {
         document.getElementById('loadingOverlay').style.display = 'none';
       }, 500);
@@ -1274,12 +1277,10 @@
       });
     }
 
-    // Event Listeners
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
     });
 
-    // Search and filters
     const searchAjay = document.getElementById('searchInputAjay');
     const dateAjay = document.getElementById('datePickerAjay');
     const clearAjay = document.getElementById('clearFiltersAjay');
@@ -1294,7 +1295,7 @@
     }
     if (dateAjay) dateAjay.addEventListener('change', () => applyFilters('dr-ajay-shah'));
     if (clearAjay) clearAjay.addEventListener('click', () => clearFilters('dr-ajay-shah'));
-    if (reloadAjay) reloadAjay.addEventListener('click', () => reloadTab('dr-ajay-shah'));
+    if (reloadAjay) reloadAjay.addEventListener('click', () => reloadTab('dr-ajay-shah', true));
     
     const searchJariwala = document.getElementById('searchInputJariwala');
     const dateJariwala = document.getElementById('datePickerJariwala');
@@ -1310,7 +1311,7 @@
     }
     if (dateJariwala) dateJariwala.addEventListener('change', () => applyFilters('dr-jariwala'));
     if (clearJariwala) clearJariwala.addEventListener('click', () => clearFilters('dr-jariwala'));
-    if (reloadJariwala) reloadJariwala.addEventListener('click', () => reloadTab('dr-jariwala'));
+    if (reloadJariwala) reloadJariwala.addEventListener('click', () => reloadTab('dr-jariwala', true));
     
     document.querySelector('.close-modal')?.addEventListener('click', closeModal);
     window.addEventListener('click', (e) => {
@@ -1321,8 +1322,8 @@
       if (e.key === 'Escape') closeModal();
     });
     
-    // Initialize
     loadAllTabs();
+    startAutoRefresh();
   </script>
 </body>
 </html>
