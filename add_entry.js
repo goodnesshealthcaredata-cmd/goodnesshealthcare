@@ -368,6 +368,354 @@ function showVisitSchedule(selectedDate) {
   document.addEventListener("keydown", keyHandler);
 }
 
+/* ========================= Custom Time Picker (Alarm Clock Style) ========================= */
+class CustomTimePicker {
+  constructor(inputElement, options = {}) {
+    this.input = inputElement;
+    this.options = { ...options };
+    this.picker = null;
+    this.isOpen = false;
+    this.hours = [];
+    this.minutes = [];
+    this.selectedHour = "00";
+    this.selectedMinute = "00";
+    
+    this.init();
+  }
+  
+  init() {
+    // Hide the native input and create custom picker trigger
+    this.input.style.cursor = "pointer";
+    this.input.style.backgroundColor = "#fff";
+    this.input.readOnly = true;
+    
+    // Parse initial value if exists
+    if (this.input.value) {
+      const parts = this.input.value.split(":");
+      if (parts.length === 2) {
+        this.selectedHour = parts[0].padStart(2, "0");
+        this.selectedMinute = parts[1].padStart(2, "0");
+      }
+    }
+    
+    this.input.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.open();
+    });
+    
+    // Close on escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.isOpen) {
+        this.close();
+      }
+    });
+  }
+  
+  generateHourOptions() {
+    const hours = [];
+    for (let i = 0; i < 24; i++) {
+      hours.push(i.toString().padStart(2, "0"));
+    }
+    return hours;
+  }
+  
+  generateMinuteOptions() {
+    const minutes = [];
+    for (let i = 0; i < 60; i++) {
+      minutes.push(i.toString().padStart(2, "0"));
+    }
+    return minutes;
+  }
+  
+  open() {
+    if (this.isOpen) return;
+    
+    this.hours = this.generateHourOptions();
+    this.minutes = this.generateMinuteOptions();
+    
+    // Create picker container
+    this.picker = document.createElement("div");
+    this.picker.className = "custom-time-picker";
+    this.picker.style.cssText = `
+      position: fixed;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 320px;
+      z-index: 10001;
+      overflow: hidden;
+      animation: timePickerSlideIn 0.2s ease;
+    `;
+    
+    // Create header
+    const header = document.createElement("div");
+    header.style.cssText = `
+      background: linear-gradient(135deg, #09637E 0%, #088395 100%);
+      padding: 16px 20px;
+      color: white;
+      text-align: center;
+    `;
+    header.innerHTML = `<h3 style="margin:0;font-size:1rem;">Select Time (24-Hour)</h3>`;
+    
+    // Create time display
+    const timeDisplay = document.createElement("div");
+    timeDisplay.style.cssText = `
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 20px;
+      background: #f8fafc;
+      font-family: monospace;
+      letter-spacing: 2px;
+      border-bottom: 1px solid #e2e8f0;
+    `;
+    timeDisplay.textContent = `${this.selectedHour}:${this.selectedMinute}`;
+    
+    // Create picker body with scrollable columns
+    const pickerBody = document.createElement("div");
+    pickerBody.style.cssText = `
+      display: flex;
+      gap: 10px;
+      padding: 20px;
+      background: white;
+    `;
+    
+    // Hour column
+    const hourColumn = this.createScrollColumn(this.hours, this.selectedHour, "hour", timeDisplay);
+    // Minute column
+    const minuteColumn = this.createScrollColumn(this.minutes, this.selectedMinute, "minute", timeDisplay);
+    
+    // Colon separator
+    const colon = document.createElement("div");
+    colon.style.cssText = `
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #09637E;
+    `;
+    colon.textContent = ":";
+    
+    pickerBody.appendChild(hourColumn);
+    pickerBody.appendChild(colon);
+    pickerBody.appendChild(minuteColumn);
+    
+    // Buttons
+    const buttonContainer = document.createElement("div");
+    buttonContainer.style.cssText = `
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    `;
+    
+    const cancelBtn = this.createButton("Cancel", "ghost", () => this.close());
+    const confirmBtn = this.createButton("Confirm", "primary", () => {
+      this.input.value = `${this.selectedHour}:${this.selectedMinute}`;
+      this.input.dispatchEvent(new Event("change", { bubbles: true }));
+      this.input.dispatchEvent(new Event("input", { bubbles: true }));
+      this.close();
+    });
+    
+    buttonContainer.appendChild(cancelBtn);
+    buttonContainer.appendChild(confirmBtn);
+    
+    this.picker.appendChild(header);
+    this.picker.appendChild(timeDisplay);
+    this.picker.appendChild(pickerBody);
+    this.picker.appendChild(buttonContainer);
+    
+    // Position picker near input
+    const rect = this.input.getBoundingClientRect();
+    this.picker.style.top = `${rect.bottom + 10}px`;
+    this.picker.style.left = `${Math.max(10, rect.left - 100)}px`;
+    
+    // Ensure picker stays in viewport
+    if (parseInt(this.picker.style.top) + 400 > window.innerHeight) {
+      this.picker.style.top = `${rect.top - 420}px`;
+    }
+    if (parseInt(this.picker.style.left) + 320 > window.innerWidth) {
+      this.picker.style.left = `${window.innerWidth - 330}px`;
+    }
+    
+    document.body.appendChild(this.picker);
+    this.isOpen = true;
+    
+    // Click outside to close
+    setTimeout(() => {
+      document.addEventListener("click", this.handleOutsideClick);
+    }, 0);
+  }
+  
+  createScrollColumn(items, selectedValue, type, timeDisplay) {
+    const container = document.createElement("div");
+    container.style.cssText = `
+      flex: 1;
+      height: 200px;
+      overflow-y: auto;
+      text-align: center;
+      border-radius: 12px;
+      background: #f8fafc;
+      scroll-snap-type: y mandatory;
+    `;
+    
+    items.forEach(item => {
+      const option = document.createElement("div");
+      option.textContent = item;
+      option.style.cssText = `
+        padding: 12px;
+        cursor: pointer;
+        scroll-snap-align: center;
+        transition: all 0.2s ease;
+        font-size: 1rem;
+        font-weight: 500;
+      `;
+      
+      if (item === selectedValue) {
+        option.style.background = "#e0f2fe";
+        option.style.color = "#09637E";
+        option.style.fontWeight = "700";
+      }
+      
+      option.addEventListener("mouseenter", () => {
+        option.style.background = "#f1f5f9";
+      });
+      option.addEventListener("mouseleave", () => {
+        if (item === selectedValue) {
+          option.style.background = "#e0f2fe";
+        } else {
+          option.style.background = "";
+        }
+      });
+      
+      option.addEventListener("click", () => {
+        if (type === "hour") {
+          this.selectedHour = item;
+        } else {
+          this.selectedMinute = item;
+        }
+        timeDisplay.textContent = `${this.selectedHour}:${this.selectedMinute}`;
+        
+        // Update selected style in column
+        container.querySelectorAll("div").forEach(div => {
+          div.style.background = "";
+          div.style.color = "";
+          div.style.fontWeight = "500";
+          if (div.textContent === item) {
+            div.style.background = "#e0f2fe";
+            div.style.color = "#09637E";
+            div.style.fontWeight = "700";
+          }
+        });
+      });
+      
+      container.appendChild(option);
+    });
+    
+    // Scroll to selected value
+    setTimeout(() => {
+      const targetOption = Array.from(container.querySelectorAll("div")).find(
+        div => div.textContent === selectedValue
+      );
+      if (targetOption) {
+        targetOption.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    }, 50);
+    
+    return container;
+  }
+  
+  createButton(text, type, onClick) {
+    const btn = document.createElement("button");
+    btn.textContent = text;
+    btn.type = "button";
+    btn.style.cssText = `
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      font-size: 0.875rem;
+    `;
+    
+    if (type === "primary") {
+      btn.style.background = "linear-gradient(135deg, #09637E 0%, #088395 100%)";
+      btn.style.color = "white";
+    } else {
+      btn.style.background = "#f1f5f9";
+      btn.style.color = "#334155";
+      btn.style.border = "1px solid #e2e8f0";
+    }
+    
+    btn.addEventListener("click", onClick);
+    btn.addEventListener("mouseenter", () => {
+      if (type === "primary") {
+        btn.style.opacity = "0.9";
+      } else {
+        btn.style.background = "#e2e8f0";
+      }
+    });
+    btn.addEventListener("mouseleave", () => {
+      if (type === "primary") {
+        btn.style.opacity = "1";
+      } else {
+        btn.style.background = "#f1f5f9";
+      }
+    });
+    
+    return btn;
+  }
+  
+  handleOutsideClick = (e) => {
+    if (this.picker && !this.picker.contains(e.target) && e.target !== this.input) {
+      this.close();
+    }
+  };
+  
+  close() {
+    if (this.picker) {
+      this.picker.remove();
+      this.picker = null;
+    }
+    document.removeEventListener("click", this.handleOutsideClick);
+    this.isOpen = false;
+  }
+}
+
+// Add CSS animation for time picker
+if (!document.querySelector("#timePickerStyle")) {
+  const style = document.createElement("style");
+  style.id = "timePickerStyle";
+  style.textContent = `
+    @keyframes timePickerSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .custom-time-picker div[style*="overflow-y: auto"]::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-time-picker div[style*="overflow-y: auto"]::-webkit-scrollbar-track {
+      background: #e2e8f0;
+      border-radius: 4px;
+    }
+    .custom-time-picker div[style*="overflow-y: auto"]::-webkit-scrollbar-thumb {
+      background: #088395;
+      border-radius: 4px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 /* ========================= Field accessors ========================= */
 const F = {
   patientName:            () => el("#patientName"),
@@ -1023,7 +1371,6 @@ function initializeUnifiedSearch() {
           resultsContainer.style.display = "none";
           updateAllCalculations();
           renderSelectedItemsDisplay();
-          // FIX 1: Auto-focus back to search input after selection
           searchInput.focus();
         });
       } else {
@@ -1033,7 +1380,6 @@ function initializeUnifiedSearch() {
         `;
         item.addEventListener("click", () => {
           showPackageTestSelectionModal(result.data, () => {
-            // FIX 1: Auto-focus callback after package selection
             searchInput.focus();
           });
           searchInput.value = "";
@@ -1131,7 +1477,7 @@ function showPackageTestSelectionModal(pkg, onCloseCallback) {
   });
 }
 
-/* ========================= Bulk Add Feature ========================= */
+/* ========================= Bulk Add Feature (Fixed: Supports both tests AND packages) ========================= */
 function initializeBulkAdd() {
   const bulkInput = F.bulkAddInput();
   const bulkBtn = F.bulkAddBtn();
@@ -1144,6 +1490,7 @@ function initializeBulkAdd() {
       return;
     }
     
+    // Split by comma, trim each item, remove empty
     const items = rawInput.split(/[,]+/).map(item => item.trim()).filter(item => item);
     const labNum = labNumFromId(currentSelectedLab);
     const labId = `lab${labNum}`;
@@ -1155,6 +1502,7 @@ function initializeBulkAdd() {
     const notFoundItems = [];
     
     items.forEach(item => {
+      // First check if item is a test (exact or case-insensitive match)
       const testMatch = tests.find(t => t.name.toLowerCase() === item.toLowerCase());
       if (testMatch && !selectedTestsByLab[labNum].includes(testMatch.name) && !isTestGloballySelected(testMatch.name, labNum)) {
         selectedTestsByLab[labNum].push(testMatch.name);
@@ -1163,13 +1511,16 @@ function initializeBulkAdd() {
         return;
       }
       
+      // Check if item is a package
       const packageMatch = packages.find(p => p.name.toLowerCase() === item.toLowerCase());
       if (packageMatch && !selectedPackagesByLab[labNum].includes(packageMatch.name)) {
+        // Add package with all its tests selected by default
         addPackageWithCheckboxControl(packageMatch, labNum, packageMatch.tests);
         addedCount++;
         return;
       }
       
+      // If we reach here, item was not found as test or package
       notFoundItems.push(item);
       notFoundCount++;
     });
@@ -1223,7 +1574,6 @@ function calculateTotalB2B() {
   return total;
 }
 
-// FIX 3: Function to get per-lab MRP totals (for backend storage)
 function calculatePerLabMRP() {
   const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0 };
   for (let i = 1; i <= 4; i++) {
@@ -1237,7 +1587,6 @@ function calculatePerLabMRP() {
   return perLabTotals;
 }
 
-// FIX 3: Function to get per-lab B2B totals (for backend storage)
 function calculatePerLabB2B() {
   const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0 };
   for (let i = 1; i <= 4; i++) {
@@ -1550,20 +1899,43 @@ function checkPPSentForProcessing() {
   return !!(F.ppSent()?.checked);
 }
 
-// FIX 4: Improved report received check - ensures it works with "Select All" checkbox
+/* ========================= FIXED: Robust Report Received Check ========================= */
 function checkReportReceived() {
   const rdEl = F.reportReceivedData();
   if (!rdEl?.value) return false;
+  
   try {
-    const checked = JSON.parse(rdEl.value);
+    const receivedData = JSON.parse(rdEl.value);
     const allTests = getAllSelectedTestsAcrossLabs();
-    // If no tests, report received is not applicable
+    
+    // If no tests are selected, report received is considered complete (not applicable)
     if (allTests.length === 0) return true;
-    // Check if all tests have report received marked
-    const allTestsReceived = allTests.length > 0 && Object.keys(checked).length === allTests.length;
-    return allTestsReceived;
-  } catch { return false; }
+    
+    // Normalize test names for comparison (trim and handle case sensitivity)
+    const normalizedReceivedKeys = Object.keys(receivedData).map(key => key.trim());
+    const normalizedAllTests = allTests.map(test => test.trim());
+    
+    // Check if every test in allTests has a corresponding entry in receivedData that is true
+    let allReceived = true;
+    for (const test of normalizedAllTests) {
+      // Find matching key in received data (case-insensitive)
+      const matchingKey = normalizedReceivedKeys.find(
+        key => key.toLowerCase() === test.toLowerCase()
+      );
+      
+      if (!matchingKey || receivedData[matchingKey] !== true) {
+        allReceived = false;
+        break;
+      }
+    }
+    
+    return allReceived;
+  } catch (e) {
+    console.error("Error parsing report received data:", e);
+    return false;
+  }
 }
+
 function checkReportOnlineSent() { return !!(F.reportOnlineSent()?.checked); }
 function checkReportsDelivered() {
   const dr = F.reportDeliveryRequired();
@@ -1625,6 +1997,13 @@ function updateProgressBar() {
   const node = fn();
   if (node) { node.addEventListener("input", updateProgressBar); node.addEventListener("change", updateProgressBar); }
 });
+
+// Also update progress bar when report received data changes
+const reportReceivedDataEl = F.reportReceivedData();
+if (reportReceivedDataEl) {
+  reportReceivedDataEl.addEventListener("change", updateProgressBar);
+  reportReceivedDataEl.addEventListener("input", updateProgressBar);
+}
 
 /* ========================= getCompletionPercentage ========================= */
 function getAllTestsFromEntry(entry) {
@@ -1694,7 +2073,22 @@ function getCurrentStage(entry) {
         if (!entry.report_received_data) return false;
         try {
           const received = JSON.parse(entry.report_received_data);
-          return Object.keys(received).length === allTests.length && allTests.length > 0;
+          const allEntryTests = getAllTestsFromEntry(entry);
+          const normalizedReceivedKeys = Object.keys(received).map(k => k.trim());
+          const normalizedAllTests = allEntryTests.map(t => t.trim());
+          
+          // Check if every test in allEntryTests has a matching true entry
+          let allReceived = true;
+          for (const test of normalizedAllTests) {
+            const matchingKey = normalizedReceivedKeys.find(
+              key => key.toLowerCase() === test.toLowerCase()
+            );
+            if (!matchingKey || received[matchingKey] !== true) {
+              allReceived = false;
+              break;
+            }
+          }
+          return allReceived && allEntryTests.length > 0;
         } catch { return false; }
       }
     },
@@ -1745,10 +2139,25 @@ function getCompletionPercentage(entry) {
   if (hasUrine) inc(entry.urine_sent === "true");
   if (hasPP) inc(entry.pp_sent === "true");
 
+  // FIXED: Robust report received check for entry
   if (entry.report_received_data) {
     try {
       const received = JSON.parse(entry.report_received_data);
-      inc(Object.keys(received).length === allTests.length && allTests.length > 0);
+      const allEntryTests = getAllTestsFromEntry(entry);
+      const normalizedReceivedKeys = Object.keys(received).map(k => k.trim());
+      const normalizedAllTests = allEntryTests.map(t => t.trim());
+      
+      let allReceived = true;
+      for (const test of normalizedAllTests) {
+        const matchingKey = normalizedReceivedKeys.find(
+          key => key.toLowerCase() === test.toLowerCase()
+        );
+        if (!matchingKey || received[matchingKey] !== true) {
+          allReceived = false;
+          break;
+        }
+      }
+      inc(allReceived && allEntryTests.length > 0);
     } catch { total++; }
   } else { total++; }
 
@@ -1775,7 +2184,13 @@ function generateReportReceivedList() {
 
   container.innerHTML = "";
 
-  const allChecked = allTests.every(t => checkedTests[t] === true);
+  // Normalize existing checkedTests keys for comparison
+  const normalizedCheckedTests = {};
+  Object.keys(checkedTests).forEach(key => {
+    normalizedCheckedTests[key.trim()] = checkedTests[key];
+  });
+  
+  const allChecked = allTests.every(t => normalizedCheckedTests[t.trim()] === true);
   const selectAllDiv = document.createElement("div");
   selectAllDiv.className = "report-test-item";
   selectAllDiv.style.cssText = "border-bottom:2px solid rgba(122, 178, 178, 0.2);margin-bottom:8px;padding-bottom:12px;";
@@ -1784,17 +2199,17 @@ function generateReportReceivedList() {
   const selectAllCb = selectAllDiv.querySelector("#select_all_reports");
   selectAllCb.addEventListener("change", () => {
     const cbs = container.querySelectorAll(".report-checkbox");
+    const newCheckedTests = {};
     if (selectAllCb.checked) {
       // Check all tests
-      allTests.forEach(t => { checkedTests[t] = true; });
+      allTests.forEach(t => { newCheckedTests[t] = true; });
       cbs.forEach(cb => { cb.checked = true; });
     } else {
       // Uncheck all tests
-      allTests.forEach(t => { delete checkedTests[t]; });
       cbs.forEach(cb => { cb.checked = false; });
     }
-    if (storedEl) storedEl.value = JSON.stringify(checkedTests);
-    updateProgressBar(); // FIX 4: Update progress bar when "Select All" changes
+    if (storedEl) storedEl.value = JSON.stringify(newCheckedTests);
+    updateProgressBar();
   });
   container.appendChild(selectAllDiv);
 
@@ -1802,14 +2217,24 @@ function generateReportReceivedList() {
     const item = document.createElement("div");
     item.className = "report-test-item";
     const safeid = `report_test_${test.replace(/\s/g, "_")}`;
-    item.innerHTML = `<input type="checkbox" id="${safeid}" data-test="${escapeHtml(test)}" class="report-checkbox" ${checkedTests[test] ? "checked" : ""}><label for="${safeid}">${escapeHtml(test)}</label><span class="test-source">Report Received</span>`;
+    const isChecked = normalizedCheckedTests[test.trim()] === true;
+    item.innerHTML = `<input type="checkbox" id="${safeid}" data-test="${escapeHtml(test)}" class="report-checkbox" ${isChecked ? "checked" : ""}><label for="${safeid}">${escapeHtml(test)}</label><span class="test-source">Report Received</span>`;
     const cb = item.querySelector("input");
     cb.addEventListener("change", () => {
-      cb.checked ? (checkedTests[cb.dataset.test] = true) : delete checkedTests[cb.dataset.test];
-      if (storedEl) storedEl.value = JSON.stringify(checkedTests);
-      const allNow = Array.from(container.querySelectorAll(".report-checkbox")).every(c => c.checked);
-      if (selectAllCb) selectAllCb.checked = allNow;
-      updateProgressBar(); // FIX 4: Update progress bar when individual checkbox changes
+      let currentData = safeJSONParse(storedEl?.value || "", {});
+      if (cb.checked) {
+        currentData[test] = true;
+      } else {
+        delete currentData[test];
+      }
+      if (storedEl) storedEl.value = JSON.stringify(currentData);
+      
+      // Update select all checkbox state
+      const allCheckboxes = Array.from(container.querySelectorAll(".report-checkbox"));
+      const allNowChecked = allCheckboxes.every(c => c.checked);
+      if (selectAllCb) selectAllCb.checked = allNowChecked;
+      
+      updateProgressBar();
     });
     container.appendChild(item);
   });
@@ -2111,6 +2536,12 @@ let searchDebounceTimer;
 function setupSearchDebounce() {
   const searchInput = F.searchPatientInput();
   if (searchInput) {
+    // FIX: Disable browser autofill/autocomplete completely
+    searchInput.setAttribute("autocomplete", "off");
+    searchInput.setAttribute("autocorrect", "off");
+    searchInput.setAttribute("autocapitalize", "off");
+    searchInput.setAttribute("spellcheck", "false");
+    
     searchInput.addEventListener("input", () => {
       clearTimeout(searchDebounceTimer);
       searchDebounceTimer = setTimeout(handleSearch, 300);
@@ -2643,7 +3074,6 @@ if (formEl) {
     data.set("total_mrp", calculateTotalMRP());
     data.set("total_b2b_price", calculateTotalB2B());
 
-    // FIX 3: Add per-lab MRP and B2B values for backend storage (not displayed in UI)
     const perLabMRP = calculatePerLabMRP();
     const perLabB2B = calculatePerLabB2B();
     data.set("lab1_total_mrp", perLabMRP[1]);
@@ -2787,7 +3217,7 @@ function setDefaults() {
   setupVisitScheduleButton();
 }
 
-/* ========================= Patient name auto-suggest - FIX 2: Remove duplicates ========================= */
+/* ========================= Patient name auto-suggest - Remove duplicates ========================= */
 const nameSuggestionsEl = F.nameSuggestions();
 let debounceTimer;
 
@@ -2808,7 +3238,7 @@ async function fetchSuggestions(q) {
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) { if (nameSuggestionsEl) { nameSuggestionsEl.hidden = true; nameSuggestionsEl.innerHTML = ""; } return; }
     
-    // FIX 2: Remove duplicate patient names by using a Map
+    // Remove duplicate patient names by using a Map
     const uniquePatients = new Map();
     data.forEach(p => {
       const patientName = p.patient_name || "";
@@ -2918,6 +3348,22 @@ if (plEl) {
   showLabPanel("lab1");
 }
 
+/* ========================= Initialize Custom Time Pickers ========================= */
+function initializeTimePickers() {
+  const visitTimeInput = F.visitTime();
+  const ppTimeInput = F.ppTime();
+  
+  if (visitTimeInput && !visitTimeInput.classList.contains("custom-time-initialized")) {
+    new CustomTimePicker(visitTimeInput);
+    visitTimeInput.classList.add("custom-time-initialized");
+  }
+  
+  if (ppTimeInput && !ppTimeInput.classList.contains("custom-time-initialized")) {
+    new CustomTimePicker(ppTimeInput);
+    ppTimeInput.classList.add("custom-time-initialized");
+  }
+}
+
 /* ========================= Server list fetch ========================= */
 async function fetchServerList() {
   try {
@@ -2933,6 +3379,7 @@ async function fetchServerList() {
 /* ========================= Boot ========================= */
 initAccordions();
 setDefaults();
+initializeTimePickers(); // Initialize custom time pickers
 fetchServerList().then(() => {
   renderInProgress();
   setupEventListeners();
