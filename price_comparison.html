@@ -44,7 +44,7 @@
   .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 24px 28px;
+    padding: 15px 15px;
   }
 
   @media (max-width: 768px) {
@@ -165,7 +165,7 @@
   }
 
   .item-list {
-    max-height: 300px;
+    max-height: 200px;
     overflow-y: auto;
     padding-right: 6px;
   }
@@ -349,7 +349,6 @@
   .big { font-size: 32px; font-weight: 800; color: #0F3D5E; }
   .savings { color: #1A8F7A; }
 
-  /* FIXED MODAL - WITH SCROLLING */
   .modal {
     position: fixed;
     inset: 0;
@@ -394,23 +393,11 @@
     font-size: 28px;
     cursor: pointer;
     color: #64748B;
-    transition: color 0.2s;
-  }
-  .modal-header button:hover {
-    color: #DC2626;
   }
   .modal-body {
     padding: 24px;
     overflow-y: auto;
     flex: 1;
-  }
-  .modal-body ul {
-    padding-left: 20px;
-    margin: 10px 0;
-  }
-  .modal-body li {
-    margin: 6px 0;
-    color: #334155;
   }
 
   .toast {
@@ -460,15 +447,6 @@
     .results-two-columns {
       grid-template-columns: 1fr;
       gap: 20px;
-    }
-    .modal-content {
-      max-width: 95%;
-    }
-    .modal-header {
-      padding: 16px 20px;
-    }
-    .modal-body {
-      padding: 20px;
     }
   }
 
@@ -554,7 +532,6 @@
   </div>
 </div>
 
-<!-- FIXED MODAL WITH PROPER SCROLLING -->
 <div class="modal" id="infoModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -569,11 +546,10 @@
 
 <script>
 // ============================================================
-// COMPLETE LABS DATA (Abbreviated for brevity - full data structure)
+// COMPLETE LABS DATA
 // ============================================================
 
 const labsData = 
-
   [
     {
   name: "Dr. Ajay Shah Laboratory",
@@ -1074,7 +1050,7 @@ const labsData =
 
 
 // ============================================================
-// APPLICATION LOGIC
+// APPLICATION LOGIC WITH CRASH PROTECTION
 // ============================================================
 
 let normalizedEntities = [];
@@ -1085,7 +1061,7 @@ let isOptimizing = false;
 
 function currency(v) { return (v !== null && v !== undefined) ? "₹" + Number(v).toLocaleString() : "₹0"; }
 function unique(arr) { return [...new Set(arr)]; }
-function uniqueById(arr) { const map = new Map(); arr.forEach(item => map.set(item.id, item)); return [...map.values()]; }
+function uniqueById(arr) { const map = new Map(); arr.forEach(item => { if(item && item.id) map.set(item.id, item); }); return [...map.values()]; }
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -1132,7 +1108,9 @@ async function copyToClipboard(text, successMessage) {
 
 function buildLabLookup(lab) {
   const lookup = {};
-  [...lab.tests, ...lab.combos, ...lab.packages].forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
+  if (lab.tests) lab.tests.forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
+  if (lab.combos) lab.combos.forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
+  if (lab.packages) lab.packages.forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
   return lookup;
 }
 
@@ -1144,33 +1122,42 @@ function normalizeEntity(entity, lookup) {
     visited.add(item.id);
     if (item.type === "test") return [item.name];
     let res = [];
-    (item.contains || []).forEach(name => {
-      const child = lookup[name] || Object.values(lookup).find(x => x && x.name === name);
-      if (child) {
-        if (child.type === "test") res.push(child.name);
-        else res.push(...expand(child));
-      } else res.push(name);
-    });
+    if (item.contains && Array.isArray(item.contains)) {
+      item.contains.forEach(name => {
+        try {
+          const child = lookup[name] || Object.values(lookup).find(x => x && x.name === name);
+          if (child) {
+            if (child.type === "test") res.push(child.name);
+            else res.push(...expand(child));
+          } else res.push(name);
+        } catch(e) { res.push(name); }
+      });
+    }
     return res;
   }
-  return { ...entity, covers: unique(expand(entity)) };
+  try {
+    return { ...entity, covers: unique(expand(entity)) };
+  } catch(e) {
+    return { ...entity, covers: [entity.name] };
+  }
 }
 
 function buildNormalizedEntities() {
   normalizedEntities = [];
   labsData.forEach(lab => {
     const lookup = buildLabLookup(lab);
-    [...lab.tests, ...lab.combos, ...lab.packages].forEach(e => {
-      if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name });
-    });
+    if (lab.tests) lab.tests.forEach(e => { if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name }); });
+    if (lab.combos) lab.combos.forEach(e => { if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name }); });
+    if (lab.packages) lab.packages.forEach(e => { if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name }); });
   });
 }
 
 function getAllSelectableItems() {
   const map = new Map();
   normalizedEntities.forEach(e => {
+    if (!e || !e.name) return;
     const key = e.name + "_" + e.type;
-    if (!map.has(key)) map.set(key, { name: e.name, type: e.type, covers: e.covers });
+    if (!map.has(key)) map.set(key, { name: e.name, type: e.type, covers: e.covers || [e.name] });
   });
   return [...map.values()];
 }
@@ -1178,8 +1165,11 @@ function getAllSelectableItems() {
 function getRequiredTests() {
   let tests = [];
   selectedItems.forEach(item => {
-    const ent = normalizedEntities.find(x => x.name === item.name && x.type === item.type);
-    if (ent && ent.covers) tests.push(...ent.covers);
+    try {
+      const ent = normalizedEntities.find(x => x && x.name === item.name && x.type === item.type);
+      if (ent && ent.covers && Array.isArray(ent.covers)) tests.push(...ent.covers);
+      else if (ent) tests.push(ent.name);
+    } catch(e) { tests.push(item.name); }
   });
   return unique(tests);
 }
@@ -1204,7 +1194,7 @@ function renderSelectionList() {
     const checked = selectedItems.some(x => x.name === item.name && x.type === item.type);
     const div = document.createElement("div");
     div.className = "checkbox-item";
-    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div><strong>${item.name}</strong><div style="font-size:12px; color:#64748b;">${item.type.toUpperCase()}</div></div>`;
+    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div><strong>${escapeHtml(item.name)}</strong><div style="font-size:12px; color:#64748b;">${item.type.toUpperCase()}</div></div>`;
     const chk = div.querySelector("input");
     div.addEventListener("click", (e) => {
       if (e.target.tagName === 'INPUT' || e.target.closest('input')) return;
@@ -1220,13 +1210,23 @@ function renderSelectionList() {
   });
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
 function renderSelectedItems() {
   const cont = document.getElementById("selectedItemsContainer");
   cont.innerHTML = "";
   selectedItems.forEach(item => {
     const chip = document.createElement("div");
     chip.className = "chip";
-    chip.innerHTML = `${item.name}<button>&times;</button>`;
+    chip.innerHTML = `${escapeHtml(item.name)}<button>&times;</button>`;
     chip.querySelector("button").addEventListener("click", () => {
       selectedItems = selectedItems.filter(x => !(x.name === item.name && x.type === item.type));
       renderSelectionList();
@@ -1243,14 +1243,13 @@ function renderLabFilters() {
     const checked = selectedLabs.has(lab.name);
     const div = document.createElement("div");
     div.className = "checkbox-item";
-    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div>${lab.name}</div>`;
+    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div>${escapeHtml(lab.name)}</div>`;
     div.querySelector("input").addEventListener("change", e => {
       if (e.target.checked) {
         selectedLabs.add(lab.name);
       } else {
         selectedLabs.delete(lab.name);
       }
-      // Re-render comparison if it's visible
       if (document.getElementById("comparisonCard").style.display === "block") {
         renderComparisonViewOnly();
       }
@@ -1261,9 +1260,9 @@ function renderLabFilters() {
 
 function renderEntityCard(entity) {
   if (!entity) return '';
-  return `<div class="entity-card" data-entity-name="${entity.name}" data-entity-type="${entity.type}">
+  return `<div class="entity-card" data-entity-name="${escapeHtml(entity.name)}" data-entity-type="${entity.type}">
     <div style="display:flex;justify-content:space-between;">
-      <h4>${entity.name}</h4>
+      <h4>${escapeHtml(entity.name)}</h4>
       <span class="badge ${entity.type}">${entity.type}</span>
     </div>
     <div class="price-block">
@@ -1275,19 +1274,19 @@ function renderEntityCard(entity) {
 }
 
 function openModal(entity) {
-  document.getElementById("modalTitle").innerHTML = entity.name;
+  if (!entity) return;
+  document.getElementById("modalTitle").innerHTML = escapeHtml(entity.name);
   document.getElementById("modalBody").innerHTML = `
     <div style="margin-bottom: 12px;"><strong>Type:</strong> ${entity.type}</div>
     <div style="margin-bottom: 12px;"><strong>MRP:</strong> ${currency(entity.mrp)}</div>
     <div class="b2b-highlight" style="margin-bottom: 16px;"><strong>B2B:</strong> ${currency(entity.b2b)}</div>
-    ${entity.contains ? `<div style="margin-bottom: 12px;"><strong>Contains:</strong><ul>${entity.contains.map(c => `<li>${c}</li>`).join("")}</ul></div>` : ""}
-    <div><strong>Expanded Tests:</strong><ul>${entity.covers.map(c => `<li>${c}</li>`).join("")}</ul></div>
+    ${entity.contains ? `<div style="margin-bottom: 12px;"><strong>Contains:</strong><ul>${entity.contains.map(c => `<li>${escapeHtml(c)}</li>`).join("")}</ul></div>` : ""}
+    <div><strong>Expanded Tests:</strong><ul>${(entity.covers || []).map(c => `<li>${escapeHtml(c)}</li>`).join("")}</ul></div>
   `;
   document.getElementById("infoModal").classList.add("active");
 }
 
 document.getElementById("closeModal").addEventListener("click", () => document.getElementById("infoModal").classList.remove("active"));
-// Close modal when clicking outside
 document.getElementById("infoModal").addEventListener("click", (e) => {
   if (e.target === document.getElementById("infoModal")) {
     document.getElementById("infoModal").classList.remove("active");
@@ -1303,7 +1302,7 @@ function attachInfoButtons() {
 
 function infoClickHandler(e) {
   e.stopPropagation();
-  const entity = normalizedEntities.find(ent => ent.id === e.currentTarget.dataset.id);
+  const entity = normalizedEntities.find(ent => ent && ent.id === e.currentTarget.dataset.id);
   if (entity) openModal(entity);
 }
 
@@ -1340,7 +1339,7 @@ function renderComparisonViewOnly() {
     return;
   }
   visible.forEach(lab => {
-    const entities = normalizedEntities.filter(x => x.lab === lab.name && x.covers && x.covers.some(t => required.includes(t)));
+    const entities = normalizedEntities.filter(x => x && x.lab === lab.name && x.covers && x.covers.some(t => required.includes(t)));
     const tests = entities.filter(x => x.type === "test");
     const combos = entities.filter(x => x.type === "combo");
     const packages = entities.filter(x => x.type === "package");
@@ -1348,7 +1347,7 @@ function renderComparisonViewOnly() {
     block.className = "lab-block";
     block.innerHTML = `
       <div class="lab-header">
-        <h2><i class="fas fa-hospital-user" style="color:#1ECAD3;"></i> ${lab.name}</h2>
+        <h2><i class="fas fa-hospital-user" style="color:#1ECAD3;"></i> ${escapeHtml(lab.name)}</h2>
         <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
       </div>
       <div class="lab-body">
@@ -1413,10 +1412,10 @@ function renderOptimizedPlan() {
     el.className = "optimized-item";
     el.innerHTML = `
       <div style="display:flex;justify-content:space-between;">
-        <div><strong>${item.name}</strong><div class="muted">${item.lab}</div></div>
+        <div><strong>${escapeHtml(item.name)}</strong><div class="muted">${escapeHtml(item.lab)}</div></div>
         <span class="badge ${item.type}">${item.type}</span>
       </div>
-      <div style="font-size:13px; margin-top:8px;"><i class="fas fa-dna"></i> Covers: ${(item.covers || []).join(", ")}</div>
+      <div style="font-size:13px; margin-top:8px;"><i class="fas fa-dna"></i> Covers: ${(item.covers || []).map(c => escapeHtml(c)).join(", ")}</div>
       <div class="price-block"><div>MRP ${currency(item.mrp)}</div><div class="b2b-highlight">B2B ${currency(item.b2b)}</div></div>
     `;
     listDiv.appendChild(el);
@@ -1432,10 +1431,10 @@ function renderOptimizedPlan() {
     const copyText = itemNames.join(", ");
     cardDiv.innerHTML = `
       <div class="lab-group-header">
-        <span class="lab-group-title"><i class="fas fa-flask" style="color:#1ECAD3;"></i> ${lab}</span>
-        <button class="btn-lab-copy copy-lab-btn" data-lab="${lab}" data-copy-text="${copyText.replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Copy Items (${items.length})</button>
+        <span class="lab-group-title"><i class="fas fa-flask" style="color:#1ECAD3;"></i> ${escapeHtml(lab)}</span>
+        <button class="btn-lab-copy copy-lab-btn" data-lab="${escapeHtml(lab)}" data-copy-text="${copyText.replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Copy Items (${items.length})</button>
       </div>
-      <ul class="lab-items-list">${items.map(i => `<li>${i.name}</li>`).join("")}</ul>
+      <ul class="lab-items-list">${items.map(i => `<li>${escapeHtml(i.name)}</li>`).join("")}</ul>
     `;
     groupDiv.appendChild(cardDiv);
   });
@@ -1455,6 +1454,7 @@ function handleLabCopy(e) {
   else showToast(`No items to copy for ${labName}`);
 }
 
+// SAFE OPTIMIZATION WITH CRASH PROTECTION
 function optimizePlan() {
   if (isOptimizing) return;
   isOptimizing = true;
@@ -1481,37 +1481,24 @@ function optimizePlan() {
         return;
       }
       
+      // Limit number of tests for DP safety (max 20 tests to prevent memory issues)
+      const MAX_TESTS = 20;
+      let safeTests = required;
+      let wasTruncated = false;
+      if (required.length > MAX_TESTS) {
+        safeTests = required.slice(0, MAX_TESTS);
+        wasTruncated = true;
+        console.warn(`Tests truncated from ${required.length} to ${MAX_TESTS} for performance`);
+      }
+      
       renderComparisonViewOnly();
       document.getElementById("comparisonCard").style.display = "block";
       
-      // CRITICAL FIX: Only include entities from selected labs
-      let entities = normalizedEntities.filter(x => selectedLabs.has(x.lab));
-      entities = entities.filter(e => e.covers && e.covers.some(t => required.includes(t)));
+      let entities = normalizedEntities.filter(x => x && selectedLabs.has(x.lab));
+      entities = entities.filter(e => e.covers && Array.isArray(e.covers) && e.covers.some(t => safeTests.includes(t)));
       
-      const bitMap = {};
-      required.forEach((t, i) => bitMap[t] = i);
-      const maskEnt = entities.map(e => {
-        let mask = 0;
-        if (e.covers) e.covers.forEach(t => { if (bitMap.hasOwnProperty(t)) mask |= (1 << bitMap[t]); });
-        return { ...e, mask };
-      });
-      const target = (1 << required.length) - 1;
-      const dp = Array(target + 1).fill(Infinity);
-      const parent = Array(target + 1).fill(null);
-      dp[0] = 0;
-      for (let cur = 0; cur <= target; cur++) {
-        if (dp[cur] === Infinity) continue;
-        maskEnt.forEach(e => {
-          const nxt = cur | e.mask;
-          const newCost = dp[cur] + e.b2b;
-          if (newCost < dp[nxt]) {
-            dp[nxt] = newCost;
-            parent[nxt] = { prevMask: cur, entity: e };
-          }
-        });
-      }
-      if (dp[target] === Infinity) {
-        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">⚠️ Insufficient coverage - selected tests cannot be covered by items from selected labs</div>`;
+      if (entities.length === 0) {
+        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">⚠️ No items available to cover the selected tests from the chosen labs.</div>`;
         document.getElementById("resultsSection").style.display = "grid";
         isOptimizing = false;
         btn.innerHTML = originalHtml;
@@ -1519,19 +1506,93 @@ function optimizePlan() {
         btn.style.pointerEvents = "auto";
         return;
       }
+      
+      const bitMap = {};
+      safeTests.forEach((t, i) => bitMap[t] = i);
+      const maskEnt = entities.map(e => {
+        let mask = 0;
+        if (e.covers) {
+          e.covers.forEach(t => { 
+            if (bitMap.hasOwnProperty(t)) mask |= (1 << bitMap[t]); 
+          });
+        }
+        return { ...e, mask };
+      });
+      
+      const target = (1 << safeTests.length) - 1;
+      
+      // Safety check: if target is too large (more than 2^20), use greedy fallback
+      if (target > 1048575) { // 2^20 - 1
+        console.warn("Target mask too large, using fallback greedy selection");
+        const greedyPlan = [];
+        const coveredTests = new Set();
+        const sortedEntities = [...maskEnt].sort((a, b) => (a.b2b / (a.covers?.length || 1)) - (b.b2b / (b.covers?.length || 1)));
+        for (const entity of sortedEntities) {
+          const newTests = entity.covers.filter(t => safeTests.includes(t) && !coveredTests.has(t));
+          if (newTests.length > 0) {
+            greedyPlan.push(entity);
+            newTests.forEach(t => coveredTests.add(t));
+          }
+          if (coveredTests.size === safeTests.length) break;
+        }
+        if (coveredTests.size === safeTests.length) {
+          optimizedPlan = uniqueById(greedyPlan);
+          renderOptimizedPlan();
+          document.getElementById("resultsSection").style.display = "grid";
+          if (wasTruncated) showToast("Note: Optimized with limited tests for performance");
+          isOptimizing = false;
+          btn.innerHTML = originalHtml;
+          btn.style.opacity = "1";
+          btn.style.pointerEvents = "auto";
+          return;
+        }
+      }
+      
+      const dp = Array(target + 1).fill(Infinity);
+      const parent = Array(target + 1).fill(null);
+      dp[0] = 0;
+      
+      for (let cur = 0; cur <= target; cur++) {
+        if (dp[cur] === Infinity) continue;
+        for (const e of maskEnt) {
+          const nxt = cur | e.mask;
+          const newCost = dp[cur] + e.b2b;
+          if (newCost < dp[nxt]) {
+            dp[nxt] = newCost;
+            parent[nxt] = { prevMask: cur, entity: e };
+          }
+        }
+      }
+      
+      if (dp[target] === Infinity) {
+        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">⚠️ Insufficient coverage - selected tests cannot be covered by items from selected labs.</div>`;
+        document.getElementById("resultsSection").style.display = "grid";
+        isOptimizing = false;
+        btn.innerHTML = originalHtml;
+        btn.style.opacity = "1";
+        btn.style.pointerEvents = "auto";
+        return;
+      }
+      
       let cur = target, chosen = [];
-      while (cur !== 0) {
+      let safetyCounter = 0;
+      const MAX_ITERATIONS = 100;
+      while (cur !== 0 && safetyCounter < MAX_ITERATIONS) {
         const step = parent[cur];
         if (!step) break;
         chosen.push(step.entity);
         cur = step.prevMask;
+        safetyCounter++;
       }
       optimizedPlan = uniqueById(chosen.reverse());
       renderOptimizedPlan();
       document.getElementById("resultsSection").style.display = "grid";
-    } catch (e) {
-      console.error(e);
-      showToast("Error during optimization");
+      if (wasTruncated) showToast("Note: Optimized with limited tests for performance");
+    } catch (error) {
+      console.error("Optimization error:", error);
+      showToast("Optimization encountered an issue. Please try with fewer selections.");
+      document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#dc2626;">⚠️ Optimization failed. Please try with a different combination of tests.</div>`;
+      document.getElementById("resultsSection").style.display = "grid";
     } finally {
       isOptimizing = false;
       btn.innerHTML = originalHtml;
