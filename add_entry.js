@@ -1,5 +1,5 @@
 /* ========================= Main Application Logic ========================= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1mDJHlb3KOTAEuuaqysykhJU7iJXTkVO4rRD-ZJbOAa9j7ugtrC-NsK0n2cA7Pgc/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3LA5kQv9WdDiQbEKRkmdgiE-VpFjVIFJxp7C9O-QP0ah88h6k7z9ve1vq1reQ7VWXBg/exec";
 
 /* ========================= Helpers & UI ========================= */
 const el = (q) => document.querySelector(q);
@@ -716,6 +716,306 @@ if (!document.querySelector("#timePickerStyle")) {
   document.head.appendChild(style);
 }
 
+/* ========================= Calculator Modal ========================= */
+class CalculatorModal {
+  constructor() {
+    this.modal = null;
+    this.isOpen = false;
+    this.currentValue = "0";
+    this.previousValue = null;
+    this.operator = null;
+    this.waitingForOperand = false;
+    this.equation = "";
+  }
+  
+  open() {
+    // If already open, just return
+    if (this.isOpen) return;
+    
+    this.isOpen = true;
+    
+    // Reset calculator state for new instance
+    this.currentValue = "0";
+    this.previousValue = null;
+    this.operator = null;
+    this.waitingForOperand = false;
+    
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.className = "calculator-overlay";
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10002;
+    `;
+    
+    // Create calculator panel
+    const panel = document.createElement("div");
+    panel.className = "calculator-panel";
+    panel.style.cssText = `
+      background: white;
+      border-radius: 24px;
+      width: 350px;
+      max-width: 90%;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: calculatorSlideIn 0.2s ease;
+    `;
+    
+    panel.innerHTML = `
+      <div style="background: linear-gradient(135deg, #09637E 0%, #088395 100%); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="color: white; margin: 0; font-size: 1rem;">🧮 Calculator</h3>
+        <button class="calc-close-btn" type="button" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
+      </div>
+      <div style="padding: 20px;">
+        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+          <div style="font-size: 0.875rem; color: #7a9aa3; min-height: 24px; text-align: right; word-wrap: break-word; overflow-x: auto;" class="calc-equation"></div>
+          <div style="font-size: 2rem; font-weight: 700; color: #09637E; font-family: monospace; text-align: right; word-wrap: break-word; overflow-x: auto; margin-top: 8px;" class="calc-display">0</div>
+        </div>
+        <div class="calc-buttons" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+          <button class="calc-clear" type="button" style="background: #fee2e2; color: #dc2626; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">C</button>
+          <button class="calc-operator" data-op="backspace" type="button" style="background: #f1f5f9; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">⌫</button>
+          <button class="calc-operator" data-op="%" type="button" style="background: #f1f5f9; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">%</button>
+          <button class="calc-operator" data-op="/" type="button" style="background: #e0f2fe; color: #09637E; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">÷</button>
+          
+          <button class="calc-number" data-num="7" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">7</button>
+          <button class="calc-number" data-num="8" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">8</button>
+          <button class="calc-number" data-num="9" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">9</button>
+          <button class="calc-operator" data-op="*" type="button" style="background: #e0f2fe; color: #09637E; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">×</button>
+          
+          <button class="calc-number" data-num="4" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">4</button>
+          <button class="calc-number" data-num="5" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">5</button>
+          <button class="calc-number" data-num="6" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">6</button>
+          <button class="calc-operator" data-op="-" type="button" style="background: #e0f2fe; color: #09637E; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">-</button>
+          
+          <button class="calc-number" data-num="1" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">1</button>
+          <button class="calc-number" data-num="2" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">2</button>
+          <button class="calc-number" data-num="3" type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">3</button>
+          <button class="calc-operator" data-op="+" type="button" style="background: #e0f2fe; color: #09637E; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">+</button>
+          
+          <button class="calc-number" data-num="0" type="button" style="grid-column: span 2; background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">0</button>
+          <button class="calc-number" data-num="." type="button" style="background: #f8fafc; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">.</button>
+          <button class="calc-equals" type="button" style="background: linear-gradient(135deg, #09637E 0%, #088395 100%); color: white; padding: 14px; font-size: 1.125rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer;">=</button>
+        </div>
+        <div style="margin-top: 16px; display: flex; gap: 12px;">
+          <button class="btn ghost calc-cancel-btn" type="button" style="flex: 1;">Cancel</button>
+          <button class="btn primary calc-insert-btn" type="button" style="flex: 1;">Insert</button>
+        </div>
+      </div>
+    `;
+    
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    
+    // Store references
+    this.modal = overlay;
+    
+    const displayEl = panel.querySelector(".calc-display");
+    const equationEl = panel.querySelector(".calc-equation");
+    const self = this;
+    
+    // Function to close modal - DIRECT REMOVAL
+    const closeModal = () => {
+      if (self.modal && self.modal.parentNode) {
+        self.modal.parentNode.removeChild(self.modal);
+      }
+      self.modal = null;
+      self.isOpen = false;
+    };
+    
+    // Update display
+    const updateDisplay = () => {
+      if (displayEl) displayEl.textContent = self.currentValue;
+    };
+    
+    const updateEquation = () => {
+      if (!equationEl) return;
+      if (self.operator && self.previousValue !== null && !self.waitingForOperand) {
+        equationEl.textContent = `${self.previousValue} ${self.getOperatorSymbol(self.operator)} ${self.currentValue}`;
+      } else if (self.operator && self.previousValue !== null) {
+        equationEl.textContent = `${self.previousValue} ${self.getOperatorSymbol(self.operator)}`;
+      } else if (self.waitingForOperand && self.previousValue !== null) {
+        equationEl.textContent = `${self.previousValue}`;
+      } else {
+        equationEl.textContent = "";
+      }
+    };
+    
+    // Number buttons
+    panel.querySelectorAll(".calc-number").forEach(btn => {
+      btn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const num = this.getAttribute("data-num");
+        if (self.waitingForOperand) {
+          self.currentValue = num;
+          self.waitingForOperand = false;
+        } else {
+          if (num === "." && self.currentValue.includes(".")) return;
+          self.currentValue = self.currentValue === "0" && num !== "." ? num : self.currentValue + num;
+        }
+        updateDisplay();
+        updateEquation();
+      });
+    });
+    
+    // Operator buttons
+    panel.querySelectorAll(".calc-operator").forEach(btn => {
+      btn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const op = this.getAttribute("data-op");
+        
+        if (op === "backspace") {
+          if (self.waitingForOperand) {
+            self.operator = null;
+            self.waitingForOperand = false;
+            self.currentValue = String(self.previousValue);
+            updateDisplay();
+            equationEl.textContent = "";
+          } else {
+            self.currentValue = self.currentValue.length > 1 ? self.currentValue.slice(0, -1) : "0";
+            updateDisplay();
+            updateEquation();
+          }
+          return;
+        }
+        
+        const inputValue = parseFloat(self.currentValue);
+        
+        if (self.previousValue !== null && !self.waitingForOperand) {
+          const result = self.calculate(self.previousValue, inputValue, self.operator);
+          self.currentValue = String(result);
+          updateDisplay();
+          self.previousValue = result;
+        } else {
+          self.previousValue = inputValue;
+        }
+        
+        self.waitingForOperand = true;
+        self.operator = op;
+        updateEquation();
+      });
+    });
+    
+    // Clear button
+    panel.querySelector(".calc-clear").addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      self.currentValue = "0";
+      self.previousValue = null;
+      self.operator = null;
+      self.waitingForOperand = false;
+      updateDisplay();
+      equationEl.textContent = "";
+    });
+    
+    // Equals button
+    panel.querySelector(".calc-equals").addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (self.operator && !self.waitingForOperand) {
+        const inputValue = parseFloat(self.currentValue);
+        const result = self.calculate(self.previousValue, inputValue, self.operator);
+        self.currentValue = String(result);
+        updateDisplay();
+        equationEl.textContent = `${self.previousValue} ${self.getOperatorSymbol(self.operator)} ${inputValue} = ${result}`;
+        self.previousValue = null;
+        self.operator = null;
+        self.waitingForOperand = true;
+      }
+    });
+    
+    // Close button (X) - ONE CLICK - DIRECT CLOSE
+    const closeBtn = panel.querySelector(".calc-close-btn");
+    closeBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
+    
+    // Cancel button - ONE CLICK - DIRECT CLOSE
+    const cancelBtn = panel.querySelector(".calc-cancel-btn");
+    cancelBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
+    
+    // Insert button
+    const insertBtn = panel.querySelector(".calc-insert-btn");
+    insertBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const targetInput = document.getElementById("goodwillCharges");
+      const value = parseFloat(displayEl.textContent);
+      if (!isNaN(value) && targetInput) {
+        targetInput.value = value;
+        targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+        targetInput.dispatchEvent(new Event("change", { bubbles: true }));
+        if (typeof updatePaymentFields === 'function') {
+          updatePaymentFields();
+        }
+        if (typeof showToast === 'function') {
+          showToast("Value inserted");
+        }
+      }
+      closeModal();
+    });
+    
+    // Click outside - ONE CLICK
+    overlay.addEventListener("click", function(e) {
+      if (e.target === overlay) {
+        closeModal();
+      }
+    });
+    
+    // Initial display
+    updateDisplay();
+    updateEquation();
+  }
+  
+  getOperatorSymbol(op) {
+    switch (op) {
+      case "+": return "+";
+      case "-": return "-";
+      case "*": return "×";
+      case "/": return "÷";
+      case "%": return "%";
+      default: return op;
+    }
+  }
+  
+  calculate(a, b, op) {
+    a = Number(a);
+    b = Number(b);
+    switch (op) {
+      case "+": return a + b;
+      case "-": return a - b;
+      case "*": return a * b;
+      case "/": return b !== 0 ? a / b : 0;
+      case "%": return a % b;
+      default: return b;
+    }
+  }
+  
+  close() {
+    if (this.modal && this.modal.parentNode) {
+      this.modal.parentNode.removeChild(this.modal);
+    }
+    this.modal = null;
+    this.isOpen = false;
+  }
+}
+
 /* ========================= Field accessors ========================= */
 const F = {
   patientName:            () => el("#patientName"),
@@ -805,6 +1105,10 @@ const F = {
   bulkAddBtn:             () => el("#bulkAddBtn"),
   urineSentField:         () => el("#urineSentField"),
   ppSentField:            () => el("#ppSentField"),
+  // NEW FIELDS
+  goodwillCharges:        () => el("#goodwillCharges"),
+  paymentComplete:        () => el("#paymentComplete"),
+  calculatorBtn:          () => el("#calculatorBtn"),
 };
 
 /* ========================= Global state ========================= */
@@ -1477,7 +1781,7 @@ function showPackageTestSelectionModal(pkg, onCloseCallback) {
   });
 }
 
-/* ========================= Bulk Add Feature (Fixed: Supports both tests AND packages) ========================= */
+/* ========================= Bulk Add Feature (Supports both tests AND packages) ========================= */
 function initializeBulkAdd() {
   const bulkInput = F.bulkAddInput();
   const bulkBtn = F.bulkAddBtn();
@@ -1490,7 +1794,6 @@ function initializeBulkAdd() {
       return;
     }
     
-    // Split by comma, trim each item, remove empty
     const items = rawInput.split(/[,]+/).map(item => item.trim()).filter(item => item);
     const labNum = labNumFromId(currentSelectedLab);
     const labId = `lab${labNum}`;
@@ -1502,7 +1805,6 @@ function initializeBulkAdd() {
     const notFoundItems = [];
     
     items.forEach(item => {
-      // First check if item is a test (exact or case-insensitive match)
       const testMatch = tests.find(t => t.name.toLowerCase() === item.toLowerCase());
       if (testMatch && !selectedTestsByLab[labNum].includes(testMatch.name) && !isTestGloballySelected(testMatch.name, labNum)) {
         selectedTestsByLab[labNum].push(testMatch.name);
@@ -1511,16 +1813,13 @@ function initializeBulkAdd() {
         return;
       }
       
-      // Check if item is a package
       const packageMatch = packages.find(p => p.name.toLowerCase() === item.toLowerCase());
       if (packageMatch && !selectedPackagesByLab[labNum].includes(packageMatch.name)) {
-        // Add package with all its tests selected by default
         addPackageWithCheckboxControl(packageMatch, labNum, packageMatch.tests);
         addedCount++;
         return;
       }
       
-      // If we reach here, item was not found as test or package
       notFoundItems.push(item);
       notFoundCount++;
     });
@@ -1609,6 +1908,8 @@ function updatePaymentFields() {
   const homeVisit = parseFloat((F.homeVisitCharges() || {}).value) || 0;
   const cashRcvd = parseFloat((F.cashReceived() || {}).value) || 0;
   const onlineRcvd = parseFloat((F.onlineReceived() || {}).value) || 0;
+  // REMOVE goodwill from final price calculation
+  // const goodwill = parseFloat((F.goodwillCharges() || {}).value) || 0;
 
   const totalMRPEl = F.totalMRP();
   if (totalMRPEl) totalMRPEl.value = fmtINR(totalMRP);
@@ -1624,7 +1925,8 @@ function updatePaymentFields() {
     discountedPriceEl.value = finalDiscounted;
   }
 
-  const finalPrice = finalDiscounted + homeVisit;
+  // REMOVE goodwill from final price calculation
+  const finalPrice = finalDiscounted + homeVisit;  // Removed + goodwill
   const fpEl = F.finalPrice();
   if (fpEl) fpEl.value = fmtINR(finalPrice);
 
@@ -1636,7 +1938,7 @@ function updatePaymentFields() {
   if (crEl) crEl.value = finalPrice;
 }
 
-[F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived].forEach(fn => {
+[F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived, F.goodwillCharges].forEach(fn => {
   const node = fn();
   if (node) node.addEventListener("input", updatePaymentFields);
 });
@@ -1899,36 +2201,25 @@ function checkPPSentForProcessing() {
   return !!(F.ppSent()?.checked);
 }
 
-/* ========================= FIXED: Robust Report Received Check ========================= */
 function checkReportReceived() {
   const rdEl = F.reportReceivedData();
   if (!rdEl?.value) return false;
-  
   try {
     const receivedData = JSON.parse(rdEl.value);
     const allTests = getAllSelectedTestsAcrossLabs();
-    
-    // If no tests are selected, report received is considered complete (not applicable)
     if (allTests.length === 0) return true;
-    
-    // Normalize test names for comparison (trim and handle case sensitivity)
     const normalizedReceivedKeys = Object.keys(receivedData).map(key => key.trim());
     const normalizedAllTests = allTests.map(test => test.trim());
-    
-    // Check if every test in allTests has a corresponding entry in receivedData that is true
     let allReceived = true;
     for (const test of normalizedAllTests) {
-      // Find matching key in received data (case-insensitive)
       const matchingKey = normalizedReceivedKeys.find(
         key => key.toLowerCase() === test.toLowerCase()
       );
-      
       if (!matchingKey || receivedData[matchingKey] !== true) {
         allReceived = false;
         break;
       }
     }
-    
     return allReceived;
   } catch (e) {
     console.error("Error parsing report received data:", e);
@@ -1941,6 +2232,12 @@ function checkReportsDelivered() {
   const dr = F.reportDeliveryRequired();
   if (!dr?.checked) return true;
   return !!(F.reportDelivered()?.checked);
+}
+
+// NEW: Check if payment is complete
+function checkPaymentComplete() {
+  const paymentCompleteToggle = F.paymentComplete();
+  return paymentCompleteToggle?.checked === true;
 }
 
 function updateProgressBar() {
@@ -1972,6 +2269,9 @@ function updateProgressBar() {
 
   const dr = F.reportDeliveryRequired();
   if (dr?.checked) steps.push({ name: "Reports Delivered", done: checkReportsDelivered() });
+  
+  // NEW: Add Payment Complete as the final step
+  steps.push({ name: "Payment Complete", done: checkPaymentComplete() });
 
   const completed = steps.filter(s => s.done).length;
   const pct = steps.length ? Math.round((completed / steps.length) * 100) : 0;
@@ -1993,12 +2293,12 @@ function updateProgressBar() {
 
 [F.patientName, F.age, F.gender, F.contact, F.visitType, F.visitDate, F.visitTime,
   F.phlebotomistInput, F.bloodCollected, F.urineCollected, F.ppCollected, F.sampleSent,
-  F.urineSent, F.ppSent, F.reportOnlineSent, F.reportDelivered, F.reportDeliveryRequired].forEach(fn => {
+  F.urineSent, F.ppSent, F.reportOnlineSent, F.reportDelivered, F.reportDeliveryRequired,
+  F.paymentComplete].forEach(fn => {
   const node = fn();
   if (node) { node.addEventListener("input", updateProgressBar); node.addEventListener("change", updateProgressBar); }
 });
 
-// Also update progress bar when report received data changes
 const reportReceivedDataEl = F.reportReceivedData();
 if (reportReceivedDataEl) {
   reportReceivedDataEl.addEventListener("change", updateProgressBar);
@@ -2076,8 +2376,6 @@ function getCurrentStage(entry) {
           const allEntryTests = getAllTestsFromEntry(entry);
           const normalizedReceivedKeys = Object.keys(received).map(k => k.trim());
           const normalizedAllTests = allEntryTests.map(t => t.trim());
-          
-          // Check if every test in allEntryTests has a matching true entry
           let allReceived = true;
           for (const test of normalizedAllTests) {
             const matchingKey = normalizedReceivedKeys.find(
@@ -2096,6 +2394,9 @@ function getCurrentStage(entry) {
   );
 
   if (entry.report_delivery_required === "true") stages.push({ name: "Reports Delivered", check: () => entry.report_delivered === "true" });
+  
+  // NEW: Add Payment Complete stage for entries
+  stages.push({ name: "Payment Complete", check: () => entry.payment_complete === "true" });
 
   for (let i = 0; i < stages.length; i++) {
     if (!stages[i].check()) {
@@ -2139,14 +2440,12 @@ function getCompletionPercentage(entry) {
   if (hasUrine) inc(entry.urine_sent === "true");
   if (hasPP) inc(entry.pp_sent === "true");
 
-  // FIXED: Robust report received check for entry
   if (entry.report_received_data) {
     try {
       const received = JSON.parse(entry.report_received_data);
       const allEntryTests = getAllTestsFromEntry(entry);
       const normalizedReceivedKeys = Object.keys(received).map(k => k.trim());
       const normalizedAllTests = allEntryTests.map(t => t.trim());
-      
       let allReceived = true;
       for (const test of normalizedAllTests) {
         const matchingKey = normalizedReceivedKeys.find(
@@ -2164,6 +2463,9 @@ function getCompletionPercentage(entry) {
   inc(entry.report_online_sent === "true");
 
   if (entry.report_delivery_required === "true") inc(entry.report_delivered === "true");
+  
+  // NEW: Add payment complete to percentage calculation
+  inc(entry.payment_complete === "true");
 
   return total > 0 ? Math.round((done / total) * 100) : 0;
 }
@@ -2184,7 +2486,6 @@ function generateReportReceivedList() {
 
   container.innerHTML = "";
 
-  // Normalize existing checkedTests keys for comparison
   const normalizedCheckedTests = {};
   Object.keys(checkedTests).forEach(key => {
     normalizedCheckedTests[key.trim()] = checkedTests[key];
@@ -2201,11 +2502,9 @@ function generateReportReceivedList() {
     const cbs = container.querySelectorAll(".report-checkbox");
     const newCheckedTests = {};
     if (selectAllCb.checked) {
-      // Check all tests
       allTests.forEach(t => { newCheckedTests[t] = true; });
       cbs.forEach(cb => { cb.checked = true; });
     } else {
-      // Uncheck all tests
       cbs.forEach(cb => { cb.checked = false; });
     }
     if (storedEl) storedEl.value = JSON.stringify(newCheckedTests);
@@ -2228,12 +2527,9 @@ function generateReportReceivedList() {
         delete currentData[test];
       }
       if (storedEl) storedEl.value = JSON.stringify(currentData);
-      
-      // Update select all checkbox state
       const allCheckboxes = Array.from(container.querySelectorAll(".report-checkbox"));
       const allNowChecked = allCheckboxes.every(c => c.checked);
       if (selectAllCb) selectAllCb.checked = allNowChecked;
-      
       updateProgressBar();
     });
     container.appendChild(item);
@@ -2536,7 +2832,6 @@ let searchDebounceTimer;
 function setupSearchDebounce() {
   const searchInput = F.searchPatientInput();
   if (searchInput) {
-    // FIX: Disable browser autofill/autocomplete completely
     searchInput.setAttribute("autocomplete", "off");
     searchInput.setAttribute("autocorrect", "off");
     searchInput.setAttribute("autocapitalize", "off");
@@ -2791,6 +3086,10 @@ function resetPaymentFields() {
   [F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived].forEach(fn => {
     const n = fn(); if (n) n.value = "0";
   });
+  // Remove goodwill from reset - keep it separate, don't reset it to 0 automatically
+  // const goodwillField = F.goodwillCharges(); if (goodwillField) goodwillField.value = "0";
+  const paymentCompleteToggle = F.paymentComplete();
+  if (paymentCompleteToggle) paymentCompleteToggle.checked = false;
 }
 
 function resetCheckboxes() {
@@ -2931,6 +3230,11 @@ function loadForEdit(entry) {
   setVal(F.homeVisitCharges, entry.home_visit_charges);
   setVal(F.cashReceived, entry.cash_received);
   setVal(F.onlineReceived, entry.online_received);
+  
+  // NEW: Load goodwill charges and payment complete
+  setVal(F.goodwillCharges, entry.goodwill_charges || "0");
+  setBool(F.paymentComplete, entry.payment_complete);
+  
   updatePaymentFields();
 
   tubeCountOverrides = safeJSONParse(entry.tube_overrides, {});
@@ -3093,6 +3397,10 @@ if (formEl) {
     const crcdEl = F.cashReceived(); if (crcdEl) data.set("cash_received", crcdEl.value);
     const orcdEl = F.onlineReceived(); if (orcdEl) data.set("online_received", orcdEl.value);
     const ppEl2 = F.pendingPayment(); if (ppEl2) data.set("pending_payment", ppEl2.value.replace("₹", ""));
+    
+    // NEW: Add goodwill charges and payment complete to form data
+    const goodwillEl = F.goodwillCharges(); if (goodwillEl) data.set("goodwill_charges", goodwillEl.value);
+    const paymentCompleteEl = F.paymentComplete(); if (paymentCompleteEl) data.set("payment_complete", paymentCompleteEl.checked ? "true" : "false");
 
     data.set("area", (F.areaInput()?.value || ""));
     data.set("care_of", (F.careOf()?.value || ""));
@@ -3202,6 +3510,10 @@ function setDefaults() {
   const billReq = F.billRequired(); if (billReq) billReq.checked = false;
   
   const scEl = F.selectCenter(); if (scEl && !scEl.value) scEl.value = "Borivali";
+  
+  // NEW: Set default payment complete to false
+  const paymentCompleteToggle = F.paymentComplete();
+  if (paymentCompleteToggle) paymentCompleteToggle.checked = false;
 
   autoPPTime();
   renderTubes();
@@ -3238,7 +3550,6 @@ async function fetchSuggestions(q) {
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) { if (nameSuggestionsEl) { nameSuggestionsEl.hidden = true; nameSuggestionsEl.innerHTML = ""; } return; }
     
-    // Remove duplicate patient names by using a Map
     const uniquePatients = new Map();
     data.forEach(p => {
       const patientName = p.patient_name || "";
@@ -3249,7 +3560,6 @@ async function fetchSuggestions(q) {
     
     if (nameSuggestionsEl) {
       nameSuggestionsEl.innerHTML = "";
-      // Show only unique patient names
       uniquePatients.forEach((p, name) => {
         const d = document.createElement("div");
         d.textContent = name;
@@ -3307,9 +3617,13 @@ function selectPatient(p) {
   if (p.home_visit_charges) { const n = F.homeVisitCharges(); if (n) n.value = p.home_visit_charges; }
   if (p.cash_received) { const n = F.cashReceived(); if (n) n.value = p.cash_received; }
   if (p.online_received) { const n = F.onlineReceived(); if (n) n.value = p.online_received; }
+  // NEW: Load goodwill charges and payment complete from saved patient data
+  if (p.goodwill_charges) { const n = F.goodwillCharges(); if (n) n.value = p.goodwill_charges; }
+  if (p.payment_complete) { const n = F.paymentComplete(); if (n) n.checked = p.payment_complete === "true" || p.payment_complete === true; }
   updatePaymentFields();
 }
 
+/* ========================= Setup Event Listeners ========================= */
 /* ========================= Setup Event Listeners ========================= */
 function setupEventListeners() {
   const toggle = F.showAllToggle();
@@ -3329,8 +3643,35 @@ function setupEventListeners() {
   if (clearFilterBtn) {
     clearFilterBtn.addEventListener("click", clearDateFilter);
   }
+  
+  // ADD THIS: Setup calculator button
+  const calculatorBtn = document.getElementById("calculatorBtn");
+  if (calculatorBtn) {
+    calculatorBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const calculator = new CalculatorModal();
+      calculator.open();
+    });
+  }
 }
 
+// Add this at the very bottom of your JavaScript, before the closing tags
+// Direct calculator button initialization (fallback)
+document.addEventListener("DOMContentLoaded", function() {
+  setTimeout(function() {
+    const calcBtn = document.getElementById("calculatorBtn");
+    if (calcBtn && !calcBtn.hasAttribute("data-listener")) {
+      calcBtn.setAttribute("data-listener", "true");
+      calcBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("Calculator button clicked");
+        const calculator = new CalculatorModal();
+        calculator.open();
+      });
+    }
+  }, 500);
+});
 /* ========================= Lab panel selection ========================= */
 const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel") };
 
@@ -3379,7 +3720,7 @@ async function fetchServerList() {
 /* ========================= Boot ========================= */
 initAccordions();
 setDefaults();
-initializeTimePickers(); // Initialize custom time pickers
+initializeTimePickers();
 fetchServerList().then(() => {
   renderInProgress();
   setupEventListeners();
