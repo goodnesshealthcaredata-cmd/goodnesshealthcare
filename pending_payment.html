@@ -186,6 +186,35 @@
             color: #0F3D5E;
         }
 
+        .btn-primary {
+            background: linear-gradient(105deg, #1ECAD3, #15B8C0);
+            border: none;
+            padding: 10px 26px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.85rem;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(30,202,211,0.4);
+            filter: brightness(1.02);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .stats-row {
             padding: 18px 28px 0 28px;
             display: flex;
@@ -390,6 +419,15 @@
             color: #C4450C;
         }
 
+        .refresh-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .data-table th:nth-child(2),
             .data-table td:nth-child(2) {
@@ -413,7 +451,7 @@
     <div class="health-header">
         <div class="logo-area">
             <div class="logo-icon">
-                <i class="fas fa-heartbeat"></i>
+                <i class="fas fa-hand-holding-usd"></i>
             </div>
             <div class="logo-text">
                 <h1>Pending Payment</h1>
@@ -435,7 +473,10 @@
                 <label><i class="fas fa-search"></i> Global search</label>
                 <input type="text" id="globalSearchInput" class="search-input" placeholder="Search patient, service, ID, amount...">
             </div>
-            <div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary" id="refreshBtn">
+                    <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh Data
+                </button>
                 <button class="btn-outline" id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> Reset</button>
             </div>
         </div>
@@ -495,11 +536,16 @@
     let currentPage = 1;
     let rowsPerPage = 20;
     let totalPages = 1;
+    
+    // Refresh state
+    let isRefreshing = false;
 
     const fromDateEl = document.getElementById('fromDateFilter');
     const toDateEl = document.getElementById('toDateFilter');
     const globalSearchEl = document.getElementById('globalSearchInput');
     const resetBtn = document.getElementById('resetFiltersBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
     const containerDiv = document.getElementById('dynamicTableContainer');
     const statsSpan = document.getElementById('statsDisplay');
     const paginationContainer = document.getElementById('paginationContainer');
@@ -598,8 +644,9 @@
         }
         const totalPendingRaw = masterSheetData.filter(r => (r.status || '').toLowerCase() === 'pending').length;
         const shown = filteredPendingData.length;
+        const lastUpdated = new Date().toLocaleTimeString();
         statsSpan.innerHTML = `<span><i class="fas fa-clinic-medical"></i> Showing ${shown} of ${totalPendingRaw} pending cases | Total records: ${masterSheetData.length}</span>
-                               <span><i class="fas fa-chart-line"></i> Medical-grade filter · <i class="fas fa-hourglass-half"></i> Pending only</span>`;
+                               <span><i class="fas fa-chart-line"></i> Medical-grade filter · <i class="fas fa-hourglass-half"></i> Pending only | <i class="fas fa-clock"></i> Last updated: ${lastUpdated}</span>`;
     }
 
     function updatePagination() {
@@ -781,20 +828,46 @@
         return rows;
     }
 
-    async function loadSheetData() {
+    async function loadSheetData(showRefreshAnimation = false) {
+        if (showRefreshAnimation) {
+            isRefreshing = true;
+            refreshBtn.disabled = true;
+            refreshIcon.className = 'fas fa-sync-alt refresh-spinner';
+        }
+        
         containerDiv.innerHTML = `<div class="loader-state"><i class="fas fa-spinner fa-pulse" style="font-size: 36px; color:#1ECAD3;"></i><p>Loading secure medical records ...</p></div>`;
+        
         try {
-            const response = await fetch(SHEET_CSV_URL, { cache: "no-store" });
+            // Add cache-busting parameter to prevent caching
+            const cacheBuster = `&_cb=${Date.now()}`;
+            const response = await fetch(SHEET_CSV_URL + cacheBuster, { 
+                cache: "no-store",
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                }
+            });
             if (!response.ok) throw new Error(`HTTP ${response.status} - Sheet unavailable`);
             const csvText = await response.text();
             if (!csvText.trim()) throw new Error("Empty CSV data");
             const parsed = csvToObjects(csvText);
             if (parsed.length === 0) throw new Error("No rows found in sheet");
             masterSheetData = parsed;
-            fromDateEl.value = '';
-            toDateEl.value = '';
-            globalSearchEl.value = '';
+            
+            // Preserve filter values but re-apply them
+            const currentFromDate = fromDateEl.value;
+            const currentToDate = toDateEl.value;
+            const currentSearch = globalSearchEl.value;
+            
             applyFiltersAndRender();
+            
+            // Show success feedback
+            if (showRefreshAnimation) {
+                refreshIcon.className = 'fas fa-check';
+                setTimeout(() => {
+                    refreshIcon.className = 'fas fa-sync-alt';
+                }, 1000);
+            }
         } catch (err) {
             console.error(err);
             containerDiv.innerHTML = `<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> <strong>Could not fetch Google Sheet</strong><br />Ensure sheet is published as CSV. CORS/public access needed.<br />Details: ${err.message}</div>`;
@@ -802,6 +875,23 @@
             masterSheetData = [];
             filteredPendingData = [];
             paginationContainer.style.display = 'none';
+            
+            if (showRefreshAnimation) {
+                refreshIcon.className = 'fas fa-exclamation-triangle';
+                setTimeout(() => {
+                    refreshIcon.className = 'fas fa-sync-alt';
+                }, 1500);
+            }
+        } finally {
+            if (showRefreshAnimation) {
+                isRefreshing = false;
+                refreshBtn.disabled = false;
+                setTimeout(() => {
+                    if (refreshIcon.className !== 'fas fa-sync-alt') {
+                        refreshIcon.className = 'fas fa-sync-alt';
+                    }
+                }, 1000);
+            }
         }
     }
 
@@ -809,11 +899,18 @@
         fromDateEl.addEventListener('change', () => applyFiltersAndRender());
         toDateEl.addEventListener('change', () => applyFiltersAndRender());
         globalSearchEl.addEventListener('input', () => applyFiltersAndRender());
+        
         resetBtn.addEventListener('click', () => {
             fromDateEl.value = '';
             toDateEl.value = '';
             globalSearchEl.value = '';
             applyFiltersAndRender();
+        });
+        
+        refreshBtn.addEventListener('click', () => {
+            if (!isRefreshing) {
+                loadSheetData(true);
+            }
         });
         
         firstPageBtn.addEventListener('click', () => {
@@ -854,7 +951,7 @@
 
     function init() {
         bindEvents();
-        loadSheetData();
+        loadSheetData(false);
     }
     init();
 </script>
