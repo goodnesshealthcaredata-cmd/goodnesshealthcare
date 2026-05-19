@@ -16,25 +16,22 @@
         }
 
         body {
-            background: #0F3D5E;  /* deep navy primary background */
+            background: #0F3D5E;
             font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
             color: #1A2C3C;
             line-height: 1.45;
         }
 
-        /* smooth scroll + subtle animations */
         html {
             scroll-behavior: smooth;
         }
 
-        /* main app container */
         .app-container {
             max-width: 1600px;
             margin: 0 auto;
             padding: 24px 28px;
         }
 
-        /* premium header with glassmorphic touch */
         .health-header {
             display: flex;
             justify-content: space-between;
@@ -96,7 +93,6 @@
             border: 1px solid rgba(30,202,211,0.3);
         }
 
-        /* main card content area */
         .dashboard-card {
             background: #F5F7FA;
             border-radius: 28px;
@@ -105,7 +101,6 @@
             transition: all 0.2s ease;
         }
 
-        /* filter bar (teal accents) */
         .filters-section {
             padding: 24px 28px;
             background: white;
@@ -158,7 +153,7 @@
         .search-wrapper i {
             position: absolute;
             left: 16px;
-            top: 44px;
+            top: 38px;
             color: #89A9C9;
             font-size: 1rem;
         }
@@ -166,31 +161,7 @@
         .search-input {
             padding: 12px 16px 12px 44px !important;
             width: 100%;
-        }
-
-        /* primary teal button */
-        .btn-primary {
-            background: linear-gradient(105deg, #1ECAD3, #15B8C0);
-            border: none;
-            padding: 10px 26px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-family: 'Rubik', sans-serif;
-            font-size: 0.85rem;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -8px rgba(30,202,211,0.4);
-            filter: brightness(1.02);
-            background: linear-gradient(105deg, #28D7E0, #1ACAD3);
+            border-radius: 100px;
         }
 
         .btn-outline {
@@ -215,7 +186,6 @@
             color: #0F3D5E;
         }
 
-        /* stats row */
         .stats-row {
             padding: 18px 28px 0 28px;
             display: flex;
@@ -228,12 +198,10 @@
             background: white;
         }
 
-        /* table wrapper + modern table */
         .table-container {
             overflow-x: auto;
-            padding: 0 24px 28px 24px;
+            padding: 0 24px 0 24px;
             background: white;
-            border-radius: 0 0 28px 28px;
         }
 
         .data-table {
@@ -241,26 +209,35 @@
             border-collapse: collapse;
             font-family: 'DM Sans', sans-serif;
             font-size: 0.85rem;
+            border: 1px solid #DCE5EC;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #E2EBF3;
+            padding: 14px 16px;
+            vertical-align: middle;
+        }
+
+        .data-table th:nth-child(2),
+        .data-table td:nth-child(2) {
+            min-width: 180px;
+            width: 180px;
         }
 
         .data-table th {
             text-align: left;
-            padding: 18px 16px;
             background: #F9FBFD;
             font-family: 'Rubik', sans-serif;
             font-weight: 600;
             color: #0F3D5E;
-            border-bottom: 2px solid #E2EBF3;
+            border-bottom: 2px solid #D0DDE8;
             position: sticky;
             top: 0;
-            background-color: #F9FBFD;
         }
 
         .data-table td {
-            padding: 16px 16px;
-            border-bottom: 1px solid #EDF2F7;
             color: #1F3E54;
-            vertical-align: middle;
         }
 
         .data-table tr:hover td {
@@ -268,7 +245,6 @@
             transition: 0.1s;
         }
 
-        /* status badge */
         .status-pending {
             background: #FEF3E2;
             color: #C46F1A;
@@ -283,65 +259,119 @@
             font-family: 'Rubik', monospace;
         }
 
-        /* card view for mobile */
-        @media (max-width: 780px) {
-            .app-container {
-                padding: 16px;
-            }
-            .filters-section {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 20px;
-            }
-            .filter-group {
-                width: 100%;
-            }
-            .stats-row {
-                flex-direction: column;
-                gap: 12px;
-                padding: 12px 20px;
-            }
-            .data-table, .data-table thead, .data-table tbody, .data-table tr, .data-table th, .data-table td {
-                display: block;
-            }
-            .data-table thead {
-                display: none;
-            }
-            .data-table tr {
-                margin-bottom: 20px;
-                background: white;
-                border-radius: 24px;
-                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-                border: 1px solid #E9F0F5;
-                padding: 8px 0;
-            }
-            .data-table td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px 16px;
-                border-bottom: 1px solid #F0F4FA;
-                gap: 12px;
-                text-align: right;
-            }
-            .data-table td:before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: #1F6E8C;
-                font-family: 'Rubik', sans-serif;
-                font-size: 0.75rem;
-                width: 42%;
-                text-align: left;
-            }
-            .status-pending {
-                justify-content: center;
-            }
-            .table-container {
-                padding: 0 16px 24px 16px;
-            }
+        /* Pagination Styles */
+        .pagination-container {
+            padding: 20px 28px 28px 28px;
+            background: white;
+            border-radius: 0 0 28px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-top: 1px solid #E5EAF0;
         }
 
-        /* loader and error states */
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            background: white;
+            border: 1px solid #D0DDE8;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1F5E7E;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #1ECAD3;
+            border-color: #1ECAD3;
+            color: white;
+        }
+
+        .page-btn.active {
+            background: #1ECAD3;
+            border-color: #1ECAD3;
+            color: white;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-numbers {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .page-number {
+            background: white;
+            border: 1px solid #D0DDE8;
+            padding: 8px 13px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1F5E7E;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .page-number:hover {
+            background: #1ECAD3;
+            border-color: #1ECAD3;
+            color: white;
+        }
+
+        .page-number.active {
+            background: #1ECAD3;
+            border-color: #1ECAD3;
+            color: white;
+        }
+
+        .rows-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rows-per-page select {
+            padding: 8px 12px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .rows-per-page select:focus {
+            border-color: #1ECAD3;
+        }
+
+        .pagination-info {
+            color: #2A577B;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
         .loader-state, .empty-msg, .error-msg {
             display: flex;
             flex-direction: column;
@@ -360,8 +390,21 @@
             color: #C4450C;
         }
 
-        i.fa, i.far, i.fas {
-            pointer-events: none;
+        @media (max-width: 768px) {
+            .data-table th:nth-child(2),
+            .data-table td:nth-child(2) {
+                min-width: 140px;
+                width: auto;
+            }
+            
+            .pagination-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .pagination-controls {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -373,12 +416,8 @@
                 <i class="fas fa-heartbeat"></i>
             </div>
             <div class="logo-text">
-                <h1>Goodness Health</h1>
-                <p>Medical internal suite · Pending oversight</p>
+                <h1>Pending Payment</h1>
             </div>
-        </div>
-        <div class="badge-premium">
-            <i class="fas fa-shield-alt"></i> HIPAA | Live Sheet
         </div>
     </div>
 
@@ -412,30 +451,66 @@
                 <p>Fetching medical records from secure sheet</p>
             </div>
         </div>
+        
+        <!-- Pagination Section -->
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
+            <div class="pagination-info" id="paginationInfo">
+                Showing 0 to 0 of 0 entries
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn" id="firstPageBtn" disabled>
+                    <i class="fas fa-angle-double-left"></i> First
+                </button>
+                <button class="page-btn" id="prevPageBtn" disabled>
+                    <i class="fas fa-chevron-left"></i> Prev
+                </button>
+                <div class="page-numbers" id="pageNumbers"></div>
+                <button class="page-btn" id="nextPageBtn" disabled>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="page-btn" id="lastPageBtn" disabled>
+                    Last <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+            <div class="rows-per-page">
+                <span>Rows per page:</span>
+                <select id="rowsPerPageSelect">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // ---------- CONFIGURATION ----------
-    // PUBLIC GOOGLE SHEET CSV (example with proper pending/paid status, second column date, third column status)
-    // Replace with your own published CSV endpoint (File → Share → Publish to web → CSV)
-    // For demo we use a realistic mock dataset containing ID, Date, Status, Patient, Service, Amount, Notes
-    // This sheet ensures "Pending" entries are shown.
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSP_1ebSEqsx3j6hnm39yDDrgnVpGIKXLghgscZnMb2irSAIZt2EJzLJVB0MhhdxnNl1spVICiwwgBB/pub?gid=0&single=true&output=csv';
     
-    // Data store
-    let masterSheetData = [];      // raw objects with column keys
+    let masterSheetData = [];
     let filteredPendingData = [];
+    
+    // Pagination variables
+    let currentPage = 1;
+    let rowsPerPage = 20;
+    let totalPages = 1;
 
-    // DOM elements
     const fromDateEl = document.getElementById('fromDateFilter');
     const toDateEl = document.getElementById('toDateFilter');
     const globalSearchEl = document.getElementById('globalSearchInput');
     const resetBtn = document.getElementById('resetFiltersBtn');
     const containerDiv = document.getElementById('dynamicTableContainer');
     const statsSpan = document.getElementById('statsDisplay');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const firstPageBtn = document.getElementById('firstPageBtn');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const lastPageBtn = document.getElementById('lastPageBtn');
+    const pageNumbersDiv = document.getElementById('pageNumbers');
+    const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+    const paginationInfo = document.getElementById('paginationInfo');
 
-    // Helper: parse dates flexibly (ISO, DD/MM/YYYY, MM/DD/YYYY)
     function parseMedicalDate(dateStr) {
         if (!dateStr || dateStr.trim() === '') return null;
         let cleaned = dateStr.toString().trim();
@@ -454,18 +529,6 @@
                     day = parseInt(parts[1],10);
                     year = parseInt(parts[2],10);
                 }
-                let d = new Date(year, month, day);
-                if (!isNaN(d.getTime())) return d;
-            }
-        }
-        if (cleaned.includes('-')) {
-            let parts = cleaned.split('-');
-            if (parts.length === 3 && parts[0].length === 4) {
-                // yyyy-mm-dd already works
-            } else if (parts.length === 3) {
-                let day = parseInt(parts[0],10);
-                let month = parseInt(parts[1],10)-1;
-                let year = parseInt(parts[2],10);
                 let d = new Date(year, month, day);
                 if (!isNaN(d.getTime())) return d;
             }
@@ -494,10 +557,10 @@
         return false;
     }
 
-    // Core filter: enforce Pending on status column (3rd column typically)
     function applyFiltersAndRender() {
         if (!masterSheetData.length) {
             filteredPendingData = [];
+            currentPage = 1;
             renderTable();
             updateStatsUI();
             return;
@@ -509,20 +572,21 @@
         const toDateObj = toRaw ? new Date(toRaw) : null;
         const searchTerm = globalSearchEl.value;
 
-        // step1: only keep rows where status === "Pending" (case-insensitive)
         let pendingRows = masterSheetData.filter(row => {
             let statusVal = (row.status || '').toString().trim().toLowerCase();
             return statusVal === 'pending';
         });
 
-        // step2: date filtering on date column (2nd semantic)
         let dateFiltered = pendingRows.filter(row => {
             return isWithinDateRange(row.date, fromDateObj, toDateObj);
         });
 
-        // step3: global search across all fields
         let finalFiltered = dateFiltered.filter(row => matchesGlobal(row, searchTerm));
         filteredPendingData = finalFiltered;
+        
+        // Reset to first page when filters change
+        currentPage = 1;
+        updatePagination();
         renderTable();
         updateStatsUI();
     }
@@ -538,42 +602,138 @@
                                <span><i class="fas fa-chart-line"></i> Medical-grade filter · <i class="fas fa-hourglass-half"></i> Pending only</span>`;
     }
 
-    // Render table with modern cards fallback
-    function renderTable() {
-        if (!masterSheetData.length && filteredPendingData.length === 0 && !document.querySelector('.loader-state')) {
-            // still loading handled
+    function updatePagination() {
+        totalPages = Math.ceil(filteredPendingData.length / rowsPerPage);
+        if (totalPages === 0) totalPages = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        
+        // Show/hide pagination container
+        if (filteredPendingData.length > rowsPerPage) {
+            paginationContainer.style.display = 'flex';
+        } else {
+            paginationContainer.style.display = 'none';
         }
+        
+        // Update buttons state
+        firstPageBtn.disabled = currentPage === 1;
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === totalPages;
+        lastPageBtn.disabled = currentPage === totalPages;
+        
+        // Update pagination info
+        const start = (currentPage - 1) * rowsPerPage + 1;
+        const end = Math.min(currentPage * rowsPerPage, filteredPendingData.length);
+        if (filteredPendingData.length === 0) {
+            paginationInfo.textContent = `Showing 0 to 0 of 0 entries`;
+        } else {
+            paginationInfo.textContent = `Showing ${start} to ${end} of ${filteredPendingData.length} entries`;
+        }
+        
+        // Render page numbers
+        renderPageNumbers();
+    }
+    
+    function renderPageNumbers() {
+        pageNumbersDiv.innerHTML = '';
+        
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (endPage - startPage < 4) {
+            if (startPage > 1) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            if (endPage < totalPages) {
+                endPage = Math.min(totalPages, startPage + 4);
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = 'page-number' + (i === currentPage ? ' active' : '');
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => {
+                currentPage = i;
+                renderTable();
+                updatePagination();
+            };
+            pageNumbersDiv.appendChild(pageBtn);
+        }
+    }
+    
+    function getCurrentPageData() {
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        return filteredPendingData.slice(start, end);
+    }
+
+    function renderTable() {
         if (filteredPendingData.length === 0 && masterSheetData.length > 0) {
             containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-inbox" style="font-size: 2rem; color:#1ECAD3;"></i><br />No pending records match the filters. Adjust date or search.</div>`;
+            paginationContainer.style.display = 'none';
             return;
         }
         if (filteredPendingData.length === 0 && masterSheetData.length === 0) {
             containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-cloud-download-alt"></i><br />Waiting for Google Sheet data. Ensure published CSV is accessible.</div>`;
+            paginationContainer.style.display = 'none';
             return;
         }
-
-        // get columns from first object
-        let columns = Object.keys(filteredPendingData[0]);
+        
+        // Get current page data
+        const pageData = getCurrentPageData();
+        
+        // Get all columns from the first row
+        let allColumns = Object.keys(filteredPendingData[0]);
+        
+        // Define the columns we want to display (excluding date and any extra status columns)
+        let columnsToDisplay = [];
+        
+        // Priority columns in desired order (without date)
+        const priorityColumns = ['ID', 'Patient', 'Service', 'Amount', 'Notes'];
+        
+        // First add priority columns if they exist
+        priorityColumns.forEach(priorityCol => {
+            const found = allColumns.find(col => col.toLowerCase() === priorityCol.toLowerCase());
+            if (found && !columnsToDisplay.includes(found)) {
+                columnsToDisplay.push(found);
+            }
+        });
+        
+        // Then add any remaining columns except 'date' and any column with 'status' (we'll add one at the end)
+        allColumns.forEach(col => {
+            const lowerCol = col.toLowerCase();
+            if (lowerCol === 'date') return;
+            if (lowerCol.includes('status')) return;
+            if (columnsToDisplay.includes(col)) return;
+            columnsToDisplay.push(col);
+        });
+        
+        // Add ONE status column at the end
+        const statusColumn = allColumns.find(col => col.toLowerCase().includes('status'));
+        if (statusColumn && !columnsToDisplay.includes(statusColumn)) {
+            columnsToDisplay.push(statusColumn);
+        }
+        
+        // Build the table
         let html = `<table class="data-table"><thead><tr>`;
-        columns.forEach(col => {
+        columnsToDisplay.forEach(col => {
             let displayHeader = col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1');
             html += `<th>${displayHeader}</th>`;
         });
-        html += `</tr></thead><tbody>`;
+        html += `</thead><tbody>`;
         
-        for (let row of filteredPendingData) {
+        for (let row of pageData) {
             html += `<tr>`;
-            columns.forEach(col => {
+            columnsToDisplay.forEach(col => {
                 let cellVal = row[col] !== undefined && row[col] !== null ? row[col] : '—';
-                let isStatusColumn = col.toLowerCase() === 'status';
+                let isStatusColumn = col.toLowerCase().includes('status');
                 let content = '';
                 if (isStatusColumn) {
-                    content = `<span class="status-pending"><i class="fas fa-clock"></i> ${cellVal}</span>`;
+                    content = `<span class="status-pending"><i class="fas fa-clock"></i> Pending</span>`;
                 } else {
                     content = cellVal;
                 }
-                let labelAttr = `data-label="${col.charAt(0).toUpperCase() + col.slice(1)}"`;
-                html += `<td ${labelAttr}>${content}</td>`;
+                html += `<td>${content}</td>`;
             });
             html += `</tr>`;
         }
@@ -581,7 +741,6 @@
         containerDiv.innerHTML = html;
     }
 
-    // CSV parsing with dynamic column mapping (detect date & status columns by index fallback)
     function csvToObjects(csvString) {
         const lines = csvString.split(/\r?\n/);
         if (lines.length < 2) return [];
@@ -611,10 +770,8 @@
                 let rawVal = values[idx] ? values[idx].replace(/^"|"$/g, '') : '';
                 obj[h] = rawVal;
             });
-            // Guarantee date and status fields mapping (2nd column is date, 3rd column is status)
-            // Use robust fallback: if explicit date/status columns missing, use index 1,2
-            let dateKey = headers[1] || (headers.find(h => /date/i.test(h)) || headers[1]);
-            let statusKey = headers[2] || (headers.find(h => /status/i.test(h)) || headers[2]);
+            let dateKey = headers.find(h => /date/i.test(h)) || headers[1];
+            let statusKey = headers.find(h => /status/i.test(h)) || headers[2];
             if (dateKey) obj.date = obj[dateKey];
             else obj.date = '';
             if (statusKey) obj.status = obj[statusKey];
@@ -624,7 +781,6 @@
         return rows;
     }
 
-    // Fetch and load sheet data
     async function loadSheetData() {
         containerDiv.innerHTML = `<div class="loader-state"><i class="fas fa-spinner fa-pulse" style="font-size: 36px; color:#1ECAD3;"></i><p>Loading secure medical records ...</p></div>`;
         try {
@@ -635,7 +791,6 @@
             const parsed = csvToObjects(csvText);
             if (parsed.length === 0) throw new Error("No rows found in sheet");
             masterSheetData = parsed;
-            // reset filter inputs
             fromDateEl.value = '';
             toDateEl.value = '';
             globalSearchEl.value = '';
@@ -646,10 +801,10 @@
             statsSpan.innerHTML = `<span><i class="fas fa-ban"></i> Data error</span><span>Check link or network</span>`;
             masterSheetData = [];
             filteredPendingData = [];
+            paginationContainer.style.display = 'none';
         }
     }
 
-    // event listeners
     function bindEvents() {
         fromDateEl.addEventListener('change', () => applyFiltersAndRender());
         toDateEl.addEventListener('change', () => applyFiltersAndRender());
@@ -659,6 +814,41 @@
             toDateEl.value = '';
             globalSearchEl.value = '';
             applyFiltersAndRender();
+        });
+        
+        firstPageBtn.addEventListener('click', () => {
+            currentPage = 1;
+            renderTable();
+            updatePagination();
+        });
+        
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+                updatePagination();
+            }
+        });
+        
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+                updatePagination();
+            }
+        });
+        
+        lastPageBtn.addEventListener('click', () => {
+            currentPage = totalPages;
+            renderTable();
+            updatePagination();
+        });
+        
+        rowsPerPageSelect.addEventListener('change', (e) => {
+            rowsPerPage = parseInt(e.target.value);
+            currentPage = 1;
+            updatePagination();
+            renderTable();
         });
     }
 
