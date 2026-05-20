@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Revenue Sheet | Goodness Health</title>
+    <!-- Google Fonts: Rubik + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (Free Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0F3D5E;
+            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            color: #1A2C3C;
+            line-height: 1.45;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .app-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 24px 28px;
+        }
+
+        .health-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 32px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, #1ECAD3, #0FA9B2);
+            width: 48px;
+            height: 48px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 20px -10px rgba(0,0,0,0.3);
+        }
+
+        .logo-icon i {
+            font-size: 26px;
+            color: white;
+        }
+
+        .logo-text h1 {
+            font-family: 'Rubik', sans-serif;
+            font-weight: 700;
+            font-size: 1.9rem;
+            letter-spacing: -0.3px;
+            background: linear-gradient(to right, #FFF, #C0E0FF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.8rem;
+            color: #9DC3E6;
+            font-weight: 500;
+        }
+
+        .badge-premium {
+            background: rgba(30,202,211,0.18);
+            backdrop-filter: blur(4px);
+            padding: 8px 18px;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #D2F0F2;
+            border: 1px solid rgba(30,202,211,0.3);
+        }
+
+        .dashboard-card {
+            background: #F5F7FA;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .filters-section {
+            padding: 24px 28px;
+            background: white;
+            border-bottom: 1px solid #E5EAF0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 170px;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #1F5E7E;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .filter-group input {
+            padding: 12px 16px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 16px;
+            font-family: 'DM Sans', monospace;
+            font-size: 0.9rem;
+            background: #FFFFFF;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .filter-group input:focus {
+            border-color: #1ECAD3;
+            box-shadow: 0 0 0 3px rgba(30,202,211,0.2);
+        }
+
+        .search-wrapper {
+            flex: 2;
+            min-width: 240px;
+            position: relative;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 38px;
+            color: #89A9C9;
+            font-size: 1rem;
+        }
+
+        .search-input {
+            padding: 12px 16px 12px 44px !important;
+            width: 100%;
+            border-radius: 100px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #B9CFE4;
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            color: #1F5E7E;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline:hover {
+            background: rgba(30,202,211,0.08);
+            border-color: #1ECAD3;
+            color: #0F3D5E;
+        }
+
+        .btn-primary {
+            background: linear-gradient(105deg, #1ECAD3, #15B8C0);
+            border: none;
+            padding: 10px 26px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.85rem;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(30,202,211,0.4);
+            filter: brightness(1.02);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats-row {
+            padding: 18px 28px 0 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: #2A577B;
+            font-weight: 500;
+            background: white;
+        }
+
+        /* Scrollable wrapper for both totals and table */
+        .scroll-wrapper {
+            overflow-x: auto;
+            background: white;
+        }
+
+        /* Totals Header Row - directly above table columns, inside same scroll wrapper */
+        .totals-header {
+            background: white;
+            border-bottom: 2px solid #1ECAD3;
+            min-width: max-content;
+        }
+
+        .totals-table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: collapse;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .totals-table td {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 700;
+            background: linear-gradient(135deg, #E8F8F9, #D0F0F2);
+            color: #0F3D5E;
+            border-bottom: 2px solid #1ECAD3;
+            white-space: nowrap;
+        }
+
+        /* First 3 columns in totals row - lighter background */
+        .totals-table td:first-child,
+        .totals-table td:nth-child(2),
+        .totals-table td:nth-child(3) {
+            background: #F9FBFD;
+            border-bottom: 2px solid #E5EAF0;
+            color: #2A577B;
+            font-weight: 500;
+        }
+
+        .total-amount {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0F3D5E;
+            display: block;
+        }
+
+        .total-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #1F5E7E;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .table-container {
+            background: white;
+            min-width: max-content;
+        }
+
+        .data-table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: collapse;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.8rem;
+            border: 1px solid #DCE5EC;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #E2EBF3;
+            padding: 12px 16px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        /* Column widths - applied consistently to both tables */
+        .data-table th:first-child,
+        .data-table td:first-child,
+        .totals-table td:first-child {
+            min-width: 110px;
+            width: 110px;
+        }
+
+        .data-table th:nth-child(2),
+        .data-table td:nth-child(2),
+        .totals-table td:nth-child(2) {
+            min-width: 150px;
+            width: 150px;
+        }
+
+        .data-table th:nth-child(3),
+        .data-table td:nth-child(3),
+        .totals-table td:nth-child(3) {
+            min-width: 140px;
+            width: 140px;
+        }
+
+        .data-table th:nth-child(n+4),
+        .data-table td:nth-child(n+4),
+        .totals-table td:nth-child(n+4) {
+            min-width: 140px;
+            width: 140px;
+        }
+
+        .data-table th {
+            text-align: left;
+            background: #F9FBFD;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 600;
+            color: #0F3D5E;
+            border-bottom: 2px solid #D0DDE8;
+            position: sticky;
+            top: 0;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            color: #1F3E54;
+        }
+
+        .data-table tr:hover td {
+            background-color: #F0F9FD;
+            transition: 0.1s;
+        }
+
+        .amount-cell {
+            font-weight: 600;
+            color: #0F3D5E;
+        }
+
+        /* Column Filter Styles */
+        .filter-header {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .filter-header:hover {
+            background-color: #E8F4F8;
+        }
+
+        .filter-icon {
+            margin-left: 8px;
+            font-size: 0.7rem;
+            color: #89A9C9;
+            transition: color 0.2s;
+            display: inline-block;
+        }
+
+        .filter-header:hover .filter-icon {
+            color: #1ECAD3;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #D0DDE8;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            padding: 12px;
+            min-width: 240px;
+            max-width: 300px;
+            z-index: 10000;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+        }
+
+        .filter-dropdown input[type="text"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .filter-dropdown .filter-options {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .filter-option-all {
+            border-bottom: 1px solid #E5EAF0;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .filter-option:hover {
+            background-color: #F0F9FD;
+        }
+
+        .filter-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            color: #1F3E54;
+        }
+
+        .blank-option {
+            border-top: 1px solid #E5EAF0;
+            margin-top: 4px;
+            padding-top: 8px;
+        }
+
+        .filter-dropdown .filter-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #E5EAF0;
+        }
+
+        .filter-apply, .filter-clear, .filter-close {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+
+        .filter-apply {
+            background: #1ECAD3;
+            color: white;
+        }
+
+        .filter-apply:hover {
+            background: #15B8C0;
+        }
+
+        .filter-clear {
+            background: #F0F2F5;
+            color: #666;
+        }
+
+        .filter-clear:hover {
+            background: #E4E7EB;
+        }
+
+        .filter-close {
+            background: #DC3545;
+            color: white;
+            margin-left: auto;
+        }
+
+        .filter-close:hover {
+            background: #C82333;
+        }
+
+        .filter-active {
+            color: #1ECAD3 !important;
+        }
+
+        /* Pagination Styles */
+        .pagination-container {
+            padding: 20px 28px 28px 28px;
+            background: white;
+            border-radius: 0 0 28px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-top: 1px solid #E5EAF0;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            background: white;
+            border: 1px solid #D0DDE8;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1F5E7E;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #1ECAD3;
+            border-color: #1ECAD3;
+            color: white;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-numbers {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .page-number {
+            background: white;
+            border: 1px solid #D0DDE8;
+            padding: 8px 13px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1F5E7E;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .page-number:hover {
+            background: #1ECAD3;
+            border-color: #1ECAD3;
+            color: white;
+        }
+
+        .page-number.active {
+            background: #1ECAD3;
+            border-color: #1ECAD3;
+            color: white;
+        }
+
+        .rows-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rows-per-page select {
+            padding: 8px 12px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .rows-per-page select:focus {
+            border-color: #1ECAD3;
+        }
+
+        .pagination-info {
+            color: #2A577B;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .loader-state, .empty-msg, .error-msg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+            gap: 14px;
+            background: #FBFDFF;
+            border-radius: 28px;
+            color: #2C6283;
+            font-weight: 500;
+        }
+
+        .error-msg {
+            background: #FFF6F0;
+            color: #C4450C;
+        }
+
+        .refresh-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="health-header">
+        <div class="logo-area">
+            <div class="logo-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="logo-text">
+                <h1>Revenue Sheet</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="filters-section">
+            <div class="filter-group">
+                <label><i class="far fa-calendar-alt"></i> From Date (Visit Date)</label>
+                <input type="date" id="fromDateFilter" placeholder="Start date">
+            </div>
+            <div class="filter-group">
+                <label><i class="far fa-calendar-check"></i> To Date (Visit Date)</label>
+                <input type="date" id="toDateFilter" placeholder="End date">
+            </div>
+            <div class="search-wrapper">
+                <label><i class="fas fa-search"></i> Global search</label>
+                <input type="text" id="globalSearchInput" class="search-input" placeholder="Search patient, care of, amount...">
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn-primary" id="refreshBtn">
+                    <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh
+                </button>
+                <button class="btn-outline" id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> Reset</button>
+            </div>
+        </div>
+
+        <div class="stats-row" id="statsDisplay">
+            <span><i class="fas fa-spinner fa-pulse"></i> Connecting to sheet...</span>
+            <span><i class="fas fa-chart-simple"></i> Revenue Analytics Dashboard</span>
+        </div>
+
+        <!-- Scroll wrapper - both totals and table scroll together -->
+        <div class="scroll-wrapper" id="scrollWrapper">
+            <!-- Totals Header Row - directly above table columns -->
+            <div id="totalsContainer" class="totals-header"></div>
+            <!-- Table Container -->
+            <div class="table-container" id="dynamicTableContainer">
+                <div class="loader-state">
+                    <i class="fas fa-sync-alt fa-spin" style="font-size: 36px; color:#1ECAD3;"></i>
+                    <p>Fetching revenue records from secure sheet</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pagination Section -->
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
+            <div class="pagination-info" id="paginationInfo">
+                Showing 0 to 0 of 0 entries
+            </div>
+            <div class="pagination-controls">
+                <button class="page-btn" id="firstPageBtn" disabled>
+                    <i class="fas fa-angle-double-left"></i> First
+                </button>
+                <button class="page-btn" id="prevPageBtn" disabled>
+                    <i class="fas fa-chevron-left"></i> Prev
+                </button>
+                <div class="page-numbers" id="pageNumbers"></div>
+                <button class="page-btn" id="nextPageBtn" disabled>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="page-btn" id="lastPageBtn" disabled>
+                    Last <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+            <div class="rows-per-page">
+                <span>Rows per page:</span>
+                <select id="rowsPerPageSelect">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Google Sheet CSV URL - Replace with your published sheet URL
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQWwLwHzkJxXYlPZfzwPZmR4iMx2EftwkgIGi_tQRiiOlanZBeCU_1zik3eoGU8aQUYlcAhDwkJn05X/pub?gid=0&single=true&output=csv';
+    
+    let masterSheetData = [];
+    let filteredData = [];
+    
+    // Pagination variables
+    let currentPage = 1;
+    let rowsPerPage = 20;
+    let totalPages = 1;
+    
+    // Refresh state
+    let isRefreshing = false;
+    
+    // Column filter state for Care of column (3rd column)
+    let careOfFilterValues = new Set();
+    let hasBlankValues = false;
+    let activeCareOfFilters = new Set();
+    let currentDropdown = null;
+
+    const fromDateEl = document.getElementById('fromDateFilter');
+    const toDateEl = document.getElementById('toDateFilter');
+    const globalSearchEl = document.getElementById('globalSearchInput');
+    const resetBtn = document.getElementById('resetFiltersBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const containerDiv = document.getElementById('dynamicTableContainer');
+    const statsSpan = document.getElementById('statsDisplay');
+    const totalsContainer = document.getElementById('totalsContainer');
+    const scrollWrapper = document.getElementById('scrollWrapper');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const firstPageBtn = document.getElementById('firstPageBtn');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const lastPageBtn = document.getElementById('lastPageBtn');
+    const pageNumbersDiv = document.getElementById('pageNumbers');
+    const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+    const paginationInfo = document.getElementById('paginationInfo');
+
+    function parseMedicalDate(dateStr) {
+        if (!dateStr || dateStr.trim() === '') return null;
+        let cleaned = dateStr.toString().trim();
+        let standardDate = new Date(cleaned);
+        if (!isNaN(standardDate.getTime())) return standardDate;
+        if (cleaned.includes('/')) {
+            let parts = cleaned.split('/');
+            if (parts.length === 3) {
+                let day, month, year;
+                if (parseInt(parts[0],10) > 12) {
+                    day = parseInt(parts[0],10);
+                    month = parseInt(parts[1],10) - 1;
+                    year = parseInt(parts[2],10);
+                } else {
+                    month = parseInt(parts[0],10) - 1;
+                    day = parseInt(parts[1],10);
+                    year = parseInt(parts[2],10);
+                }
+                let d = new Date(year, month, day);
+                if (!isNaN(d.getTime())) return d;
+            }
+        }
+        return null;
+    }
+
+    function isWithinDateRange(dateCell, fromDateObj, toDateObj) {
+        if (!dateCell) return false;
+        const rowDate = parseMedicalDate(dateCell);
+        if (!rowDate) return false;
+        if (fromDateObj && rowDate < fromDateObj) return false;
+        if (toDateObj && rowDate > toDateObj) return false;
+        return true;
+    }
+
+    function matchesGlobal(rowObj, term) {
+        if (!term || term.trim() === '') return true;
+        const lowerTerm = term.trim().toLowerCase();
+        for (let key in rowObj) {
+            let val = rowObj[key];
+            if (val !== undefined && val !== null && String(val).toLowerCase().includes(lowerTerm)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function matchesCareOfFilter(rowObj) {
+        if (activeCareOfFilters.size === 0) return true;
+        
+        const careOfColumn = getCareOfColumnName();
+        if (!careOfColumn) return true;
+        
+        const rowValue = (rowObj[careOfColumn] || '').toString().trim();
+        
+        if (activeCareOfFilters.has('(Blank)')) {
+            if (rowValue === '') return true;
+            if (activeCareOfFilters.has(rowValue)) return true;
+            return false;
+        } else {
+            if (rowValue === '') return false;
+            return activeCareOfFilters.has(rowValue);
+        }
+    }
+
+    function getCareOfColumnName() {
+        if (filteredData.length > 0) {
+            const columns = Object.keys(filteredData[0]);
+            return columns[2] || null;
+        }
+        return null;
+    }
+
+    function getCareOfColumnNameFromData(data) {
+        if (data && data.length > 0) {
+            const columns = Object.keys(data[0]);
+            return columns[2] || null;
+        }
+        return null;
+    }
+
+    function updateCareOfFilterOptions() {
+        careOfFilterValues.clear();
+        hasBlankValues = false;
+        
+        const fromRaw = fromDateEl.value;
+        const toRaw = toDateEl.value;
+        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
+        const toDateObj = toRaw ? new Date(toRaw) : null;
+        const searchTerm = globalSearchEl.value;
+        
+        let tempFiltered = masterSheetData.filter(row => {
+            return isWithinDateRange(row.visitDate || row.date, fromDateObj, toDateObj);
+        });
+        
+        tempFiltered = tempFiltered.filter(row => matchesGlobal(row, searchTerm));
+        
+        const careOfCol = getCareOfColumnNameFromData(tempFiltered);
+        if (careOfCol) {
+            tempFiltered.forEach(row => {
+                let val = row[careOfCol];
+                if (val && val.toString().trim() !== '') {
+                    careOfFilterValues.add(val.toString().trim());
+                } else {
+                    hasBlankValues = true;
+                }
+            });
+        }
+    }
+
+    function sortByDateDescending(data) {
+        return [...data].sort((a, b) => {
+            const dateA = parseMedicalDate(a.visitDate || a.date);
+            const dateB = parseMedicalDate(b.visitDate || b.date);
+            
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            
+            return dateB - dateA;
+        });
+    }
+
+    // Function to extract numeric value from a cell
+    function extractNumericValue(value) {
+        if (value === undefined || value === null || value === '') return 0;
+        if (typeof value === 'number') return value;
+        const numMatch = value.toString().replace(/[^0-9.-]/g, '');
+        const num = parseFloat(numMatch);
+        return isNaN(num) ? 0 : num;
+    }
+
+    // Function to calculate column totals from column 4 onwards
+    function calculateColumnTotals(data) {
+        if (!data || data.length === 0) return {};
+        
+        const columns = Object.keys(data[0]);
+        const totals = {};
+        
+        // Start from column index 3 (4th column) to the end
+        for (let i = 3; i < columns.length; i++) {
+            const colName = columns[i];
+            let total = 0;
+            
+            for (let row of data) {
+                const value = row[colName];
+                total += extractNumericValue(value);
+            }
+            
+            totals[colName] = total;
+        }
+        
+        return totals;
+    }
+
+    // Function to render totals row as a table that aligns with the data table columns
+    function renderTotalsRow(columns, totals) {
+        if (!columns || columns.length === 0) return '';
+        
+        let html = '<table class="totals-table"><tr>';
+        
+        for (let i = 0; i < columns.length; i++) {
+            const colName = columns[i];
+            if (i < 3) {
+                // First 3 columns (Visit Date, Patient Name, Care of) - show blank or "TOTAL"
+                if (i === 0) {
+                    html += `<td><span class="total-label">TOTAL</span><span class="total-amount"></span></td>`;
+                } else {
+                    html += `<td><span class="total-label"></span><span class="total-amount"></span></td>`;
+                }
+            } else {
+                // Columns 4 onwards - show the total amount directly above the column
+                const total = totals[colName] || 0;
+                html += `<td><span class="total-label">${colName}</span><span class="total-amount">₹${Math.round(total).toLocaleString('en-IN')}</span></td>`;
+            }
+        }
+        
+        html += `</tr></table>`;
+        return html;
+    }
+
+    function applyFiltersAndRender() {
+        if (!masterSheetData.length) {
+            filteredData = [];
+            currentPage = 1;
+            renderTotals();
+            renderTable();
+            updateStatsUI();
+            return;
+        }
+
+        const fromRaw = fromDateEl.value;
+        const toRaw = toDateEl.value;
+        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
+        const toDateObj = toRaw ? new Date(toRaw) : null;
+        const searchTerm = globalSearchEl.value;
+
+        let dateFiltered = masterSheetData.filter(row => {
+            return isWithinDateRange(row.visitDate || row.date, fromDateObj, toDateObj);
+        });
+
+        let searchFiltered = dateFiltered.filter(row => matchesGlobal(row, searchTerm));
+        
+        let finalFiltered = searchFiltered.filter(row => matchesCareOfFilter(row));
+        
+        filteredData = sortByDateDescending(finalFiltered);
+        
+        currentPage = 1;
+        renderTotals();
+        updatePagination();
+        renderTable();
+        updateStatsUI();
+    }
+
+    function renderTotals() {
+        if (!filteredData.length) {
+            totalsContainer.innerHTML = '';
+            return;
+        }
+        
+        const columns = Object.keys(filteredData[0]);
+        const totals = calculateColumnTotals(filteredData);
+        const totalsHtml = renderTotalsRow(columns, totals);
+        totalsContainer.innerHTML = totalsHtml;
+    }
+
+    function updateStatsUI() {
+        if (!masterSheetData.length) {
+            statsSpan.innerHTML = `<span><i class="fas fa-database"></i> No data loaded</span>
+                                   <span><i class="fas fa-chart-simple"></i> Revenue Analytics Dashboard</span>`;
+            return;
+        }
+        const totalRecords = masterSheetData.length;
+        const shown = filteredData.length;
+        const lastUpdated = new Date().toLocaleTimeString();
+        
+        statsSpan.innerHTML = `<span><i class="fas fa-chart-line"></i> Showing ${shown} of ${totalRecords} records | Last updated: ${lastUpdated}</span>
+                               <span><i class="fas fa-chart-simple"></i> Revenue Analytics Dashboard | Sorted by date (newest first)</span>`;
+    }
+
+    function updatePagination() {
+        totalPages = Math.ceil(filteredData.length / rowsPerPage);
+        if (totalPages === 0) totalPages = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        
+        if (filteredData.length > rowsPerPage) {
+            paginationContainer.style.display = 'flex';
+        } else {
+            paginationContainer.style.display = 'none';
+        }
+        
+        firstPageBtn.disabled = currentPage === 1;
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === totalPages;
+        lastPageBtn.disabled = currentPage === totalPages;
+        
+        const start = (currentPage - 1) * rowsPerPage + 1;
+        const end = Math.min(currentPage * rowsPerPage, filteredData.length);
+        if (filteredData.length === 0) {
+            paginationInfo.textContent = `Showing 0 to 0 of 0 entries`;
+        } else {
+            paginationInfo.textContent = `Showing ${start} to ${end} of ${filteredData.length} entries`;
+        }
+        
+        renderPageNumbers();
+    }
+    
+    function renderPageNumbers() {
+        pageNumbersDiv.innerHTML = '';
+        
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (endPage - startPage < 4) {
+            if (startPage > 1) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            if (endPage < totalPages) {
+                endPage = Math.min(totalPages, startPage + 4);
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = 'page-number' + (i === currentPage ? ' active' : '');
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => {
+                currentPage = i;
+                renderTable();
+                updatePagination();
+            };
+            pageNumbersDiv.appendChild(pageBtn);
+        }
+    }
+    
+    function getCurrentPageData() {
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        return filteredData.slice(start, end);
+    }
+
+    function closeDropdown() {
+        if (currentDropdown) {
+            currentDropdown.remove();
+            currentDropdown = null;
+        }
+    }
+
+    function createColumnFilter(columnName, columnIndex, filterValues) {
+        const th = document.querySelector(`.data-table th:nth-child(${columnIndex + 1})`);
+        if (!th) return;
+        
+        const originalText = columnName;
+        th.innerHTML = `${originalText} <i class="fas fa-filter filter-icon"></i>`;
+        th.classList.add('filter-header');
+        
+        const filterIcon = th.querySelector('.filter-icon');
+        
+        if (activeCareOfFilters.size > 0) {
+            filterIcon.style.color = '#1ECAD3';
+        }
+        
+        filterIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            if (currentDropdown) {
+                closeDropdown();
+                return;
+            }
+            
+            const rect = th.getBoundingClientRect();
+            
+            const dropdown = document.createElement('div');
+            dropdown.className = 'filter-dropdown';
+            
+            dropdown.style.position = 'absolute';
+            dropdown.style.top = `${rect.height}px`;
+            dropdown.style.left = '0px';
+            
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Search options...';
+            searchInput.autocomplete = 'off';
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'filter-options';
+            
+            const sortedValues = Array.from(filterValues).sort();
+            
+            let currentSelections = new Set(activeCareOfFilters);
+            
+            function renderOptions(searchTerm = '') {
+                optionsContainer.innerHTML = '';
+                
+                const allOptionDiv = document.createElement('div');
+                allOptionDiv.className = 'filter-option filter-option-all';
+                
+                const allCheckbox = document.createElement('input');
+                allCheckbox.type = 'checkbox';
+                allCheckbox.id = 'select_all_careof';
+                
+                let totalOptions = sortedValues.length;
+                if (hasBlankValues) totalOptions++;
+                let selectedCount = currentSelections.size;
+                allCheckbox.checked = (selectedCount === totalOptions);
+                allCheckbox.indeterminate = (selectedCount > 0 && selectedCount < totalOptions);
+                
+                const allLabel = document.createElement('label');
+                allLabel.htmlFor = 'select_all_careof';
+                allLabel.textContent = '☑ Select All';
+                allLabel.style.fontWeight = '600';
+                
+                allCheckbox.addEventListener('change', (e) => {
+                    if (allCheckbox.checked) {
+                        sortedValues.forEach(v => currentSelections.add(v));
+                        if (hasBlankValues) currentSelections.add('(Blank)');
+                    } else {
+                        currentSelections.clear();
+                    }
+                    renderOptions(searchInput.value);
+                });
+                
+                allOptionDiv.appendChild(allCheckbox);
+                allOptionDiv.appendChild(allLabel);
+                optionsContainer.appendChild(allOptionDiv);
+                
+                const filtered = sortedValues.filter(v => 
+                    v.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                
+                filtered.forEach(value => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'filter-option';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    checkbox.checked = currentSelections.has(value);
+                    checkbox.id = `filter_${value.replace(/\s/g, '_')}`;
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = checkbox.id;
+                    label.textContent = value;
+                    
+                    checkbox.addEventListener('change', (e) => {
+                        if (checkbox.checked) {
+                            currentSelections.add(value);
+                        } else {
+                            currentSelections.delete(value);
+                        }
+                        const selectAllCheckbox = optionsContainer.querySelector('#select_all_careof');
+                        if (selectAllCheckbox) {
+                            let totalOpts = sortedValues.length;
+                            if (hasBlankValues) totalOpts++;
+                            let selectedCnt = currentSelections.size;
+                            selectAllCheckbox.checked = (selectedCnt === totalOpts);
+                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
+                        }
+                    });
+                    
+                    optionDiv.appendChild(checkbox);
+                    optionDiv.appendChild(label);
+                    optionsContainer.appendChild(optionDiv);
+                });
+                
+                if (hasBlankValues) {
+                    const blankOptionDiv = document.createElement('div');
+                    blankOptionDiv.className = 'filter-option blank-option';
+                    
+                    const blankCheckbox = document.createElement('input');
+                    blankCheckbox.type = 'checkbox';
+                    blankCheckbox.value = '(Blank)';
+                    blankCheckbox.checked = currentSelections.has('(Blank)');
+                    blankCheckbox.id = 'filter_blank_option';
+                    
+                    const blankLabel = document.createElement('label');
+                    blankLabel.htmlFor = 'filter_blank_option';
+                    blankLabel.textContent = '(Blank)';
+                    blankLabel.style.fontStyle = 'italic';
+                    blankLabel.style.color = '#888';
+                    
+                    blankCheckbox.addEventListener('change', (e) => {
+                        if (blankCheckbox.checked) {
+                            currentSelections.add('(Blank)');
+                        } else {
+                            currentSelections.delete('(Blank)');
+                        }
+                        const selectAllCheckbox = optionsContainer.querySelector('#select_all_careof');
+                        if (selectAllCheckbox) {
+                            let totalOpts = sortedValues.length;
+                            if (hasBlankValues) totalOpts++;
+                            let selectedCnt = currentSelections.size;
+                            selectAllCheckbox.checked = (selectedCnt === totalOpts);
+                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
+                        }
+                    });
+                    
+                    blankOptionDiv.appendChild(blankCheckbox);
+                    blankOptionDiv.appendChild(blankLabel);
+                    optionsContainer.appendChild(blankOptionDiv);
+                }
+                
+                if (filtered.length === 0 && (!hasBlankValues || (hasBlankValues && searchTerm.toLowerCase() !== '(blank)' && searchTerm !== ''))) {
+                    const noResult = document.createElement('div');
+                    noResult.style.padding = '12px';
+                    noResult.style.textAlign = 'center';
+                    noResult.style.color = '#999';
+                    noResult.textContent = 'No matching options';
+                    optionsContainer.appendChild(noResult);
+                }
+            }
+            
+            searchInput.addEventListener('input', (e) => {
+                renderOptions(e.target.value);
+            });
+            
+            renderOptions();
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'filter-actions';
+            
+            const applyBtn = document.createElement('button');
+            applyBtn.textContent = 'Apply';
+            applyBtn.className = 'filter-apply';
+            applyBtn.onclick = () => {
+                activeCareOfFilters.clear();
+                currentSelections.forEach(v => activeCareOfFilters.add(v));
+                applyFiltersAndRender();
+                closeDropdown();
+                if (activeCareOfFilters.size > 0) {
+                    filterIcon.style.color = '#1ECAD3';
+                } else {
+                    filterIcon.style.color = '';
+                }
+            };
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.textContent = 'Clear All';
+            clearBtn.className = 'filter-clear';
+            clearBtn.onclick = () => {
+                currentSelections.clear();
+                renderOptions(searchInput.value);
+            };
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Close';
+            closeBtn.className = 'filter-close';
+            closeBtn.onclick = () => {
+                closeDropdown();
+            };
+            
+            actionsDiv.appendChild(applyBtn);
+            actionsDiv.appendChild(clearBtn);
+            actionsDiv.appendChild(closeBtn);
+            
+            dropdown.appendChild(searchInput);
+            dropdown.appendChild(optionsContainer);
+            dropdown.appendChild(actionsDiv);
+            
+            th.style.position = 'relative';
+            th.appendChild(dropdown);
+            currentDropdown = dropdown;
+        });
+    }
+
+    function formatCurrency(value) {
+        if (value === undefined || value === null || value === '') return '—';
+        const num = parseFloat(value.toString().replace(/[^0-9.-]/g, ''));
+        if (isNaN(num)) return value;
+        return `₹${Math.round(num).toLocaleString('en-IN')}`;
+    }
+
+    function renderTable() {
+        if (filteredData.length === 0 && masterSheetData.length > 0) {
+            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-inbox" style="font-size: 2rem; color:#1ECAD3;"></i><br />No records match the filters. Adjust date or search.</div>`;
+            paginationContainer.style.display = 'none';
+            return;
+        }
+        if (filteredData.length === 0 && masterSheetData.length === 0) {
+            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-cloud-download-alt"></i><br />Waiting for Google Sheet data. Ensure published CSV is accessible.</div>`;
+            paginationContainer.style.display = 'none';
+            return;
+        }
+        
+        const pageData = getCurrentPageData();
+        const columns = Object.keys(filteredData[0]);
+        
+        let html = `<table class="data-table"><thead><tr>`;
+        columns.forEach((col, idx) => {
+            let displayHeader = col;
+            html += `<th data-column="${col}" data-index="${idx}">${displayHeader}</th>`;
+        });
+        html += `</thead><tbody>`;
+        
+        for (let row of pageData) {
+            html += `<tr>`;
+            columns.forEach(col => {
+                let cellVal = row[col] !== undefined && row[col] !== null ? row[col] : '—';
+                let isAmountColumn = col.toLowerCase().includes('mrp') || 
+                                     col.toLowerCase().includes('b2b') || 
+                                     col.toLowerCase().includes('charges') || 
+                                     col.toLowerCase().includes('price') || 
+                                     col.toLowerCase().includes('received') || 
+                                     col.toLowerCase().includes('payment') || 
+                                     col.toLowerCase().includes('profit') ||
+                                     col.toLowerCase().includes('share') ||
+                                     col.toLowerCase().includes('discount');
+                
+                let content = '';
+                if (isAmountColumn && cellVal !== '—') {
+                    content = `<span class="amount-cell">${formatCurrency(cellVal)}</span>`;
+                } else {
+                    content = cellVal;
+                }
+                html += `<td>${content}</td>`;
+            });
+            html += `</tr>`;
+        }
+        html += `</tbody></table>`;
+        containerDiv.innerHTML = html;
+        
+        // Add filter to Care of column (3rd column - index 2)
+        setTimeout(() => {
+            if (columns.length > 2) {
+                const careOfColumn = columns[2];
+                updateCareOfFilterOptions();
+                createColumnFilter(careOfColumn, 2, careOfFilterValues);
+            }
+        }, 50);
+    }
+
+    function csvToObjects(csvString) {
+        const lines = csvString.split(/\r?\n/);
+        if (lines.length < 2) return [];
+        let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim() === '') continue;
+            let values = [];
+            let inQuote = false;
+            let current = '';
+            for (let ch of lines[i]) {
+                if (ch === '"') {
+                    inQuote = !inQuote;
+                } else if (ch === ',' && !inQuote) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            values.push(current.trim());
+            if (values.length < headers.length) {
+                while (values.length < headers.length) values.push('');
+            }
+            let obj = {};
+            headers.forEach((h, idx) => {
+                let rawVal = values[idx] ? values[idx].replace(/^"|"$/g, '') : '';
+                obj[h] = rawVal;
+            });
+            if (headers[0]) obj.visitDate = obj[headers[0]];
+            rows.push(obj);
+        }
+        return rows;
+    }
+
+    async function loadSheetData(showRefreshAnimation = false) {
+        if (showRefreshAnimation) {
+            isRefreshing = true;
+            refreshBtn.disabled = true;
+            refreshIcon.className = 'fas fa-sync-alt refresh-spinner';
+        }
+        
+        containerDiv.innerHTML = `<div class="loader-state"><i class="fas fa-spinner fa-pulse" style="font-size: 36px; color:#1ECAD3;"></i><p>Loading revenue records ...</p></div>`;
+        
+        try {
+            const cacheBuster = `&_cb=${Date.now()}`;
+            const response = await fetch(SHEET_CSV_URL + cacheBuster, { 
+                cache: "no-store",
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                }
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status} - Sheet unavailable`);
+            const csvText = await response.text();
+            if (!csvText.trim()) throw new Error("Empty CSV data");
+            const parsed = csvToObjects(csvText);
+            if (parsed.length === 0) throw new Error("No rows found in sheet");
+            masterSheetData = parsed;
+            
+            updateCareOfFilterOptions();
+            
+            activeCareOfFilters.clear();
+            careOfFilterValues.forEach(v => activeCareOfFilters.add(v));
+            if (hasBlankValues) activeCareOfFilters.add('(Blank)');
+            
+            applyFiltersAndRender();
+            
+            if (showRefreshAnimation) {
+                refreshIcon.className = 'fas fa-check';
+                setTimeout(() => {
+                    refreshIcon.className = 'fas fa-sync-alt';
+                }, 1000);
+            }
+        } catch (err) {
+            console.error(err);
+            containerDiv.innerHTML = `<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> <strong>Could not fetch Google Sheet</strong><br />Ensure sheet is published as CSV. CORS/public access needed.<br />Details: ${err.message}</div>`;
+            statsSpan.innerHTML = `<span><i class="fas fa-ban"></i> Data error</span><span>Check link or network</span>`;
+            masterSheetData = [];
+            filteredData = [];
+            paginationContainer.style.display = 'none';
+            
+            if (showRefreshAnimation) {
+                refreshIcon.className = 'fas fa-exclamation-triangle';
+                setTimeout(() => {
+                    refreshIcon.className = 'fas fa-sync-alt';
+                }, 1500);
+            }
+        } finally {
+            if (showRefreshAnimation) {
+                isRefreshing = false;
+                refreshBtn.disabled = false;
+                setTimeout(() => {
+                    if (refreshIcon.className !== 'fas fa-sync-alt') {
+                        refreshIcon.className = 'fas fa-sync-alt';
+                    }
+                }, 1000);
+            }
+        }
+    }
+
+    function bindEvents() {
+        fromDateEl.addEventListener('change', () => {
+            updateCareOfFilterOptions();
+            applyFiltersAndRender();
+        });
+        toDateEl.addEventListener('change', () => {
+            updateCareOfFilterOptions();
+            applyFiltersAndRender();
+        });
+        globalSearchEl.addEventListener('input', () => {
+            updateCareOfFilterOptions();
+            applyFiltersAndRender();
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            fromDateEl.value = '';
+            toDateEl.value = '';
+            globalSearchEl.value = '';
+            updateCareOfFilterOptions();
+            activeCareOfFilters.clear();
+            careOfFilterValues.forEach(v => activeCareOfFilters.add(v));
+            if (hasBlankValues) activeCareOfFilters.add('(Blank)');
+            applyFiltersAndRender();
+        });
+        
+        refreshBtn.addEventListener('click', () => {
+            if (!isRefreshing) {
+                loadSheetData(true);
+            }
+        });
+        
+        firstPageBtn.addEventListener('click', () => {
+            currentPage = 1;
+            renderTable();
+            updatePagination();
+        });
+        
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+                updatePagination();
+            }
+        });
+        
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+                updatePagination();
+            }
+        });
+        
+        lastPageBtn.addEventListener('click', () => {
+            currentPage = totalPages;
+            renderTable();
+            updatePagination();
+        });
+        
+        rowsPerPageSelect.addEventListener('change', (e) => {
+            rowsPerPage = parseInt(e.target.value);
+            currentPage = 1;
+            updatePagination();
+            renderTable();
+        });
+    }
+
+    function init() {
+        bindEvents();
+        loadSheetData(false);
+    }
+    init();
+</script>
+</body>
+</html>
