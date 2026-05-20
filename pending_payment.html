@@ -128,7 +128,7 @@
             font-family: 'Rubik', sans-serif;
         }
 
-        .filter-group input {
+        .filter-group input, .filter-group select {
             padding: 12px 16px;
             border: 1.5px solid #E2E8F0;
             border-radius: 16px;
@@ -139,7 +139,7 @@
             outline: none;
         }
 
-        .filter-group input:focus {
+        .filter-group input:focus, .filter-group select:focus {
             border-color: #1ECAD3;
             box-shadow: 0 0 0 3px rgba(30,202,211,0.2);
         }
@@ -227,6 +227,32 @@
             background: white;
         }
 
+        .total-payment-card {
+            background: linear-gradient(135deg, #1ECAD3 0%, #0FA9B2 100%);
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .total-payment-card i {
+            font-size: 1.2rem;
+        }
+
+        .total-payment-card span {
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .total-payment-card small {
+            font-size: 0.7rem;
+            opacity: 0.9;
+        }
+
         .table-container {
             overflow-x: auto;
             padding: 0 24px 0 24px;
@@ -274,6 +300,24 @@
             transition: 0.1s;
         }
 
+        .negative-amount-row {
+            background-color: #FFF0F0 !important;
+            border-left: 3px solid #DC3545;
+        }
+
+        .negative-amount-row td {
+            background-color: #FFF0F0 !important;
+        }
+
+        .negative-amount-row:hover td {
+            background-color: #FFE0E0 !important;
+        }
+
+        .amount-cell-negative {
+            color: #DC3545 !important;
+            font-weight: 700 !important;
+        }
+
         .status-pending {
             background: #FEF3E2;
             color: #C46F1A;
@@ -288,7 +332,154 @@
             font-family: 'Rubik', monospace;
         }
 
-        /* Pagination Styles */
+        .amount-cell {
+            font-weight: 600;
+            color: #0F3D5E;
+        }
+
+        .filter-header {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .filter-header:hover {
+            background-color: #E8F4F8;
+        }
+
+        .filter-icon {
+            margin-left: 8px;
+            font-size: 0.7rem;
+            color: #89A9C9;
+            transition: color 0.2s;
+            display: inline-block;
+        }
+
+        .filter-header:hover .filter-icon {
+            color: #1ECAD3;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            background: white;
+            border: 1px solid #D0DDE8;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            padding: 12px;
+            min-width: 240px;
+            max-width: 300px;
+            z-index: 10000;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+        }
+
+        .filter-dropdown input[type="text"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .filter-dropdown .filter-options {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .filter-option-all {
+            border-bottom: 1px solid #E5EAF0;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .filter-option:hover {
+            background-color: #F0F9FD;
+        }
+
+        .filter-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            color: #1F3E54;
+        }
+
+        .blank-option {
+            border-top: 1px solid #E5EAF0;
+            margin-top: 4px;
+            padding-top: 8px;
+        }
+
+        .filter-dropdown .filter-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #E5EAF0;
+        }
+
+        .filter-apply, .filter-clear, .filter-close {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+
+        .filter-apply {
+            background: #1ECAD3;
+            color: white;
+        }
+
+        .filter-apply:hover {
+            background: #15B8C0;
+        }
+
+        .filter-clear {
+            background: #F0F2F5;
+            color: #666;
+        }
+
+        .filter-clear:hover {
+            background: #E4E7EB;
+        }
+
+        .filter-close {
+            background: #DC3545;
+            color: white;
+            margin-left: auto;
+        }
+
+        .filter-close:hover {
+            background: #C82333;
+        }
+
+        .filter-active {
+            color: #1ECAD3 !important;
+        }
+
         .pagination-container {
             padding: 20px 28px 28px 28px;
             background: white;
@@ -325,12 +516,6 @@
         }
 
         .page-btn:hover:not(:disabled) {
-            background: #1ECAD3;
-            border-color: #1ECAD3;
-            color: white;
-        }
-
-        .page-btn.active {
             background: #1ECAD3;
             border-color: #1ECAD3;
             color: white;
@@ -443,6 +628,20 @@
             .pagination-controls {
                 justify-content: center;
             }
+            
+            .stats-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .filter-dropdown {
+                position: fixed;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-width: 320px;
+            }
         }
     </style>
 </head>
@@ -473,27 +672,32 @@
                 <label><i class="fas fa-search"></i> Global search</label>
                 <input type="text" id="globalSearchInput" class="search-input" placeholder="Search patient, service, ID, amount...">
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
                 <button class="btn-primary" id="refreshBtn">
-                    <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh Data
+                    <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh
                 </button>
                 <button class="btn-outline" id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> Reset</button>
+                <div class="total-payment-card">
+                    <i class="fas fa-rupee-sign"></i>
+                    <div>
+                        <small>Total Pending</small>
+                        <span id="totalPaymentAmount">₹ 0</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="stats-row" id="statsDisplay">
             <span><i class="fas fa-spinner fa-pulse"></i> Connecting to sheet...</span>
-            <span><i class="fas fa-filter"></i> Status: <strong style="color:#0F3D5E;">Pending only</strong> (automatic)</span>
         </div>
 
         <div class="table-container" id="dynamicTableContainer">
             <div class="loader-state">
-                <i class="fas fa-sync-alt fa-spin" style="font-size: 32px; color:#1ECAD3;"></i>
-                <p>Fetching medical records from secure sheet</p>
+                <i class="fas fa-sync-alt fa-spin" style="font-size: 36px; color:#1ECAD3;"></i>
+                <p>Fetching Pending Payment Records From Sheet</p>
             </div>
         </div>
         
-        <!-- Pagination Section -->
         <div class="pagination-container" id="paginationContainer" style="display: none;">
             <div class="pagination-info" id="paginationInfo">
                 Showing 0 to 0 of 0 entries
@@ -532,13 +736,16 @@
     let masterSheetData = [];
     let filteredPendingData = [];
     
-    // Pagination variables
     let currentPage = 1;
     let rowsPerPage = 20;
     let totalPages = 1;
     
-    // Refresh state
     let isRefreshing = false;
+    
+    let careOfFilterValues = new Set();
+    let hasBlankValues = false;
+    let activeCareOfFilters = new Set();
+    let currentDropdown = null;
 
     const fromDateEl = document.getElementById('fromDateFilter');
     const toDateEl = document.getElementById('toDateFilter');
@@ -548,6 +755,7 @@
     const refreshIcon = document.getElementById('refreshIcon');
     const containerDiv = document.getElementById('dynamicTableContainer');
     const statsSpan = document.getElementById('statsDisplay');
+    const totalPaymentAmountSpan = document.getElementById('totalPaymentAmount');
     const paginationContainer = document.getElementById('paginationContainer');
     const firstPageBtn = document.getElementById('firstPageBtn');
     const prevPageBtn = document.getElementById('prevPageBtn');
@@ -603,12 +811,113 @@
         return false;
     }
 
+    function matchesCareOfFilter(rowObj) {
+        if (activeCareOfFilters.size === 0) return true;
+        const careOfColumn = getCareOfColumnName();
+        if (!careOfColumn) return true;
+        const rowValue = (rowObj[careOfColumn] || '').toString().trim();
+        
+        if (activeCareOfFilters.has('(Blank)')) {
+            if (rowValue === '') return true;
+            if (activeCareOfFilters.has(rowValue)) return true;
+            return false;
+        } else {
+            if (rowValue === '') return false;
+            return activeCareOfFilters.has(rowValue);
+        }
+    }
+
+    function getCareOfColumnName() {
+        if (filteredPendingData.length > 0) {
+            const columns = Object.keys(filteredPendingData[0]);
+            const careOfCol = columns.find(col => col.toLowerCase() === 'care of' || col.toLowerCase() === 'careof');
+            return careOfCol;
+        }
+        return null;
+    }
+
+    function getCareOfColumnNameFromData(data) {
+        if (data && data.length > 0) {
+            const columns = Object.keys(data[0]);
+            const careOfCol = columns.find(col => col.toLowerCase() === 'care of' || col.toLowerCase() === 'careof');
+            return careOfCol;
+        }
+        return null;
+    }
+
+    function extractAmount(rowObj) {
+        const amountKeys = ['amount', 'total', 'payment', 'balance', 'due'];
+        for (let key of Object.keys(rowObj)) {
+            if (amountKeys.some(ak => key.toLowerCase().includes(ak))) {
+                let val = rowObj[key];
+                if (val && typeof val === 'string') {
+                    const numMatch = val.replace(/[^0-9.-]/g, '');
+                    const num = parseFloat(numMatch);
+                    if (!isNaN(num)) return num;
+                } else if (typeof val === 'number') {
+                    return val;
+                }
+            }
+        }
+        return 0;
+    }
+
+    function isNegativeAmount(rowObj) {
+        const amount = extractAmount(rowObj);
+        return amount < 0;
+    }
+
+    function calculateTotalPayment(data) {
+        let total = 0;
+        for (let row of data) {
+            total += extractAmount(row);
+        }
+        return Math.round(total);
+    }
+
+    function updateTotalPaymentDisplay() {
+        const total = calculateTotalPayment(filteredPendingData);
+        totalPaymentAmountSpan.textContent = `₹${total.toLocaleString('en-IN')}`;
+    }
+
+    function updateCareOfFilterOptions() {
+        careOfFilterValues.clear();
+        hasBlankValues = false;
+        
+        const fromRaw = fromDateEl.value;
+        const toRaw = toDateEl.value;
+        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
+        const toDateObj = toRaw ? new Date(toRaw) : null;
+        const searchTerm = globalSearchEl.value;
+        
+        let tempFiltered = masterSheetData.filter(row => {
+            let statusVal = (row.status || '').toString().trim().toLowerCase();
+            return statusVal === 'pending';
+        });
+        
+        tempFiltered = tempFiltered.filter(row => isWithinDateRange(row.date, fromDateObj, toDateObj));
+        tempFiltered = tempFiltered.filter(row => matchesGlobal(row, searchTerm));
+        
+        const careOfCol = getCareOfColumnNameFromData(tempFiltered);
+        if (careOfCol) {
+            tempFiltered.forEach(row => {
+                let val = row[careOfCol];
+                if (val && val.toString().trim() !== '') {
+                    careOfFilterValues.add(val.toString().trim());
+                } else {
+                    hasBlankValues = true;
+                }
+            });
+        }
+    }
+
     function applyFiltersAndRender() {
         if (!masterSheetData.length) {
             filteredPendingData = [];
             currentPage = 1;
             renderTable();
             updateStatsUI();
+            updateTotalPaymentDisplay();
             return;
         }
 
@@ -627,11 +936,14 @@
             return isWithinDateRange(row.date, fromDateObj, toDateObj);
         });
 
-        let finalFiltered = dateFiltered.filter(row => matchesGlobal(row, searchTerm));
+        let searchFiltered = dateFiltered.filter(row => matchesGlobal(row, searchTerm));
+        
+        let finalFiltered = searchFiltered.filter(row => matchesCareOfFilter(row));
+        
         filteredPendingData = finalFiltered;
         
-        // Reset to first page when filters change
         currentPage = 1;
+        updateTotalPaymentDisplay();
         updatePagination();
         renderTable();
         updateStatsUI();
@@ -639,14 +951,16 @@
 
     function updateStatsUI() {
         if (!masterSheetData.length) {
-            statsSpan.innerHTML = `<span><i class="fas fa-database"></i> No data loaded</span><span><i class="fas fa-check-circle"></i> Pending filter active</span>`;
+            statsSpan.innerHTML = `<span><i class="fas fa-database"></i> No data loaded</span>
+                                   <span><i class="fas fa-filter"></i> Status: <strong>Pending only</strong></span>`;
             return;
         }
         const totalPendingRaw = masterSheetData.filter(r => (r.status || '').toLowerCase() === 'pending').length;
         const shown = filteredPendingData.length;
         const lastUpdated = new Date().toLocaleTimeString();
-        statsSpan.innerHTML = `<span><i class="fas fa-clinic-medical"></i> Showing ${shown} of ${totalPendingRaw} pending cases | Total records: ${masterSheetData.length}</span>
-                               <span><i class="fas fa-chart-line"></i> Medical-grade filter · <i class="fas fa-hourglass-half"></i> Pending only | <i class="fas fa-clock"></i> Last updated: ${lastUpdated}</span>`;
+        
+        statsSpan.innerHTML = `<span><i class="fas fa-clinic-medical"></i> Showing ${shown} of ${totalPendingRaw} pending cases | Total records: ${masterSheetData.length} | Last updated: ${lastUpdated}</span>
+                               <span><i class="fas fa-filter"></i> Status: <strong>Pending only</strong></span>`;
     }
 
     function updatePagination() {
@@ -654,20 +968,17 @@
         if (totalPages === 0) totalPages = 1;
         if (currentPage > totalPages) currentPage = totalPages;
         
-        // Show/hide pagination container
         if (filteredPendingData.length > rowsPerPage) {
             paginationContainer.style.display = 'flex';
         } else {
             paginationContainer.style.display = 'none';
         }
         
-        // Update buttons state
         firstPageBtn.disabled = currentPage === 1;
         prevPageBtn.disabled = currentPage === 1;
         nextPageBtn.disabled = currentPage === totalPages;
         lastPageBtn.disabled = currentPage === totalPages;
         
-        // Update pagination info
         const start = (currentPage - 1) * rowsPerPage + 1;
         const end = Math.min(currentPage * rowsPerPage, filteredPendingData.length);
         if (filteredPendingData.length === 0) {
@@ -676,7 +987,6 @@
             paginationInfo.textContent = `Showing ${start} to ${end} of ${filteredPendingData.length} entries`;
         }
         
-        // Render page numbers
         renderPageNumbers();
     }
     
@@ -714,6 +1024,239 @@
         return filteredPendingData.slice(start, end);
     }
 
+    function closeDropdown() {
+        if (currentDropdown) {
+            currentDropdown.remove();
+            currentDropdown = null;
+        }
+    }
+
+    function updateSelectAllState(selectAllCheckbox, sortedValues, currentSelections) {
+        if (!selectAllCheckbox) return;
+        let totalOptions = sortedValues.length;
+        if (hasBlankValues) totalOptions++;
+        let selectedCount = currentSelections.size;
+        selectAllCheckbox.checked = (selectedCount === totalOptions);
+        selectAllCheckbox.indeterminate = (selectedCount > 0 && selectedCount < totalOptions);
+    }
+
+    function createColumnFilter(columnName, columnIndex, filterValues) {
+        const th = document.querySelector(`.data-table th:nth-child(${columnIndex + 1})`);
+        if (!th) return;
+        
+        const originalText = columnName.charAt(0).toUpperCase() + columnName.slice(1).replace(/([A-Z])/g, ' $1');
+        th.innerHTML = `${originalText} <i class="fas fa-filter filter-icon"></i>`;
+        th.classList.add('filter-header');
+        
+        const filterIcon = th.querySelector('.filter-icon');
+        
+        if (activeCareOfFilters.size > 0) {
+            filterIcon.style.color = '#1ECAD3';
+        }
+        
+        filterIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            if (currentDropdown) {
+                closeDropdown();
+                return;
+            }
+            
+            const rect = th.getBoundingClientRect();
+            
+            const dropdown = document.createElement('div');
+            dropdown.className = 'filter-dropdown';
+            
+            dropdown.style.position = 'absolute';
+            dropdown.style.top = `${rect.height}px`;
+            dropdown.style.left = '0px';
+            
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Search options...';
+            searchInput.autocomplete = 'off';
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'filter-options';
+            
+            const sortedValues = Array.from(filterValues).sort();
+            
+            let currentSelections = new Set(activeCareOfFilters);
+            
+            function renderOptions(searchTerm = '') {
+                optionsContainer.innerHTML = '';
+                
+                const allOptionDiv = document.createElement('div');
+                allOptionDiv.className = 'filter-option filter-option-all';
+                
+                const allCheckbox = document.createElement('input');
+                allCheckbox.type = 'checkbox';
+                allCheckbox.id = 'select_all_careof';
+                
+                let totalOptions = sortedValues.length;
+                if (hasBlankValues) totalOptions++;
+                let selectedCount = currentSelections.size;
+                allCheckbox.checked = (selectedCount === totalOptions);
+                allCheckbox.indeterminate = (selectedCount > 0 && selectedCount < totalOptions);
+                
+                const allLabel = document.createElement('label');
+                allLabel.htmlFor = 'select_all_careof';
+                allLabel.textContent = '☑ Select All';
+                allLabel.style.fontWeight = '600';
+                
+                allCheckbox.addEventListener('change', (e) => {
+                    if (allCheckbox.checked) {
+                        sortedValues.forEach(v => currentSelections.add(v));
+                        if (hasBlankValues) currentSelections.add('(Blank)');
+                    } else {
+                        currentSelections.clear();
+                    }
+                    renderOptions(searchInput.value);
+                });
+                
+                allOptionDiv.appendChild(allCheckbox);
+                allOptionDiv.appendChild(allLabel);
+                optionsContainer.appendChild(allOptionDiv);
+                
+                const filtered = sortedValues.filter(v => 
+                    v.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                
+                filtered.forEach(value => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'filter-option';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    checkbox.checked = currentSelections.has(value);
+                    checkbox.id = `filter_${value.replace(/\s/g, '_')}`;
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = checkbox.id;
+                    label.textContent = value;
+                    
+                    checkbox.addEventListener('change', (e) => {
+                        if (checkbox.checked) {
+                            currentSelections.add(value);
+                        } else {
+                            currentSelections.delete(value);
+                        }
+                        const selectAllCheckbox = optionsContainer.querySelector('#select_all_careof');
+                        if (selectAllCheckbox) {
+                            let totalOpts = sortedValues.length;
+                            if (hasBlankValues) totalOpts++;
+                            let selectedCnt = currentSelections.size;
+                            selectAllCheckbox.checked = (selectedCnt === totalOpts);
+                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
+                        }
+                    });
+                    
+                    optionDiv.appendChild(checkbox);
+                    optionDiv.appendChild(label);
+                    optionsContainer.appendChild(optionDiv);
+                });
+                
+                if (hasBlankValues) {
+                    const blankOptionDiv = document.createElement('div');
+                    blankOptionDiv.className = 'filter-option blank-option';
+                    
+                    const blankCheckbox = document.createElement('input');
+                    blankCheckbox.type = 'checkbox';
+                    blankCheckbox.value = '(Blank)';
+                    blankCheckbox.checked = currentSelections.has('(Blank)');
+                    blankCheckbox.id = 'filter_blank_option';
+                    
+                    const blankLabel = document.createElement('label');
+                    blankLabel.htmlFor = 'filter_blank_option';
+                    blankLabel.textContent = '(Blank)';
+                    blankLabel.style.fontStyle = 'italic';
+                    blankLabel.style.color = '#888';
+                    
+                    blankCheckbox.addEventListener('change', (e) => {
+                        if (blankCheckbox.checked) {
+                            currentSelections.add('(Blank)');
+                        } else {
+                            currentSelections.delete('(Blank)');
+                        }
+                        const selectAllCheckbox = optionsContainer.querySelector('#select_all_careof');
+                        if (selectAllCheckbox) {
+                            let totalOpts = sortedValues.length;
+                            if (hasBlankValues) totalOpts++;
+                            let selectedCnt = currentSelections.size;
+                            selectAllCheckbox.checked = (selectedCnt === totalOpts);
+                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
+                        }
+                    });
+                    
+                    blankOptionDiv.appendChild(blankCheckbox);
+                    blankOptionDiv.appendChild(blankLabel);
+                    optionsContainer.appendChild(blankOptionDiv);
+                }
+                
+                if (filtered.length === 0 && (!hasBlankValues || (hasBlankValues && searchTerm.toLowerCase() !== '(blank)' && searchTerm !== ''))) {
+                    const noResult = document.createElement('div');
+                    noResult.style.padding = '12px';
+                    noResult.style.textAlign = 'center';
+                    noResult.style.color = '#999';
+                    noResult.textContent = 'No matching options';
+                    optionsContainer.appendChild(noResult);
+                }
+            }
+            
+            searchInput.addEventListener('input', (e) => {
+                renderOptions(e.target.value);
+            });
+            
+            renderOptions();
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'filter-actions';
+            
+            const applyBtn = document.createElement('button');
+            applyBtn.textContent = 'Apply';
+            applyBtn.className = 'filter-apply';
+            applyBtn.onclick = () => {
+                activeCareOfFilters.clear();
+                currentSelections.forEach(v => activeCareOfFilters.add(v));
+                applyFiltersAndRender();
+                closeDropdown();
+                if (activeCareOfFilters.size > 0) {
+                    filterIcon.style.color = '#1ECAD3';
+                } else {
+                    filterIcon.style.color = '';
+                }
+            };
+            
+            const clearBtn = document.createElement('button');
+            clearBtn.textContent = 'Clear All';
+            clearBtn.className = 'filter-clear';
+            clearBtn.onclick = () => {
+                currentSelections.clear();
+                renderOptions(searchInput.value);
+            };
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = 'Close';
+            closeBtn.className = 'filter-close';
+            closeBtn.onclick = () => {
+                closeDropdown();
+            };
+            
+            actionsDiv.appendChild(applyBtn);
+            actionsDiv.appendChild(clearBtn);
+            actionsDiv.appendChild(closeBtn);
+            
+            dropdown.appendChild(searchInput);
+            dropdown.appendChild(optionsContainer);
+            dropdown.appendChild(actionsDiv);
+            
+            th.style.position = 'relative';
+            th.appendChild(dropdown);
+            currentDropdown = dropdown;
+        });
+    }
+
     function renderTable() {
         if (filteredPendingData.length === 0 && masterSheetData.length > 0) {
             containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-inbox" style="font-size: 2rem; color:#1ECAD3;"></i><br />No pending records match the filters. Adjust date or search.</div>`;
@@ -726,19 +1269,12 @@
             return;
         }
         
-        // Get current page data
         const pageData = getCurrentPageData();
-        
-        // Get all columns from the first row
         let allColumns = Object.keys(filteredPendingData[0]);
         
-        // Define the columns we want to display (excluding date and any extra status columns)
         let columnsToDisplay = [];
-        
-        // Priority columns in desired order (without date)
         const priorityColumns = ['ID', 'Patient', 'Service', 'Amount', 'Notes'];
         
-        // First add priority columns if they exist
         priorityColumns.forEach(priorityCol => {
             const found = allColumns.find(col => col.toLowerCase() === priorityCol.toLowerCase());
             if (found && !columnsToDisplay.includes(found)) {
@@ -746,39 +1282,57 @@
             }
         });
         
-        // Then add any remaining columns except 'date' and any column with 'status' (we'll add one at the end)
         allColumns.forEach(col => {
             const lowerCol = col.toLowerCase();
             if (lowerCol === 'date') return;
             if (lowerCol.includes('status')) return;
+            if (lowerCol === 'care of' || lowerCol === 'careof') return;
             if (columnsToDisplay.includes(col)) return;
             columnsToDisplay.push(col);
         });
         
-        // Add ONE status column at the end
+        const careOfColumn = allColumns.find(col => col.toLowerCase() === 'care of' || col.toLowerCase() === 'careof');
+        if (careOfColumn && !columnsToDisplay.includes(careOfColumn)) {
+            columnsToDisplay.push(careOfColumn);
+        }
+        
         const statusColumn = allColumns.find(col => col.toLowerCase().includes('status'));
         if (statusColumn && !columnsToDisplay.includes(statusColumn)) {
             columnsToDisplay.push(statusColumn);
         }
         
-        // Build the table
         let html = `<table class="data-table"><thead><tr>`;
-        columnsToDisplay.forEach(col => {
+        columnsToDisplay.forEach((col, idx) => {
             let displayHeader = col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1');
-            html += `<th>${displayHeader}</th>`;
+            html += `<th data-column="${col}" data-index="${idx}">${displayHeader}</th>`;
         });
         html += `</thead><tbody>`;
         
         for (let row of pageData) {
-            html += `<tr>`;
+            const isNegative = isNegativeAmount(row);
+            const rowClass = isNegative ? 'negative-amount-row' : '';
+            html += `<tr class="${rowClass}">`;
+            
             columnsToDisplay.forEach(col => {
                 let cellVal = row[col] !== undefined && row[col] !== null ? row[col] : '—';
                 let isStatusColumn = col.toLowerCase().includes('status');
+                let isAmountColumn = col.toLowerCase().includes('amount') || col.toLowerCase().includes('total');
                 let content = '';
+                
                 if (isStatusColumn) {
                     content = `<span class="status-pending"><i class="fas fa-clock"></i> Pending</span>`;
+                } else if (isAmountColumn) {
+                    const numVal = parseFloat(cellVal.toString().replace(/[^0-9.-]/g, ''));
+                    const isNegativeNum = numVal < 0;
+                    const formatted = !isNaN(numVal) ? `₹${Math.round(Math.abs(numVal)).toLocaleString('en-IN')}` : cellVal;
+                    const amountClass = isNegativeNum ? 'amount-cell-negative' : 'amount-cell';
+                    content = `<span class="${amountClass}">${isNegativeNum ? '- ' : ''}${formatted}</span>`;
                 } else {
-                    content = cellVal;
+                    if ((col === careOfColumn) && (cellVal === '—' || cellVal === '')) {
+                        content = '—';
+                    } else {
+                        content = cellVal;
+                    }
                 }
                 html += `<td>${content}</td>`;
             });
@@ -786,6 +1340,16 @@
         }
         html += `</tbody></table>`;
         containerDiv.innerHTML = html;
+        
+        setTimeout(() => {
+            if (careOfColumn) {
+                const careOfIndex = columnsToDisplay.indexOf(careOfColumn);
+                if (careOfIndex !== -1) {
+                    updateCareOfFilterOptions();
+                    createColumnFilter(careOfColumn, careOfIndex, careOfFilterValues);
+                }
+            }
+        }, 50);
     }
 
     function csvToObjects(csvString) {
@@ -838,7 +1402,6 @@
         containerDiv.innerHTML = `<div class="loader-state"><i class="fas fa-spinner fa-pulse" style="font-size: 36px; color:#1ECAD3;"></i><p>Loading secure medical records ...</p></div>`;
         
         try {
-            // Add cache-busting parameter to prevent caching
             const cacheBuster = `&_cb=${Date.now()}`;
             const response = await fetch(SHEET_CSV_URL + cacheBuster, { 
                 cache: "no-store",
@@ -854,14 +1417,14 @@
             if (parsed.length === 0) throw new Error("No rows found in sheet");
             masterSheetData = parsed;
             
-            // Preserve filter values but re-apply them
-            const currentFromDate = fromDateEl.value;
-            const currentToDate = toDateEl.value;
-            const currentSearch = globalSearchEl.value;
+            updateCareOfFilterOptions();
+            
+            activeCareOfFilters.clear();
+            careOfFilterValues.forEach(v => activeCareOfFilters.add(v));
+            if (hasBlankValues) activeCareOfFilters.add('(Blank)');
             
             applyFiltersAndRender();
             
-            // Show success feedback
             if (showRefreshAnimation) {
                 refreshIcon.className = 'fas fa-check';
                 setTimeout(() => {
@@ -896,14 +1459,27 @@
     }
 
     function bindEvents() {
-        fromDateEl.addEventListener('change', () => applyFiltersAndRender());
-        toDateEl.addEventListener('change', () => applyFiltersAndRender());
-        globalSearchEl.addEventListener('input', () => applyFiltersAndRender());
+        fromDateEl.addEventListener('change', () => {
+            updateCareOfFilterOptions();
+            applyFiltersAndRender();
+        });
+        toDateEl.addEventListener('change', () => {
+            updateCareOfFilterOptions();
+            applyFiltersAndRender();
+        });
+        globalSearchEl.addEventListener('input', () => {
+            updateCareOfFilterOptions();
+            applyFiltersAndRender();
+        });
         
         resetBtn.addEventListener('click', () => {
             fromDateEl.value = '';
             toDateEl.value = '';
             globalSearchEl.value = '';
+            updateCareOfFilterOptions();
+            activeCareOfFilters.clear();
+            careOfFilterValues.forEach(v => activeCareOfFilters.add(v));
+            if (hasBlankValues) activeCareOfFilters.add('(Blank)');
             applyFiltersAndRender();
         });
         
