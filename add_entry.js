@@ -1908,8 +1908,6 @@ function updatePaymentFields() {
   const homeVisit = parseFloat((F.homeVisitCharges() || {}).value) || 0;
   const cashRcvd = parseFloat((F.cashReceived() || {}).value) || 0;
   const onlineRcvd = parseFloat((F.onlineReceived() || {}).value) || 0;
-  // REMOVE goodwill from final price calculation
-  // const goodwill = parseFloat((F.goodwillCharges() || {}).value) || 0;
 
   const totalMRPEl = F.totalMRP();
   if (totalMRPEl) totalMRPEl.value = fmtINR(totalMRP);
@@ -1925,12 +1923,13 @@ function updatePaymentFields() {
     discountedPriceEl.value = finalDiscounted;
   }
 
-  // REMOVE goodwill from final price calculation
-  const finalPrice = finalDiscounted + homeVisit;  // Removed + goodwill
+  // Final price calculation (Goodwill is NOT added - separate tracking only)
+  const finalPrice = finalDiscounted + homeVisit;
   const fpEl = F.finalPrice();
   if (fpEl) fpEl.value = fmtINR(finalPrice);
 
-  const pending = Math.max(0, finalPrice - cashRcvd - onlineRcvd);
+  // FIX: Allow negative pending payment (overpayment)
+  const pending = finalPrice - cashRcvd - onlineRcvd;  // Removed Math.max(0, ...)
   const ppEl = F.pendingPayment();
   if (ppEl) ppEl.value = fmtINR(pending);
 
@@ -1938,7 +1937,7 @@ function updatePaymentFields() {
   if (crEl) crEl.value = finalPrice;
 }
 
-[F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived, F.goodwillCharges].forEach(fn => {
+[F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived].forEach(fn => {
   const node = fn();
   if (node) node.addEventListener("input", updatePaymentFields);
 });
@@ -2027,6 +2026,7 @@ function updateConditionalVisitFields() {
   toggleDisplay(F.urineSentField, hasUrine);
   toggleDisplay(F.ppSentField, hasPP);
 
+  // IMPORTANT: Do NOT reset test selections here
   if (hasPP) {
     autoPPTime();
   } else {
