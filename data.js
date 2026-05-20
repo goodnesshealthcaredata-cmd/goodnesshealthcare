@@ -362,7 +362,10 @@ lab1: [{ name: "CBC", mrp: 300, b2b: 80 },
 { name: "Amylase", mrp: 700, b2b: 275 },
 { name: "ACTH", mrp: 1800, b2b: null },
 { name: "Throat Swab C/S", mrp: 950, b2b: 400 },
-{ name: "ASO Titer", mrp: 650, b2b: 390 }],
+{ name: "ASO Titer", mrp: 650, b2b: 390 },
+{ name: "AMH", mrp: 2000, b2b: 1000 },
+{ name: "PTH ", mrp: 1600, b2b: 1120 },
+{ name: "Apo B: Apo A1 ratio", mrp: null, b2b: null }],
 
 lab2: [{ name: "CBC", mrp: 280, b2b: 168 },
 { name: "Blood Group", mrp: 150, b2b: 90 },
@@ -425,7 +428,7 @@ lab2: [{ name: "CBC", mrp: 280, b2b: 168 },
 { name: "Beta HCG", mrp: 500, b2b: 355 },
 { name: "Homocysten", mrp: 1200, b2b: 744 },
 { name: "CA125 (Female)", mrp: 1050, b2b: 683 },
-{ name: "PSA (Male)", mrp: 1450, b2b: 1001 },
+{ name: "PSA (Male)", mrp: 750, b2b: 497 },
 { name: "IGE", mrp: 770, b2b: 539 },
 { name: "Trop-T", mrp: 770, b2b: 539 },
 { name: "Anti CCP", mrp: 1250, b2b: 813 },
@@ -510,7 +513,10 @@ lab2: [{ name: "CBC", mrp: 280, b2b: 168 },
 { name: "Amylase", mrp: null, b2b: null },
 { name: "ACTH", mrp: null, b2b: null },
 { name: "Throat Swab C/S", mrp: null, b2b: null },
-{ name: "ASO Titer", mrp: null, b2b: null }],
+{ name: "ASO Titer", mrp: null, b2b: null },
+{ name: "AMH", mrp: 2050, b2b: 1415 },
+{ name: "PTH ", mrp: 1320, b2b: 924 },
+{ name: "Apo B: Apo A1 ratio", mrp: null, b2b: null }],
 
 lab3: [{ name: "CBC", mrp: 190, b2b: 60 },
 { name: "Blood Group", mrp: 220, b2b: 50 },
@@ -658,7 +664,10 @@ lab3: [{ name: "CBC", mrp: 190, b2b: 60 },
 { name: "Amylase", mrp: null, b2b: null },
 { name: "ACTH", mrp: null, b2b: null },
 { name: "Throat Swab C/S", mrp: null, b2b: null },
-{ name: "ASO Titer", mrp: null, b2b: null }],
+{ name: "ASO Titer", mrp: null, b2b: null },
+{ name: "AMH", mrp: 2142, b2b: 600 },
+{ name: "PTH ", mrp: 1450, b2b: null },
+{ name: "Apo B: Apo A1 ratio", mrp: null, b2b: null }],
 
   lab4: [  ]
 };
@@ -675,8 +684,8 @@ const PACKAGES = {
 { name: "GOODNESS BB FEMALE", tests: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)"], mrp: 3500, b2b: 1500 },
 { name: "GOODNESS BA MALE", tests: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "PSA (Male)"], mrp: 3500, b2b: 1400 },
 { name: "GOODNESS C", tests: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
-{ name: "GOODNES F", tests: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
-{ name: "GODNESS 3H ", tests: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
+{ name: "GOODNESS F", tests: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
+{ name: "GOODNESS 3H ", tests: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
 { name: "FEVER PROFILE", tests: ["CBC", "ESR", "SGPT", "SGOT", "CRP", "Dengue NSI", "Maleria Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 }
 ],
   lab2: [
@@ -690,6 +699,7 @@ const PACKAGES = {
 { name: "GD WELLNESS 15.1", tests: ["Iron Study", "LFT", "Lipid Profile", "RFT", "Total TFT"], mrp: 1000, b2b: 550 },
 { name: "GD LIFE - A6", tests: ["Homocysten", "Iron Study", "LFT", "Lipid Profile", "Total TFT", "HbA1C", "RFT", "Vit B12", "Vit D3"], mrp: 1800, b2b: 750 },
 { name: "Summer Health Package", tests: ["Iron Study", "Total TFT", "LFT", "HbA1C", "RFT", "Vit D3", "Vit B12", "Lipid Profile", "Electrolytes", "CBC", "Urine Routine"], mrp: 2000, b2b: 700 },
+{ name: "Tax Saver Health Package", tests: ["Vit D3", "Vit B12", "RA Factor", "ESR", "Electrolytes", "Iron Study", "LFT", "Lipid Profile", "Total TFT", "HbA1C", "RFT", "CBC", "HSCRP", "Apolipoprotein A-1 & B", "Apo B: Apo A1 ratio"], mrp: 2500, b2b: 950 }
 ],
   lab4: [
   ]
