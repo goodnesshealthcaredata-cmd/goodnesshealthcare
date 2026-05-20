@@ -272,6 +272,7 @@
             border: 1px solid #E2EBF3;
             padding: 14px 16px;
             vertical-align: middle;
+            white-space: nowrap;
         }
 
         .data-table th:nth-child(2),
@@ -385,7 +386,7 @@
         }
 
         .filter-dropdown .filter-options {
-            max-height: 280px;
+            max-height: 200px;
             overflow-y: auto;
         }
 
@@ -634,14 +635,6 @@
                 gap: 10px;
             }
             
-            .filter-dropdown {
-                position: fixed;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%);
-                width: 90%;
-                max-width: 320px;
-            }
         }
     </style>
 </head>
@@ -681,7 +674,7 @@
                     <i class="fas fa-rupee-sign"></i>
                     <div>
                         <small>Total Pending</small>
-                        <span id="totalPaymentAmount">₹ 0</span>
+                        <span id="totalPaymentAmount">₹0</span>
                     </div>
                 </div>
             </div>
@@ -689,12 +682,13 @@
 
         <div class="stats-row" id="statsDisplay">
             <span><i class="fas fa-spinner fa-pulse"></i> Connecting to sheet...</span>
+            <span><i class="fas fa-filter"></i> Status: <strong style="color:#0F3D5E;">Pending only</strong></span>
         </div>
 
         <div class="table-container" id="dynamicTableContainer">
             <div class="loader-state">
                 <i class="fas fa-sync-alt fa-spin" style="font-size: 36px; color:#1ECAD3;"></i>
-                <p>Fetching Pending Payment Records From Sheet</p>
+                <p>Fetching medical records from secure sheet</p>
             </div>
         </div>
         
@@ -911,6 +905,22 @@
         }
     }
 
+    // Sort data by date - most recent first
+    function sortByDateDescending(data) {
+        return [...data].sort((a, b) => {
+            const dateA = parseMedicalDate(a.date);
+            const dateB = parseMedicalDate(b.date);
+            
+            // Handle null dates (put them at the end)
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            
+            // Sort descending (newest first)
+            return dateB - dateA;
+        });
+    }
+
     function applyFiltersAndRender() {
         if (!masterSheetData.length) {
             filteredPendingData = [];
@@ -940,7 +950,8 @@
         
         let finalFiltered = searchFiltered.filter(row => matchesCareOfFilter(row));
         
-        filteredPendingData = finalFiltered;
+        // Sort by date - most recent first
+        filteredPendingData = sortByDateDescending(finalFiltered);
         
         currentPage = 1;
         updateTotalPaymentDisplay();
@@ -960,7 +971,7 @@
         const lastUpdated = new Date().toLocaleTimeString();
         
         statsSpan.innerHTML = `<span><i class="fas fa-clinic-medical"></i> Showing ${shown} of ${totalPendingRaw} pending cases | Total records: ${masterSheetData.length} | Last updated: ${lastUpdated}</span>
-                               <span><i class="fas fa-filter"></i> Status: <strong>Pending only</strong></span>`;
+                               <span><i class="fas fa-filter"></i> Status: <strong>Pending only</strong> | <i class="fas fa-sort-amount-down"></i> Sorted by date (newest first)</span>`;
     }
 
     function updatePagination() {
@@ -1029,15 +1040,6 @@
             currentDropdown.remove();
             currentDropdown = null;
         }
-    }
-
-    function updateSelectAllState(selectAllCheckbox, sortedValues, currentSelections) {
-        if (!selectAllCheckbox) return;
-        let totalOptions = sortedValues.length;
-        if (hasBlankValues) totalOptions++;
-        let selectedCount = currentSelections.size;
-        selectAllCheckbox.checked = (selectedCount === totalOptions);
-        selectAllCheckbox.indeterminate = (selectedCount > 0 && selectedCount < totalOptions);
     }
 
     function createColumnFilter(columnName, columnIndex, filterValues) {
