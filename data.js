@@ -42,6 +42,7 @@ const PREDEFINED_CARE_OF = [
 "Kalpana Sister",
 "Megha Sister",
 "Sindhu Sister",
+"Yogita Sister",
 "Centre Patient"
 ];
 
