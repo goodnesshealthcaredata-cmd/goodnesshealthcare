@@ -6,12 +6,28 @@ const el = (q) => document.querySelector(q);
 const $ = (q, root = document) => Array.from(root.querySelectorAll(q));
 const fmtINR = (n) => "₹" + (Number(n) || 0).toLocaleString("en-IN");
 
+// Lab Color Mapping
+const LAB_COLORS = {
+  1: { bg: "#f3e8ff", border: "#c084fc", text: "#4c1d95", light: "#e9d5ff" },      // Purple
+  2: { bg: "#eff6ff", border: "#60a5fa", text: "#1e3a8a", light: "#dbeafe" },      // Blue
+  3: { bg: "#f0fdf4", border: "#4ade80", text: "#166534", light: "#dcfce7" },      // Parrot Green
+  4: { bg: "#fdf2f2", border: "#f87171", text: "#991b1b", light: "#fee2e2" }       // Maroon
+};
+
+const LAB_GRADIENT_COLORS = {
+  1: "#c084fc",  // Purple
+  2: "#60a5fa",  // Blue
+  3: "#4ade80",  // Parrot Green
+  4: "#f87171"   // Maroon
+};
+
 // Pagination state
 let currentPage = 1;
 const ITEMS_PER_PAGE = 15;
 let showAllEntries = false;
 let currentSearchQuery = "";
 let currentFilterDate = null;
+let currentLabFilters = { 1: true, 2: true, 3: true, 4: true };
 
 function showToast(msg = "Saved!") {
   const t = el("#toast");
@@ -196,6 +212,81 @@ function sortEntriesByDateAndTime(entries) {
     
     return timeA.localeCompare(timeB);
   });
+}
+
+/* ========================= Lab Detection for Entries ========================= */
+function getLabsForEntry(entry) {
+  const labs = new Set();
+  for (let i = 1; i <= 4; i++) {
+    const tests = (entry[`tests_lab${i}`] || "").split(",").filter(t => t.trim());
+    const packages = (entry[`packages_lab${i}`] || "");
+    
+    if (tests.length > 0) {
+      labs.add(i);
+    }
+    
+    if (packages && packages !== "" && packages !== "[]") {
+      try {
+        const parsed = JSON.parse(packages);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          labs.add(i);
+        } else if (packages.split(",").filter(p => p.trim()).length > 0) {
+          labs.add(i);
+        }
+      } catch (e) {
+        if (packages.split(",").filter(p => p.trim()).length > 0) {
+          labs.add(i);
+        }
+      }
+    }
+  }
+  return Array.from(labs);
+}
+
+function getLabCountsForEntry(entry) {
+  const labs = getLabsForEntry(entry);
+  const labDetails = {};
+  for (let i = 1; i <= 4; i++) {
+    const tests = (entry[`tests_lab${i}`] || "").split(",").filter(t => t.trim());
+    const packages = (entry[`packages_lab${i}`] || "");
+    let hasContent = tests.length > 0;
+    
+    if (!hasContent && packages && packages !== "" && packages !== "[]") {
+      try {
+        const parsed = JSON.parse(packages);
+        hasContent = Array.isArray(parsed) && parsed.length > 0;
+      } catch (e) {
+        hasContent = packages.split(",").filter(p => p.trim()).length > 0;
+      }
+    }
+    
+    if (hasContent) {
+      labDetails[i] = { tests, packages };
+    }
+  }
+  return labDetails;
+}
+
+function getCardStyleForEntry(entry) {
+  const labs = getLabsForEntry(entry);
+  
+  if (labs.length === 0) {
+    return { background: "#ffffff", borderColor: "#e2e8f0", textColor: "#1a2e35" };
+  }
+  
+  if (labs.length === 1) {
+    const labNum = labs[0];
+    const colors = LAB_COLORS[labNum] || LAB_COLORS[1];
+    return { background: colors.bg, borderColor: colors.border, textColor: colors.text };
+  }
+  
+  const gradientColors = labs.map(l => LAB_GRADIENT_COLORS[l]).join(", ");
+  return { 
+    background: `linear-gradient(90deg, ${gradientColors})`,
+    borderColor: "transparent",
+    textColor: "#ffffff",
+    isGradient: true
+  };
 }
 
 /* ========================= Visit Schedule Modal ========================= */
@@ -384,12 +475,10 @@ class CustomTimePicker {
   }
   
   init() {
-    // Hide the native input and create custom picker trigger
     this.input.style.cursor = "pointer";
     this.input.style.backgroundColor = "#fff";
     this.input.readOnly = true;
     
-    // Parse initial value if exists
     if (this.input.value) {
       const parts = this.input.value.split(":");
       if (parts.length === 2) {
@@ -403,7 +492,6 @@ class CustomTimePicker {
       this.open();
     });
     
-    // Close on escape
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && this.isOpen) {
         this.close();
@@ -433,7 +521,6 @@ class CustomTimePicker {
     this.hours = this.generateHourOptions();
     this.minutes = this.generateMinuteOptions();
     
-    // Create picker container
     this.picker = document.createElement("div");
     this.picker.className = "custom-time-picker";
     this.picker.style.cssText = `
@@ -447,7 +534,6 @@ class CustomTimePicker {
       animation: timePickerSlideIn 0.2s ease;
     `;
     
-    // Create header
     const header = document.createElement("div");
     header.style.cssText = `
       background: linear-gradient(135deg, #09637E 0%, #088395 100%);
@@ -457,7 +543,6 @@ class CustomTimePicker {
     `;
     header.innerHTML = `<h3 style="margin:0;font-size:1rem;">Select Time (24-Hour)</h3>`;
     
-    // Create time display
     const timeDisplay = document.createElement("div");
     timeDisplay.style.cssText = `
       font-size: 2.5rem;
@@ -471,7 +556,6 @@ class CustomTimePicker {
     `;
     timeDisplay.textContent = `${this.selectedHour}:${this.selectedMinute}`;
     
-    // Create picker body with scrollable columns
     const pickerBody = document.createElement("div");
     pickerBody.style.cssText = `
       display: flex;
@@ -480,12 +564,9 @@ class CustomTimePicker {
       background: white;
     `;
     
-    // Hour column
     const hourColumn = this.createScrollColumn(this.hours, this.selectedHour, "hour", timeDisplay);
-    // Minute column
     const minuteColumn = this.createScrollColumn(this.minutes, this.selectedMinute, "minute", timeDisplay);
     
-    // Colon separator
     const colon = document.createElement("div");
     colon.style.cssText = `
       font-size: 1.5rem;
@@ -501,7 +582,6 @@ class CustomTimePicker {
     pickerBody.appendChild(colon);
     pickerBody.appendChild(minuteColumn);
     
-    // Buttons
     const buttonContainer = document.createElement("div");
     buttonContainer.style.cssText = `
       display: flex;
@@ -527,12 +607,10 @@ class CustomTimePicker {
     this.picker.appendChild(pickerBody);
     this.picker.appendChild(buttonContainer);
     
-    // Position picker near input
     const rect = this.input.getBoundingClientRect();
     this.picker.style.top = `${rect.bottom + 10}px`;
     this.picker.style.left = `${Math.max(10, rect.left - 100)}px`;
     
-    // Ensure picker stays in viewport
     if (parseInt(this.picker.style.top) + 400 > window.innerHeight) {
       this.picker.style.top = `${rect.top - 420}px`;
     }
@@ -543,7 +621,6 @@ class CustomTimePicker {
     document.body.appendChild(this.picker);
     this.isOpen = true;
     
-    // Click outside to close
     setTimeout(() => {
       document.addEventListener("click", this.handleOutsideClick);
     }, 0);
@@ -598,7 +675,6 @@ class CustomTimePicker {
         }
         timeDisplay.textContent = `${this.selectedHour}:${this.selectedMinute}`;
         
-        // Update selected style in column
         container.querySelectorAll("div").forEach(div => {
           div.style.background = "";
           div.style.color = "";
@@ -614,7 +690,6 @@ class CustomTimePicker {
       container.appendChild(option);
     });
     
-    // Scroll to selected value
     setTimeout(() => {
       const targetOption = Array.from(container.querySelectorAll("div")).find(
         div => div.textContent === selectedValue
@@ -686,7 +761,6 @@ class CustomTimePicker {
   }
 }
 
-// Add CSS animation for time picker
 if (!document.querySelector("#timePickerStyle")) {
   const style = document.createElement("style");
   style.id = "timePickerStyle";
@@ -729,18 +803,15 @@ class CalculatorModal {
   }
   
   open() {
-    // If already open, just return
     if (this.isOpen) return;
     
     this.isOpen = true;
     
-    // Reset calculator state for new instance
     this.currentValue = "0";
     this.previousValue = null;
     this.operator = null;
     this.waitingForOperand = false;
     
-    // Create overlay
     const overlay = document.createElement("div");
     overlay.className = "calculator-overlay";
     overlay.style.cssText = `
@@ -757,7 +828,6 @@ class CalculatorModal {
       z-index: 10002;
     `;
     
-    // Create calculator panel
     const panel = document.createElement("div");
     panel.className = "calculator-panel";
     panel.style.cssText = `
@@ -815,14 +885,12 @@ class CalculatorModal {
     overlay.appendChild(panel);
     document.body.appendChild(overlay);
     
-    // Store references
     this.modal = overlay;
     
     const displayEl = panel.querySelector(".calc-display");
     const equationEl = panel.querySelector(".calc-equation");
     const self = this;
     
-    // Function to close modal - DIRECT REMOVAL
     const closeModal = () => {
       if (self.modal && self.modal.parentNode) {
         self.modal.parentNode.removeChild(self.modal);
@@ -831,7 +899,6 @@ class CalculatorModal {
       self.isOpen = false;
     };
     
-    // Update display
     const updateDisplay = () => {
       if (displayEl) displayEl.textContent = self.currentValue;
     };
@@ -849,7 +916,6 @@ class CalculatorModal {
       }
     };
     
-    // Number buttons
     panel.querySelectorAll(".calc-number").forEach(btn => {
       btn.addEventListener("click", function(e) {
         e.preventDefault();
@@ -867,7 +933,6 @@ class CalculatorModal {
       });
     });
     
-    // Operator buttons
     panel.querySelectorAll(".calc-operator").forEach(btn => {
       btn.addEventListener("click", function(e) {
         e.preventDefault();
@@ -906,7 +971,6 @@ class CalculatorModal {
       });
     });
     
-    // Clear button
     panel.querySelector(".calc-clear").addEventListener("click", function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -918,7 +982,6 @@ class CalculatorModal {
       equationEl.textContent = "";
     });
     
-    // Equals button
     panel.querySelector(".calc-equals").addEventListener("click", function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -934,7 +997,6 @@ class CalculatorModal {
       }
     });
     
-    // Close button (X) - ONE CLICK - DIRECT CLOSE
     const closeBtn = panel.querySelector(".calc-close-btn");
     closeBtn.addEventListener("click", function(e) {
       e.preventDefault();
@@ -942,7 +1004,6 @@ class CalculatorModal {
       closeModal();
     });
     
-    // Cancel button - ONE CLICK - DIRECT CLOSE
     const cancelBtn = panel.querySelector(".calc-cancel-btn");
     cancelBtn.addEventListener("click", function(e) {
       e.preventDefault();
@@ -950,7 +1011,6 @@ class CalculatorModal {
       closeModal();
     });
     
-    // Insert button
     const insertBtn = panel.querySelector(".calc-insert-btn");
     insertBtn.addEventListener("click", function(e) {
       e.preventDefault();
@@ -971,14 +1031,12 @@ class CalculatorModal {
       closeModal();
     });
     
-    // Click outside - ONE CLICK
     overlay.addEventListener("click", function(e) {
       if (e.target === overlay) {
         closeModal();
       }
     });
     
-    // Initial display
     updateDisplay();
     updateEquation();
   }
@@ -1105,10 +1163,14 @@ const F = {
   bulkAddBtn:             () => el("#bulkAddBtn"),
   urineSentField:         () => el("#urineSentField"),
   ppSentField:            () => el("#ppSentField"),
-  // NEW FIELDS
   goodwillCharges:        () => el("#goodwillCharges"),
   paymentComplete:        () => el("#paymentComplete"),
   calculatorBtn:          () => el("#calculatorBtn"),
+  labFilter1:             () => el("#labFilter1"),
+  labFilter2:             () => el("#labFilter2"),
+  labFilter3:             () => el("#labFilter3"),
+  labFilter4:             () => el("#labFilter4"),
+  testDetailsCard:        () => document.querySelector("#accordion-test .card-body"),
 };
 
 /* ========================= Global state ========================= */
@@ -1122,6 +1184,45 @@ let globallySelectedTests = new Set();
 
 function labNumFromId(labId) {
   return parseInt(labId.replace("lab", ""), 10) || 1;
+}
+
+/* ========================= Lab-wise Color Coding for Test Detail Section ========================= */
+function updateTestSectionColor() {
+  const testCardBody = F.testDetailsCard();
+  if (!testCardBody) return;
+  
+  const labNum = labNumFromId(currentSelectedLab);
+  const colors = LAB_COLORS[labNum] || LAB_COLORS[1];
+  
+  testCardBody.style.transition = "background-color 0.3s ease";
+  testCardBody.style.backgroundColor = colors.bg;
+  
+  const allInputs = testCardBody.querySelectorAll("input, select, textarea");
+  allInputs.forEach(input => {
+    input.style.backgroundColor = "#ffffff";
+    input.style.borderColor = colors.border;
+  });
+  
+  const labels = testCardBody.querySelectorAll("label");
+  labels.forEach(label => {
+    label.style.color = colors.text;
+  });
+  
+  const placeholders = ["unifiedSearchInput", "bulkAddInput"];
+  placeholders.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.backgroundColor = "#ffffff";
+      el.style.borderColor = colors.border;
+    }
+  });
+  
+  const selectedItemsContainer = F.selectedItemsList();
+  if (selectedItemsContainer) {
+    selectedItemsContainer.style.backgroundColor = colors.light;
+    selectedItemsContainer.style.borderRadius = "12px";
+    selectedItemsContainer.style.padding = "12px";
+  }
 }
 
 /* ========================= De-duplication Logic ========================= */
@@ -1781,7 +1882,7 @@ function showPackageTestSelectionModal(pkg, onCloseCallback) {
   });
 }
 
-/* ========================= Bulk Add Feature (Supports both tests AND packages) ========================= */
+/* ========================= Bulk Add Feature ========================= */
 function initializeBulkAdd() {
   const bulkInput = F.bulkAddInput();
   const bulkBtn = F.bulkAddBtn();
@@ -1923,13 +2024,11 @@ function updatePaymentFields() {
     discountedPriceEl.value = finalDiscounted;
   }
 
-  // Final price calculation (Goodwill is NOT added - separate tracking only)
   const finalPrice = finalDiscounted + homeVisit;
   const fpEl = F.finalPrice();
   if (fpEl) fpEl.value = fmtINR(finalPrice);
 
-  // FIX: Allow negative pending payment (overpayment)
-  const pending = finalPrice - cashRcvd - onlineRcvd;  // Removed Math.max(0, ...)
+  const pending = finalPrice - cashRcvd - onlineRcvd;
   const ppEl = F.pendingPayment();
   if (ppEl) ppEl.value = fmtINR(pending);
 
@@ -2026,7 +2125,6 @@ function updateConditionalVisitFields() {
   toggleDisplay(F.urineSentField, hasUrine);
   toggleDisplay(F.ppSentField, hasPP);
 
-  // IMPORTANT: Do NOT reset test selections here
   if (hasPP) {
     autoPPTime();
   } else {
@@ -2234,7 +2332,6 @@ function checkReportsDelivered() {
   return !!(F.reportDelivered()?.checked);
 }
 
-// NEW: Check if payment is complete
 function checkPaymentComplete() {
   const paymentCompleteToggle = F.paymentComplete();
   return paymentCompleteToggle?.checked === true;
@@ -2270,7 +2367,6 @@ function updateProgressBar() {
   const dr = F.reportDeliveryRequired();
   if (dr?.checked) steps.push({ name: "Reports Delivered", done: checkReportsDelivered() });
   
-  // NEW: Add Payment Complete as the final step
   steps.push({ name: "Payment Complete", done: checkPaymentComplete() });
 
   const completed = steps.filter(s => s.done).length;
@@ -2395,7 +2491,6 @@ function getCurrentStage(entry) {
 
   if (entry.report_delivery_required === "true") stages.push({ name: "Reports Delivered", check: () => entry.report_delivered === "true" });
   
-  // NEW: Add Payment Complete stage for entries
   stages.push({ name: "Payment Complete", check: () => entry.payment_complete === "true" });
 
   for (let i = 0; i < stages.length; i++) {
@@ -2464,7 +2559,6 @@ function getCompletionPercentage(entry) {
 
   if (entry.report_delivery_required === "true") inc(entry.report_delivered === "true");
   
-  // NEW: Add payment complete to percentage calculation
   inc(entry.payment_complete === "true");
 
   return total > 0 ? Math.round((done / total) * 100) : 0;
@@ -2545,6 +2639,7 @@ function updateAllCalculations() {
   updateConditionalVisitFields();
   generateReportReceivedList();
   updateProgressBar();
+  updateTestSectionColor();
 }
 
 /* ========================= Patient name formatting ========================= */
@@ -2796,6 +2891,63 @@ $(".tab-btn").forEach(btn => {
   });
 });
 
+/* ========================= Lab Filter Checkboxes Setup ========================= */
+function setupLabFilters() {
+  const labFilter1 = el("#labFilter1");
+  const labFilter2 = el("#labFilter2");
+  const labFilter3 = el("#labFilter3");
+  const labFilter4 = el("#labFilter4");
+  
+  if (!labFilter1) {
+    const filterContainer = document.querySelector(".control-bar");
+    if (filterContainer) {
+      const labFiltersDiv = document.createElement("div");
+      labFiltersDiv.className = "lab-filters";
+      labFiltersDiv.style.cssText = "display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px;";
+      labFiltersDiv.innerHTML = `
+        <span style="font-size: 0.813rem; font-weight: 500; color: var(--text-medium);">🔬 Filter by Lab:</span>
+        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[1].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
+          <input type="checkbox" id="labFilter1" checked style="margin: 0;"> 
+          <span style="font-size: 0.875rem; font-weight: 500;">Dr. Ajay Shah</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[2].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
+          <input type="checkbox" id="labFilter2" checked style="margin: 0;"> 
+          <span style="font-size: 0.875rem; font-weight: 500;">Dr. Jariwala</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[3].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
+          <input type="checkbox" id="labFilter3" checked style="margin: 0;"> 
+          <span style="font-size: 0.875rem; font-weight: 500;">General Diagnostics</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[4].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
+          <input type="checkbox" id="labFilter4" checked style="margin: 0;"> 
+          <span style="font-size: 0.875rem; font-weight: 500;">Truecheck Diagnostics</span>
+        </label>
+      `;
+      filterContainer.appendChild(labFiltersDiv);
+    }
+  }
+  
+
+  const filter1 = el("#labFilter1");
+  const filter2 = el("#labFilter2");
+  const filter3 = el("#labFilter3");
+  const filter4 = el("#labFilter4");
+  
+  const updateFilters = () => {
+    currentLabFilters[1] = filter1 ? filter1.checked : true;
+    currentLabFilters[2] = filter2 ? filter2.checked : true;
+    currentLabFilters[3] = filter3 ? filter3.checked : true;
+    currentLabFilters[4] = filter4 ? filter4.checked : true;
+    currentPage = 1;
+    renderInProgress();
+  };
+  
+  if (filter1) filter1.addEventListener("change", updateFilters);
+  if (filter2) filter2.addEventListener("change", updateFilters);
+  if (filter3) filter3.addEventListener("change", updateFilters);
+  if (filter4) filter4.addEventListener("change", updateFilters);
+}
+
 /* ========================= Date Filter, Search, Toggle, Pagination ========================= */
 function filterInProgressEntries() {
   const filterDate = F.filterDate();
@@ -2844,6 +2996,18 @@ function setupSearchDebounce() {
   }
 }
 
+function shouldShowEntryByLabFilter(entry) {
+  const entryLabs = getLabsForEntry(entry);
+  if (entryLabs.length === 0) return true;
+  
+  for (const lab of entryLabs) {
+    if (currentLabFilters[lab]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function getFilteredEntries() {
   let items = [...serverEntriesCache];
   
@@ -2865,6 +3029,8 @@ function getFilteredEntries() {
       return patientName.includes(currentSearchQuery);
     });
   }
+  
+  items = items.filter(shouldShowEntryByLabFilter);
   
   return sortEntriesByDateAndTime(items);
 }
@@ -2999,6 +3165,7 @@ function renderInProgress() {
     const currentStage = getCurrentStage(entry);
     const displayDate = entry.date ? formatDisplayDate(entry.date) : "-";
     const displayTime = entry.time_of_visit ? formatDisplayTime(entry.time_of_visit) : "-";
+    const cardStyle = getCardStyleForEntry(entry);
     
     let progressColor;
     if (pct < 30) {
@@ -3011,21 +3178,34 @@ function renderInProgress() {
 
     const row = document.createElement("div");
     row.className = "card-item";
+    
+    if (cardStyle.isGradient) {
+      row.style.background = cardStyle.background;
+      row.style.color = cardStyle.textColor;
+      row.style.border = "none";
+    } else {
+      row.style.background = cardStyle.background;
+      row.style.borderColor = cardStyle.borderColor;
+      row.style.color = cardStyle.textColor;
+    }
+    
+    row.style.transition = "all 0.3s ease";
+    
     row.innerHTML = `
       <div class="card-top">
-        <div class="card-name" title="${escapeHtml(entry.patient_name || "-")}">${escapeHtml(entry.patient_name || "-")}</div>
-        <div class="card-date">
+        <div class="card-name" style="color: ${cardStyle.isGradient ? '#ffffff' : cardStyle.textColor}; font-weight: 700;" title="${escapeHtml(entry.patient_name || "-")}">${escapeHtml(entry.patient_name || "-")}</div>
+        <div class="card-date" style="color: ${cardStyle.isGradient ? '#f0fdf4' : '#4a6a73'};">
           📅 ${displayDate}<br>
           ⏰ ${displayTime}
         </div>
       </div>
-      <div class="card-stage">Progress: <strong>${pct}% Complete</strong> - Current Stage: ${escapeHtml(currentStage)}</div>
+      <div class="card-stage" style="color: ${cardStyle.isGradient ? '#f0fdf4' : '#4a6a73'};">Progress: <strong style="color: ${cardStyle.isGradient ? '#ffffff' : cardStyle.textColor}">${pct}% Complete</strong> - Current Stage: ${escapeHtml(currentStage)}</div>
       <div class="progress-bar-wrapper" style="margin:10px 0;">
         <div class="progress-bar-fill" style="width:${pct}%;height:8px;background:${progressColor};border-radius:4px;"></div>
       </div>
       <div class="card-actions">
-        <button class="btn ghost sm" data-edit="${escapeHtml(entry.id)}">Edit</button>
-        <button class="btn danger sm" data-del="${escapeHtml(entry.id)}"><span class="btn-text">Delete</span></button>
+        <button class="btn ghost sm" data-edit="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? 'rgba(255,255,255,0.2)' : '#ffffff'}; color: ${cardStyle.isGradient ? '#ffffff' : cardStyle.textColor};">Edit</button>
+        <button class="btn danger sm" data-del="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? 'rgba(255,255,255,0.2)' : '#ffffff'};"><span class="btn-text">Delete</span></button>
       </div>`;
     row.querySelector("[data-edit]").addEventListener("click", () => loadForEdit(entry));
     row.querySelector("[data-del]").addEventListener("click", (ev) => deleteEntry(entry.id, ev.currentTarget));
@@ -3086,8 +3266,6 @@ function resetPaymentFields() {
   [F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived].forEach(fn => {
     const n = fn(); if (n) n.value = "0";
   });
-  // Remove goodwill from reset - keep it separate, don't reset it to 0 automatically
-  // const goodwillField = F.goodwillCharges(); if (goodwillField) goodwillField.value = "0";
   const paymentCompleteToggle = F.paymentComplete();
   if (paymentCompleteToggle) paymentCompleteToggle.checked = false;
 }
@@ -3231,7 +3409,6 @@ function loadForEdit(entry) {
   setVal(F.cashReceived, entry.cash_received);
   setVal(F.onlineReceived, entry.online_received);
   
-  // NEW: Load goodwill charges and payment complete
   setVal(F.goodwillCharges, entry.goodwill_charges || "0");
   setBool(F.paymentComplete, entry.payment_complete);
   
@@ -3398,7 +3575,6 @@ if (formEl) {
     const orcdEl = F.onlineReceived(); if (orcdEl) data.set("online_received", orcdEl.value);
     const ppEl2 = F.pendingPayment(); if (ppEl2) data.set("pending_payment", ppEl2.value.replace("₹", ""));
     
-    // NEW: Add goodwill charges and payment complete to form data
     const goodwillEl = F.goodwillCharges(); if (goodwillEl) data.set("goodwill_charges", goodwillEl.value);
     const paymentCompleteEl = F.paymentComplete(); if (paymentCompleteEl) data.set("payment_complete", paymentCompleteEl.checked ? "true" : "false");
 
@@ -3511,7 +3687,6 @@ function setDefaults() {
   
   const scEl = F.selectCenter(); if (scEl && !scEl.value) scEl.value = "Borivali";
   
-  // NEW: Set default payment complete to false
   const paymentCompleteToggle = F.paymentComplete();
   if (paymentCompleteToggle) paymentCompleteToggle.checked = false;
 
@@ -3525,11 +3700,12 @@ function setDefaults() {
   updatePaymentFields();
   updateProgressBar();
   updateGlobalTestSet();
+  updateTestSectionColor();
   
   setupVisitScheduleButton();
 }
 
-/* ========================= Patient name auto-suggest - Remove duplicates ========================= */
+/* ========================= Patient name auto-suggest ========================= */
 const nameSuggestionsEl = F.nameSuggestions();
 let debounceTimer;
 
@@ -3617,13 +3793,11 @@ function selectPatient(p) {
   if (p.home_visit_charges) { const n = F.homeVisitCharges(); if (n) n.value = p.home_visit_charges; }
   if (p.cash_received) { const n = F.cashReceived(); if (n) n.value = p.cash_received; }
   if (p.online_received) { const n = F.onlineReceived(); if (n) n.value = p.online_received; }
-  // NEW: Load goodwill charges and payment complete from saved patient data
   if (p.goodwill_charges) { const n = F.goodwillCharges(); if (n) n.value = p.goodwill_charges; }
   if (p.payment_complete) { const n = F.paymentComplete(); if (n) n.checked = p.payment_complete === "true" || p.payment_complete === true; }
   updatePaymentFields();
 }
 
-/* ========================= Setup Event Listeners ========================= */
 /* ========================= Setup Event Listeners ========================= */
 function setupEventListeners() {
   const toggle = F.showAllToggle();
@@ -3644,7 +3818,6 @@ function setupEventListeners() {
     clearFilterBtn.addEventListener("click", clearDateFilter);
   }
   
-  // ADD THIS: Setup calculator button
   const calculatorBtn = document.getElementById("calculatorBtn");
   if (calculatorBtn) {
     calculatorBtn.addEventListener("click", function(e) {
@@ -3653,10 +3826,10 @@ function setupEventListeners() {
       calculator.open();
     });
   }
+  
+  setupLabFilters();
 }
 
-// Add this at the very bottom of your JavaScript, before the closing tags
-// Direct calculator button initialization (fallback)
 document.addEventListener("DOMContentLoaded", function() {
   setTimeout(function() {
     const calcBtn = document.getElementById("calculatorBtn");
@@ -3672,6 +3845,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }, 500);
 });
+
 /* ========================= Lab panel selection ========================= */
 const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel") };
 
@@ -3680,6 +3854,7 @@ function showLabPanel(labId) {
   if (labPanels[labId]) labPanels[labId].style.display = "block";
   currentSelectedLab = labId;
   updateAllCalculations();
+  updateTestSectionColor();
 }
 
 const plEl = F.processingLab();
