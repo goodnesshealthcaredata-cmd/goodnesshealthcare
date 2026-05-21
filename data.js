@@ -43,6 +43,7 @@ const PREDEFINED_CARE_OF = [
 "Megha Sister",
 "Sindhu Sister",
 "Yogita Sister",
+"Sandeep Bijam"
 "Dr. Shruti Gogate",
 "Dr. Snehal Sawant",
 "Dr. Satish Sawant",
