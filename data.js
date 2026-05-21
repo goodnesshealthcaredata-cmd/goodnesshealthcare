@@ -4,7 +4,7 @@
 const PREDEFINED_AREAS = [
   "Borivali West", "Borivali East", "Dahisar West", "Dahisar East",
 "Kandivali West", "Kandivali East", "Malad West", "Malad East",
-"Mira Road West", "Mira Raod East", "Goregaon West", "Goregaon East",
+"Mira Road West", "Mira Road East", "Goregaon West", "Goregaon East",
 "Andheri West", "Andheri East", "Gorai", "Charkop",
 "Old MHB", "New MHB", "Babhai", "Kajupada",
 "Ashok Van", "Magathane", "Kulupwadi", "IC Colony",
@@ -255,7 +255,7 @@ const TEST_TUBE_MAPPING = {"CBC": ["EDTA"],
 "ASO Titer": [""],
 "AMH": [""],
 "PTH ": [""],
-"Apo B: Apo A1 ratio": [""],};
+"Apo B: Apo A1 ratio": [""]};
 
 
 /* ========================= Test Data per Lab ========================= */
