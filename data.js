@@ -56,7 +56,8 @@ const PREDEFINED_PHLEBOTOMISTS = [
 "Ashok Sir",
 "Priya Purabiya",
 "Megha Sister",
-"Sindhu Sister"
+"Sindhu Sister",
+"Kavita Sister"
 ];
 
 /* ========================= Tube Types Definition (Centralized) ========================= */
