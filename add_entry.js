@@ -6,19 +6,27 @@ const el = (q) => document.querySelector(q);
 const $ = (q, root = document) => Array.from(root.querySelectorAll(q));
 const fmtINR = (n) => "₹" + (Number(n) || 0).toLocaleString("en-IN");
 
-// Lab Color Mapping
+// Lab Color Mapping - Light colors for gradients
 const LAB_COLORS = {
-  1: { bg: "#f3e8ff", border: "#c084fc", text: "#4c1d95", light: "#e9d5ff" },      // Purple
-  2: { bg: "#eff6ff", border: "#60a5fa", text: "#1e3a8a", light: "#dbeafe" },      // Blue
-  3: { bg: "#f0fdf4", border: "#4ade80", text: "#166534", light: "#dcfce7" },      // Parrot Green
-  4: { bg: "#fdf2f2", border: "#f87171", text: "#991b1b", light: "#fee2e2" }       // Maroon
+  1: { bg: "#f3e8ff", border: "#c084fc", text: "#4c1d95", light: "#e9d5ff", gradient: "rgba(192, 132, 252, 0.25)" },      // Purple light
+  2: { bg: "#eff6ff", border: "#60a5fa", text: "#1e3a8a", light: "#dbeafe", gradient: "rgba(96, 165, 250, 0.25)" },      // Blue light
+  3: { bg: "#f0fdf4", border: "#4ade80", text: "#166534", light: "#dcfce7", gradient: "rgba(74, 222, 128, 0.25)" },      // Parrot Green light
+  4: { bg: "#fdf2f2", border: "#f87171", text: "#991b1b", light: "#fee2e2", gradient: "rgba(248, 113, 113, 0.25)" }       // Maroon light
 };
 
 const LAB_GRADIENT_COLORS = {
-  1: "#c084fc",  // Purple
-  2: "#60a5fa",  // Blue
-  3: "#4ade80",  // Parrot Green
-  4: "#f87171"   // Maroon
+  1: "rgba(192, 132, 252, 0.25)",  // Purple light
+  2: "rgba(96, 165, 250, 0.25)",   // Blue light
+  3: "rgba(74, 222, 128, 0.25)",   // Parrot Green light
+  4: "rgba(248, 113, 113, 0.25)"   // Maroon light
+};
+
+// Lab Names for Display
+const LAB_NAMES = {
+  1: "Dr. Ajay Shah Laboratory",
+  2: "Dr. Jariwala Laboratory", 
+  3: "General Diagnostics",
+  4: "Trucheck Diagnostics"
 };
 
 // Pagination state
@@ -46,6 +54,17 @@ function safeJSONParse(str, fallback = {}) {
 function formatPatientName(name) {
   if (!name) return name;
   return name.split(" ").map(w => w.length === 0 ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+}
+
+/* ========================= Disable Number Input Scrolling ========================= */
+function disableNumberInputScrolling() {
+  const numberInputs = document.querySelectorAll('input[type="number"]');
+  numberInputs.forEach(input => {
+    input.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      return false;
+    });
+  });
 }
 
 /* ========================= Get Logged-in User Name ========================= */
@@ -280,11 +299,12 @@ function getCardStyleForEntry(entry) {
     return { background: colors.bg, borderColor: colors.border, textColor: colors.text };
   }
   
+  // For multiple labs - use light gradient with the same light colors
   const gradientColors = labs.map(l => LAB_GRADIENT_COLORS[l]).join(", ");
   return { 
     background: `linear-gradient(90deg, ${gradientColors})`,
     borderColor: "transparent",
-    textColor: "#ffffff",
+    textColor: "#1a2e35",  // Dark text for better readability on light gradients
     isGradient: true
   };
 }
@@ -790,7 +810,7 @@ if (!document.querySelector("#timePickerStyle")) {
   document.head.appendChild(style);
 }
 
-/* ========================= Calculator Modal ========================= */
+/* ========================= Enhanced Calculator with Keyboard Support ========================= */
 class CalculatorModal {
   constructor() {
     this.modal = null;
@@ -800,6 +820,7 @@ class CalculatorModal {
     this.operator = null;
     this.waitingForOperand = false;
     this.equation = "";
+    this.keyboardHandler = null;
   }
   
   open() {
@@ -892,6 +913,10 @@ class CalculatorModal {
     const self = this;
     
     const closeModal = () => {
+      if (self.keyboardHandler) {
+        document.removeEventListener("keydown", self.keyboardHandler);
+        self.keyboardHandler = null;
+      }
       if (self.modal && self.modal.parentNode) {
         self.modal.parentNode.removeChild(self.modal);
       }
@@ -916,75 +941,51 @@ class CalculatorModal {
       }
     };
     
-    panel.querySelectorAll(".calc-number").forEach(btn => {
-      btn.addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const num = this.getAttribute("data-num");
-        if (self.waitingForOperand) {
-          self.currentValue = num;
-          self.waitingForOperand = false;
-        } else {
-          if (num === "." && self.currentValue.includes(".")) return;
-          self.currentValue = self.currentValue === "0" && num !== "." ? num : self.currentValue + num;
-        }
-        updateDisplay();
-        updateEquation();
-      });
-    });
-    
-    panel.querySelectorAll(".calc-operator").forEach(btn => {
-      btn.addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const op = this.getAttribute("data-op");
-        
-        if (op === "backspace") {
-          if (self.waitingForOperand) {
-            self.operator = null;
-            self.waitingForOperand = false;
-            self.currentValue = String(self.previousValue);
-            updateDisplay();
-            equationEl.textContent = "";
-          } else {
-            self.currentValue = self.currentValue.length > 1 ? self.currentValue.slice(0, -1) : "0";
-            updateDisplay();
-            updateEquation();
-          }
-          return;
-        }
-        
-        const inputValue = parseFloat(self.currentValue);
-        
-        if (self.previousValue !== null && !self.waitingForOperand) {
-          const result = self.calculate(self.previousValue, inputValue, self.operator);
-          self.currentValue = String(result);
-          updateDisplay();
-          self.previousValue = result;
-        } else {
-          self.previousValue = inputValue;
-        }
-        
-        self.waitingForOperand = true;
-        self.operator = op;
-        updateEquation();
-      });
-    });
-    
-    panel.querySelector(".calc-clear").addEventListener("click", function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      self.currentValue = "0";
-      self.previousValue = null;
-      self.operator = null;
-      self.waitingForOperand = false;
+    const handleNumber = (num) => {
+      if (self.waitingForOperand) {
+        self.currentValue = num;
+        self.waitingForOperand = false;
+      } else {
+        if (num === "." && self.currentValue.includes(".")) return;
+        self.currentValue = self.currentValue === "0" && num !== "." ? num : self.currentValue + num;
+      }
       updateDisplay();
-      equationEl.textContent = "";
-    });
+      updateEquation();
+    };
     
-    panel.querySelector(".calc-equals").addEventListener("click", function(e) {
-      e.preventDefault();
-      e.stopPropagation();
+    const handleOperator = (op) => {
+      if (op === "backspace") {
+        if (self.waitingForOperand) {
+          self.operator = null;
+          self.waitingForOperand = false;
+          self.currentValue = String(self.previousValue);
+          updateDisplay();
+          equationEl.textContent = "";
+        } else {
+          self.currentValue = self.currentValue.length > 1 ? self.currentValue.slice(0, -1) : "0";
+          updateDisplay();
+          updateEquation();
+        }
+        return;
+      }
+      
+      const inputValue = parseFloat(self.currentValue);
+      
+      if (self.previousValue !== null && !self.waitingForOperand) {
+        const result = self.calculate(self.previousValue, inputValue, self.operator);
+        self.currentValue = String(result);
+        updateDisplay();
+        self.previousValue = result;
+      } else {
+        self.previousValue = inputValue;
+      }
+      
+      self.waitingForOperand = true;
+      self.operator = op;
+      updateEquation();
+    };
+    
+    const handleEquals = () => {
       if (self.operator && !self.waitingForOperand) {
         const inputValue = parseFloat(self.currentValue);
         const result = self.calculate(self.previousValue, inputValue, self.operator);
@@ -995,6 +996,88 @@ class CalculatorModal {
         self.operator = null;
         self.waitingForOperand = true;
       }
+    };
+    
+    const handleClear = () => {
+      self.currentValue = "0";
+      self.previousValue = null;
+      self.operator = null;
+      self.waitingForOperand = false;
+      updateDisplay();
+      equationEl.textContent = "";
+    };
+    
+    // Keyboard handler
+    self.keyboardHandler = (e) => {
+      const key = e.key;
+      
+      if (/^[0-9]$/.test(key)) {
+        e.preventDefault();
+        handleNumber(key);
+      } else if (key === ".") {
+        e.preventDefault();
+        handleNumber(".");
+      } else if (key === "+") {
+        e.preventDefault();
+        handleOperator("+");
+      } else if (key === "-") {
+        e.preventDefault();
+        handleOperator("-");
+      } else if (key === "*") {
+        e.preventDefault();
+        handleOperator("*");
+      } else if (key === "/") {
+        e.preventDefault();
+        handleOperator("/");
+      } else if (key === "%") {
+        e.preventDefault();
+        handleOperator("%");
+      } else if (key === "Enter" || key === "=") {
+        e.preventDefault();
+        handleEquals();
+      } else if (key === "Backspace") {
+        e.preventDefault();
+        handleOperator("backspace");
+      } else if (key === "Escape") {
+        e.preventDefault();
+        closeModal();
+      } else if (key === "c" || key === "C") {
+        e.preventDefault();
+        handleClear();
+      }
+    };
+    
+    document.addEventListener("keydown", self.keyboardHandler);
+    
+    // Button event listeners
+    panel.querySelectorAll(".calc-number").forEach(btn => {
+      btn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const num = this.getAttribute("data-num");
+        handleNumber(num);
+      });
+    });
+    
+    panel.querySelectorAll(".calc-operator").forEach(btn => {
+      btn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const op = this.getAttribute("data-op");
+        handleOperator(op);
+      });
+    });
+    
+    panel.querySelector(".calc-clear").addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleClear();
+    });
+    
+    panel.querySelector(".calc-equals").addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleEquals();
     });
     
     const closeBtn = panel.querySelector(".calc-close-btn");
@@ -1066,6 +1149,10 @@ class CalculatorModal {
   }
   
   close() {
+    if (this.keyboardHandler) {
+      document.removeEventListener("keydown", this.keyboardHandler);
+      this.keyboardHandler = null;
+    }
     if (this.modal && this.modal.parentNode) {
       this.modal.parentNode.removeChild(this.modal);
     }
@@ -2017,10 +2104,10 @@ function updatePaymentFields() {
   if (document.activeElement === discountedPriceEl) {
     finalDiscounted = parseFloat(discountedPriceEl.value) || 0;
     const calcDiscount = totalMRP - finalDiscounted;
-    if (calcDiscount >= 0) discountEl.value = calcDiscount;
+    discountEl.value = calcDiscount;
   } else {
-    const discount = parseFloat(discountEl.value) || 0;
-    finalDiscounted = Math.max(0, totalMRP - discount);
+    let discount = parseFloat(discountEl.value) || 0;
+    finalDiscounted = totalMRP - discount;
     discountedPriceEl.value = finalDiscounted;
   }
 
@@ -2038,7 +2125,13 @@ function updatePaymentFields() {
 
 [F.discount, F.discountedPrice, F.homeVisitCharges, F.cashReceived, F.onlineReceived].forEach(fn => {
   const node = fn();
-  if (node) node.addEventListener("input", updatePaymentFields);
+  if (node) {
+    node.addEventListener("input", updatePaymentFields);
+    if (node.id === "discount") {
+      node.removeAttribute("min");
+      node.setAttribute("step", "1");
+    }
+  }
 });
 
 /* ========================= B2B Popup ========================= */
@@ -2908,26 +3001,25 @@ function setupLabFilters() {
         <span style="font-size: 0.813rem; font-weight: 500; color: var(--text-medium);">🔬 Filter by Lab:</span>
         <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[1].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
           <input type="checkbox" id="labFilter1" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">Dr. Ajay Shah</span>
+          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[1]}</span>
         </label>
         <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[2].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
           <input type="checkbox" id="labFilter2" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">Dr. Jariwala</span>
+          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[2]}</span>
         </label>
         <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[3].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
           <input type="checkbox" id="labFilter3" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">General Diagnostics</span>
+          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[3]}</span>
         </label>
         <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[4].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
           <input type="checkbox" id="labFilter4" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">Truecheck Diagnostics</span>
+          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[4]}</span>
         </label>
       `;
       filterContainer.appendChild(labFiltersDiv);
     }
   }
   
-
   const filter1 = el("#labFilter1");
   const filter2 = el("#labFilter2");
   const filter3 = el("#labFilter3");
@@ -2984,10 +3076,23 @@ let searchDebounceTimer;
 function setupSearchDebounce() {
   const searchInput = F.searchPatientInput();
   if (searchInput) {
+    // Disable browser autofill/autocomplete
     searchInput.setAttribute("autocomplete", "off");
     searchInput.setAttribute("autocorrect", "off");
     searchInput.setAttribute("autocapitalize", "off");
     searchInput.setAttribute("spellcheck", "false");
+    
+    // Additional attributes to prevent autofill
+    searchInput.setAttribute("autocomplete", "new-password");
+    searchInput.setAttribute("name", "search_patient_no_autofill");
+    searchInput.setAttribute("id", "searchPatientInput");
+    
+    // Clear any existing autofill values on focus
+    searchInput.addEventListener("focus", function() {
+      if (this.value && this.value.includes("@")) {
+        this.value = "";
+      }
+    });
     
     searchInput.addEventListener("input", () => {
       clearTimeout(searchDebounceTimer);
@@ -3182,7 +3287,7 @@ function renderInProgress() {
     if (cardStyle.isGradient) {
       row.style.background = cardStyle.background;
       row.style.color = cardStyle.textColor;
-      row.style.border = "none";
+      row.style.border = "1px solid rgba(0,0,0,0.05)";
     } else {
       row.style.background = cardStyle.background;
       row.style.borderColor = cardStyle.borderColor;
@@ -3193,19 +3298,19 @@ function renderInProgress() {
     
     row.innerHTML = `
       <div class="card-top">
-        <div class="card-name" style="color: ${cardStyle.isGradient ? '#ffffff' : cardStyle.textColor}; font-weight: 700;" title="${escapeHtml(entry.patient_name || "-")}">${escapeHtml(entry.patient_name || "-")}</div>
-        <div class="card-date" style="color: ${cardStyle.isGradient ? '#f0fdf4' : '#4a6a73'};">
+        <div class="card-name" style="color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor}; font-weight: 700;" title="${escapeHtml(entry.patient_name || "-")}">${escapeHtml(entry.patient_name || "-")}</div>
+        <div class="card-date" style="color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'};">
           📅 ${displayDate}<br>
           ⏰ ${displayTime}
         </div>
       </div>
-      <div class="card-stage" style="color: ${cardStyle.isGradient ? '#f0fdf4' : '#4a6a73'};">Progress: <strong style="color: ${cardStyle.isGradient ? '#ffffff' : cardStyle.textColor}">${pct}% Complete</strong> - Current Stage: ${escapeHtml(currentStage)}</div>
+      <div class="card-stage" style="color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'};">Progress: <strong style="color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor}">${pct}% Complete</strong> - Current Stage: ${escapeHtml(currentStage)}</div>
       <div class="progress-bar-wrapper" style="margin:10px 0;">
         <div class="progress-bar-fill" style="width:${pct}%;height:8px;background:${progressColor};border-radius:4px;"></div>
       </div>
       <div class="card-actions">
-        <button class="btn ghost sm" data-edit="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? 'rgba(255,255,255,0.2)' : '#ffffff'}; color: ${cardStyle.isGradient ? '#ffffff' : cardStyle.textColor};">Edit</button>
-        <button class="btn danger sm" data-del="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? 'rgba(255,255,255,0.2)' : '#ffffff'};"><span class="btn-text">Delete</span></button>
+        <button class="btn ghost sm" data-edit="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? '#ffffff' : '#ffffff'}; color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor};">Edit</button>
+        <button class="btn danger sm" data-del="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? '#ffffff' : '#ffffff'};"><span class="btn-text">Delete</span></button>
       </div>`;
     row.querySelector("[data-edit]").addEventListener("click", () => loadForEdit(entry));
     row.querySelector("[data-del]").addEventListener("click", (ev) => deleteEntry(entry.id, ev.currentTarget));
@@ -3703,6 +3808,7 @@ function setDefaults() {
   updateTestSectionColor();
   
   setupVisitScheduleButton();
+  disableNumberInputScrolling();
 }
 
 /* ========================= Patient name auto-suggest ========================= */
