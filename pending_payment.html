@@ -137,6 +137,7 @@
             background: #FFFFFF;
             transition: all 0.2s ease;
             outline: none;
+            cursor: pointer;
         }
 
         .filter-group input:focus, .filter-group select:focus {
@@ -215,6 +216,29 @@
             transform: none;
         }
 
+        /* Sort dropdown styling */
+        .sort-group {
+            min-width: 170px;
+        }
+
+        .sort-select {
+            padding: 12px 16px;
+            border: 1.5px solid #E2E8F0;
+            border-radius: 16px;
+            font-family: 'DM Sans', monospace;
+            font-size: 0.9rem;
+            background: #FFFFFF;
+            transition: all 0.2s ease;
+            outline: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .sort-select:focus {
+            border-color: #1ECAD3;
+            box-shadow: 0 0 0 3px rgba(30,202,211,0.2);
+        }
+
         .stats-row {
             padding: 18px 28px 0 28px;
             display: flex;
@@ -275,10 +299,19 @@
             white-space: nowrap;
         }
 
-        .data-table th:nth-child(2),
-        .data-table td:nth-child(2) {
+        /* Allow Notes column to wrap if needed */
+        .data-table td:nth-child(5),
+        .data-table th:nth-child(5) {
+            white-space: normal;
             min-width: 180px;
-            width: 180px;
+            max-width: 250px;
+        }
+
+        /* Date column - no wrap */
+        .data-table td:first-child,
+        .data-table th:first-child {
+            white-space: nowrap;
+            min-width: 110px;
         }
 
         .data-table th {
@@ -386,7 +419,7 @@
         }
 
         .filter-dropdown .filter-options {
-            max-height: 200px;
+            max-height: 280px;
             overflow-y: auto;
         }
 
@@ -635,6 +668,14 @@
                 gap: 10px;
             }
             
+            .filter-dropdown {
+                position: fixed;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%);
+                width: 90%;
+                max-width: 320px;
+            }
         }
     </style>
 </head>
@@ -664,6 +705,13 @@
             <div class="search-wrapper">
                 <label><i class="fas fa-search"></i> Global search</label>
                 <input type="text" id="globalSearchInput" class="search-input" placeholder="Search patient, service, ID, amount...">
+            </div>
+            <div class="filter-group sort-group">
+                <label><i class="fas fa-sort-amount-down"></i> Sort by Date</label>
+                <select id="sortOrderSelect" class="sort-select">
+                    <option value="desc" selected>📅 Newest First ↓</option>
+                    <option value="asc">📅 Oldest First ↑</option>
+                </select>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <button class="btn-primary" id="refreshBtn">
@@ -740,10 +788,14 @@
     let hasBlankValues = false;
     let activeCareOfFilters = new Set();
     let currentDropdown = null;
+    
+    // Sort order: 'desc' for newest first (default), 'asc' for oldest first
+    let sortOrder = 'desc';
 
     const fromDateEl = document.getElementById('fromDateFilter');
     const toDateEl = document.getElementById('toDateFilter');
     const globalSearchEl = document.getElementById('globalSearchInput');
+    const sortOrderSelect = document.getElementById('sortOrderSelect');
     const resetBtn = document.getElementById('resetFiltersBtn');
     const refreshBtn = document.getElementById('refreshBtn');
     const refreshIcon = document.getElementById('refreshIcon');
@@ -905,8 +957,8 @@
         }
     }
 
-    // Sort data by date - most recent first
-    function sortByDateDescending(data) {
+    // Sort data by date based on selected sort order
+    function sortByDate(data) {
         return [...data].sort((a, b) => {
             const dateA = parseMedicalDate(a.date);
             const dateB = parseMedicalDate(b.date);
@@ -916,8 +968,13 @@
             if (!dateA) return 1;
             if (!dateB) return -1;
             
-            // Sort descending (newest first)
-            return dateB - dateA;
+            if (sortOrder === 'desc') {
+                // Newest first (descending)
+                return dateB - dateA;
+            } else {
+                // Oldest first (ascending)
+                return dateA - dateB;
+            }
         });
     }
 
@@ -950,8 +1007,8 @@
         
         let finalFiltered = searchFiltered.filter(row => matchesCareOfFilter(row));
         
-        // Sort by date - most recent first
-        filteredPendingData = sortByDateDescending(finalFiltered);
+        // Apply sorting based on selected sort order
+        filteredPendingData = sortByDate(finalFiltered);
         
         currentPage = 1;
         updateTotalPaymentDisplay();
@@ -969,9 +1026,10 @@
         const totalPendingRaw = masterSheetData.filter(r => (r.status || '').toLowerCase() === 'pending').length;
         const shown = filteredPendingData.length;
         const lastUpdated = new Date().toLocaleTimeString();
+        const sortText = sortOrder === 'desc' ? 'Newest First ↓' : 'Oldest First ↑';
         
         statsSpan.innerHTML = `<span><i class="fas fa-clinic-medical"></i> Showing ${shown} of ${totalPendingRaw} pending cases | Total records: ${masterSheetData.length} | Last updated: ${lastUpdated}</span>
-                               <span><i class="fas fa-filter"></i> Status: <strong>Pending only</strong> | <i class="fas fa-sort-amount-down"></i> Sorted by date (newest first)</span>`;
+                               <span><i class="fas fa-filter"></i> Status: <strong>Pending only</strong> | <i class="fas fa-sort-amount-down"></i> Sort: <strong>${sortText}</strong></span>`;
     }
 
     function updatePagination() {
@@ -1474,10 +1532,17 @@
             applyFiltersAndRender();
         });
         
+        sortOrderSelect.addEventListener('change', (e) => {
+            sortOrder = e.target.value;
+            applyFiltersAndRender();
+        });
+        
         resetBtn.addEventListener('click', () => {
             fromDateEl.value = '';
             toDateEl.value = '';
             globalSearchEl.value = '';
+            sortOrderSelect.value = 'desc';
+            sortOrder = 'desc';
             updateCareOfFilterOptions();
             activeCareOfFilters.clear();
             careOfFilterValues.forEach(v => activeCareOfFilters.add(v));
