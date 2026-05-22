@@ -4641,20 +4641,61 @@ async function fetchServerList() {
 }
 
 /* ========================= Boot ========================= */
+// Initialize basic UI first
 initAccordions();
 setDefaults();
 initializeTimePickers();
+
+// Load data and setup UI components that depend on data
 fetchServerList().then(() => {
-  renderInProgress();
-  setupEventListeners();
-  initializeUnifiedSearch();
-  initializeBulkAdd();
+  if (typeof renderInProgress === 'function') {
+    renderInProgress();
+  }
+  
+  if (typeof setupEventListeners === 'function') {
+    setupEventListeners();
+  }
+  
+  if (typeof initializeUnifiedSearch === 'function') {
+    initializeUnifiedSearch();
+  }
+  
+  if (typeof initializeBulkAdd === 'function') {
+    initializeBulkAdd();
+  }
+  
   // Initialize filters with proper data after cache is loaded
-  initializeFiltersAfterDataLoad();
-  renderInProgress(); // Re-render to show correct count
+  if (typeof initializeFiltersAfterDataLoad === 'function') {
+    try {
+      initializeFiltersAfterDataLoad();
+    } catch (e) {
+      console.error("Error initializing filters:", e);
+    }
+  }
+  
+  // Re-render to show correct count
+  if (typeof renderInProgress === 'function') {
+    renderInProgress();
+  }
+}).catch(error => {
+  console.error("Error loading data:", error);
+  // Still try to setup non-data dependent features
+  if (typeof setupEventListeners === 'function') {
+    setupEventListeners();
+  }
+  if (typeof initializeUnifiedSearch === 'function') {
+    initializeUnifiedSearch();
+  }
+  if (typeof initializeBulkAdd === 'function') {
+    initializeBulkAdd();
+  }
+  if (typeof renderInProgress === 'function') {
+    renderInProgress();
+  }
 });
 
 const resetTubeBtn = F.resetTubeBtn();
-if (resetTubeBtn) {
+if (resetTubeBtn && !resetTubeBtn.hasAttribute("data-listener")) {
+  resetTubeBtn.setAttribute("data-listener", "true");
   resetTubeBtn.addEventListener("click", resetTubeCounts);
 }
