@@ -8,17 +8,17 @@ const fmtINR = (n) => "₹" + (Number(n) || 0).toLocaleString("en-IN");
 
 // Lab Color Mapping - Light colors for gradients
 const LAB_COLORS = {
-  1: { bg: "#f3e8ff", border: "#c084fc", text: "#4c1d95", light: "#e9d5ff", gradient: "rgba(192, 132, 252, 0.25)" },      // Purple light
-  2: { bg: "#eff6ff", border: "#60a5fa", text: "#1e3a8a", light: "#dbeafe", gradient: "rgba(96, 165, 250, 0.25)" },      // Blue light
-  3: { bg: "#f0fdf4", border: "#4ade80", text: "#166534", light: "#dcfce7", gradient: "rgba(74, 222, 128, 0.25)" },      // Parrot Green light
-  4: { bg: "#fdf2f2", border: "#f87171", text: "#991b1b", light: "#fee2e2", gradient: "rgba(248, 113, 113, 0.25)" }       // Maroon light
+  1: { bg: "#f3e8ff", border: "#c084fc", text: "#4c1d95", light: "#e9d5ff", gradient: "rgba(192, 132, 252, 0.25)", name: "Dr. Ajay Shah Laboratory" },
+  2: { bg: "#eff6ff", border: "#60a5fa", text: "#1e3a8a", light: "#dbeafe", gradient: "rgba(96, 165, 250, 0.25)", name: "Dr. Jariwala Laboratory" },
+  3: { bg: "#f0fdf4", border: "#4ade80", text: "#166534", light: "#dcfce7", gradient: "rgba(74, 222, 128, 0.25)", name: "General Diagnostics" },
+  4: { bg: "#fdf2f2", border: "#f87171", text: "#991b1b", light: "#fee2e2", gradient: "rgba(248, 113, 113, 0.25)", name: "Trucheck Diagnostics" }
 };
 
 const LAB_GRADIENT_COLORS = {
-  1: "rgba(192, 132, 252, 0.25)",  // Purple light
-  2: "rgba(96, 165, 250, 0.25)",   // Blue light
-  3: "rgba(74, 222, 128, 0.25)",   // Parrot Green light
-  4: "rgba(248, 113, 113, 0.25)"   // Maroon light
+  1: "rgba(192, 132, 252, 0.25)",
+  2: "rgba(96, 165, 250, 0.25)",
+  3: "rgba(74, 222, 128, 0.25)",
+  4: "rgba(248, 113, 113, 0.25)"
 };
 
 // Lab Names for Display
@@ -29,13 +29,37 @@ const LAB_NAMES = {
   4: "Trucheck Diagnostics"
 };
 
+// Gender short forms
+const GENDER_SHORT = {
+  "Male": "M",
+  "Female": "F",
+  "Other": "O"
+};
+
+// Sort options
+const SORT_OPTIONS = {
+  NEWEST_FIRST: "newest",
+  OLDEST_FIRST: "oldest"
+};
+let currentSortOption = SORT_OPTIONS.NEWEST_FIRST;
+
 // Pagination state
 let currentPage = 1;
 const ITEMS_PER_PAGE = 15;
 let showAllEntries = false;
 let currentSearchQuery = "";
-let currentFilterDate = null;
+let currentFilterDateFrom = null;
+let currentFilterDateTo = null;
 let currentLabFilters = { 1: true, 2: true, 3: true, 4: true };
+let currentCenterFilters = new Set();
+let currentVisitTypeFilters = new Set();
+let currentCareOfFilters = new Set();
+
+// Filter dropdown states
+let centerFilterPopup = null;
+let visitTypeFilterPopup = null;
+let careOfFilterPopup = null;
+let activeFilterPopup = null;
 
 function showToast(msg = "Saved!") {
   const t = el("#toast");
@@ -217,19 +241,24 @@ function formatDisplayDate(dateValue) {
   return dateValue;
 }
 
-function sortEntriesByDateAndTime(entries) {
+function sortEntries(entries) {
   return [...entries].sort((a, b) => {
     const dateA = parseDateFromSheet(a.date) || "0000-00-00";
     const dateB = parseDateFromSheet(b.date) || "0000-00-00";
-    
-    if (dateA !== dateB) {
-      return dateB.localeCompare(dateA);
-    }
-    
     const timeA = parseTimeFromSheet(a.time_of_visit) || "00:00";
     const timeB = parseTimeFromSheet(b.time_of_visit) || "00:00";
     
-    return timeA.localeCompare(timeB);
+    if (currentSortOption === SORT_OPTIONS.NEWEST_FIRST) {
+      if (dateA !== dateB) {
+        return dateB.localeCompare(dateA);
+      }
+      return timeB.localeCompare(timeA);
+    } else {
+      if (dateA !== dateB) {
+        return dateA.localeCompare(dateB);
+      }
+      return timeA.localeCompare(timeB);
+    }
   });
 }
 
@@ -263,27 +292,31 @@ function getLabsForEntry(entry) {
 }
 
 function getLabCountsForEntry(entry) {
-  const labs = getLabsForEntry(entry);
-  const labDetails = {};
+  const labCounts = { 1: { tests: 0, packages: 0 }, 2: { tests: 0, packages: 0 }, 3: { tests: 0, packages: 0 }, 4: { tests: 0, packages: 0 } };
+  
   for (let i = 1; i <= 4; i++) {
     const tests = (entry[`tests_lab${i}`] || "").split(",").filter(t => t.trim());
-    const packages = (entry[`packages_lab${i}`] || "");
-    let hasContent = tests.length > 0;
+    const packagesData = entry[`packages_lab${i}`] || "";
     
-    if (!hasContent && packages && packages !== "" && packages !== "[]") {
+    labCounts[i].tests = tests.length;
+    
+    if (packagesData && packagesData !== "" && packagesData !== "[]") {
       try {
-        const parsed = JSON.parse(packages);
-        hasContent = Array.isArray(parsed) && parsed.length > 0;
+        const parsed = JSON.parse(packagesData);
+        if (Array.isArray(parsed)) {
+          labCounts[i].packages = parsed.length;
+        } else if (packagesData.split(",").filter(p => p.trim()).length > 0) {
+          labCounts[i].packages = packagesData.split(",").filter(p => p.trim()).length;
+        }
       } catch (e) {
-        hasContent = packages.split(",").filter(p => p.trim()).length > 0;
+        if (packagesData.split(",").filter(p => p.trim()).length > 0) {
+          labCounts[i].packages = packagesData.split(",").filter(p => p.trim()).length;
+        }
       }
     }
-    
-    if (hasContent) {
-      labDetails[i] = { tests, packages };
-    }
   }
-  return labDetails;
+  
+  return labCounts;
 }
 
 function getCardStyleForEntry(entry) {
@@ -299,12 +332,11 @@ function getCardStyleForEntry(entry) {
     return { background: colors.bg, borderColor: colors.border, textColor: colors.text };
   }
   
-  // For multiple labs - use light gradient with the same light colors
   const gradientColors = labs.map(l => LAB_GRADIENT_COLORS[l]).join(", ");
   return { 
     background: `linear-gradient(90deg, ${gradientColors})`,
     borderColor: "transparent",
-    textColor: "#1a2e35",  // Dark text for better readability on light gradients
+    textColor: "#1a2e35",
     isGradient: true
   };
 }
@@ -1007,7 +1039,6 @@ class CalculatorModal {
       equationEl.textContent = "";
     };
     
-    // Keyboard handler
     self.keyboardHandler = (e) => {
       const key = e.key;
       
@@ -1049,7 +1080,6 @@ class CalculatorModal {
     
     document.addEventListener("keydown", self.keyboardHandler);
     
-    // Button event listeners
     panel.querySelectorAll(".calc-number").forEach(btn => {
       btn.addEventListener("click", function(e) {
         e.preventDefault();
@@ -1240,7 +1270,8 @@ const F = {
   b2bError:               () => el("#b2bError"),
   verifyB2BBtn:           () => el("#verifyB2BBtn"),
   closeB2BPopup:          () => el("#closeB2BPopup"),
-  filterDate:             () => el("#filterDate"),
+  filterDateFrom:         () => el("#filterDateFrom"),
+  filterDateTo:           () => el("#filterDateTo"),
   clearFilterBtn:         () => el("#clearFilterBtn"),
   showAllToggle:          () => el("#showAllToggle"),
   searchPatientInput:     () => el("#searchPatientInput"),
@@ -1258,6 +1289,10 @@ const F = {
   labFilter3:             () => el("#labFilter3"),
   labFilter4:             () => el("#labFilter4"),
   testDetailsCard:        () => document.querySelector("#accordion-test .card-body"),
+  centerFilterBtn:        () => el("#centerFilterBtn"),
+  visitTypeFilterBtn:     () => el("#visitTypeFilterBtn"),
+  careOfFilterBtn:        () => el("#careOfFilterBtn"),
+  sortSelect:             () => el("#sortSelect"),
 };
 
 /* ========================= Global state ========================= */
@@ -2885,6 +2920,23 @@ document.addEventListener("click", (e) => {
   if (unifiedResults && (!unifiedInput || !unifiedInput.contains(e.target)) && !unifiedResults.contains(e.target)) {
     unifiedResults.style.display = "none";
   }
+  
+  // Close filter popups when clicking outside
+  if (centerFilterPopup && !centerFilterPopup.contains(e.target) && e.target !== F.centerFilterBtn()) {
+    centerFilterPopup.remove();
+    centerFilterPopup = null;
+    activeFilterPopup = null;
+  }
+  if (visitTypeFilterPopup && !visitTypeFilterPopup.contains(e.target) && e.target !== F.visitTypeFilterBtn()) {
+    visitTypeFilterPopup.remove();
+    visitTypeFilterPopup = null;
+    activeFilterPopup = null;
+  }
+  if (careOfFilterPopup && !careOfFilterPopup.contains(e.target) && e.target !== F.careOfFilterBtn()) {
+    careOfFilterPopup.remove();
+    careOfFilterPopup = null;
+    activeFilterPopup = null;
+  }
 });
 
 /* ========================= Generic typeahead factory ========================= */
@@ -2966,6 +3018,275 @@ createTypeahead({
   listFn: (q) => phlebotomistList.filter(p => p.toLowerCase().includes(q.toLowerCase())),
 });
 
+/* ========================= Filter Popup Functions ========================= */
+function updateFilterButtonStyle(button, hasActiveFilter) {
+  if (hasActiveFilter) {
+    button.style.background = "linear-gradient(135deg, #09637E 0%, #088395 100%)";
+    button.style.color = "white";
+    button.style.border = "none";
+  } else {
+    button.style.background = "#f1f5f9";
+    button.style.color = "#334155";
+    button.style.border = "1px solid #e2e8f0";
+  }
+}
+
+function createFilterPopup(title, items, selectedSet, onApply, buttonElement) {
+  // Close any existing popup first
+  if (activeFilterPopup) {
+    activeFilterPopup.remove();
+    activeFilterPopup = null;
+  }
+  
+  const popup = document.createElement("div");
+  popup.className = "filter-popup";
+  popup.style.cssText = `
+    position: fixed;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    min-width: 220px;
+    max-width: 320px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 10000;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+  `;
+  
+  // Add "Blank" option to the list
+  const optionsWithBlank = ["(Blank)", ...items];
+  const uniqueItems = [...new Set(optionsWithBlank.filter(i => i && i.trim()))];
+  
+  const selectAllChecked = uniqueItems.length > 0 && uniqueItems.every(item => selectedSet.has(item));
+  
+  popup.innerHTML = `
+    <div style="font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; margin-bottom: 8px;">${title}</div>
+    <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" class="filter-select-all" ${selectAllChecked ? 'checked' : ''}> 
+        <span style="font-weight: 500;">Select All</span>
+      </label>
+    </div>
+    <div class="filter-items-list">
+      ${uniqueItems.map(item => `
+        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
+          <input type="checkbox" class="filter-item" value="${escapeHtml(item)}" ${selectedSet.has(item) ? 'checked' : ''}> 
+          <span>${item === "(Blank)" ? "📭 Blank (Empty)" : escapeHtml(item)}</span>
+        </label>
+      `).join("")}
+    </div>
+    <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; justify-content: flex-end;">
+      <button class="btn ghost sm filter-cancel-btn" style="padding: 4px 12px;">Cancel</button>
+      <button class="btn primary sm filter-apply-btn" style="padding: 4px 12px;">Apply</button>
+    </div>
+  `;
+  
+  const selectAllCheckbox = popup.querySelector(".filter-select-all");
+  const itemCheckboxes = popup.querySelectorAll(".filter-item");
+  
+  selectAllCheckbox.addEventListener("change", (e) => {
+    itemCheckboxes.forEach(cb => {
+      cb.checked = e.target.checked;
+    });
+  });
+  
+  itemCheckboxes.forEach(cb => {
+    cb.addEventListener("change", () => {
+      const allChecked = Array.from(itemCheckboxes).every(c => c.checked);
+      selectAllCheckbox.checked = allChecked;
+    });
+  });
+  
+  popup.querySelector(".filter-cancel-btn").addEventListener("click", () => {
+    popup.remove();
+    activeFilterPopup = null;
+  });
+  
+  popup.querySelector(".filter-apply-btn").addEventListener("click", () => {
+    const newSelection = new Set();
+    itemCheckboxes.forEach(cb => {
+      if (cb.checked) {
+        newSelection.add(cb.value);
+      }
+    });
+    onApply(newSelection);
+    popup.remove();
+    activeFilterPopup = null;
+  });
+  
+  return popup;
+}
+
+function matchesFilter(value, selectedSet) {
+  if (selectedSet.size === 0) return true;
+  const valueToCheck = (value && value.trim()) ? value : "(Blank)";
+  return selectedSet.has(valueToCheck);
+}
+
+function setupFilterButtons() {
+  const centerFilterBtn = F.centerFilterBtn();
+  const visitTypeFilterBtn = F.visitTypeFilterBtn();
+  const careOfFilterBtn = F.careOfFilterBtn();
+  
+  if (!centerFilterBtn) return;
+  
+  // Get unique values from entries
+  const getCenterOptions = () => {
+    const centers = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.select_center && entry.select_center.trim()) {
+        centers.add(entry.select_center);
+      } else {
+        centers.add("(Blank)");
+      }
+    });
+    return Array.from(centers);
+  };
+  
+  const getVisitTypeOptions = () => {
+    const types = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.visit_type && entry.visit_type.trim()) {
+        types.add(entry.visit_type);
+      } else {
+        types.add("(Blank)");
+      }
+    });
+    return Array.from(types);
+  };
+  
+  const getCareOfOptions = () => {
+    const cares = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.care_of && entry.care_of.trim()) {
+        cares.add(entry.care_of);
+      } else {
+        cares.add("(Blank)");
+      }
+    });
+    return Array.from(cares);
+  };
+  
+  // Initialize all filters to Select All (all options selected including Blank)
+  const initializeAllFilters = () => {
+    const centerOptions = getCenterOptions();
+    const visitTypeOptions = getVisitTypeOptions();
+    const careOfOptions = getCareOfOptions();
+    
+    centerOptions.forEach(opt => currentCenterFilters.add(opt));
+    visitTypeOptions.forEach(opt => currentVisitTypeFilters.add(opt));
+    careOfOptions.forEach(opt => currentCareOfFilters.add(opt));
+  };
+  
+  // Update button styles
+  const updateButtonStyles = () => {
+    const centerOptions = getCenterOptions();
+    const visitTypeOptions = getVisitTypeOptions();
+    const careOfOptions = getCareOfOptions();
+    
+    updateFilterButtonStyle(centerFilterBtn, currentCenterFilters.size !== centerOptions.length);
+    updateFilterButtonStyle(visitTypeFilterBtn, currentVisitTypeFilters.size !== visitTypeOptions.length);
+    updateFilterButtonStyle(careOfFilterBtn, currentCareOfFilters.size !== careOfOptions.length);
+  };
+  
+  // Initialize filters with all options selected
+  initializeAllFilters();
+  updateButtonStyles();
+  
+  centerFilterBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (activeFilterPopup) {
+      activeFilterPopup.remove();
+      activeFilterPopup = null;
+    }
+    const popup = createFilterPopup(
+      "Filter by Center", 
+      getCenterOptions(), 
+      currentCenterFilters,
+      (newSelection) => {
+        currentCenterFilters = newSelection;
+        updateButtonStyles();
+        currentPage = 1;
+        renderInProgress();
+      },
+      centerFilterBtn
+    );
+    activeFilterPopup = popup;
+    const rect = centerFilterBtn.getBoundingClientRect();
+    popup.style.position = "fixed";
+    // Position below the button, ensuring it stays within viewport
+    let topPos = rect.bottom + window.scrollY + 5;
+    // Check if popup would go off screen at the bottom
+    if (topPos + 400 > window.innerHeight + window.scrollY) {
+      topPos = rect.top + window.scrollY - 200;
+    }
+    popup.style.top = `${topPos}px`;
+    popup.style.left = `${rect.left + window.scrollX}px`;
+    document.body.appendChild(popup);
+  });
+  
+  visitTypeFilterBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (activeFilterPopup) {
+      activeFilterPopup.remove();
+      activeFilterPopup = null;
+    }
+    const popup = createFilterPopup(
+      "Filter by Visit Type", 
+      getVisitTypeOptions(), 
+      currentVisitTypeFilters,
+      (newSelection) => {
+        currentVisitTypeFilters = newSelection;
+        updateButtonStyles();
+        currentPage = 1;
+        renderInProgress();
+      },
+      visitTypeFilterBtn
+    );
+    activeFilterPopup = popup;
+    const rect = visitTypeFilterBtn.getBoundingClientRect();
+    popup.style.position = "fixed";
+    let topPos = rect.bottom + window.scrollY + 5;
+    if (topPos + 400 > window.innerHeight + window.scrollY) {
+      topPos = rect.top + window.scrollY - 200;
+    }
+    popup.style.top = `${topPos}px`;
+    popup.style.left = `${rect.left + window.scrollX}px`;
+    document.body.appendChild(popup);
+  });
+  
+  careOfFilterBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (activeFilterPopup) {
+      activeFilterPopup.remove();
+      activeFilterPopup = null;
+    }
+    const popup = createFilterPopup(
+      "Filter by Care Of", 
+      getCareOfOptions(), 
+      currentCareOfFilters,
+      (newSelection) => {
+        currentCareOfFilters = newSelection;
+        updateButtonStyles();
+        currentPage = 1;
+        renderInProgress();
+      },
+      careOfFilterBtn
+    );
+    activeFilterPopup = popup;
+    const rect = careOfFilterBtn.getBoundingClientRect();
+    popup.style.position = "fixed";
+    let topPos = rect.bottom + window.scrollY + 5;
+    if (topPos + 400 > window.innerHeight + window.scrollY) {
+      topPos = rect.top + window.scrollY - 200;
+    }
+    popup.style.top = `${topPos}px`;
+    popup.style.left = `${rect.left + window.scrollX}px`;
+    document.body.appendChild(popup);
+  });
+}
+
 /* ========================= Tabs ========================= */
 const panels = {
   inprogress: el("#panel-inprogress"),
@@ -3017,6 +3338,56 @@ function setupLabFilters() {
         </label>
       `;
       filterContainer.appendChild(labFiltersDiv);
+      
+      // Add date range filters with larger size
+      const dateRangeDiv = document.createElement("div");
+      dateRangeDiv.className = "date-range-filters";
+      dateRangeDiv.style.cssText = "display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 8px;";
+      dateRangeDiv.innerHTML = `
+        <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-medium);">📅 Date Range:</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 0.813rem;">From:</label>
+          <input type="date" id="filterDateFrom" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent); font-size: 0.9rem; min-width: 140px;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <label style="font-size: 0.813rem;">To:</label>
+          <input type="date" id="filterDateTo" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent); font-size: 0.9rem; min-width: 140px;">
+        </div>
+      `;
+      filterContainer.appendChild(dateRangeDiv);
+      
+      // Add sort option with larger size
+      const sortDiv = document.createElement("div");
+      sortDiv.className = "sort-options";
+      sortDiv.style.cssText = "display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 8px;";
+      sortDiv.innerHTML = `
+        <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-medium);">📊 Sort by:</span>
+        <select id="sortSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent); font-size: 0.9rem; min-width: 120px;">
+          <option value="newest">Newest First ⬇️</option>
+          <option value="oldest">Oldest First ⬆️</option>
+        </select>
+      `;
+      filterContainer.appendChild(sortDiv);
+      
+      // Add new filter buttons with larger size
+      const extraFiltersDiv = document.createElement("div");
+      extraFiltersDiv.className = "extra-filters";
+      extraFiltersDiv.style.cssText = "display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px;";
+      extraFiltersDiv.innerHTML = `
+        <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-medium);">📋 Additional Filters:</span>
+        <button type="button" id="centerFilterBtn" class="btn ghost" style="padding: 6px 14px; font-size: 0.813rem;">🏥 Center</button>
+        <button type="button" id="visitTypeFilterBtn" class="btn ghost" style="padding: 6px 14px; font-size: 0.813rem;">🩺 Visit Type</button>
+        <button type="button" id="careOfFilterBtn" class="btn ghost" style="padding: 6px 14px; font-size: 0.813rem;">👤 Care Of</button>
+      `;
+      filterContainer.appendChild(extraFiltersDiv);
+      
+      // Add count display
+      const countDisplayDiv = document.createElement("div");
+      countDisplayDiv.className = "count-display";
+      countDisplayDiv.id = "entriesCountDisplay";
+      countDisplayDiv.style.cssText = "display: flex; justify-content: flex-end; margin-top: 8px; padding: 6px 12px; background: #f8fafc; border-radius: 8px; font-size: 0.875rem; font-weight: 500; color: var(--primary);";
+      countDisplayDiv.innerHTML = `📊 Total Entries: 0`;
+      filterContainer.appendChild(countDisplayDiv);
     }
   }
   
@@ -3024,12 +3395,20 @@ function setupLabFilters() {
   const filter2 = el("#labFilter2");
   const filter3 = el("#labFilter3");
   const filter4 = el("#labFilter4");
+  const filterDateFrom = el("#filterDateFrom");
+  const filterDateTo = el("#filterDateTo");
+  const sortSelect = el("#sortSelect");
   
   const updateFilters = () => {
     currentLabFilters[1] = filter1 ? filter1.checked : true;
     currentLabFilters[2] = filter2 ? filter2.checked : true;
     currentLabFilters[3] = filter3 ? filter3.checked : true;
     currentLabFilters[4] = filter4 ? filter4.checked : true;
+    currentFilterDateFrom = filterDateFrom ? filterDateFrom.value : null;
+    currentFilterDateTo = filterDateTo ? filterDateTo.value : null;
+    if (sortSelect) {
+      currentSortOption = sortSelect.value;
+    }
     currentPage = 1;
     renderInProgress();
   };
@@ -3038,26 +3417,76 @@ function setupLabFilters() {
   if (filter2) filter2.addEventListener("change", updateFilters);
   if (filter3) filter3.addEventListener("change", updateFilters);
   if (filter4) filter4.addEventListener("change", updateFilters);
+  if (filterDateFrom) filterDateFrom.addEventListener("change", updateFilters);
+  if (filterDateTo) filterDateTo.addEventListener("change", updateFilters);
+  if (sortSelect) sortSelect.addEventListener("change", updateFilters);
+  
+  // Don't call setupFilterButtons here - will be called after data loads
 }
 
-/* ========================= Date Filter, Search, Toggle, Pagination ========================= */
-function filterInProgressEntries() {
-  const filterDate = F.filterDate();
-  currentFilterDate = filterDate ? filterDate.value : null;
-  currentPage = 1;
+// Add this new function to initialize filters after data is loaded
+function initializeFiltersAfterDataLoad() {
+  const getCenterOptions = () => {
+    const centers = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.select_center && entry.select_center.trim()) {
+        centers.add(entry.select_center);
+      } else {
+        centers.add("(Blank)");
+      }
+    });
+    return Array.from(centers);
+  };
+  
+  const getVisitTypeOptions = () => {
+    const types = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.visit_type && entry.visit_type.trim()) {
+        types.add(entry.visit_type);
+      } else {
+        types.add("(Blank)");
+      }
+    });
+    return Array.from(types);
+  };
+  
+  const getCareOfOptions = () => {
+    const cares = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.care_of && entry.care_of.trim()) {
+        cares.add(entry.care_of);
+      } else {
+        cares.add("(Blank)");
+      }
+    });
+    return Array.from(cares);
+  };
+  
+  // Clear existing filters
+  currentCenterFilters.clear();
+  currentVisitTypeFilters.clear();
+  currentCareOfFilters.clear();
+  
+  // Select all options including Blank
+  getCenterOptions().forEach(opt => currentCenterFilters.add(opt));
+  getVisitTypeOptions().forEach(opt => currentVisitTypeFilters.add(opt));
+  getCareOfOptions().forEach(opt => currentCareOfFilters.add(opt));
+  
+  // Update button styles
+  const centerFilterBtn = F.centerFilterBtn();
+  const visitTypeFilterBtn = F.visitTypeFilterBtn();
+  const careOfFilterBtn = F.careOfFilterBtn();
+  
+  if (centerFilterBtn) updateFilterButtonStyle(centerFilterBtn, false);
+  if (visitTypeFilterBtn) updateFilterButtonStyle(visitTypeFilterBtn, false);
+  if (careOfFilterBtn) updateFilterButtonStyle(careOfFilterBtn, false);
+  
+  // Update count and render
+  updateEntriesCount();
   renderInProgress();
 }
 
-function clearDateFilter() {
-  const filterDate = F.filterDate();
-  if (filterDate) {
-    filterDate.value = "";
-    currentFilterDate = null;
-    currentPage = 1;
-    renderInProgress();
-  }
-}
-
+/* ========================= Date Filter, Search, Toggle, Pagination ========================= */
 function handleSearch() {
   const searchInput = F.searchPatientInput();
   currentSearchQuery = searchInput ? searchInput.value.trim().toLowerCase() : "";
@@ -3076,18 +3505,14 @@ let searchDebounceTimer;
 function setupSearchDebounce() {
   const searchInput = F.searchPatientInput();
   if (searchInput) {
-    // Disable browser autofill/autocomplete
     searchInput.setAttribute("autocomplete", "off");
     searchInput.setAttribute("autocorrect", "off");
     searchInput.setAttribute("autocapitalize", "off");
     searchInput.setAttribute("spellcheck", "false");
-    
-    // Additional attributes to prevent autofill
     searchInput.setAttribute("autocomplete", "new-password");
     searchInput.setAttribute("name", "search_patient_no_autofill");
     searchInput.setAttribute("id", "searchPatientInput");
     
-    // Clear any existing autofill values on focus
     searchInput.addEventListener("focus", function() {
       if (this.value && this.value.includes("@")) {
         this.value = "";
@@ -3113,6 +3538,38 @@ function shouldShowEntryByLabFilter(entry) {
   return false;
 }
 
+function shouldShowEntryByDateRange(entry) {
+  const entryDate = parseDateFromSheet(entry.date);
+  if (!entryDate) return true;
+  
+  if (currentFilterDateFrom && entryDate < currentFilterDateFrom) {
+    return false;
+  }
+  if (currentFilterDateTo && entryDate > currentFilterDateTo) {
+    return false;
+  }
+  return true;
+}
+
+function shouldShowEntryByAdditionalFilters(entry) {
+  // Center filter
+  if (!matchesFilter(entry.select_center, currentCenterFilters)) {
+    return false;
+  }
+  
+  // Visit Type filter
+  if (!matchesFilter(entry.visit_type, currentVisitTypeFilters)) {
+    return false;
+  }
+  
+  // Care Of filter
+  if (!matchesFilter(entry.care_of, currentCareOfFilters)) {
+    return false;
+  }
+  
+  return true;
+}
+
 function getFilteredEntries() {
   let items = [...serverEntriesCache];
   
@@ -3120,13 +3577,7 @@ function getFilteredEntries() {
     items = items.filter(e => getCompletionPercentage(e) < 100);
   }
   
-  if (currentFilterDate) {
-    items = items.filter(entry => {
-      if (!entry.date) return false;
-      const entryDate = parseDateFromSheet(entry.date);
-      return entryDate === currentFilterDate;
-    });
-  }
+  items = items.filter(shouldShowEntryByDateRange);
   
   if (currentSearchQuery) {
     items = items.filter(entry => {
@@ -3136,8 +3587,17 @@ function getFilteredEntries() {
   }
   
   items = items.filter(shouldShowEntryByLabFilter);
+  items = items.filter(shouldShowEntryByAdditionalFilters);
   
-  return sortEntriesByDateAndTime(items);
+  return sortEntries(items);
+}
+
+function updateEntriesCount() {
+  const filteredItems = getFilteredEntries();
+  const countDisplay = document.getElementById("entriesCountDisplay");
+  if (countDisplay) {
+    countDisplay.innerHTML = `📊 Total Entries: ${filteredItems.length}`;
+  }
 }
 
 function renderPagination(totalItems) {
@@ -3238,7 +3698,7 @@ function renderPagination(totalItems) {
   paginationContainer.appendChild(pageInfo);
 }
 
-/* ========================= In-progress cards ========================= */
+/* ========================= Enhanced In-progress cards with all new fields ========================= */
 function renderInProgress() {
   const listEl = F.inProgressList();
   const emptyEl = F.inProgressEmpty();
@@ -3246,6 +3706,9 @@ function renderInProgress() {
 
   const filteredItems = getFilteredEntries();
   const totalItems = filteredItems.length;
+  
+  // Update count display
+  updateEntriesCount();
   
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -3257,7 +3720,7 @@ function renderInProgress() {
     emptyEl.style.display = "block";
     let filterMsg = "No entries found.";
     if (currentSearchQuery) filterMsg = `No entries found matching "${currentSearchQuery}".`;
-    else if (currentFilterDate) filterMsg = `No entries found for ${currentFilterDate}.`;
+    else if (currentFilterDateFrom || currentFilterDateTo) filterMsg = `No entries found in selected date range.`;
     else if (!showAllEntries) filterMsg = "No in-progress items right now.";
     emptyEl.textContent = filterMsg;
     renderPagination(0);
@@ -3270,7 +3733,20 @@ function renderInProgress() {
     const currentStage = getCurrentStage(entry);
     const displayDate = entry.date ? formatDisplayDate(entry.date) : "-";
     const displayTime = entry.time_of_visit ? formatDisplayTime(entry.time_of_visit) : "-";
+    const ppTime = entry.pp_time ? formatDisplayTime(entry.pp_time) : null;
+    const phlebotomist = entry.phlebotomist || "";
+    const ppPhlebotomist = entry.pp_phlebotomist || "";
     const cardStyle = getCardStyleForEntry(entry);
+    const labCounts = getLabCountsForEntry(entry);
+    const finalPrice = entry.final_price || "0";
+    const pendingPayment = entry.pending_payment || "0";
+    const careOf = entry.care_of || "";
+    const selectCenter = entry.select_center || "";
+    const visitType = entry.visit_type || "";
+    const area = entry.area || "";
+    const gender = entry.gender || "";
+    const age = entry.age || "";
+    const contact = entry.contact || "";
     
     let progressColor;
     if (pct < 30) {
@@ -3296,21 +3772,94 @@ function renderInProgress() {
     
     row.style.transition = "all 0.3s ease";
     
+    // Get gender short form
+    const genderShort = GENDER_SHORT[gender] || gender.substring(0, 1) || "";
+    
+    // Build patient info line with double hyphens
+    const patientInfoParts = [escapeHtml(entry.patient_name || "-")];
+    if (genderShort && age) {
+      patientInfoParts.push(`${genderShort}/${age} yrs`);
+    } else if (genderShort) {
+      patientInfoParts.push(genderShort);
+    } else if (age) {
+      patientInfoParts.push(`${age} yrs`);
+    }
+    if (contact) {
+      patientInfoParts.push(contact);
+    }
+    const patientInfoLine = patientInfoParts.join(" -- ");
+    
+    // Build visit time with phlebotomist
+    let visitTimeDisplay = "";
+    if (displayTime && displayTime !== "-") {
+      visitTimeDisplay = phlebotomist ? `${displayTime} - ${escapeHtml(phlebotomist)}` : displayTime;
+    }
+    
+    // Build PP time display with PP phlebotomist (displayed below visit time)
+    let ppDisplay = "";
+    if (ppTime && ppTime !== "-") {
+      ppDisplay = ppPhlebotomist ? `🔄 ${ppTime} - ${escapeHtml(ppPhlebotomist)}` : `🔄 ${ppTime}`;
+    }
+    
+    // Build center, visit type, area line with double hyphens
+    const centerVisitParts = [];
+    if (selectCenter) centerVisitParts.push(`Center: ${escapeHtml(selectCenter)}`);
+    if (visitType) centerVisitParts.push(`Visit Type: ${escapeHtml(visitType)}`);
+    if (area) centerVisitParts.push(`Area: ${escapeHtml(area)}`);
+    const centerVisitLine = centerVisitParts.join(" -- ");
+    
+    // Build lab counts lines
+    let labCountsHtml = "";
+    for (let i = 1; i <= 4; i++) {
+      const testsCount = labCounts[i].tests;
+      const packagesCount = labCounts[i].packages;
+      if (testsCount > 0 || packagesCount > 0) {
+        const labName = LAB_NAMES[i];
+        labCountsHtml += `<div style="font-weight: normal; margin: 4px 0;">${escapeHtml(labName)}: ${testsCount} Tests ${packagesCount} Packages</div>`;
+      }
+    }
+    
+    // Build final price and pending payment line with double hyphens
+    let finalPriceDisplay = "";
+    let pendingPaymentDisplay = "";
+    if (finalPrice && finalPrice !== "0" && finalPrice !== 0) {
+      finalPriceDisplay = `Final Price: ${fmtINR(parseFloat(finalPrice))}`;
+    }
+    if (pendingPayment && pendingPayment !== "0" && pendingPayment !== 0) {
+      pendingPaymentDisplay = `Pending Payment: ${fmtINR(parseFloat(pendingPayment))}`;
+    }
+    const priceLine = [finalPriceDisplay, pendingPaymentDisplay].filter(p => p).join(" -- ");
+    
+    // Build care of line (without goodwill charges)
+    let careOfDisplay = "";
+    if (careOf) {
+      careOfDisplay = `<div style="margin-top: 8px; font-weight: normal;">(Care Of: ${escapeHtml(careOf)})</div>`;
+    }
+    
     row.innerHTML = `
-      <div class="card-top">
-        <div class="card-name" style="color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor}; font-weight: 700;" title="${escapeHtml(entry.patient_name || "-")}">${escapeHtml(entry.patient_name || "-")}</div>
+      <div class="card-top" style="margin-bottom: 10px;">
+        <div class="card-name" style="color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor}; font-weight: 700; font-size: 1rem; margin-bottom: 8px;" title="${escapeHtml(entry.patient_name || "-")}">
+          ${patientInfoLine}
+        </div>
         <div class="card-date" style="color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'};">
           📅 ${displayDate}<br>
-          ⏰ ${displayTime}
+          ⏰ ${visitTimeDisplay}
+          ${ppDisplay ? `<br> ${ppDisplay}` : ''}
         </div>
       </div>
-      <div class="card-stage" style="color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'};">Progress: <strong style="color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor}">${pct}% Complete</strong> - Current Stage: ${escapeHtml(currentStage)}</div>
+      ${centerVisitLine ? `<div class="card-stage" style="font-weight: normal; color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'}; margin: 6px 0;">${centerVisitLine}</div>` : ''}
+      ${labCountsHtml ? `<div class="card-stage" style="font-weight: normal; margin: 6px 0;">${labCountsHtml}</div>` : ''}
+      ${priceLine ? `<div class="card-stage" style="font-weight: normal; color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor}; margin: 6px 0;"><strong>${priceLine}</strong></div>` : ''}
       <div class="progress-bar-wrapper" style="margin:10px 0;">
         <div class="progress-bar-fill" style="width:${pct}%;height:8px;background:${progressColor};border-radius:4px;"></div>
       </div>
-      <div class="card-actions">
+      <div style="margin: 5px 0;">
+        <div class="progress-percentage" style="font-size: 0.75rem; color: #7a9aa3;">Progress: ${pct}% Complete -- Current Stage: ${escapeHtml(currentStage)}</div>
+      </div>
+      <div class="card-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px;">
         <button class="btn ghost sm" data-edit="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? '#ffffff' : '#ffffff'}; color: ${cardStyle.isGradient ? '#1a2e35' : cardStyle.textColor};">Edit</button>
         <button class="btn danger sm" data-del="${escapeHtml(entry.id)}" style="background: ${cardStyle.isGradient ? '#ffffff' : '#ffffff'};"><span class="btn-text">Delete</span></button>
+        ${careOfDisplay}
       </div>`;
     row.querySelector("[data-edit]").addEventListener("click", () => loadForEdit(entry));
     row.querySelector("[data-del]").addEventListener("click", (ev) => deleteEntry(entry.id, ev.currentTarget));
@@ -3403,6 +3952,99 @@ function fullFormReset() {
   resetMiscFields();
   updateAllCalculations();
   setDefaults();
+}
+
+function clearAllFilters() {
+  // Clear date range filters
+  const filterDateFrom = el("#filterDateFrom");
+  const filterDateTo = el("#filterDateTo");
+  if (filterDateFrom) filterDateFrom.value = "";
+  if (filterDateTo) filterDateTo.value = "";
+  currentFilterDateFrom = null;
+  currentFilterDateTo = null;
+  
+  // Clear search query
+  const searchInput = F.searchPatientInput();
+  if (searchInput) searchInput.value = "";
+  currentSearchQuery = "";
+  
+  // Clear lab filters (reset to all checked)
+  const filter1 = el("#labFilter1");
+  const filter2 = el("#labFilter2");
+  const filter3 = el("#labFilter3");
+  const filter4 = el("#labFilter4");
+  if (filter1) filter1.checked = true;
+  if (filter2) filter2.checked = true;
+  if (filter3) filter3.checked = true;
+  if (filter4) filter4.checked = true;
+  currentLabFilters = { 1: true, 2: true, 3: true, 4: true };
+  
+  // Reset center, visit type, care of filters to all options selected (including Blank)
+  const getCenterOptions = () => {
+    const centers = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.select_center && entry.select_center.trim()) {
+        centers.add(entry.select_center);
+      } else {
+        centers.add("(Blank)");
+      }
+    });
+    return Array.from(centers);
+  };
+  
+  const getVisitTypeOptions = () => {
+    const types = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.visit_type && entry.visit_type.trim()) {
+        types.add(entry.visit_type);
+      } else {
+        types.add("(Blank)");
+      }
+    });
+    return Array.from(types);
+  };
+  
+  const getCareOfOptions = () => {
+    const cares = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.care_of && entry.care_of.trim()) {
+        cares.add(entry.care_of);
+      } else {
+        cares.add("(Blank)");
+      }
+    });
+    return Array.from(cares);
+  };
+  
+  currentCenterFilters.clear();
+  currentVisitTypeFilters.clear();
+  currentCareOfFilters.clear();
+  
+  getCenterOptions().forEach(opt => currentCenterFilters.add(opt));
+  getVisitTypeOptions().forEach(opt => currentVisitTypeFilters.add(opt));
+  getCareOfOptions().forEach(opt => currentCareOfFilters.add(opt));
+  
+  // Reset sort option to default
+  const sortSelect = el("#sortSelect");
+  if (sortSelect) sortSelect.value = "newest";
+  currentSortOption = SORT_OPTIONS.NEWEST_FIRST;
+  
+  // Reset show all entries toggle
+  const toggle = F.showAllToggle();
+  if (toggle) toggle.checked = false;
+  showAllEntries = false;
+  
+  // Update filter button styles (all should be default since all options are selected)
+  const centerFilterBtn = F.centerFilterBtn();
+  const visitTypeFilterBtn = F.visitTypeFilterBtn();
+  const careOfFilterBtn = F.careOfFilterBtn();
+  if (centerFilterBtn) updateFilterButtonStyle(centerFilterBtn, false);
+  if (visitTypeFilterBtn) updateFilterButtonStyle(visitTypeFilterBtn, false);
+  if (careOfFilterBtn) updateFilterButtonStyle(careOfFilterBtn, false);
+  
+  currentPage = 1;
+  renderInProgress();
+  showToast("All filters cleared");
 }
 
 /* ========================= Edit / Load for edit ========================= */
@@ -3809,6 +4451,11 @@ function setDefaults() {
   
   setupVisitScheduleButton();
   disableNumberInputScrolling();
+  
+  const clearFilterBtn = F.clearFilterBtn();
+  if (clearFilterBtn) {
+    clearFilterBtn.addEventListener("click", clearAllFilters);
+  }
 }
 
 /* ========================= Patient name auto-suggest ========================= */
@@ -3913,15 +4560,9 @@ function setupEventListeners() {
   
   setupSearchDebounce();
   
-  const filterDateEl = F.filterDate();
   const clearFilterBtn = F.clearFilterBtn();
-  
-  if (filterDateEl) {
-    filterDateEl.addEventListener("change", filterInProgressEntries);
-  }
-  
   if (clearFilterBtn) {
-    clearFilterBtn.addEventListener("click", clearDateFilter);
+    clearFilterBtn.addEventListener("click", clearAllFilters);
   }
   
   const calculatorBtn = document.getElementById("calculatorBtn");
@@ -3934,6 +4575,7 @@ function setupEventListeners() {
   }
   
   setupLabFilters();
+  setupFilterButtons();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -4007,6 +4649,9 @@ fetchServerList().then(() => {
   setupEventListeners();
   initializeUnifiedSearch();
   initializeBulkAdd();
+  // Initialize filters with proper data after cache is loaded
+  initializeFiltersAfterDataLoad();
+  renderInProgress(); // Re-render to show correct count
 });
 
 const resetTubeBtn = F.resetTubeBtn();
