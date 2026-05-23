@@ -2,7 +2,7 @@ const CACHE_NAME = "goodness-cache-v5";
 
 const urlsToCache = [
   "/goodnesshealthcare/",
-  "/goodnesshealthcare/login.html"
+  "/goodnesshealthcare/index.html"
 ];
 
 self.addEventListener("install", event => {
