@@ -1,4 +1,4 @@
-const CACHE_NAME = "my-app-cache-v2";
+const CACHE_NAME = "my-app-cache-v3";
 
 // Install event → cache basic shell (optional but good)
 self.addEventListener("install", event => {
