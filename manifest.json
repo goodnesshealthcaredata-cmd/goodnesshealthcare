@@ -1,7 +1,7 @@
 {
-  "name": "My Website App",
-  "short_name": "MyApp",
-  "start_url": "/your-repo-name/",
+  "name": "Goodness Healthcare",
+  "short_name": "Goodness",
+  "start_url": "/goodnesshealthcaredata-cmd/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
