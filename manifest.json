@@ -1,7 +1,8 @@
 {
   "name": "Goodness Healthcare",
   "short_name": "Goodness",
-  "start_url": "/goodnesshealthcare/",
+  "start_url": "/goodnesshealthcare/index.html",
+  "scope": "/goodnesshealthcare/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
