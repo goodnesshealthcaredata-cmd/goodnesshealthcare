@@ -3509,7 +3509,7 @@ function setupLabFilters() {
       sortDiv.style.cssText = "display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 8px;";
       sortDiv.innerHTML = `
         <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-medium);">📊 Sort by:</span>
-        <select id="sortSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent); font-size: 0.9rem; min-width: 200px;">
+        <select id="sortSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent); font-size: 0.9rem; min-width: 120px;">
           <option value="newest">Newest First ⬇️</option>
           <option value="oldest">Oldest First ⬆️</option>
         </select>
