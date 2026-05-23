@@ -1,7 +1,7 @@
 {
   "name": "Goodness Healthcare",
   "short_name": "Goodness",
-  "start_url": "/goodnesshealthcaredata-cmd/",
+  "start_url": "/goodnesshealthcare/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
