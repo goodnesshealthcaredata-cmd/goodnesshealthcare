@@ -341,6 +341,155 @@ function getCardStyleForEntry(entry) {
   };
 }
 
+/* ========================= Move Test to Another Lab ========================= */
+function showMoveTestModal(testName, sourceLabNum) {
+  const modal = document.createElement("div");
+  modal.className = "move-test-modal";
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+  
+  const modalContent = document.createElement("div");
+  modalContent.style.cssText = `
+    background: white;
+    border-radius: 16px;
+    max-width: 400px;
+    width: 90%;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.2s ease;
+  `;
+  
+  // Get available target labs (all labs except source)
+  const targetLabs = [];
+  for (let i = 1; i <= 4; i++) {
+    if (i !== sourceLabNum) {
+      targetLabs.push({ num: i, name: LAB_NAMES[i] });
+    }
+  }
+  
+  modalContent.innerHTML = `
+    <h3 style="margin-bottom: 16px; color: var(--primary); font-size: 1.25rem;">Move Test to Another Lab</h3>
+    <p style="margin-bottom: 16px; color: var(--text-medium);">
+      Move "<strong>${escapeHtml(testName)}</strong>" from <strong>${LAB_NAMES[sourceLabNum]}</strong> to:
+    </p>
+    <div style="margin-bottom: 20px;">
+      ${targetLabs.map(lab => `
+        <label style="display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;" 
+               onmouseover="this.style.backgroundColor='#f8fafc'" 
+               onmouseout="this.style.backgroundColor='white'">
+          <input type="radio" name="targetLab" value="${lab.num}" style="width: 18px; height: 18px;">
+          <span style="font-weight: 500;">${escapeHtml(lab.name)}</span>
+        </label>
+      `).join("")}
+    </div>
+    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+      <button class="btn ghost" id="cancelMoveBtn">Cancel</button>
+      <button class="btn primary" id="confirmMoveBtn">Move Test</button>
+    </div>
+  `;
+  
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+  
+  const cancelBtn = modal.querySelector("#cancelMoveBtn");
+  const confirmBtn = modal.querySelector("#confirmMoveBtn");
+  const radioButtons = modal.querySelectorAll('input[name="targetLab"]');
+  
+  cancelBtn.addEventListener("click", () => {
+    modal.remove();
+  });
+  
+  confirmBtn.addEventListener("click", () => {
+    let selectedLab = null;
+    radioButtons.forEach(radio => {
+      if (radio.checked) {
+        selectedLab = parseInt(radio.value);
+      }
+    });
+    
+    if (!selectedLab) {
+      showToast("Please select a target lab");
+      return;
+    }
+    
+    // Move the test
+    moveTestToLab(testName, sourceLabNum, selectedLab);
+    modal.remove();
+  });
+  
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+function moveTestToLab(testName, sourceLabNum, targetLabNum) {
+  // Remove from source lab
+  const testIndex = selectedTestsByLab[sourceLabNum].indexOf(testName);
+  if (testIndex !== -1) {
+    selectedTestsByLab[sourceLabNum].splice(testIndex, 1);
+  }
+  
+  // Check if test already exists in target lab
+  if (selectedTestsByLab[targetLabNum].includes(testName)) {
+    showToast(`"${testName}" already exists in ${LAB_NAMES[targetLabNum]}. Cannot move.`);
+    // Re-add to source lab
+    selectedTestsByLab[sourceLabNum].push(testName);
+    return;
+  }
+  
+  // Check if test is already selected in another lab (global uniqueness)
+  if (isTestGloballySelected(testName, targetLabNum)) {
+    showToast(`"${testName}" is already selected in another lab or package. Cannot move to ${LAB_NAMES[targetLabNum]}.`);
+    // Re-add to source lab
+    selectedTestsByLab[sourceLabNum].push(testName);
+    return;
+  }
+  
+  // Check if test is already in a package in target lab
+  const targetPackages = selectedPackagesByLab[targetLabNum] || [];
+  let isInPackage = false;
+  for (const pkgName of targetPackages) {
+    const includedTests = packageTestSelections[`${targetLabNum}_${pkgName}`];
+    const pkg = getPackage(`lab${targetLabNum}`, pkgName);
+    if (pkg && (includedTests || pkg.tests).includes(testName)) {
+      isInPackage = true;
+      break;
+    }
+  }
+  
+  if (isInPackage) {
+    showToast(`"${testName}" is already included in a package in ${LAB_NAMES[targetLabNum]}. Cannot move.`);
+    // Re-add to source lab
+    selectedTestsByLab[sourceLabNum].push(testName);
+    return;
+  }
+  
+  // Add to target lab
+  selectedTestsByLab[targetLabNum].push(testName);
+  
+  // Update global test set
+  updateGlobalTestSet();
+  
+  // Re-render UI
+  renderSelectedItemsDisplay();
+  updateAllCalculations();
+  
+  showToast(`Moved "${testName}" from ${LAB_NAMES[sourceLabNum]} to ${LAB_NAMES[targetLabNum]}`);
+}
+
 /* ========================= Visit Schedule Modal ========================= */
 function showVisitSchedule(selectedDate) {
   if (!selectedDate) {
@@ -1735,7 +1884,7 @@ function updatePackageTestSelection(labNum, packageName, testName, isChecked) {
   updateAllCalculations();
 }
 
-/* ========================= Selected items display (Unified) ========================= */
+/* ========================= Selected items display (Unified) with Move Button ========================= */
 function renderSelectedItemsDisplay() {
   const container = F.selectedItemsList();
   if (!container) return;
@@ -1760,7 +1909,11 @@ function renderSelectedItemsDisplay() {
         <div class="test-name">🧪 ${escapeHtml(test)}</div>
         <div class="test-price">MRP: ${fmtINR(mrp)}</div>
       </div>
-      <button class="remove-test-btn" data-test="${escapeHtml(test)}" title="Remove test">❌</button>`;
+      <div style="display: flex; gap: 8px;">
+        <button class="move-test-btn" data-test="${escapeHtml(test)}" title="Move to another lab" style="background: none; border: none; cursor: pointer; font-size: 1rem; opacity: 0.7; transition: all 0.2s ease;">🔄</button>
+        <button class="remove-test-btn" data-test="${escapeHtml(test)}" title="Remove test" style="background: none; border: none; cursor: pointer; font-size: 1rem; opacity: 0.7; transition: all 0.2s ease;">❌</button>
+      </div>`;
+    
     div.querySelector(".remove-test-btn").addEventListener("click", (e) => {
       e.stopPropagation();
       const testIndex = selectedTestsByLab[labNum].indexOf(test);
@@ -1771,6 +1924,12 @@ function renderSelectedItemsDisplay() {
         renderSelectedItemsDisplay();
       }
     });
+    
+    div.querySelector(".move-test-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      showMoveTestModal(test, labNum);
+    });
+    
     container.appendChild(div);
   });
   
@@ -3047,14 +3206,14 @@ function createFilterPopup(title, items, selectedSet, onApply, buttonElement) {
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     min-width: 220px;
     max-width: 320px;
-    max-height: 250px;
+    max-height: 400px;
     overflow-y: auto;
     z-index: 10000;
     padding: 12px;
     border: 1px solid #e2e8f0;
   `;
   
-  // Add "Blank" option to the list
+  // ALWAYS include "(Blank)" option at the beginning of the list
   const optionsWithBlank = ["(Blank)", ...items];
   const uniqueItems = [...new Set(optionsWithBlank.filter(i => i && i.trim()))];
   
@@ -3137,8 +3296,6 @@ function setupFilterButtons() {
     serverEntriesCache.forEach(entry => {
       if (entry.select_center && entry.select_center.trim()) {
         centers.add(entry.select_center);
-      } else {
-        centers.add("(Blank)");
       }
     });
     return Array.from(centers);
@@ -3149,8 +3306,6 @@ function setupFilterButtons() {
     serverEntriesCache.forEach(entry => {
       if (entry.visit_type && entry.visit_type.trim()) {
         types.add(entry.visit_type);
-      } else {
-        types.add("(Blank)");
       }
     });
     return Array.from(types);
@@ -3161,22 +3316,9 @@ function setupFilterButtons() {
     serverEntriesCache.forEach(entry => {
       if (entry.care_of && entry.care_of.trim()) {
         cares.add(entry.care_of);
-      } else {
-        cares.add("(Blank)");
       }
     });
     return Array.from(cares);
-  };
-  
-  // Initialize all filters to Select All (all options selected including Blank)
-  const initializeAllFilters = () => {
-    const centerOptions = getCenterOptions();
-    const visitTypeOptions = getVisitTypeOptions();
-    const careOfOptions = getCareOfOptions();
-    
-    centerOptions.forEach(opt => currentCenterFilters.add(opt));
-    visitTypeOptions.forEach(opt => currentVisitTypeFilters.add(opt));
-    careOfOptions.forEach(opt => currentCareOfFilters.add(opt));
   };
   
   // Update button styles
@@ -3185,14 +3327,18 @@ function setupFilterButtons() {
     const visitTypeOptions = getVisitTypeOptions();
     const careOfOptions = getCareOfOptions();
     
-    updateFilterButtonStyle(centerFilterBtn, currentCenterFilters.size !== centerOptions.length);
-    updateFilterButtonStyle(visitTypeFilterBtn, currentVisitTypeFilters.size !== visitTypeOptions.length);
-    updateFilterButtonStyle(careOfFilterBtn, currentCareOfFilters.size !== careOfOptions.length);
+    // Check if all options (including Blank) are selected
+    const allCenterSelected = currentCenterFilters.has("(Blank)") && centerOptions.every(opt => currentCenterFilters.has(opt));
+    const allVisitTypeSelected = currentVisitTypeFilters.has("(Blank)") && visitTypeOptions.every(opt => currentVisitTypeFilters.has(opt));
+    const allCareOfSelected = currentCareOfFilters.has("(Blank)") && careOfOptions.every(opt => currentCareOfFilters.has(opt));
+    
+    updateFilterButtonStyle(centerFilterBtn, !allCenterSelected);
+    updateFilterButtonStyle(visitTypeFilterBtn, !allVisitTypeSelected);
+    updateFilterButtonStyle(careOfFilterBtn, !allCareOfSelected);
   };
   
-  // Initialize filters with all options selected
-  initializeAllFilters();
-  updateButtonStyles();
+  // Initialize update function to be called after changes
+  window.updateFilterButtonStyles = updateButtonStyles;
   
   centerFilterBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -3215,11 +3361,9 @@ function setupFilterButtons() {
     activeFilterPopup = popup;
     const rect = centerFilterBtn.getBoundingClientRect();
     popup.style.position = "fixed";
-    // Position below the button, ensuring it stays within viewport
     let topPos = rect.bottom + window.scrollY + 5;
-    // Check if popup would go off screen at the bottom
     if (topPos + 400 > window.innerHeight + window.scrollY) {
-      topPos = rect.top + window.scrollY - 200;
+      topPos = rect.top + window.scrollY - 405;
     }
     popup.style.top = `${topPos}px`;
     popup.style.left = `${rect.left + window.scrollX}px`;
@@ -3249,7 +3393,7 @@ function setupFilterButtons() {
     popup.style.position = "fixed";
     let topPos = rect.bottom + window.scrollY + 5;
     if (topPos + 400 > window.innerHeight + window.scrollY) {
-      topPos = rect.top + window.scrollY - 200;
+      topPos = rect.top + window.scrollY - 405;
     }
     popup.style.top = `${topPos}px`;
     popup.style.left = `${rect.left + window.scrollX}px`;
@@ -3279,12 +3423,15 @@ function setupFilterButtons() {
     popup.style.position = "fixed";
     let topPos = rect.bottom + window.scrollY + 5;
     if (topPos + 400 > window.innerHeight + window.scrollY) {
-      topPos = rect.top + window.scrollY - 200;
+      topPos = rect.top + window.scrollY - 405;
     }
     popup.style.top = `${topPos}px`;
     popup.style.left = `${rect.left + window.scrollX}px`;
     document.body.appendChild(popup);
   });
+  
+  // Initial button style update
+  updateButtonStyles();
 }
 
 /* ========================= Tabs ========================= */
@@ -3362,7 +3509,7 @@ function setupLabFilters() {
       sortDiv.style.cssText = "display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 8px;";
       sortDiv.innerHTML = `
         <span style="font-size: 0.875rem; font-weight: 500; color: var(--text-medium);">📊 Sort by:</span>
-        <select id="sortSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent); font-size: 0.9rem; min-width: 120px;">
+        <select id="sortSelect" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--accent); font-size: 0.9rem; min-width: 200px;">
           <option value="newest">Newest First ⬇️</option>
           <option value="oldest">Oldest First ⬆️</option>
         </select>
@@ -3420,70 +3567,6 @@ function setupLabFilters() {
   if (filterDateFrom) filterDateFrom.addEventListener("change", updateFilters);
   if (filterDateTo) filterDateTo.addEventListener("change", updateFilters);
   if (sortSelect) sortSelect.addEventListener("change", updateFilters);
-  
-  // Don't call setupFilterButtons here - will be called after data loads
-}
-
-// Add this new function to initialize filters after data is loaded
-function initializeFiltersAfterDataLoad() {
-  const getCenterOptions = () => {
-    const centers = new Set();
-    serverEntriesCache.forEach(entry => {
-      if (entry.select_center && entry.select_center.trim()) {
-        centers.add(entry.select_center);
-      } else {
-        centers.add("(Blank)");
-      }
-    });
-    return Array.from(centers);
-  };
-  
-  const getVisitTypeOptions = () => {
-    const types = new Set();
-    serverEntriesCache.forEach(entry => {
-      if (entry.visit_type && entry.visit_type.trim()) {
-        types.add(entry.visit_type);
-      } else {
-        types.add("(Blank)");
-      }
-    });
-    return Array.from(types);
-  };
-  
-  const getCareOfOptions = () => {
-    const cares = new Set();
-    serverEntriesCache.forEach(entry => {
-      if (entry.care_of && entry.care_of.trim()) {
-        cares.add(entry.care_of);
-      } else {
-        cares.add("(Blank)");
-      }
-    });
-    return Array.from(cares);
-  };
-  
-  // Clear existing filters
-  currentCenterFilters.clear();
-  currentVisitTypeFilters.clear();
-  currentCareOfFilters.clear();
-  
-  // Select all options including Blank
-  getCenterOptions().forEach(opt => currentCenterFilters.add(opt));
-  getVisitTypeOptions().forEach(opt => currentVisitTypeFilters.add(opt));
-  getCareOfOptions().forEach(opt => currentCareOfFilters.add(opt));
-  
-  // Update button styles
-  const centerFilterBtn = F.centerFilterBtn();
-  const visitTypeFilterBtn = F.visitTypeFilterBtn();
-  const careOfFilterBtn = F.careOfFilterBtn();
-  
-  if (centerFilterBtn) updateFilterButtonStyle(centerFilterBtn, false);
-  if (visitTypeFilterBtn) updateFilterButtonStyle(visitTypeFilterBtn, false);
-  if (careOfFilterBtn) updateFilterButtonStyle(careOfFilterBtn, false);
-  
-  // Update count and render
-  updateEntriesCount();
-  renderInProgress();
 }
 
 /* ========================= Date Filter, Search, Toggle, Pagination ========================= */
@@ -3571,7 +3654,7 @@ function shouldShowEntryByAdditionalFilters(entry) {
 }
 
 function getFilteredEntries() {
-  let items = [...serverEntriesCache];
+  let items = [...(serverEntriesCache || [])];
   
   if (!showAllEntries) {
     items = items.filter(e => getCompletionPercentage(e) < 100);
@@ -3593,10 +3676,15 @@ function getFilteredEntries() {
 }
 
 function updateEntriesCount() {
-  const filteredItems = getFilteredEntries();
   const countDisplay = document.getElementById("entriesCountDisplay");
-  if (countDisplay) {
+  if (!countDisplay) return;
+  
+  try {
+    const filteredItems = getFilteredEntries();
     countDisplay.innerHTML = `📊 Total Entries: ${filteredItems.length}`;
+  } catch (e) {
+    console.error("Error updating count:", e);
+    countDisplay.innerHTML = `📊 Total Entries: ${serverEntriesCache ? serverEntriesCache.length : 0}`;
   }
 }
 
@@ -3798,7 +3886,7 @@ function renderInProgress() {
     // Build PP time display with PP phlebotomist (displayed below visit time)
     let ppDisplay = "";
     if (ppTime && ppTime !== "-") {
-      ppDisplay = ppPhlebotomist ? `🔄 ${ppTime} - ${escapeHtml(ppPhlebotomist)}` : `🔄 ${ppTime}`;
+      ppDisplay = ppPhlebotomist ? ` ${ppTime} - ${escapeHtml(ppPhlebotomist)}` : `🔄 ${ppTime}`;
     }
     
     // Build center, visit type, area line with double hyphens
@@ -3844,7 +3932,7 @@ function renderInProgress() {
         <div class="card-date" style="color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'};">
           📅 ${displayDate}<br>
           ⏰ ${visitTimeDisplay}
-          ${ppDisplay ? `<br> ${ppDisplay}` : ''}
+          ${ppDisplay ? `<br>🔄 ${ppDisplay}` : ''}
         </div>
       </div>
       ${centerVisitLine ? `<div class="card-stage" style="font-weight: normal; color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'}; margin: 6px 0;">${centerVisitLine}</div>` : ''}
@@ -3979,14 +4067,12 @@ function clearAllFilters() {
   if (filter4) filter4.checked = true;
   currentLabFilters = { 1: true, 2: true, 3: true, 4: true };
   
-  // Reset center, visit type, care of filters to all options selected (including Blank)
+  // Reset center, visit type, care of filters to have "(Blank)" and all options
   const getCenterOptions = () => {
     const centers = new Set();
     serverEntriesCache.forEach(entry => {
       if (entry.select_center && entry.select_center.trim()) {
         centers.add(entry.select_center);
-      } else {
-        centers.add("(Blank)");
       }
     });
     return Array.from(centers);
@@ -3997,8 +4083,6 @@ function clearAllFilters() {
     serverEntriesCache.forEach(entry => {
       if (entry.visit_type && entry.visit_type.trim()) {
         types.add(entry.visit_type);
-      } else {
-        types.add("(Blank)");
       }
     });
     return Array.from(types);
@@ -4009,8 +4093,6 @@ function clearAllFilters() {
     serverEntriesCache.forEach(entry => {
       if (entry.care_of && entry.care_of.trim()) {
         cares.add(entry.care_of);
-      } else {
-        cares.add("(Blank)");
       }
     });
     return Array.from(cares);
@@ -4020,6 +4102,12 @@ function clearAllFilters() {
   currentVisitTypeFilters.clear();
   currentCareOfFilters.clear();
   
+  // ALWAYS add "(Blank)" to all filters
+  currentCenterFilters.add("(Blank)");
+  currentVisitTypeFilters.add("(Blank)");
+  currentCareOfFilters.add("(Blank)");
+  
+  // Add all actual options
   getCenterOptions().forEach(opt => currentCenterFilters.add(opt));
   getVisitTypeOptions().forEach(opt => currentVisitTypeFilters.add(opt));
   getCareOfOptions().forEach(opt => currentCareOfFilters.add(opt));
@@ -4035,12 +4123,9 @@ function clearAllFilters() {
   showAllEntries = false;
   
   // Update filter button styles (all should be default since all options are selected)
-  const centerFilterBtn = F.centerFilterBtn();
-  const visitTypeFilterBtn = F.visitTypeFilterBtn();
-  const careOfFilterBtn = F.careOfFilterBtn();
-  if (centerFilterBtn) updateFilterButtonStyle(centerFilterBtn, false);
-  if (visitTypeFilterBtn) updateFilterButtonStyle(visitTypeFilterBtn, false);
-  if (careOfFilterBtn) updateFilterButtonStyle(careOfFilterBtn, false);
+  if (typeof window.updateFilterButtonStyles === 'function') {
+    window.updateFilterButtonStyles();
+  }
   
   currentPage = 1;
   renderInProgress();
@@ -4172,7 +4257,9 @@ function loadForEdit(entry) {
 /* ========================= Form submit / reset ========================= */
 const formEl = F.entryForm();
 
-if (formEl) {
+if (formEl && !formEl.hasAttribute("data-submit-listener")) {
+  formEl.setAttribute("data-submit-listener", "true");
+  
   formEl.addEventListener("reset", () => {
     setTimeout(fullFormReset, 0);
   });
@@ -4554,19 +4641,22 @@ function selectPatient(p) {
 /* ========================= Setup Event Listeners ========================= */
 function setupEventListeners() {
   const toggle = F.showAllToggle();
-  if (toggle) {
+  if (toggle && !toggle.hasAttribute("data-listener")) {
+    toggle.setAttribute("data-listener", "true");
     toggle.addEventListener("change", handleToggleChange);
   }
   
   setupSearchDebounce();
   
   const clearFilterBtn = F.clearFilterBtn();
-  if (clearFilterBtn) {
+  if (clearFilterBtn && !clearFilterBtn.hasAttribute("data-listener")) {
+    clearFilterBtn.setAttribute("data-listener", "true");
     clearFilterBtn.addEventListener("click", clearAllFilters);
   }
   
   const calculatorBtn = document.getElementById("calculatorBtn");
-  if (calculatorBtn) {
+  if (calculatorBtn && !calculatorBtn.hasAttribute("data-listener")) {
+    calculatorBtn.setAttribute("data-listener", "true");
     calculatorBtn.addEventListener("click", function(e) {
       e.preventDefault();
       const calculator = new CalculatorModal();
@@ -4576,6 +4666,62 @@ function setupEventListeners() {
   
   setupLabFilters();
   setupFilterButtons();
+}
+
+function initializeFiltersAfterDataLoad() {
+  const getCenterOptions = () => {
+    const centers = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.select_center && entry.select_center.trim()) {
+        centers.add(entry.select_center);
+      }
+    });
+    return Array.from(centers);
+  };
+  
+  const getVisitTypeOptions = () => {
+    const types = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.visit_type && entry.visit_type.trim()) {
+        types.add(entry.visit_type);
+      }
+    });
+    return Array.from(types);
+  };
+  
+  const getCareOfOptions = () => {
+    const cares = new Set();
+    serverEntriesCache.forEach(entry => {
+      if (entry.care_of && entry.care_of.trim()) {
+        cares.add(entry.care_of);
+      }
+    });
+    return Array.from(cares);
+  };
+  
+  // Clear existing filters
+  currentCenterFilters.clear();
+  currentVisitTypeFilters.clear();
+  currentCareOfFilters.clear();
+  
+  // ALWAYS add "(Blank)" to all filters by default
+  currentCenterFilters.add("(Blank)");
+  currentVisitTypeFilters.add("(Blank)");
+  currentCareOfFilters.add("(Blank)");
+  
+  // Add all actual options
+  getCenterOptions().forEach(opt => currentCenterFilters.add(opt));
+  getVisitTypeOptions().forEach(opt => currentVisitTypeFilters.add(opt));
+  getCareOfOptions().forEach(opt => currentCareOfFilters.add(opt));
+  
+  // Update button styles
+  if (typeof window.updateFilterButtonStyles === 'function') {
+    window.updateFilterButtonStyles();
+  }
+  
+  // Update count and render
+  updateEntriesCount();
+  renderInProgress();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -4606,7 +4752,8 @@ function showLabPanel(labId) {
 }
 
 const plEl = F.processingLab();
-if (plEl) {
+if (plEl && !plEl.hasAttribute("data-listener")) {
+  plEl.setAttribute("data-listener", "true");
   plEl.addEventListener("change", (e) => { if (e.target.value) showLabPanel(e.target.value); });
   plEl.value = "lab1";
   showLabPanel("lab1");
