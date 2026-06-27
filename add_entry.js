@@ -4587,55 +4587,54 @@ async function fetchSuggestions(q) {
   } catch (err) { console.error("fetchSuggestions:", err); if (nameSuggestionsEl) nameSuggestionsEl.hidden = true; }
 }
 
+/**
+ * UPDATED: selectPatient - Only populates Patient Details section fields.
+ * All other form sections (Visit Details, Test Details, etc.) remain untouched.
+ */
 function selectPatient(p) {
   if (!p) return;
-  const pnEl = F.patientName(); if (pnEl) pnEl.value = p.patient_name || "";
-  if (nameSuggestionsEl) nameSuggestionsEl.hidden = true;
+
+  // Populate ONLY Patient Details section fields
+  const pnEl = F.patientName();
+  if (pnEl) pnEl.value = p.patient_name || "";
 
   const dobValue = p.dob ? parseDateFromSheet(p.dob) : "";
+  const dobEl = F.dob();
+  if (dobEl) dobEl.value = dobValue;
+  
+  // Apply DOB to age calculation (uses the applyDOBToAge function)
   applyDOBToAge(dobValue);
-  if (!dobValue) { 
-    const ageEl3 = F.age(); 
-    if (ageEl3) { 
-      ageEl3.value = p.age || ""; 
-      ageEl3.readOnly = false; 
-      ageEl3.classList.remove("readonly"); 
-    } 
+  
+  // If no DOB, set age directly from the patient data
+  if (!dobValue) {
+    const ageEl = F.age();
+    if (ageEl) {
+      ageEl.value = p.age || "";
+      ageEl.readOnly = false;
+      ageEl.classList.remove("readonly");
+    }
   }
 
-  const setVal2 = (fn, val) => { const n = fn(); if (n) n.value = val || ""; };
-  setVal2(F.dob, dobValue);
-  setVal2(F.gender, p.gender);
-  setVal2(() => F.contact(), p.contact);
-  setVal2(F.altContact, p.alt_contact);
-  setVal2(F.address, p.address);
-  setVal2(F.areaInput, p.area);
-  setVal2(F.mapLink, p.map_link);
-  setVal2(F.doctorName, p.doctor);
-  setVal2(F.careOf, p.care_of);
-  setVal2(F.height, p.height);
-  setVal2(F.weight, p.weight);
-  setVal2(F.lmpDate, p.lmp_date ? parseDateFromSheet(p.lmp_date) : "");
-  setVal2(F.clinicalHistory, p.clinical_history);
-  setVal2(F.phlebotomistInput, p.phlebotomist);
-  setVal2(F.ppPhlebotomistInput, p.pp_phlebotomist);
-  setVal2(F.visitInstruction, p.visit_instruction);
-  setVal2(F.selectCenter, p.select_center);
-  
-  const setBool2 = (fn, val) => { const n = fn(); if (n) n.checked = val === "true" || val === true; };
-  setBool2(F.urineSent, p.urine_sent);
-  setBool2(F.ppSent, p.pp_sent);
-  setBool2(F.billRequired, p.bill_required);
+  const genderEl = F.gender();
+  if (genderEl) genderEl.value = p.gender || "";
 
-  if (p.tube_overrides) tubeCountOverrides = safeJSONParse(p.tube_overrides, {});
-  if (p.discount) { const n = F.discount(); if (n) n.value = p.discount; }
-  if (p.discounted_price) { const n = F.discountedPrice(); if (n) n.value = p.discounted_price; }
-  if (p.home_visit_charges) { const n = F.homeVisitCharges(); if (n) n.value = p.home_visit_charges; }
-  if (p.cash_received) { const n = F.cashReceived(); if (n) n.value = p.cash_received; }
-  if (p.online_received) { const n = F.onlineReceived(); if (n) n.value = p.online_received; }
-  if (p.goodwill_charges) { const n = F.goodwillCharges(); if (n) n.value = p.goodwill_charges; }
-  if (p.payment_complete) { const n = F.paymentComplete(); if (n) n.checked = p.payment_complete === "true" || p.payment_complete === true; }
-  updatePaymentFields();
+  const contactEl = F.contact();
+  if (contactEl) contactEl.value = p.contact || "";
+
+  const altContactEl = F.altContact();
+  if (altContactEl) altContactEl.value = p.alt_contact || "";
+
+  const addressEl = F.address();
+  if (addressEl) addressEl.value = p.address || "";
+
+  const areaEl = F.areaInput();
+  if (areaEl) areaEl.value = p.area || "";
+
+  // Close the suggestions dropdown
+  if (nameSuggestionsEl) nameSuggestionsEl.hidden = true;
+
+  // Show toast notification to inform user
+  showToast("Patient details loaded");
 }
 
 /* ========================= Setup Event Listeners ========================= */
