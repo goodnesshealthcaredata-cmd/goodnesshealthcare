@@ -884,7 +884,3 @@ Object.keys(TUBE_TYPES).forEach(key => {
   TUBE_IMAGES[TUBE_TYPES[key].name] = TUBE_TYPES[key].imageUrl;
 });
 
-const SYRINGE_IMAGES = {};
-Object.keys(SYRINGE_TYPES).forEach(key => {
-  SYRINGE_IMAGES[key] = SYRINGE_TYPES[key].imageUrl;
-});
