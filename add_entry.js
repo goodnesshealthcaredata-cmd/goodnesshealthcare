@@ -11,14 +11,16 @@ const LAB_COLORS = {
   1: { bg: "#f3e8ff", border: "#c084fc", text: "#4c1d95", light: "#e9d5ff", gradient: "rgba(192, 132, 252, 0.25)", name: "Dr. Ajay Shah Laboratory" },
   2: { bg: "#eff6ff", border: "#60a5fa", text: "#1e3a8a", light: "#dbeafe", gradient: "rgba(96, 165, 250, 0.25)", name: "Dr. Jariwala Laboratory" },
   3: { bg: "#f0fdf4", border: "#4ade80", text: "#166534", light: "#dcfce7", gradient: "rgba(74, 222, 128, 0.25)", name: "General Diagnostics" },
-  4: { bg: "#fdf2f2", border: "#f87171", text: "#991b1b", light: "#fee2e2", gradient: "rgba(248, 113, 113, 0.25)", name: "Trucheck Diagnostics" }
+  4: { bg: "#fdf2f2", border: "#f87171", text: "#991b1b", light: "#fee2e2", gradient: "rgba(248, 113, 113, 0.25)", name: "Trucheck Diagnostics" },
+  5: { bg: "#fffbeb", border: "#fcd34d", text: "#92400e", light: "#fef3c7", gradient: "rgba(252, 211, 77, 0.25)", name: "Diagnostica Span" }
 };
 
 const LAB_GRADIENT_COLORS = {
   1: "rgba(192, 132, 252, 0.25)",
   2: "rgba(96, 165, 250, 0.25)",
   3: "rgba(74, 222, 128, 0.25)",
-  4: "rgba(248, 113, 113, 0.25)"
+  4: "rgba(248, 113, 113, 0.25)",
+  5: "rgba(252, 211, 77, 0.25)"
 };
 
 // Lab Names for Display
@@ -26,7 +28,8 @@ const LAB_NAMES = {
   1: "Dr. Ajay Shah Laboratory",
   2: "Dr. Jariwala Laboratory", 
   3: "General Diagnostics",
-  4: "Trucheck Diagnostics"
+  4: "Trucheck Diagnostics",
+  5: "Diagnostica Span"
 };
 
 // Gender short forms
@@ -50,7 +53,7 @@ let showAllEntries = false;
 let currentSearchQuery = "";
 let currentFilterDateFrom = null;
 let currentFilterDateTo = null;
-let currentLabFilters = { 1: true, 2: true, 3: true, 4: true };
+let currentLabFilters = { 1: true, 2: true, 3: true, 4: true, 5: true };
 let currentCenterFilters = new Set();
 let currentVisitTypeFilters = new Set();
 let currentCareOfFilters = new Set();
@@ -265,7 +268,7 @@ function sortEntries(entries) {
 /* ========================= Lab Detection for Entries ========================= */
 function getLabsForEntry(entry) {
   const labs = new Set();
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const tests = (entry[`tests_lab${i}`] || "").split(",").filter(t => t.trim());
     const packages = (entry[`packages_lab${i}`] || "");
     
@@ -292,9 +295,9 @@ function getLabsForEntry(entry) {
 }
 
 function getLabCountsForEntry(entry) {
-  const labCounts = { 1: { tests: 0, packages: 0 }, 2: { tests: 0, packages: 0 }, 3: { tests: 0, packages: 0 }, 4: { tests: 0, packages: 0 } };
+  const labCounts = { 1: { tests: 0, packages: 0 }, 2: { tests: 0, packages: 0 }, 3: { tests: 0, packages: 0 }, 4: { tests: 0, packages: 0 }, 5: { tests: 0, packages: 0 } };
   
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const tests = (entry[`tests_lab${i}`] || "").split(",").filter(t => t.trim());
     const packagesData = entry[`packages_lab${i}`] || "";
     
@@ -372,7 +375,7 @@ function showMoveTestModal(testName, sourceLabNum) {
   
   // Get available target labs (all labs except source)
   const targetLabs = [];
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     if (i !== sourceLabNum) {
       targetLabs.push({ num: i, name: LAB_NAMES[i] });
     }
@@ -1437,6 +1440,7 @@ const F = {
   labFilter2:             () => el("#labFilter2"),
   labFilter3:             () => el("#labFilter3"),
   labFilter4:             () => el("#labFilter4"),
+  labFilter5:             () => el("#labFilter5"),
   testDetailsCard:        () => document.querySelector("#accordion-test .card-body"),
   centerFilterBtn:        () => el("#centerFilterBtn"),
   visitTypeFilterBtn:     () => el("#visitTypeFilterBtn"),
@@ -1445,8 +1449,8 @@ const F = {
 };
 
 /* ========================= Global state ========================= */
-let selectedTestsByLab    = { 1: [], 2: [], 3: [], 4: [] };
-let selectedPackagesByLab = { 1: [], 2: [], 3: [], 4: [] };
+let selectedTestsByLab    = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+let selectedPackagesByLab = { 1: [], 2: [], 3: [], 4: [], 5: [] };
 let packageTestSelections = {};
 let currentSelectedLab    = "lab1";
 let tubeCountOverrides    = {};
@@ -1514,7 +1518,7 @@ function getAllTestsForLab(labNum) {
 
 function getAllSelectedTestsAcrossLabs() {
   const all = [];
-  for (let i = 1; i <= 4; i++) all.push(...getAllTestsForLab(i));
+  for (let i = 1; i <= 5; i++) all.push(...getAllTestsForLab(i));
   return [...new Set(all)];
 }
 
@@ -1525,7 +1529,7 @@ function getCombinedTestsList() {
 
 function getAllSelectedPackagesAcrossLabs() {
   const all = [];
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     all.push(...(selectedPackagesByLab[i] || []));
   }
   return [...new Set(all)];
@@ -1533,7 +1537,7 @@ function getAllSelectedPackagesAcrossLabs() {
 
 function getAllPackageTestsAcrossLabs() {
   const all = [];
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const labId = `lab${i}`;
     const pkgNames = selectedPackagesByLab[i] || [];
     pkgNames.forEach(n => {
@@ -1549,7 +1553,7 @@ function getAllPackageTestsAcrossLabs() {
 }
 
 function isTestGloballySelected(testName, currentLabNum) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     if (i !== currentLabNum) {
       const tests = getAllTestsForLab(i);
       if (tests.includes(testName)) {
@@ -1561,7 +1565,7 @@ function isTestGloballySelected(testName, currentLabNum) {
 }
 
 function removeTestFromOtherLabs(testName, currentLabNum) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     if (i !== currentLabNum) {
       const testIndex = selectedTestsByLab[i].indexOf(testName);
       if (testIndex !== -1) {
@@ -1613,7 +1617,7 @@ function removeConflictingIndividualTests(pkg, labNum) {
 
 function updateGlobalTestSet() {
   globallySelectedTests.clear();
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const tests = getAllTestsForLab(i);
     tests.forEach(t => globallySelectedTests.add(t));
   }
@@ -1623,7 +1627,7 @@ function updateGlobalTestSet() {
 function calculateAggregatedTubeCounts() {
   const aggregatedCounts = {};
   
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const tests = getAllTestsForLab(i);
     const labCounts = calculateUniqueTubeCountsPerLab(tests);
     
@@ -1636,9 +1640,9 @@ function calculateAggregatedTubeCounts() {
 }
 
 function calculateTubeCountsPerLab() {
-  const perLabCounts = { 1: {}, 2: {}, 3: {}, 4: {} };
+  const perLabCounts = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
   
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const tests = getAllTestsForLab(i);
     perLabCounts[i] = calculateUniqueTubeCountsPerLab(tests);
   }
@@ -1654,9 +1658,9 @@ function getCombinedTubeCountsString() {
 
 function getPerLabTubeCountsString() {
   const perLabCounts = calculateTubeCountsPerLab();
-  const result = { 1: "", 2: "", 3: "", 4: "" };
+  const result = { 1: "", 2: "", 3: "", 4: "", 5: "" };
   
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const entries = Object.entries(perLabCounts[i]).filter(([, c]) => c > 0);
     result[i] = entries.length ? entries.map(([tube, count]) => `${tube}: ${count}`).join(", ") : "-";
   }
@@ -2231,7 +2235,7 @@ function initializeBulkAdd() {
 /* ========================= Payment ========================= */
 function calculateTotalMRP() {
   let total = 0;
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { total += getTestMRP(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2244,7 +2248,7 @@ function calculateTotalMRP() {
 
 function calculateTotalB2B() {
   let total = 0;
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { total += getTestB2B(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2256,8 +2260,8 @@ function calculateTotalB2B() {
 }
 
 function calculatePerLabMRP() {
-  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0 };
-  for (let i = 1; i <= 4; i++) {
+  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (let i = 1; i <= 5; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { perLabTotals[i] += getTestMRP(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2269,8 +2273,8 @@ function calculatePerLabMRP() {
 }
 
 function calculatePerLabB2B() {
-  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0 };
-  for (let i = 1; i <= 4; i++) {
+  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (let i = 1; i <= 5; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { perLabTotals[i] += getTestB2B(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2552,7 +2556,7 @@ function checkPatientDetailsCompleted() {
 }
 
 function checkTestDetailsCompleted() {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     if (selectedTestsByLab[i].length > 0 || selectedPackagesByLab[i].length > 0) {
       return true;
     }
@@ -2691,7 +2695,7 @@ if (reportReceivedDataEl) {
 /* ========================= getCompletionPercentage ========================= */
 function getAllTestsFromEntry(entry) {
   const tests = new Set();
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     (entry[`tests_lab${i}`] || "").split(",").forEach(t => t.trim() && tests.add(t.trim()));
     const packagesData = entry[`packages_lab${i}`];
     if (packagesData && packagesData !== "" && packagesData !== "[]") {
@@ -2722,7 +2726,7 @@ function getCurrentStage(entry) {
     { name: "Patient Details", check: () => entry.patient_name && entry.age && entry.gender && entry.contact },
     {
       name: "Test Details", check: () => {
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= 5; i++) {
           if ((entry[`tests_lab${i}`] && entry[`tests_lab${i}`] !== "") || 
               (entry[`packages_lab${i}`] && entry[`packages_lab${i}`] !== "" && entry[`packages_lab${i}`] !== "[]")) {
             return true;
@@ -2798,7 +2802,7 @@ function getCompletionPercentage(entry) {
   inc(!!(entry.patient_name && entry.age && entry.gender && entry.contact));
   
   let hasTestOrPackage = false;
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     if ((entry[`tests_lab${i}`] && entry[`tests_lab${i}`] !== "") || 
         (entry[`packages_lab${i}`] && entry[`packages_lab${i}`] !== "" && entry[`packages_lab${i}`] !== "[]")) {
       hasTestOrPackage = true;
@@ -3458,6 +3462,7 @@ function setupLabFilters() {
   const labFilter2 = el("#labFilter2");
   const labFilter3 = el("#labFilter3");
   const labFilter4 = el("#labFilter4");
+  const labFilter5 = el("#labFilter5");
   
   if (!labFilter1) {
     const filterContainer = document.querySelector(".control-bar");
@@ -3482,6 +3487,10 @@ function setupLabFilters() {
         <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[4].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
           <input type="checkbox" id="labFilter4" checked style="margin: 0;"> 
           <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[4]}</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[5].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
+          <input type="checkbox" id="labFilter5" checked style="margin: 0;"> 
+          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[5]}</span>
         </label>
       `;
       filterContainer.appendChild(labFiltersDiv);
@@ -3542,6 +3551,7 @@ function setupLabFilters() {
   const filter2 = el("#labFilter2");
   const filter3 = el("#labFilter3");
   const filter4 = el("#labFilter4");
+  const filter5 = el("#labFilter5");
   const filterDateFrom = el("#filterDateFrom");
   const filterDateTo = el("#filterDateTo");
   const sortSelect = el("#sortSelect");
@@ -3551,6 +3561,7 @@ function setupLabFilters() {
     currentLabFilters[2] = filter2 ? filter2.checked : true;
     currentLabFilters[3] = filter3 ? filter3.checked : true;
     currentLabFilters[4] = filter4 ? filter4.checked : true;
+    currentLabFilters[5] = filter5 ? filter5.checked : true;
     currentFilterDateFrom = filterDateFrom ? filterDateFrom.value : null;
     currentFilterDateTo = filterDateTo ? filterDateTo.value : null;
     if (sortSelect) {
@@ -3564,6 +3575,7 @@ function setupLabFilters() {
   if (filter2) filter2.addEventListener("change", updateFilters);
   if (filter3) filter3.addEventListener("change", updateFilters);
   if (filter4) filter4.addEventListener("change", updateFilters);
+  if (filter5) filter5.addEventListener("change", updateFilters);
   if (filterDateFrom) filterDateFrom.addEventListener("change", updateFilters);
   if (filterDateTo) filterDateTo.addEventListener("change", updateFilters);
   if (sortSelect) sortSelect.addEventListener("change", updateFilters);
@@ -3898,7 +3910,7 @@ function renderInProgress() {
     
     // Build lab counts lines
     let labCountsHtml = "";
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
       const testsCount = labCounts[i].tests;
       const packagesCount = labCounts[i].packages;
       if (testsCount > 0 || packagesCount > 0) {
@@ -3932,7 +3944,7 @@ function renderInProgress() {
         <div class="card-date" style="color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'};">
           📅 ${displayDate}<br>
           ⏰ ${visitTimeDisplay}
-          ${ppDisplay ? `<br>🔄 ${ppDisplay}` : ''}
+          ${ppDisplay ? `<br>${ppDisplay}` : ''}
         </div>
       </div>
       ${centerVisitLine ? `<div class="card-stage" style="font-weight: normal; color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'}; margin: 6px 0;">${centerVisitLine}</div>` : ''}
@@ -3994,7 +4006,7 @@ async function deleteEntry(id, btn) {
 
 /* ========================= Reset helpers ========================= */
 function resetLabState() {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     selectedTestsByLab[i] = [];
     selectedPackagesByLab[i] = [];
     delete packageTestSelections[`${i}_`];
@@ -4034,12 +4046,61 @@ function resetMiscFields() {
 }
 
 function fullFormReset() {
+  // Reset all lab selections
   resetLabState();
+  // Reset payment fields
   resetPaymentFields();
+  // Reset all checkboxes
   resetCheckboxes();
+  // Reset misc fields
   resetMiscFields();
+  
+  // Reset patient details fields
+  const patientFields = [F.patientName, F.dob, F.age, F.gender, F.contact, F.altContact, F.address, F.areaInput, F.mapLink];
+  patientFields.forEach(fn => {
+    const n = fn(); 
+    if (n) n.value = "";
+  });
+  
+  // Reset age readonly state
+  const ageEl = F.age();
+  if (ageEl) {
+    ageEl.readOnly = false;
+    ageEl.classList.remove("readonly");
+  }
+  
+  // Reset the processing lab to lab1
+  const plEl = F.processingLab();
+  if (plEl) {
+    plEl.value = "lab1";
+  }
+  
+  // Reset current selected lab and show lab1 panel
+  currentSelectedLab = "lab1";
+  showLabPanel("lab1");
+  
+  // Reset all other UI components
   updateAllCalculations();
   setDefaults();
+  
+  // Clear any edit state
+  const ei = F.editId();
+  if (ei) ei.value = "";
+  const sc = F.submitContent();
+  if (sc) sc.textContent = "Submit Entry";
+  
+  // Reset name suggestions
+  const nameSuggestions = F.nameSuggestions();
+  if (nameSuggestions) {
+    nameSuggestions.hidden = true;
+    nameSuggestions.innerHTML = "";
+  }
+  
+  // Update test section color to lab1
+  updateTestSectionColor();
+  
+  // Show toast notification
+  showToast("Form reset for new entry");
 }
 
 function clearAllFilters() {
@@ -4061,11 +4122,13 @@ function clearAllFilters() {
   const filter2 = el("#labFilter2");
   const filter3 = el("#labFilter3");
   const filter4 = el("#labFilter4");
+  const filter5 = el("#labFilter5");
   if (filter1) filter1.checked = true;
   if (filter2) filter2.checked = true;
   if (filter3) filter3.checked = true;
   if (filter4) filter4.checked = true;
-  currentLabFilters = { 1: true, 2: true, 3: true, 4: true };
+  if (filter5) filter5.checked = true;
+  currentLabFilters = { 1: true, 2: true, 3: true, 4: true, 5: true };
   
   // Reset center, visit type, care of filters to have "(Blank)" and all options
   const getCenterOptions = () => {
@@ -4167,7 +4230,7 @@ function loadForEdit(entry) {
   setBool(F.ppSent, entry.pp_sent);
   setBool(F.billRequired, entry.bill_required);
 
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     selectedTestsByLab[i] = (entry[`tests_lab${i}`] || "").split(",").map(s => s.trim()).filter(Boolean);
     
     const packagesData = entry[`packages_lab${i}`];
@@ -4330,7 +4393,7 @@ if (formEl) {
 
     const data = new FormData(formEl);
     
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
       const individualTests = selectedTestsByLab[i] || [];
       const packageNames = selectedPackagesByLab[i] || [];
       
@@ -4360,7 +4423,7 @@ if (formEl) {
     }
     
     const allIndividualTests = [];
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
       allIndividualTests.push(...(selectedTestsByLab[i] || []));
     }
     const uniqueIndividualTests = [...new Set(allIndividualTests)];
@@ -4384,6 +4447,7 @@ if (formEl) {
     data.set("lab2_tubes", perLabTubeCounts[2]);
     data.set("lab3_tubes", perLabTubeCounts[3]);
     data.set("lab4_tubes", perLabTubeCounts[4]);
+    data.set("lab5_tubes", perLabTubeCounts[5]);
     
     data.set("processing_lab", currentSelectedLab);
     data.set("total_mrp", calculateTotalMRP());
@@ -4395,10 +4459,12 @@ if (formEl) {
     data.set("lab2_total_mrp", perLabMRP[2]);
     data.set("lab3_total_mrp", perLabMRP[3]);
     data.set("lab4_total_mrp", perLabMRP[4]);
+    data.set("lab5_total_mrp", perLabMRP[5]);
     data.set("lab1_total_b2b", perLabB2B[1]);
     data.set("lab2_total_b2b", perLabB2B[2]);
     data.set("lab3_total_b2b", perLabB2B[3]);
     data.set("lab4_total_b2b", perLabB2B[4]);
+    data.set("lab5_total_b2b", perLabB2B[5]);
 
     const crEl = F.costRaw(); if (crEl) data.set("cost", crEl.value);
     const discEl = F.discount(); if (discEl) data.set("discount", discEl.value);
@@ -4465,9 +4531,13 @@ if (formEl) {
       renderInProgress();
       showToast(editId ? "Changes saved" : "Entry saved successfully");
 
+      // Complete form reset after successful submission
       fullFormReset();
+      
+      // Reset edit state
       if (eiEl2) eiEl2.value = "";
-      const scEl = F.submitContent(); if (scEl) scEl.textContent = "Submit Entry";
+      const scEl = F.submitContent(); 
+      if (scEl) scEl.textContent = "Submit Entry";
 
       const ipTab = document.querySelector('.tab-btn[data-tab="inprogress"]');
       if (ipTab) ipTab.click();
@@ -4587,54 +4657,46 @@ async function fetchSuggestions(q) {
   } catch (err) { console.error("fetchSuggestions:", err); if (nameSuggestionsEl) nameSuggestionsEl.hidden = true; }
 }
 
-/**
- * UPDATED: selectPatient - Only populates Patient Details section fields.
- * All other form sections (Visit Details, Test Details, etc.) remain untouched.
- */
 function selectPatient(p) {
   if (!p) return;
-
-  // Populate ONLY Patient Details section fields
-  const pnEl = F.patientName();
-  if (pnEl) pnEl.value = p.patient_name || "";
-
-  const dobValue = p.dob ? parseDateFromSheet(p.dob) : "";
-  const dobEl = F.dob();
-  if (dobEl) dobEl.value = dobValue;
-  
-  // Apply DOB to age calculation (uses the applyDOBToAge function)
-  applyDOBToAge(dobValue);
-  
-  // If no DOB, set age directly from the patient data
-  if (!dobValue) {
-    const ageEl = F.age();
-    if (ageEl) {
-      ageEl.value = p.age || "";
-      ageEl.readOnly = false;
-      ageEl.classList.remove("readonly");
-    }
-  }
-
-  const genderEl = F.gender();
-  if (genderEl) genderEl.value = p.gender || "";
-
-  const contactEl = F.contact();
-  if (contactEl) contactEl.value = p.contact || "";
-
-  const altContactEl = F.altContact();
-  if (altContactEl) altContactEl.value = p.alt_contact || "";
-
-  const addressEl = F.address();
-  if (addressEl) addressEl.value = p.address || "";
-
-  const areaEl = F.areaInput();
-  if (areaEl) areaEl.value = p.area || "";
-
-  // Close the suggestions dropdown
+  const pnEl = F.patientName(); if (pnEl) pnEl.value = p.patient_name || "";
   if (nameSuggestionsEl) nameSuggestionsEl.hidden = true;
 
-  // Show toast notification to inform user
-  showToast("Patient details loaded");
+  // ONLY populate Patient Details section fields
+  const dobValue = p.dob ? parseDateFromSheet(p.dob) : "";
+  applyDOBToAge(dobValue);
+  if (!dobValue) { 
+    const ageEl3 = F.age(); 
+    if (ageEl3) { 
+      ageEl3.value = p.age || ""; 
+      ageEl3.readOnly = false; 
+      ageEl3.classList.remove("readonly"); 
+    } 
+  }
+
+  // Set only patient details fields
+  const setVal2 = (fn, val) => { 
+    const n = fn(); 
+    if (n) n.value = val || "";
+  };
+  
+  setVal2(F.dob, dobValue);
+  setVal2(F.gender, p.gender);
+  setVal2(() => F.contact(), p.contact);
+  setVal2(F.altContact, p.alt_contact);
+  setVal2(F.address, p.address);
+  setVal2(F.areaInput, p.area);
+  setVal2(F.mapLink, p.map_link);
+  
+  // Do NOT populate other sections
+  // These fields remain as they are (preserving existing data):
+  // doctorName, careOf, height, weight, lmpDate, clinicalHistory, 
+  // phlebotomistInput, ppPhlebotomistInput, visitInstruction, selectCenter,
+  // urineSent, ppSent, billRequired, tube_overrides, discount, discounted_price,
+  // home_visit_charges, cash_received, online_received, goodwill_charges, payment_complete
+  
+  // If user has existing data in other sections, it is preserved
+  // If other sections are empty, they remain empty
 }
 
 /* ========================= Setup Event Listeners ========================= */
@@ -4740,7 +4802,7 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 /* ========================= Lab panel selection ========================= */
-const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel") };
+const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel"), lab5: el("#lab5Panel") };
 
 function showLabPanel(labId) {
   Object.values(labPanels).forEach(p => { if (p) p.style.display = "none"; });
