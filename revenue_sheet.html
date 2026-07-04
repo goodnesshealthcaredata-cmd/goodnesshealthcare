@@ -258,10 +258,11 @@
             white-space: nowrap;
         }
 
-        /* First 3 columns in totals row - lighter background */
+        /* First 4 columns in totals row - lighter background */
         .totals-table td:first-child,
         .totals-table td:nth-child(2),
-        .totals-table td:nth-child(3) {
+        .totals-table td:nth-child(3),
+        .totals-table td:nth-child(4) {
             background: #F9FBFD;
             border-bottom: 2px solid #E5EAF0;
             color: #2A577B;
@@ -328,9 +329,16 @@
             width: 140px;
         }
 
-        .data-table th:nth-child(n+4),
-        .data-table td:nth-child(n+4),
-        .totals-table td:nth-child(n+4) {
+        .data-table th:nth-child(4),
+        .data-table td:nth-child(4),
+        .totals-table td:nth-child(4) {
+            min-width: 140px;
+            width: 140px;
+        }
+
+        .data-table th:nth-child(n+5),
+        .data-table td:nth-child(n+5),
+        .totals-table td:nth-child(n+5) {
             min-width: 140px;
             width: 140px;
         }
@@ -748,10 +756,22 @@
     // Refresh state
     let isRefreshing = false;
     
-    // Column filter state for Care of column (3rd column)
-    let careOfFilterValues = new Set();
-    let hasBlankValues = false;
-    let activeCareOfFilters = new Set();
+    // Column filter state for multiple columns
+    const columnFilters = {
+        'Center': {
+            values: new Set(),
+            hasBlank: false,
+            active: new Set(),
+            columnIndex: 2 // 3rd column (0-indexed)
+        },
+        'Care of': {
+            values: new Set(),
+            hasBlank: false,
+            active: new Set(),
+            columnIndex: 3 // 4th column (0-indexed)
+        }
+    };
+    
     let currentDropdown = null;
 
     const fromDateEl = document.getElementById('fromDateFilter');
@@ -819,43 +839,35 @@
         return false;
     }
 
-    function matchesCareOfFilter(rowObj) {
-        if (activeCareOfFilters.size === 0) return true;
+    function matchesColumnFilter(rowObj, columnName, filterConfig) {
+        if (filterConfig.active.size === 0) return true;
         
-        const careOfColumn = getCareOfColumnName();
-        if (!careOfColumn) return true;
+        const rowValue = (rowObj[columnName] || '').toString().trim();
         
-        const rowValue = (rowObj[careOfColumn] || '').toString().trim();
-        
-        if (activeCareOfFilters.has('(Blank)')) {
+        if (filterConfig.active.has('(Blank)')) {
             if (rowValue === '') return true;
-            if (activeCareOfFilters.has(rowValue)) return true;
+            if (filterConfig.active.has(rowValue)) return true;
             return false;
         } else {
             if (rowValue === '') return false;
-            return activeCareOfFilters.has(rowValue);
+            return filterConfig.active.has(rowValue);
         }
     }
 
-    function getCareOfColumnName() {
-        if (filteredData.length > 0) {
-            const columns = Object.keys(filteredData[0]);
-            return columns[2] || null;
-        }
-        return null;
-    }
-
-    function getCareOfColumnNameFromData(data) {
+    function getColumnNameFromData(data, columnIndex) {
         if (data && data.length > 0) {
             const columns = Object.keys(data[0]);
-            return columns[2] || null;
+            return columns[columnIndex] || null;
         }
         return null;
     }
 
-    function updateCareOfFilterOptions() {
-        careOfFilterValues.clear();
-        hasBlankValues = false;
+    function updateColumnFilterOptions() {
+        // Reset filter values
+        for (let key in columnFilters) {
+            columnFilters[key].values.clear();
+            columnFilters[key].hasBlank = false;
+        }
         
         const fromRaw = fromDateEl.value;
         const toRaw = toDateEl.value;
@@ -869,16 +881,21 @@
         
         tempFiltered = tempFiltered.filter(row => matchesGlobal(row, searchTerm));
         
-        const careOfCol = getCareOfColumnNameFromData(tempFiltered);
-        if (careOfCol) {
-            tempFiltered.forEach(row => {
-                let val = row[careOfCol];
-                if (val && val.toString().trim() !== '') {
-                    careOfFilterValues.add(val.toString().trim());
-                } else {
-                    hasBlankValues = true;
-                }
-            });
+        // Update filter options for each configured column
+        for (let columnName in columnFilters) {
+            const config = columnFilters[columnName];
+            const colName = getColumnNameFromData(tempFiltered, config.columnIndex);
+            
+            if (colName) {
+                tempFiltered.forEach(row => {
+                    let val = row[colName];
+                    if (val && val.toString().trim() !== '') {
+                        config.values.add(val.toString().trim());
+                    } else {
+                        config.hasBlank = true;
+                    }
+                });
+            }
         }
     }
 
@@ -911,8 +928,8 @@
         const columns = Object.keys(data[0]);
         const totals = {};
         
-        // Start from column index 3 (4th column) to the end
-        for (let i = 3; i < columns.length; i++) {
+        // Start from column index 4 (5th column) to the end
+        for (let i = 4; i < columns.length; i++) {
             const colName = columns[i];
             let total = 0;
             
@@ -935,15 +952,15 @@
         
         for (let i = 0; i < columns.length; i++) {
             const colName = columns[i];
-            if (i < 3) {
-                // First 3 columns (Visit Date, Patient Name, Care of) - show blank or "TOTAL"
+            if (i < 4) {
+                // First 4 columns (Visit Date, Patient Name, Center, Care of) - show blank or "TOTAL"
                 if (i === 0) {
                     html += `<td><span class="total-label">TOTAL</span><span class="total-amount"></span></td>`;
                 } else {
                     html += `<td><span class="total-label"></span><span class="total-amount"></span></td>`;
                 }
             } else {
-                // Columns 4 onwards - show the total amount directly above the column
+                // Columns 5 onwards - show the total amount directly above the column
                 const total = totals[colName] || 0;
                 html += `<td><span class="total-label">${colName}</span><span class="total-amount">₹${Math.round(total).toLocaleString('en-IN')}</span></td>`;
             }
@@ -975,7 +992,15 @@
 
         let searchFiltered = dateFiltered.filter(row => matchesGlobal(row, searchTerm));
         
-        let finalFiltered = searchFiltered.filter(row => matchesCareOfFilter(row));
+        // Apply column filters
+        let finalFiltered = searchFiltered;
+        for (let columnName in columnFilters) {
+            const config = columnFilters[columnName];
+            const colName = getColumnNameFromData(searchFiltered, config.columnIndex);
+            if (colName) {
+                finalFiltered = finalFiltered.filter(row => matchesColumnFilter(row, colName, config));
+            }
+        }
         
         filteredData = sortByDateDescending(finalFiltered);
         
@@ -1080,7 +1105,7 @@
         }
     }
 
-    function createColumnFilter(columnName, columnIndex, filterValues) {
+    function createColumnFilter(columnName, columnIndex, filterConfig) {
         const th = document.querySelector(`.data-table th:nth-child(${columnIndex + 1})`);
         if (!th) return;
         
@@ -1090,7 +1115,7 @@
         
         const filterIcon = th.querySelector('.filter-icon');
         
-        if (activeCareOfFilters.size > 0) {
+        if (filterConfig.active.size > 0) {
             filterIcon.style.color = '#1ECAD3';
         }
         
@@ -1119,9 +1144,9 @@
             const optionsContainer = document.createElement('div');
             optionsContainer.className = 'filter-options';
             
-            const sortedValues = Array.from(filterValues).sort();
+            const sortedValues = Array.from(filterConfig.values).sort();
             
-            let currentSelections = new Set(activeCareOfFilters);
+            let currentSelections = new Set(filterConfig.active);
             
             function renderOptions(searchTerm = '') {
                 optionsContainer.innerHTML = '';
@@ -1131,23 +1156,23 @@
                 
                 const allCheckbox = document.createElement('input');
                 allCheckbox.type = 'checkbox';
-                allCheckbox.id = 'select_all_careof';
+                allCheckbox.id = `select_all_${columnName.replace(/\s/g, '_')}`;
                 
                 let totalOptions = sortedValues.length;
-                if (hasBlankValues) totalOptions++;
+                if (filterConfig.hasBlank) totalOptions++;
                 let selectedCount = currentSelections.size;
                 allCheckbox.checked = (selectedCount === totalOptions);
                 allCheckbox.indeterminate = (selectedCount > 0 && selectedCount < totalOptions);
                 
                 const allLabel = document.createElement('label');
-                allLabel.htmlFor = 'select_all_careof';
+                allLabel.htmlFor = `select_all_${columnName.replace(/\s/g, '_')}`;
                 allLabel.textContent = '☑ Select All';
                 allLabel.style.fontWeight = '600';
                 
                 allCheckbox.addEventListener('change', (e) => {
                     if (allCheckbox.checked) {
                         sortedValues.forEach(v => currentSelections.add(v));
-                        if (hasBlankValues) currentSelections.add('(Blank)');
+                        if (filterConfig.hasBlank) currentSelections.add('(Blank)');
                     } else {
                         currentSelections.clear();
                     }
@@ -1170,7 +1195,7 @@
                     checkbox.type = 'checkbox';
                     checkbox.value = value;
                     checkbox.checked = currentSelections.has(value);
-                    checkbox.id = `filter_${value.replace(/\s/g, '_')}`;
+                    checkbox.id = `filter_${columnName.replace(/\s/g, '_')}_${value.replace(/\s/g, '_')}`;
                     
                     const label = document.createElement('label');
                     label.htmlFor = checkbox.id;
@@ -1182,10 +1207,10 @@
                         } else {
                             currentSelections.delete(value);
                         }
-                        const selectAllCheckbox = optionsContainer.querySelector('#select_all_careof');
+                        const selectAllCheckbox = optionsContainer.querySelector(`#select_all_${columnName.replace(/\s/g, '_')}`);
                         if (selectAllCheckbox) {
                             let totalOpts = sortedValues.length;
-                            if (hasBlankValues) totalOpts++;
+                            if (filterConfig.hasBlank) totalOpts++;
                             let selectedCnt = currentSelections.size;
                             selectAllCheckbox.checked = (selectedCnt === totalOpts);
                             selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
@@ -1197,7 +1222,7 @@
                     optionsContainer.appendChild(optionDiv);
                 });
                 
-                if (hasBlankValues) {
+                if (filterConfig.hasBlank) {
                     const blankOptionDiv = document.createElement('div');
                     blankOptionDiv.className = 'filter-option blank-option';
                     
@@ -1205,10 +1230,10 @@
                     blankCheckbox.type = 'checkbox';
                     blankCheckbox.value = '(Blank)';
                     blankCheckbox.checked = currentSelections.has('(Blank)');
-                    blankCheckbox.id = 'filter_blank_option';
+                    blankCheckbox.id = `filter_${columnName.replace(/\s/g, '_')}_blank_option`;
                     
                     const blankLabel = document.createElement('label');
-                    blankLabel.htmlFor = 'filter_blank_option';
+                    blankLabel.htmlFor = `filter_${columnName.replace(/\s/g, '_')}_blank_option`;
                     blankLabel.textContent = '(Blank)';
                     blankLabel.style.fontStyle = 'italic';
                     blankLabel.style.color = '#888';
@@ -1219,10 +1244,10 @@
                         } else {
                             currentSelections.delete('(Blank)');
                         }
-                        const selectAllCheckbox = optionsContainer.querySelector('#select_all_careof');
+                        const selectAllCheckbox = optionsContainer.querySelector(`#select_all_${columnName.replace(/\s/g, '_')}`);
                         if (selectAllCheckbox) {
                             let totalOpts = sortedValues.length;
-                            if (hasBlankValues) totalOpts++;
+                            if (filterConfig.hasBlank) totalOpts++;
                             let selectedCnt = currentSelections.size;
                             selectAllCheckbox.checked = (selectedCnt === totalOpts);
                             selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
@@ -1234,7 +1259,7 @@
                     optionsContainer.appendChild(blankOptionDiv);
                 }
                 
-                if (filtered.length === 0 && (!hasBlankValues || (hasBlankValues && searchTerm.toLowerCase() !== '(blank)' && searchTerm !== ''))) {
+                if (filtered.length === 0 && (!filterConfig.hasBlank || (filterConfig.hasBlank && searchTerm.toLowerCase() !== '(blank)' && searchTerm !== ''))) {
                     const noResult = document.createElement('div');
                     noResult.style.padding = '12px';
                     noResult.style.textAlign = 'center';
@@ -1257,11 +1282,11 @@
             applyBtn.textContent = 'Apply';
             applyBtn.className = 'filter-apply';
             applyBtn.onclick = () => {
-                activeCareOfFilters.clear();
-                currentSelections.forEach(v => activeCareOfFilters.add(v));
+                filterConfig.active.clear();
+                currentSelections.forEach(v => filterConfig.active.add(v));
                 applyFiltersAndRender();
                 closeDropdown();
-                if (activeCareOfFilters.size > 0) {
+                if (filterConfig.active.size > 0) {
                     filterIcon.style.color = '#1ECAD3';
                 } else {
                     filterIcon.style.color = '';
@@ -1353,12 +1378,24 @@
         html += `</tbody></table>`;
         containerDiv.innerHTML = html;
         
-        // Add filter to Care of column (3rd column - index 2)
+        // Add filters to Center and Care of columns
         setTimeout(() => {
-            if (columns.length > 2) {
-                const careOfColumn = columns[2];
-                updateCareOfFilterOptions();
-                createColumnFilter(careOfColumn, 2, careOfFilterValues);
+            const columnsList = Object.keys(filteredData[0]);
+            
+            // Add filter for Center column (index 2)
+            if (columnsList.length > 2) {
+                const centerColumn = columnsList[2];
+                if (columnFilters['Center']) {
+                    createColumnFilter(centerColumn, 2, columnFilters['Center']);
+                }
+            }
+            
+            // Add filter for Care of column (index 3)
+            if (columnsList.length > 3) {
+                const careOfColumn = columnsList[3];
+                if (columnFilters['Care of']) {
+                    createColumnFilter(careOfColumn, 3, columnFilters['Care of']);
+                }
             }
         }, 50);
     }
@@ -1423,11 +1460,16 @@
             if (parsed.length === 0) throw new Error("No rows found in sheet");
             masterSheetData = parsed;
             
-            updateCareOfFilterOptions();
+            // Initialize column filters with all values selected by default
+            updateColumnFilterOptions();
             
-            activeCareOfFilters.clear();
-            careOfFilterValues.forEach(v => activeCareOfFilters.add(v));
-            if (hasBlankValues) activeCareOfFilters.add('(Blank)');
+            // Set all values as active by default for each column filter
+            for (let columnName in columnFilters) {
+                const config = columnFilters[columnName];
+                config.active.clear();
+                config.values.forEach(v => config.active.add(v));
+                if (config.hasBlank) config.active.add('(Blank)');
+            }
             
             applyFiltersAndRender();
             
@@ -1466,15 +1508,15 @@
 
     function bindEvents() {
         fromDateEl.addEventListener('change', () => {
-            updateCareOfFilterOptions();
+            updateColumnFilterOptions();
             applyFiltersAndRender();
         });
         toDateEl.addEventListener('change', () => {
-            updateCareOfFilterOptions();
+            updateColumnFilterOptions();
             applyFiltersAndRender();
         });
         globalSearchEl.addEventListener('input', () => {
-            updateCareOfFilterOptions();
+            updateColumnFilterOptions();
             applyFiltersAndRender();
         });
         
@@ -1482,10 +1524,16 @@
             fromDateEl.value = '';
             toDateEl.value = '';
             globalSearchEl.value = '';
-            updateCareOfFilterOptions();
-            activeCareOfFilters.clear();
-            careOfFilterValues.forEach(v => activeCareOfFilters.add(v));
-            if (hasBlankValues) activeCareOfFilters.add('(Blank)');
+            updateColumnFilterOptions();
+            
+            // Reset column filters to select all
+            for (let columnName in columnFilters) {
+                const config = columnFilters[columnName];
+                config.active.clear();
+                config.values.forEach(v => config.active.add(v));
+                if (config.hasBlank) config.active.add('(Blank)');
+            }
+            
             applyFiltersAndRender();
         });
         
