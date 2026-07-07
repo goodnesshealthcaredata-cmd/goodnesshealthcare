@@ -45,7 +45,9 @@ const PREDEFINED_DOCTORS = [
 "Dr. Nazeen Menon",
 "Dr. A C Chaube",
 "Dr. Shailendra Telang",
-"Dr. A L Seth"
+"Dr. A L Seth",
+"Dr. Yogini Gada",
+"Dr. Ajay Yadav"
 ];
 
 // Predefined care of relationships
@@ -95,7 +97,9 @@ const PREDEFINED_CARE_OF = [
 "Dr. Nazeen Menon",
 "Dr. A C Chaube",
 "Dr. Shailendra Telang",
-"Dr. A L Seth"
+"Dr. A L Seth",
+"Dr. Yogini Gada",
+"Dr. Ajay Yadav"
 ];
 
 // Predefined phlebotomists
