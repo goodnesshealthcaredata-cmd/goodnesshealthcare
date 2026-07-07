@@ -4312,8 +4312,16 @@ function loadForEdit(entry) {
   
   updateGlobalTestSet();
 
+  // FIX: Properly set the lab for editing
   const lab = entry.processing_lab || "lab1";
-  const plEl2 = F.processingLab(); if (plEl2) plEl2.value = lab;
+  const plEl2 = F.processingLab(); 
+  if (plEl2) {
+    plEl2.value = lab;
+    // Force the change event to ensure currentSelectedLab is updated
+    plEl2.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  // Explicitly set currentSelectedLab and show the correct panel
+  currentSelectedLab = lab;
   showLabPanel(lab);
 
   setVal(F.doctorName, entry.doctor);
@@ -4887,9 +4895,17 @@ document.addEventListener("DOMContentLoaded", function() {
 const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#lab3Panel"), lab4: el("#lab4Panel"), lab5: el("#lab5Panel") };
 
 function showLabPanel(labId) {
-  Object.values(labPanels).forEach(p => { if (p) p.style.display = "none"; });
-  if (labPanels[labId]) labPanels[labId].style.display = "block";
-  currentSelectedLab = labId;  // ← This ensures currentSelectedLab always matches the displayed panel
+  // Set currentSelectedLab FIRST before any other operations
+  currentSelectedLab = labId;
+  
+  Object.values(labPanels).forEach(p => { 
+    if (p) p.style.display = "none"; 
+  });
+  
+  if (labPanels[labId]) {
+    labPanels[labId].style.display = "block";
+  }
+  
   updateAllCalculations();
   updateTestSectionColor();
 }
