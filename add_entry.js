@@ -1,5 +1,5 @@
 /* ========================= Main Application Logic ========================= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3LA5kQv9WdDiQbEKRkmdgiE-VpFjVIFJxp7C9O-QP0ah88h6k7z9ve1vq1reQ7VWXBg/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjxynktBmodXbRv_4Ks4YyCXGzjcaZnAdwTME4iOdLlZetpDw6Q0R17pmkqHfAzUaHbQ/exec";
 
 /* ========================= Helpers & UI ========================= */
 const el = (q) => document.querySelector(q);
@@ -32,6 +32,11 @@ const LAB_NAMES = {
   5: "Diagnostica Span"
 };
 
+// Get total number of labs dynamically
+function getTotalLabs() {
+  return Object.keys(LAB_NAMES).length;
+}
+
 // Gender short forms
 const GENDER_SHORT = {
   "Male": "M",
@@ -53,10 +58,19 @@ let showAllEntries = false;
 let currentSearchQuery = "";
 let currentFilterDateFrom = null;
 let currentFilterDateTo = null;
-let currentLabFilters = { 1: true, 2: true, 3: true, 4: true, 5: true };
+let currentLabFilters = {};
 let currentCenterFilters = new Set();
 let currentVisitTypeFilters = new Set();
 let currentCareOfFilters = new Set();
+
+// Initialize lab filters dynamically
+function initializeLabFilters() {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
+    currentLabFilters[i] = true;
+  }
+}
+initializeLabFilters();
 
 // Filter dropdown states
 let centerFilterPopup = null;
@@ -268,7 +282,8 @@ function sortEntries(entries) {
 /* ========================= Lab Detection for Entries ========================= */
 function getLabsForEntry(entry) {
   const labs = new Set();
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     const tests = (entry[`tests_lab${i}`] || "").split(",").filter(t => t.trim());
     const packages = (entry[`packages_lab${i}`] || "");
     
@@ -295,9 +310,13 @@ function getLabsForEntry(entry) {
 }
 
 function getLabCountsForEntry(entry) {
-  const labCounts = { 1: { tests: 0, packages: 0 }, 2: { tests: 0, packages: 0 }, 3: { tests: 0, packages: 0 }, 4: { tests: 0, packages: 0 }, 5: { tests: 0, packages: 0 } };
+  const totalLabs = getTotalLabs();
+  const labCounts = {};
+  for (let i = 1; i <= totalLabs; i++) {
+    labCounts[i] = { tests: 0, packages: 0 };
+  }
   
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= totalLabs; i++) {
     const tests = (entry[`tests_lab${i}`] || "").split(",").filter(t => t.trim());
     const packagesData = entry[`packages_lab${i}`] || "";
     
@@ -375,7 +394,8 @@ function showMoveTestModal(testName, sourceLabNum) {
   
   // Get available target labs (all labs except source)
   const targetLabs = [];
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     if (i !== sourceLabNum) {
       targetLabs.push({ num: i, name: LAB_NAMES[i] });
     }
@@ -1449,13 +1469,23 @@ const F = {
 };
 
 /* ========================= Global state ========================= */
-let selectedTestsByLab    = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-let selectedPackagesByLab = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+let selectedTestsByLab    = {};
+let selectedPackagesByLab = {};
 let packageTestSelections = {};
 let currentSelectedLab    = "lab1";
 let tubeCountOverrides    = {};
 let serverEntriesCache    = [];
 let globallySelectedTests = new Set();
+
+// Initialize lab data structures dynamically
+function initializeLabDataStructures() {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
+    if (!selectedTestsByLab[i]) selectedTestsByLab[i] = [];
+    if (!selectedPackagesByLab[i]) selectedPackagesByLab[i] = [];
+  }
+}
+initializeLabDataStructures();
 
 function labNumFromId(labId) {
   return parseInt(labId.replace("lab", ""), 10) || 1;
@@ -1518,7 +1548,8 @@ function getAllTestsForLab(labNum) {
 
 function getAllSelectedTestsAcrossLabs() {
   const all = [];
-  for (let i = 1; i <= 5; i++) all.push(...getAllTestsForLab(i));
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) all.push(...getAllTestsForLab(i));
   return [...new Set(all)];
 }
 
@@ -1529,7 +1560,8 @@ function getCombinedTestsList() {
 
 function getAllSelectedPackagesAcrossLabs() {
   const all = [];
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     all.push(...(selectedPackagesByLab[i] || []));
   }
   return [...new Set(all)];
@@ -1537,7 +1569,8 @@ function getAllSelectedPackagesAcrossLabs() {
 
 function getAllPackageTestsAcrossLabs() {
   const all = [];
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     const labId = `lab${i}`;
     const pkgNames = selectedPackagesByLab[i] || [];
     pkgNames.forEach(n => {
@@ -1553,7 +1586,8 @@ function getAllPackageTestsAcrossLabs() {
 }
 
 function isTestGloballySelected(testName, currentLabNum) {
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     if (i !== currentLabNum) {
       const tests = getAllTestsForLab(i);
       if (tests.includes(testName)) {
@@ -1565,7 +1599,8 @@ function isTestGloballySelected(testName, currentLabNum) {
 }
 
 function removeTestFromOtherLabs(testName, currentLabNum) {
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     if (i !== currentLabNum) {
       const testIndex = selectedTestsByLab[i].indexOf(testName);
       if (testIndex !== -1) {
@@ -1617,7 +1652,8 @@ function removeConflictingIndividualTests(pkg, labNum) {
 
 function updateGlobalTestSet() {
   globallySelectedTests.clear();
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     const tests = getAllTestsForLab(i);
     tests.forEach(t => globallySelectedTests.add(t));
   }
@@ -1626,8 +1662,9 @@ function updateGlobalTestSet() {
 /* ========================= Enhanced Tube Calculation ========================= */
 function calculateAggregatedTubeCounts() {
   const aggregatedCounts = {};
+  const totalLabs = getTotalLabs();
   
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= totalLabs; i++) {
     const tests = getAllTestsForLab(i);
     const labCounts = calculateUniqueTubeCountsPerLab(tests);
     
@@ -1640,9 +1677,13 @@ function calculateAggregatedTubeCounts() {
 }
 
 function calculateTubeCountsPerLab() {
-  const perLabCounts = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {} };
+  const perLabCounts = {};
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
+    perLabCounts[i] = {};
+  }
   
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= totalLabs; i++) {
     const tests = getAllTestsForLab(i);
     perLabCounts[i] = calculateUniqueTubeCountsPerLab(tests);
   }
@@ -1658,9 +1699,13 @@ function getCombinedTubeCountsString() {
 
 function getPerLabTubeCountsString() {
   const perLabCounts = calculateTubeCountsPerLab();
-  const result = { 1: "", 2: "", 3: "", 4: "", 5: "" };
+  const result = {};
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
+    result[i] = "";
+  }
   
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= totalLabs; i++) {
     const entries = Object.entries(perLabCounts[i]).filter(([, c]) => c > 0);
     result[i] = entries.length ? entries.map(([tube, count]) => `${tube}: ${count}`).join(", ") : "-";
   }
@@ -2235,7 +2280,8 @@ function initializeBulkAdd() {
 /* ========================= Payment ========================= */
 function calculateTotalMRP() {
   let total = 0;
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { total += getTestMRP(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2248,7 +2294,8 @@ function calculateTotalMRP() {
 
 function calculateTotalB2B() {
   let total = 0;
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { total += getTestB2B(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2260,8 +2307,12 @@ function calculateTotalB2B() {
 }
 
 function calculatePerLabMRP() {
-  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  for (let i = 1; i <= 5; i++) {
+  const perLabTotals = {};
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
+    perLabTotals[i] = 0;
+  }
+  for (let i = 1; i <= totalLabs; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { perLabTotals[i] += getTestMRP(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2273,8 +2324,12 @@ function calculatePerLabMRP() {
 }
 
 function calculatePerLabB2B() {
-  const perLabTotals = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  for (let i = 1; i <= 5; i++) {
+  const perLabTotals = {};
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
+    perLabTotals[i] = 0;
+  }
+  for (let i = 1; i <= totalLabs; i++) {
     const labId = `lab${i}`;
     selectedTestsByLab[i].forEach(t => { perLabTotals[i] += getTestB2B(labId, t); });
     selectedPackagesByLab[i].forEach(n => {
@@ -2556,7 +2611,8 @@ function checkPatientDetailsCompleted() {
 }
 
 function checkTestDetailsCompleted() {
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     if (selectedTestsByLab[i].length > 0 || selectedPackagesByLab[i].length > 0) {
       return true;
     }
@@ -2695,7 +2751,8 @@ if (reportReceivedDataEl) {
 /* ========================= getCompletionPercentage ========================= */
 function getAllTestsFromEntry(entry) {
   const tests = new Set();
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     (entry[`tests_lab${i}`] || "").split(",").forEach(t => t.trim() && tests.add(t.trim()));
     const packagesData = entry[`packages_lab${i}`];
     if (packagesData && packagesData !== "" && packagesData !== "[]") {
@@ -2726,7 +2783,8 @@ function getCurrentStage(entry) {
     { name: "Patient Details", check: () => entry.patient_name && entry.age && entry.gender && entry.contact },
     {
       name: "Test Details", check: () => {
-        for (let i = 1; i <= 5; i++) {
+        const totalLabs = getTotalLabs();
+        for (let i = 1; i <= totalLabs; i++) {
           if ((entry[`tests_lab${i}`] && entry[`tests_lab${i}`] !== "") || 
               (entry[`packages_lab${i}`] && entry[`packages_lab${i}`] !== "" && entry[`packages_lab${i}`] !== "[]")) {
             return true;
@@ -2802,7 +2860,8 @@ function getCompletionPercentage(entry) {
   inc(!!(entry.patient_name && entry.age && entry.gender && entry.contact));
   
   let hasTestOrPackage = false;
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     if ((entry[`tests_lab${i}`] && entry[`tests_lab${i}`] !== "") || 
         (entry[`packages_lab${i}`] && entry[`packages_lab${i}`] !== "" && entry[`packages_lab${i}`] !== "[]")) {
       hasTestOrPackage = true;
@@ -3015,6 +3074,16 @@ function initAccordions() {
         }, 150);
       }
     });
+  });
+}
+
+function collapseAllAccordions() {
+  const sections = document.querySelectorAll(".accordion-section");
+  sections.forEach(section => {
+    const content = section.querySelector(".accordion-content");
+    const icon = section.querySelector(".accordion-icon");
+    if (content) content.classList.remove("open");
+    if (icon) icon.textContent = "▼";
   });
 }
 
@@ -3458,11 +3527,8 @@ $(".tab-btn").forEach(btn => {
 
 /* ========================= Lab Filter Checkboxes Setup ========================= */
 function setupLabFilters() {
+  const totalLabs = getTotalLabs();
   const labFilter1 = el("#labFilter1");
-  const labFilter2 = el("#labFilter2");
-  const labFilter3 = el("#labFilter3");
-  const labFilter4 = el("#labFilter4");
-  const labFilter5 = el("#labFilter5");
   
   if (!labFilter1) {
     const filterContainer = document.querySelector(".control-bar");
@@ -3470,29 +3536,17 @@ function setupLabFilters() {
       const labFiltersDiv = document.createElement("div");
       labFiltersDiv.className = "lab-filters";
       labFiltersDiv.style.cssText = "display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px;";
-      labFiltersDiv.innerHTML = `
-        <span style="font-size: 0.813rem; font-weight: 500; color: var(--text-medium);">🔬 Filter by Lab:</span>
-        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[1].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
-          <input type="checkbox" id="labFilter1" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[1]}</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[2].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
-          <input type="checkbox" id="labFilter2" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[2]}</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[3].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
-          <input type="checkbox" id="labFilter3" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[3]}</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[4].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
-          <input type="checkbox" id="labFilter4" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[4]}</span>
-        </label>
-        <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[5].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
-          <input type="checkbox" id="labFilter5" checked style="margin: 0;"> 
-          <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[5]}</span>
-        </label>
-      `;
+      
+      let html = `<span style="font-size: 0.813rem; font-weight: 500; color: var(--text-medium);">🔬 Filter by Lab:</span>`;
+      for (let i = 1; i <= totalLabs; i++) {
+        html += `
+          <label style="display: flex; align-items: center; gap: 6px; background: ${LAB_COLORS[i].light}; padding: 4px 12px; border-radius: 20px; cursor: pointer;">
+            <input type="checkbox" id="labFilter${i}" checked style="margin: 0;"> 
+            <span style="font-size: 0.875rem; font-weight: 500;">${LAB_NAMES[i]}</span>
+          </label>
+        `;
+      }
+      labFiltersDiv.innerHTML = html;
       filterContainer.appendChild(labFiltersDiv);
       
       // Add date range filters with larger size
@@ -3547,21 +3601,20 @@ function setupLabFilters() {
     }
   }
   
-  const filter1 = el("#labFilter1");
-  const filter2 = el("#labFilter2");
-  const filter3 = el("#labFilter3");
-  const filter4 = el("#labFilter4");
-  const filter5 = el("#labFilter5");
   const filterDateFrom = el("#filterDateFrom");
   const filterDateTo = el("#filterDateTo");
   const sortSelect = el("#sortSelect");
   
+  // Get all lab filter checkboxes
+  const labFilters = {};
+  for (let i = 1; i <= totalLabs; i++) {
+    labFilters[i] = el(`#labFilter${i}`);
+  }
+  
   const updateFilters = () => {
-    currentLabFilters[1] = filter1 ? filter1.checked : true;
-    currentLabFilters[2] = filter2 ? filter2.checked : true;
-    currentLabFilters[3] = filter3 ? filter3.checked : true;
-    currentLabFilters[4] = filter4 ? filter4.checked : true;
-    currentLabFilters[5] = filter5 ? filter5.checked : true;
+    for (let i = 1; i <= totalLabs; i++) {
+      currentLabFilters[i] = labFilters[i] ? labFilters[i].checked : true;
+    }
     currentFilterDateFrom = filterDateFrom ? filterDateFrom.value : null;
     currentFilterDateTo = filterDateTo ? filterDateTo.value : null;
     if (sortSelect) {
@@ -3571,11 +3624,9 @@ function setupLabFilters() {
     renderInProgress();
   };
   
-  if (filter1) filter1.addEventListener("change", updateFilters);
-  if (filter2) filter2.addEventListener("change", updateFilters);
-  if (filter3) filter3.addEventListener("change", updateFilters);
-  if (filter4) filter4.addEventListener("change", updateFilters);
-  if (filter5) filter5.addEventListener("change", updateFilters);
+  for (let i = 1; i <= totalLabs; i++) {
+    if (labFilters[i]) labFilters[i].addEventListener("change", updateFilters);
+  }
   if (filterDateFrom) filterDateFrom.addEventListener("change", updateFilters);
   if (filterDateTo) filterDateTo.addEventListener("change", updateFilters);
   if (sortSelect) sortSelect.addEventListener("change", updateFilters);
@@ -3910,7 +3961,8 @@ function renderInProgress() {
     
     // Build lab counts lines
     let labCountsHtml = "";
-    for (let i = 1; i <= 5; i++) {
+    const totalLabs = getTotalLabs();
+    for (let i = 1; i <= totalLabs; i++) {
       const testsCount = labCounts[i].tests;
       const packagesCount = labCounts[i].packages;
       if (testsCount > 0 || packagesCount > 0) {
@@ -3944,7 +3996,7 @@ function renderInProgress() {
         <div class="card-date" style="color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'};">
           📅 ${displayDate}<br>
           ⏰ ${visitTimeDisplay}
-          ${ppDisplay ? `<br>${ppDisplay}` : ''}
+          ${ppDisplay ? `<br>🔄 ${ppDisplay}` : ''}
         </div>
       </div>
       ${centerVisitLine ? `<div class="card-stage" style="font-weight: normal; color: ${cardStyle.isGradient ? '#4a6a73' : '#4a6a73'}; margin: 6px 0;">${centerVisitLine}</div>` : ''}
@@ -4006,7 +4058,8 @@ async function deleteEntry(id, btn) {
 
 /* ========================= Reset helpers ========================= */
 function resetLabState() {
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     selectedTestsByLab[i] = [];
     selectedPackagesByLab[i] = [];
     delete packageTestSelections[`${i}_`];
@@ -4022,6 +4075,9 @@ function resetPaymentFields() {
   });
   const paymentCompleteToggle = F.paymentComplete();
   if (paymentCompleteToggle) paymentCompleteToggle.checked = false;
+  // Reset goodwill charges
+  const goodwillEl = F.goodwillCharges();
+  if (goodwillEl) goodwillEl.value = "0";
 }
 
 function resetCheckboxes() {
@@ -4099,6 +4155,9 @@ function fullFormReset() {
   // Update test section color to lab1
   updateTestSectionColor();
   
+  // Collapse all accordions
+  collapseAllAccordions();
+  
   // Show toast notification
   showToast("Form reset for new entry");
 }
@@ -4118,17 +4177,12 @@ function clearAllFilters() {
   currentSearchQuery = "";
   
   // Clear lab filters (reset to all checked)
-  const filter1 = el("#labFilter1");
-  const filter2 = el("#labFilter2");
-  const filter3 = el("#labFilter3");
-  const filter4 = el("#labFilter4");
-  const filter5 = el("#labFilter5");
-  if (filter1) filter1.checked = true;
-  if (filter2) filter2.checked = true;
-  if (filter3) filter3.checked = true;
-  if (filter4) filter4.checked = true;
-  if (filter5) filter5.checked = true;
-  currentLabFilters = { 1: true, 2: true, 3: true, 4: true, 5: true };
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
+    const filter = el(`#labFilter${i}`);
+    if (filter) filter.checked = true;
+    currentLabFilters[i] = true;
+  }
   
   // Reset center, visit type, care of filters to have "(Blank)" and all options
   const getCenterOptions = () => {
@@ -4230,7 +4284,8 @@ function loadForEdit(entry) {
   setBool(F.ppSent, entry.pp_sent);
   setBool(F.billRequired, entry.bill_required);
 
-  for (let i = 1; i <= 5; i++) {
+  const totalLabs = getTotalLabs();
+  for (let i = 1; i <= totalLabs; i++) {
     selectedTestsByLab[i] = (entry[`tests_lab${i}`] || "").split(",").map(s => s.trim()).filter(Boolean);
     
     const packagesData = entry[`packages_lab${i}`];
@@ -4368,6 +4423,32 @@ function postViaIframe(formData) {
   });
 }
 
+// Prevent form submission on Enter key press
+function preventEnterKeySubmit() {
+  const form = F.entryForm();
+  if (!form) return;
+  
+  form.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+      // Check if the target is a search/autocomplete input where Enter should work
+      const isSearchField = e.target.classList.contains("search-input") || 
+                           e.target.id === "unifiedSearchInput" ||
+                           e.target.id === "bulkAddInput" ||
+                           e.target.id === "searchPatientInput";
+      
+      // Allow Enter on search fields, but prevent default form submission
+      if (isSearchField) {
+        // Let the search field handle the Enter key
+        return;
+      }
+      
+      // Prevent default form submission for all other fields
+      e.preventDefault();
+      return false;
+    }
+  }, true);
+}
+
 if (formEl) {
   formEl.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -4393,7 +4474,8 @@ if (formEl) {
 
     const data = new FormData(formEl);
     
-    for (let i = 1; i <= 5; i++) {
+    const totalLabs = getTotalLabs();
+    for (let i = 1; i <= totalLabs; i++) {
       const individualTests = selectedTestsByLab[i] || [];
       const packageNames = selectedPackagesByLab[i] || [];
       
@@ -4423,7 +4505,7 @@ if (formEl) {
     }
     
     const allIndividualTests = [];
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= totalLabs; i++) {
       allIndividualTests.push(...(selectedTestsByLab[i] || []));
     }
     const uniqueIndividualTests = [...new Set(allIndividualTests)];
@@ -4443,28 +4525,21 @@ if (formEl) {
     data.set("tube_overrides", JSON.stringify(tubeCountOverrides));
     
     const perLabTubeCounts = getPerLabTubeCountsString();
-    data.set("lab1_tubes", perLabTubeCounts[1]);
-    data.set("lab2_tubes", perLabTubeCounts[2]);
-    data.set("lab3_tubes", perLabTubeCounts[3]);
-    data.set("lab4_tubes", perLabTubeCounts[4]);
-    data.set("lab5_tubes", perLabTubeCounts[5]);
+    for (let i = 1; i <= totalLabs; i++) {
+      data.set(`lab${i}_tubes`, perLabTubeCounts[i]);
+    }
     
+    // CRITICAL FIX: Use currentSelectedLab to determine which lab is active
     data.set("processing_lab", currentSelectedLab);
     data.set("total_mrp", calculateTotalMRP());
     data.set("total_b2b_price", calculateTotalB2B());
 
     const perLabMRP = calculatePerLabMRP();
     const perLabB2B = calculatePerLabB2B();
-    data.set("lab1_total_mrp", perLabMRP[1]);
-    data.set("lab2_total_mrp", perLabMRP[2]);
-    data.set("lab3_total_mrp", perLabMRP[3]);
-    data.set("lab4_total_mrp", perLabMRP[4]);
-    data.set("lab5_total_mrp", perLabMRP[5]);
-    data.set("lab1_total_b2b", perLabB2B[1]);
-    data.set("lab2_total_b2b", perLabB2B[2]);
-    data.set("lab3_total_b2b", perLabB2B[3]);
-    data.set("lab4_total_b2b", perLabB2B[4]);
-    data.set("lab5_total_b2b", perLabB2B[5]);
+    for (let i = 1; i <= totalLabs; i++) {
+      data.set(`lab${i}_total_mrp`, perLabMRP[i]);
+      data.set(`lab${i}_total_b2b`, perLabB2B[i]);
+    }
 
     const crEl = F.costRaw(); if (crEl) data.set("cost", crEl.value);
     const discEl = F.discount(); if (discEl) data.set("discount", discEl.value);
@@ -4593,6 +4668,10 @@ function setDefaults() {
   
   const paymentCompleteToggle = F.paymentComplete();
   if (paymentCompleteToggle) paymentCompleteToggle.checked = false;
+  
+  // Reset goodwill charges
+  const goodwillEl = F.goodwillCharges();
+  if (goodwillEl) goodwillEl.value = "0";
 
   autoPPTime();
   renderTubes();
@@ -4727,6 +4806,9 @@ function setupEventListeners() {
   
   setupLabFilters();
   setupFilterButtons();
+  
+  // Prevent Enter key from submitting the form
+  preventEnterKeySubmit();
 }
 
 function initializeFiltersAfterDataLoad() {
@@ -4807,7 +4889,7 @@ const labPanels = { lab1: el("#lab1Panel"), lab2: el("#lab2Panel"), lab3: el("#l
 function showLabPanel(labId) {
   Object.values(labPanels).forEach(p => { if (p) p.style.display = "none"; });
   if (labPanels[labId]) labPanels[labId].style.display = "block";
-  currentSelectedLab = labId;
+  currentSelectedLab = labId;  // ← This ensures currentSelectedLab always matches the displayed panel
   updateAllCalculations();
   updateTestSectionColor();
 }
@@ -4815,7 +4897,11 @@ function showLabPanel(labId) {
 const plEl = F.processingLab();
 if (plEl && !plEl.hasAttribute("data-listener")) {
   plEl.setAttribute("data-listener", "true");
-  plEl.addEventListener("change", (e) => { if (e.target.value) showLabPanel(e.target.value); });
+  plEl.addEventListener("change", (e) => { 
+    if (e.target.value) {
+      showLabPanel(e.target.value);  // ← This updates currentSelectedLab
+    }
+  });
   plEl.value = "lab1";
   showLabPanel("lab1");
 }
