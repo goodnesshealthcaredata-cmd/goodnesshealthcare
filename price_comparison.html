@@ -1,1635 +1,2404 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Pathology Lab Optimizer | Medical Intelligence</title>
-
-<!-- Google Fonts: Rubik (Headings) + DM Sans (Body) -->
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-<!-- Font Awesome 6 (Free Icons) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pathology Lab Optimizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+/* =========================================================================
+   DESIGN TOKENS
+   ========================================================================= */
+:root{
+  --primary:#0F3D5E;
+  --primary-dark:#0A2C44;
+  --primary-light:#155479;
+  --accent:#1ECAD3;
+  --accent-dark:#17A8AF;
+  --accent-soft:#E5FAFB;
+  --bg:#ffffff;
+  --bg-soft:#F3F8FA;
+  --bg-soft-2:#EAF3F5;
+  --border:#E1EAEE;
+  --text:#12232F;
+  --text-muted:#5C7484;
+  --text-faint:#8CA0AB;
+  --success:#1AA469;
+  --success-soft:#E7F8F0;
+  --danger:#E5484D;
+  --danger-soft:#FDEBEC;
+  --warning:#B9770E;
+  --warning-soft:#FEF3DF;
+  --gold:#C9932B;
+  --gold-soft:#FBF1DD;
+  --violet:#6C63D6;
+  --violet-soft:#EEECFB;
+  --radius-lg:18px;
+  --radius-md:12px;
+  --radius-sm:8px;
+  --shadow-sm:0 2px 8px rgba(15,61,94,0.06);
+  --shadow-md:0 8px 24px rgba(15,61,94,0.10);
+  --shadow-lg:0 16px 46px rgba(15,61,94,0.16);
+  --font-display:'Rubik', sans-serif;
+  --font-body:'DM Sans', sans-serif;
+}
 
-  body {
-    background: #0F3D5E;
-    font-family: 'DM Sans', system-ui, sans-serif;
-    color: #1A2C3E;
-    line-height: 1.5;
-  }
+*,*::before,*::after{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--text);
+  background:var(--bg-soft);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{ font-family:var(--font-display); margin:0; color:var(--primary-dark); }
+p{ margin:0; }
+button{ font-family:inherit; cursor:pointer; }
+ul{ margin:0; padding:0; list-style:none; }
+::selection{ background:var(--accent-soft); color:var(--primary-dark); }
 
-  h1, h2, h3, h4, .heading-font {
-    font-family: 'Rubik', sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
+.container{ max-width:1320px; margin:0 auto; padding:0 24px; }
+.hidden{ display:none !important; }
+.empty-hint{ color:var(--text-faint); font-size:14.5px; padding:18px 4px; }
+.muted{ color:var(--text-faint); }
 
-  .header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    background: linear-gradient(135deg, #FFFFFF 0%, #D4F1F4 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    margin-bottom: 8px;
-  }
+/* =========================================================================
+   HEADER
+   ========================================================================= */
+header.app-header{
+  position:sticky; top:0; z-index:40;
+  background:linear-gradient(120deg, var(--primary-dark), var(--primary) 60%, var(--primary-light));
+  color:#fff;
+  box-shadow:0 4px 24px rgba(10,44,68,0.25);
+}
+.header-inner{
+  display:flex; align-items:center; gap:18px;
+  padding:20px 24px;
+  max-width:1320px; margin:0 auto;
+}
+.header-icon{
+  width:56px; height:56px; flex:0 0 auto;
+  border-radius:16px;
+  background:rgba(30,202,211,0.16);
+  border:1px solid rgba(30,202,211,0.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; color:var(--accent);
+}
+.header-text h1{
+  font-size:26px; font-weight:700; color:#fff; letter-spacing:-0.01em;
+  display:flex; align-items:center; gap:10px;
+}
+.header-text p{
+  margin-top:2px; font-size:13.5px; color:rgba(255,255,255,0.72); letter-spacing:0.03em; text-transform:uppercase; font-weight:500;
+}
+.header-badge{
+  margin-left:auto; display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18);
+  padding:8px 14px; border-radius:999px; font-size:12.5px; color:rgba(255,255,255,0.85);
+  white-space:nowrap;
+}
+.header-badge i{ color:var(--accent); }
 
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 15px 15px;
-  }
+/* =========================================================================
+   LAYOUT / SECTIONS
+   ========================================================================= */
+main{ padding:28px 0 80px; }
+.panel{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+  padding:24px 26px;
+  margin-bottom:22px;
+}
+.panel-title{
+  display:flex; align-items:center; gap:10px;
+  font-size:16.5px; font-weight:700; color:var(--primary-dark);
+  margin-bottom:16px;
+}
+.panel-title i{ color:var(--accent-dark); font-size:15px; }
+.panel-title .count-pill{
+  margin-left:auto; font-size:12px; font-weight:600; color:var(--primary);
+  background:var(--bg-soft-2); padding:3px 10px; border-radius:999px;
+}
 
-  @media (max-width: 768px) {
-    .container { padding: 16px; }
-    .header h1 { font-size: 26px; }
-  }
+/* Search */
+.search-wrap{ position:relative; }
+.search-wrap i.fa-magnifying-glass{
+  position:absolute; left:18px; top:50%; transform:translateY(-50%);
+  color:var(--text-faint); font-size:15px;
+}
+#searchInput{
+  width:100%; padding:14px 18px 14px 46px;
+  border:1.5px solid var(--border); border-radius:var(--radius-md);
+  font-size:15px; font-family:inherit; color:var(--text);
+  background:var(--bg-soft); transition:border-color .15s, box-shadow .15s;
+}
+#searchInput:focus{
+  outline:none; border-color:var(--accent); background:#fff;
+  box-shadow:0 0 0 4px rgba(30,202,211,0.15);
+}
+.search-hint{ margin-top:8px; font-size:12.5px; color:var(--text-faint); }
 
-  .vertical-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-  }
+/* Selection grid */
+.selection-grid{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; margin-top:18px;
+}
+.selection-col h4{
+  font-size:13px; text-transform:uppercase; letter-spacing:0.05em;
+  color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:7px;
+}
+.selection-col h4 i{ color:var(--accent-dark); }
+.selection-list{
+  max-height:260px; overflow-y:auto;
+  border:1px solid var(--border); border-radius:var(--radius-md);
+  background:var(--bg-soft);
+}
+.selection-list::-webkit-scrollbar{ width:8px; }
+.selection-list::-webkit-scrollbar-thumb{ background:#cfe0e6; border-radius:8px; }
+.sel-item{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; border-bottom:1px solid var(--border);
+  font-size:14px; transition:background .12s;
+  cursor:pointer;
+}
+.sel-item:last-child{ border-bottom:none; }
+.sel-item:hover{ background:var(--accent-soft); }
+.sel-item input[type=checkbox]{ width:16px; height:16px; accent-color:var(--accent-dark); flex:0 0 auto; }
+.sel-item label{ cursor:pointer; flex:1; }
+.sel-item mark{ background:rgba(30,202,211,0.35); color:inherit; border-radius:3px; padding:0 1px; }
 
-  .card {
-    background: #FFFFFF;
-    border-radius: 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-    padding: 24px;
-    width: 100%;
-  }
+/* Chips */
+.chips-wrap{ display:flex; flex-wrap:wrap; gap:10px; min-height:20px; }
+.chip{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:7px 8px 7px 14px; border-radius:999px;
+  font-size:13.5px; font-weight:500;
+  background:var(--bg-soft-2); color:var(--primary-dark);
+  border:1px solid var(--border);
+  animation:chipIn .16s ease;
+}
+@keyframes chipIn{ from{ opacity:0; transform:scale(.9);} to{opacity:1; transform:scale(1);} }
+.chip i.fa-vial{ color:var(--accent-dark); }
+.chip i.fa-layer-group{ color:var(--violet); }
+.chip i.fa-box-archive{ color:var(--gold); }
+.chip-remove{
+  border:none; background:rgba(15,61,94,0.08); color:var(--primary-dark);
+  width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:10.5px; transition:background .12s;
+}
+.chip-remove:hover{ background:var(--danger); color:#fff; }
 
-  .section-title {
-    font-size: 18px;
-    font-weight: 600;
-    font-family: 'Rubik', sans-serif;
-    color: #0F3D5E;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+/* Lab filters */
+.lab-filters{ display:flex; flex-wrap:wrap; gap:10px; }
+.lab-filter-chip{
+  display:flex; align-items:center; gap:8px;
+  padding:9px 14px; border-radius:var(--radius-md);
+  border:1.5px solid var(--border); background:var(--bg-soft);
+  font-size:13.5px; font-weight:500; cursor:pointer; transition:all .12s;
+}
+.lab-filter-chip:hover{ border-color:var(--accent); }
+.lab-filter-chip input{ accent-color:var(--accent-dark); width:15px; height:15px; }
+.lab-filter-chip i.fa-hospital{ color:var(--primary); }
 
-  .section-title i {
-    color: #1ECAD3;
-    font-size: 20px;
-  }
+/* Buttons */
+.action-row{ display:flex; flex-wrap:wrap; gap:12px; margin-top:4px; }
+.btn{
+  display:inline-flex; align-items:center; gap:9px;
+  padding:12px 22px; border-radius:var(--radius-md);
+  font-size:14.5px; font-weight:600; border:1.5px solid transparent;
+  transition:transform .1s, box-shadow .15s, background .15s;
+}
+.btn:active{ transform:translateY(1px); }
+.btn-primary{
+  background:linear-gradient(120deg, var(--accent-dark), var(--accent));
+  color:#04303a; box-shadow:0 6px 18px rgba(30,202,211,0.35);
+}
+.btn-primary:hover{ box-shadow:0 8px 22px rgba(30,202,211,0.48); }
+.btn-secondary{ background:var(--primary); color:#fff; }
+.btn-secondary:hover{ background:var(--primary-light); }
+.btn-outline{ background:#fff; color:var(--primary); border-color:var(--border); }
+.btn-outline:hover{ border-color:var(--primary); }
+.btn-sm{ padding:7px 13px; font-size:12.5px; }
 
-  .search {
-    width: 100%;
-    padding: 14px 18px;
-    border-radius: 16px;
-    border: 1.5px solid #E5EAF0;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    transition: all 0.2s;
-    outline: none;
-  }
+/* Accordions (Comparison view) */
+.lab-panel{
+  border:1px solid var(--border); border-radius:var(--radius-md);
+  margin-bottom:14px; overflow:hidden; background:var(--bg);
+}
+.lab-panel-header{
+  display:flex; align-items:center; gap:12px;
+  padding:16px 18px; background:var(--bg-soft-2); cursor:pointer;
+  user-select:none;
+}
+.lab-panel-header h3{ font-size:15.5px; display:flex; align-items:center; gap:9px; color:var(--primary-dark); }
+.lab-panel-header h3 i{ color:var(--primary); }
+.lab-count{
+  font-size:12px; color:var(--text-muted); background:#fff; padding:3px 10px; border-radius:999px;
+  border:1px solid var(--border);
+}
+.chevron{ margin-left:auto; transition:transform .2s; color:var(--text-muted); }
+.lab-panel.collapsed .chevron{ transform:rotate(-90deg); }
+.lab-panel.collapsed .lab-panel-body{ display:none; }
+.lab-panel-body{ padding:14px 18px 18px; }
 
-  .search:focus {
-    border-color: #1ECAD3;
-    box-shadow: 0 0 0 4px rgba(30, 202, 211, 0.15);
-  }
+.accordion{ border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:10px; overflow:hidden; }
+.accordion:last-child{ margin-bottom:0; }
+.accordion-header{
+  display:flex; align-items:center; gap:10px;
+  padding:12px 16px; background:var(--bg-soft); font-size:14px; font-weight:600;
+  color:var(--primary-dark); cursor:pointer; user-select:none;
+}
+.accordion-header i:first-child{ color:var(--accent-dark); }
+.acc-count{
+  font-size:11.5px; background:#fff; border:1px solid var(--border); padding:2px 8px; border-radius:999px;
+  color:var(--text-muted); font-weight:600;
+}
+.acc-chevron{ margin-left:auto; transition:transform .2s; font-size:12px; color:var(--text-muted); }
+.accordion.open .acc-chevron{ transform:rotate(90deg); }
+.accordion-body{ max-height:0; overflow:hidden; transition:max-height .25s ease; }
+.accordion.open .accordion-body{ max-height:4000px; }
+.card-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr));
+  gap:12px; padding:14px;
+}
 
-  .btn {
-    border: none;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    padding: 12px 20px;
-    border-radius: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
+/* Entity cards */
+.entity-card{
+  border:1px solid var(--border); border-radius:var(--radius-md);
+  padding:14px 15px; background:#fff; transition:box-shadow .15s, transform .15s;
+}
+.entity-card:hover{ box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.entity-card-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.entity-card h4{ font-size:14.5px; font-weight:600; line-height:1.3; margin-bottom:10px; min-height:19px; }
+.badge{
+  font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+  padding:4px 9px; border-radius:999px;
+}
+.badge-test{ background:var(--accent-soft); color:var(--accent-dark); }
+.badge-combo{ background:var(--violet-soft); color:var(--violet); }
+.badge-package{ background:var(--gold-soft); color:var(--gold); }
+.info-btn{
+  border:none; background:var(--bg-soft-2); color:var(--primary);
+  width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:13px; transition:background .12s;
+}
+.info-btn:hover{ background:var(--accent); color:#04303a; }
+.entity-price-row{ display:flex; gap:16px; }
+.price-label{ display:block; font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px; }
+.price-val{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+.price-val.mrp{ color:var(--text-faint); text-decoration:line-through; font-weight:500; font-size:13.5px; }
+.price-val.b2b{ color:var(--primary); }
 
-  .btn-primary {
-    background: linear-gradient(105deg, #1ECAD3 0%, #12A7B0 100%);
-    color: white;
-  }
+/* Results */
+#resultsSection{ scroll-margin-top:90px; }
+.summary-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:20px;
+}
+.summary-card{
+  border-radius:var(--radius-lg); padding:20px; color:#fff; position:relative; overflow:hidden;
+  box-shadow:var(--shadow-md);
+}
+.summary-card .label{ font-size:12px; text-transform:uppercase; letter-spacing:0.05em; opacity:0.85; margin-bottom:8px; }
+.summary-card .value{ font-family:var(--font-display); font-size:26px; font-weight:700; }
+.summary-card .sub{ font-size:12.5px; opacity:0.85; margin-top:4px; }
+.summary-card i{ position:absolute; right:14px; top:14px; font-size:34px; opacity:0.18; }
+.card-mrp{ background:linear-gradient(135deg, #64748B, #46566A); }
+.card-b2b{ background:linear-gradient(135deg, var(--primary), var(--primary-light)); }
+.card-savings{ background:linear-gradient(135deg, #16A876, #0E8A61); }
+.card-meta{ background:linear-gradient(135deg, var(--accent-dark), #129099); }
 
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 20px -8px rgba(30, 202, 211, 0.4);
-  }
+.warning-banner{
+  background:var(--warning-soft); color:#8a5a06; border:1px solid #f3d99a;
+  padding:12px 16px; border-radius:var(--radius-sm); font-size:13.5px; margin-bottom:10px;
+}
+.success-banner{
+  background:var(--success-soft); color:#0d7a4d; border:1px solid #a7e3c6;
+  padding:12px 16px; border-radius:var(--radius-sm); font-size:13.5px; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px; font-weight:600;
+}
 
-  .btn-secondary {
-    background: #F0F4F9;
-    color: #1A4A6F;
-    border: 1px solid #E2E8F0;
-  }
+.results-toolbar{ display:flex; justify-content:flex-end; margin-bottom:14px; }
+.lab-groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:16px; }
+.lab-result-card{
+  border:1px solid var(--border); border-radius:var(--radius-md); padding:16px 18px; background:var(--bg-soft);
+}
+.lab-result-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.lab-result-header h4{ font-size:14.5px; display:flex; align-items:center; gap:8px; }
+.lab-result-header h4 i{ color:var(--primary); }
+.lab-result-list li{
+  display:flex; align-items:center; gap:8px; font-size:13.5px; padding:7px 0; border-bottom:1px dashed var(--border);
+}
+.lab-result-list li:last-child{ border-bottom:none; }
+.item-name{ flex:1; }
+.item-price{ font-weight:700; color:var(--primary); font-family:var(--font-display); }
+.lab-result-total{ margin-top:10px; text-align:right; font-size:14px; color:var(--primary-dark); }
 
-  .btn-secondary:hover {
-    background: #E6EDF5;
-  }
+/* Modal */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(10,30,45,0.55); backdrop-filter:blur(2px);
+  display:flex; align-items:center; justify-content:center; z-index:100;
+  opacity:0; pointer-events:none; transition:opacity .18s;
+  padding:20px;
+}
+.modal-overlay.show{ opacity:1; pointer-events:auto; }
+.modal-box{
+  background:#fff; border-radius:var(--radius-lg); width:100%; max-width:520px;
+  max-height:85vh; display:flex; flex-direction:column; box-shadow:var(--shadow-lg);
+  transform:translateY(10px) scale(.98); transition:transform .18s;
+}
+.modal-overlay.show .modal-box{ transform:translateY(0) scale(1); }
+.modal-header{ padding:20px 22px 14px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:12px; }
+.modal-header-text{ flex:1; }
+.modal-header-text .modal-lab{ font-size:12.5px; color:var(--text-muted); margin-bottom:4px; }
+.modal-header-text h3{ font-size:19px; }
+.modal-close{
+  border:none; background:var(--bg-soft-2); width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color:var(--text-muted);
+}
+.modal-close:hover{ background:var(--danger); color:#fff; }
+.modal-body{ padding:18px 22px; overflow-y:auto; }
+.modal-price-row{ display:flex; gap:24px; margin-bottom:18px; }
+.modal-price-box{ flex:1; background:var(--bg-soft); border-radius:var(--radius-sm); padding:12px 14px; }
+.modal-section-title{ font-size:12.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin:14px 0 8px; display:flex; align-items:center; gap:8px; }
+.modal-list{ max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); }
+.modal-list li{ padding:9px 14px; border-bottom:1px solid var(--border); font-size:13.5px; display:flex; align-items:center; gap:8px; }
+.modal-list li:last-child{ border-bottom:none; }
 
-  .btn-danger {
-    background: #FEF3F2;
-    color: #C2410C;
-    border: 1px solid #FFD9D4;
-  }
+/* Toast */
+#toastWrap{ position:fixed; bottom:24px; right:24px; z-index:200; display:flex; flex-direction:column; gap:10px; }
+.toast{
+  min-width:260px; max-width:340px; padding:13px 16px; border-radius:var(--radius-md);
+  background:var(--primary-dark); color:#fff; font-size:13.5px; box-shadow:var(--shadow-lg);
+  display:flex; align-items:center; gap:10px;
+  opacity:0; transform:translateX(20px); transition:opacity .25s, transform .25s;
+}
+.toast.show{ opacity:1; transform:translateX(0); }
+.toast-success{ background:#0E8A5C; }
+.toast-error{ background:#B23237; }
+.toast-warning{ background:#9C6B0C; }
+.toast-info{ background:var(--primary-dark); }
 
-  .btn-danger:hover {
-    background: #FFE4E0;
-  }
+/* Spinner */
+#spinnerOverlay{
+  position:fixed; inset:0; background:rgba(255,255,255,0.75); backdrop-filter:blur(1.5px);
+  display:flex; align-items:center; justify-content:center; z-index:150;
+  opacity:0; pointer-events:none; transition:opacity .15s;
+}
+#spinnerOverlay.show{ opacity:1; pointer-events:auto; }
+.spinner{
+  width:52px; height:52px; border-radius:50%;
+  border:4px solid var(--bg-soft-2); border-top-color:var(--accent-dark);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.spinner-text{ margin-top:14px; font-size:13.5px; color:var(--primary); font-weight:600; }
+.spinner-wrap{ display:flex; flex-direction:column; align-items:center; }
 
-  .btn-lab-copy {
-    background: #EFF9FC;
-    border: 1px solid #CBF0F2;
-    color: #0F5C70;
-    padding: 6px 14px;
-    font-size: 12px;
-    border-radius: 40px;
-    cursor: pointer;
-  }
+footer.app-footer{ text-align:center; padding:26px; color:var(--text-faint); font-size:12.5px; }
 
-  .btn-lab-copy:hover {
-    background: #1ECAD3;
-    color: white;
-  }
-
-  .checkbox-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .item-list {
-    max-height: 200px;
-    overflow-y: auto;
-    padding-right: 6px;
-  }
-
-  .checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    background: #FFFFFF;
-    border: 1px solid #EDF2F7;
-    border-radius: 16px;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-
-  .checkbox-item:hover {
-    border-color: #1ECAD3;
-    background: #F9FDFF;
-  }
-
-  .checkbox-item input {
-    width: 20px;
-    height: 20px;
-    accent-color: #1ECAD3;
-    cursor: pointer;
-  }
-
-  .selected-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .chip {
-    background: #EFF9FC;
-    color: #0F5C70;
-    border-radius: 40px;
-    padding: 8px 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    border: 1px solid #CBF0F2;
-  }
-
-  .chip button {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    color: #D97706;
-  }
-
-  .lab-block {
-    background: #FFFFFF;
-    border-radius: 20px;
-    margin-bottom: 28px;
-    overflow: hidden;
-    border: 1px solid #EFF3F8;
-  }
-
-  .lab-header {
-    padding: 20px 24px;
-    background: #FFFFFF;
-    border-bottom: 1px solid #ECF3F9;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  .lab-header h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #0F3D5E;
-  }
-
-  .accordion-section {
-    border-bottom: 1px solid #F0F4FA;
-  }
-
-  .section-header {
-    padding: 16px 24px;
-    background: #FBFDFF;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    font-weight: 600;
-    font-size: 16px;
-    color: #1D4E6E;
-  }
-
-  .section-arrow {
-    transition: transform 0.2s;
-    color: #1ECAD3;
-  }
-
-  .section-content {
-    padding: 20px 24px;
-    display: none;
-    border-top: 1px solid #F0F4FA;
-  }
-
-  .section-content.open {
-    display: block;
-  }
-
-  .entity-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 18px;
-  }
-
-  .entity-card {
-    background: #FFFFFF;
-    border-radius: 18px;
-    padding: 18px;
-    border: 1px solid #E9EFF6;
-    transition: all 0.2s ease;
-    cursor: pointer;
-  }
-
-  .entity-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 18px -12px rgba(0, 0, 0, 0.1);
-    border-color: #B9E6EA;
-  }
-
-  .badge {
-    padding: 4px 12px;
-    border-radius: 40px;
-    font-size: 11px;
-    font-weight: 700;
-  }
-
-  .badge.test { background: #E2F0FA; color: #186C8C; }
-  .badge.combo { background: #E3F1FD; color: #2C6B9E; }
-  .badge.package { background: #E0F5F0; color: #1C6E5C; }
-
-  .price-block { margin-top: 16px; }
-  .b2b-highlight { background: #F2FCF9; border: 1px solid #C8F0E8; border-radius: 16px; padding: 12px; margin-top: 8px; }
-  .b2b-price { font-size: 24px; font-weight: 800; color: #1B8B7A; }
-
-  .info-btn {
-    background: #F5F9FE;
-    border: none;
-    width: 100%;
-    padding: 10px;
-    border-radius: 14px;
-    font-weight: 600;
-    margin-top: 14px;
-    cursor: pointer;
-    color: #22668D;
-  }
-
-  .optimized-item {
-    background: #FFFFFF;
-    border-radius: 20px;
-    padding: 20px;
-    border: 1px solid #EDF2F9;
-    margin-bottom: 12px;
-  }
-
-  .results-two-columns {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 28px;
-  }
-
-  .summary-box {
-    background: #F9FCFE;
-    border-radius: 20px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid #E9F0F5;
-  }
-
-  .big { font-size: 32px; font-weight: 800; color: #0F3D5E; }
-  .savings { color: #1A8F7A; }
-
-  .modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 61, 94, 0.85);
-    backdrop-filter: blur(8px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-  }
-  .modal.active { display: flex; }
-  .modal-content {
-    background: white;
-    max-width: 650px;
-    width: 100%;
-    max-height: 90vh;
-    border-radius: 28px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  }
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #E9EFF6;
-    background: white;
-    flex-shrink: 0;
-  }
-  .modal-header h2 {
-    font-family: 'Rubik', sans-serif;
-    font-size: 20px;
-    color: #0F3D5E;
-    margin: 0;
-  }
-  .modal-header button {
-    background: none;
-    border: none;
-    font-size: 28px;
-    cursor: pointer;
-    color: #64748B;
-  }
-  .modal-body {
-    padding: 24px;
-    overflow-y: auto;
-    flex: 1;
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    background: #1A4E6E;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 60px;
-    font-weight: 600;
-    display: none;
-    z-index: 9999;
-  }
-  .toast.show { display: block; }
-
-  .lab-grouping-section {
-    margin-top: 24px;
-    border-top: 2px solid #ECF3F9;
-    padding-top: 20px;
-  }
-  .lab-group-card {
-    background: #FBFDFF;
-    border-radius: 18px;
-    padding: 18px;
-    margin-bottom: 20px;
-    border: 1px solid #E9F0F5;
-  }
-  .lab-group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .lab-group-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #0F3D5E;
-  }
-  .lab-items-list {
-    padding-left: 20px;
-    margin: 12px 0 8px;
-  }
-
-  @media (max-width: 768px) {
-    .results-two-columns {
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-  }
-
-  .search-actions {
-    display: flex;
-    gap: 12px;
-    margin: 16px 0 20px;
-  }
-
-  @media (max-width: 480px) {
-    .search-actions {
-      flex-direction: column;
-    }
-  }
-
-  .loading-overlay {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.6s linear infinite;
-    margin-right: 8px;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  
-  .muted {
-    color: #64748B;
-  }
+/* Responsive */
+@media (max-width: 980px){
+  .selection-grid{ grid-template-columns:1fr; }
+  .summary-grid{ grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width: 640px){
+  .header-inner{ padding:16px; }
+  .header-text h1{ font-size:20px; }
+  .header-badge{ display:none; }
+  .panel{ padding:18px; }
+  .summary-grid{ grid-template-columns:1fr 1fr; }
+  .action-row .btn{ flex:1; justify-content:center; }
+  .modal-price-row{ flex-direction:column; gap:10px; }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1><i class="fas fa-microscope" style="color:#1ECAD3; margin-right: 12px;"></i> Test Price Comparison</h1>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-icon"><i class="fa-solid fa-microscope"></i></div>
+    <div class="header-text">
+      <h1>Pathology Lab Optimizer</h1>
+      <p>Medical Price Intelligence</p>
+    </div>
+    <div class="header-badge"><i class="fa-solid fa-shield-halved"></i> Exact Optimization Engine</div>
   </div>
+</header>
 
-  <div class="vertical-stack">
-    <div class="card">
-      <div class="section-title"><i class="fas fa-flask"></i> Select Tests/Combos/Packages</div>
-      <input type="text" id="searchInput" class="search" placeholder="Search tests, combos, packages..." autocomplete="off" />
-      <div class="search-actions">
-        <button class="btn btn-primary" id="optimizeBtn" style="flex:1;"><i class="fas fa-chart-line"></i> Optimize Planning</button>
-        <button class="btn btn-danger" id="clearAllBtn" style="flex:1;"><i class="fas fa-eraser"></i> Clear All</button>
+<main class="container">
+
+  <!-- SECTION 1: SEARCH -->
+  <section class="panel">
+    <div class="panel-title"><i class="fa-solid fa-magnifying-glass"></i> Search Catalog</div>
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" placeholder="Search tests, combos or packages… e.g. CBC, Liver, Thyroid" autocomplete="off">
+    </div>
+    <div class="search-hint">Search filters the selection lists below and the laboratory catalogs live, as you type.</div>
+  </section>
+
+  <!-- SECTION 2: SELECTION LIST -->
+  <section class="panel">
+    <div class="panel-title"><i class="fa-solid fa-list-check"></i> Required Tests, Combos &amp; Packages</div>
+    <div class="selection-grid">
+      <div class="selection-col">
+        <h4><i class="fa-solid fa-vial"></i> Individual Tests</h4>
+        <div class="selection-list" id="selTestsList"></div>
       </div>
-      <div id="selectionList" class="item-list checkbox-grid"></div>
-      <div id="selectedItemsContainer" class="selected-items"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title"><i class="fas fa-microscope"></i> Lab Filters</div>
-      <div id="labFilters" class="checkbox-grid"></div>
-    </div>
-
-    <div class="card" id="comparisonCard" style="display: none;">
-      <div class="section-title"><i class="fas fa-chart-simple"></i> Comparison View</div>
-      <div id="comparisonView"></div>
-    </div>
-
-    <div class="results-two-columns" id="resultsSection" style="display: none;">
-      <div class="card" style="margin:0; padding:24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 8px;">
-          <div class="section-title" style="margin-bottom: 0;"><i class="fas fa-chart-pie"></i> Optimized Plan</div>
-          <button class="btn btn-secondary" id="copyAllBtn" style="padding: 8px 18px;"><i class="fas fa-copy"></i> Copy All Labs</button>
-        </div>
-        <div id="optimizedResults" style="margin-top: 16px;"></div>
+      <div class="selection-col">
+        <h4><i class="fa-solid fa-layer-group"></i> Combos</h4>
+        <div class="selection-list" id="selCombosList"></div>
       </div>
-
-      <div class="card" style="margin:0; padding:24px;">
-        <div class="section-title"><i class="fas fa-coins"></i> Financial Summary</div>
-        <div class="summary" style="display: flex; flex-direction: column; gap: 18px;">
-          <div class="summary-box"><h3>Total MRP</h3><div class="big" id="totalMRP">₹0</div></div>
-          <div class="summary-box"><h3>Total B2B</h3><div class="big savings" id="totalB2B">₹0</div></div>
-          <div class="summary-box"><h3>Total Savings</h3><div class="big savings" id="totalSavings">₹0</div></div>
-        </div>
+      <div class="selection-col">
+        <h4><i class="fa-solid fa-box-archive"></i> Packages</h4>
+        <div class="selection-list" id="selPackagesList"></div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
-<div class="modal" id="infoModal">
-  <div class="modal-content">
+  <!-- SECTION 3: CHIPS -->
+  <section class="panel">
+    <div class="panel-title"><i class="fa-solid fa-tags"></i> Selected Requirements <span class="count-pill" id="chipsCount">0</span></div>
+    <div class="chips-wrap" id="chipsWrap"></div>
+  </section>
+
+  <!-- SECTION 4: LAB FILTERS -->
+  <section class="panel">
+    <div class="panel-title"><i class="fa-solid fa-hospital"></i> Laboratory Filters</div>
+    <div class="lab-filters" id="labFiltersWrap"></div>
+  </section>
+
+  <!-- SECTION 5: ACTIONS -->
+  <section class="panel">
+    <div class="panel-title"><i class="fa-solid fa-gears"></i> Actions</div>
+    <div class="action-row">
+      <button class="btn btn-primary" id="btnOptimize"><i class="fa-solid fa-bolt"></i> Optimize Plan</button>
+      <button class="btn btn-outline" id="btnClear"><i class="fa-solid fa-eraser"></i> Clear Selection</button>
+      <button class="btn btn-outline" id="btnSelectAllLabs"><i class="fa-solid fa-check-double"></i> Select All Labs</button>
+      <button class="btn btn-outline" id="btnDeselectAllLabs"><i class="fa-solid fa-xmark"></i> Deselect All Labs</button>
+    </div>
+  </section>
+
+  <!-- SECTION 6: COMPARISON VIEW -->
+  <section class="panel">
+    <div class="panel-title"><i class="fa-solid fa-scale-balanced"></i> Laboratory Comparison Catalog</div>
+    <div id="comparisonSection"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="panel hidden" id="resultsSection">
+    <div class="panel-title"><i class="fa-solid fa-trophy"></i> Optimized Plan</div>
+    <div id="resultWarnings"></div>
+    <div class="summary-grid">
+      <div class="summary-card card-mrp"><i class="fa-solid fa-receipt"></i><div class="label">Total MRP</div><div class="value" id="sumMrp">₹0</div><div class="sub">Standard retail price</div></div>
+      <div class="summary-card card-b2b"><i class="fa-solid fa-hand-holding-dollar"></i><div class="label">Total B2B</div><div class="value" id="sumB2b">₹0</div><div class="sub">Optimized payable amount</div></div>
+      <div class="summary-card card-savings"><i class="fa-solid fa-piggy-bank"></i><div class="label">Total Savings</div><div class="value" id="sumSavings">₹0</div><div class="sub" id="sumSavingsPct">0% saved</div></div>
+      <div class="summary-card card-meta"><i class="fa-solid fa-cubes"></i><div class="label">Plan Composition</div><div class="value"><span id="sumEntities">0</span> items</div><div class="sub"><span id="sumLabs">0</span> laborator(y/ies) used</div></div>
+    </div>
+    <div class="results-toolbar">
+      <button class="btn btn-secondary btn-sm" id="btnCopyAll"><i class="fa-solid fa-copy"></i> Copy Full Plan</button>
+    </div>
+    <div class="lab-groups" id="labGroupWrap"></div>
+  </section>
+
+</main>
+
+<footer class="app-footer">Pathology Lab Optimizer — offline medical price intelligence engine.</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" role="dialog" aria-modal="true">
     <div class="modal-header">
-      <h2 id="modalTitle"></h2>
-      <button id="closeModal">&times;</button>
+      <div class="modal-header-text">
+        <div class="modal-lab" id="modalLab"></div>
+        <h3 id="modalTitle"></h3>
+        <div style="margin-top:8px;" id="modalBadge"></div>
+      </div>
+      <button class="modal-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-body">
+      <div class="modal-price-row">
+        <div class="modal-price-box"><span class="price-label">MRP</span><div class="price-val mrp" id="modalMrp" style="font-size:18px;"></div></div>
+        <div class="modal-price-box"><span class="price-label">B2B</span><div class="price-val b2b" id="modalB2b" style="font-size:18px;"></div></div>
+      </div>
+      <div class="modal-section-title"><i class="fa-solid fa-sitemap"></i> Direct Components</div>
+      <ul class="modal-list" id="modalContains"></ul>
+      <div class="modal-section-title"><i class="fa-solid fa-vials"></i> Expanded Tests Covered (<span id="modalCount">0</span>)</div>
+      <ul class="modal-list" id="modalTests"></ul>
+    </div>
   </div>
 </div>
 
-<div class="toast" id="toast"><i class="fas fa-check-circle"></i> Copied</div>
+<!-- SPINNER -->
+<div id="spinnerOverlay">
+  <div class="spinner-wrap">
+    <div class="spinner"></div>
+    <div class="spinner-text">Running optimization engine…</div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toastWrap"></div>
 
 <script>
-// ============================================================
-// COMPLETE LABS DATA
-// ============================================================
+'use strict';
+/* =============================================================================================
+   PATHOLOGY LAB OPTIMIZER
+   Layers: Data | Utility | Expansion | Optimization | Rendering | Clipboard | Validation | UI
+   ============================================================================================= */
 
-const labsData = 
-  [
-    {
-  name: "Dr. Ajay Shah Laboratory",
-
-  tests: [
-    { id: "CBC_AS", name: "CBC", type: "test", mrp: 300, b2b: 80 },
-    { id: "BLOOD_GROUP_AS", name: "Blood Group", type: "test", mrp: 180, b2b: 70 },
-    { id: "ESR_AS", name: "ESR", type: "test", mrp: 150, b2b: 60 },
-    { id: "FBS_AS", name: "FBS", type: "test", mrp: 80, b2b: 30 },
-    { id: "PP_AS", name: "PP", type: "test", mrp: 80, b2b: 30 },
-    { id: "RBS_AS", name: "RBS", type: "test", mrp: 80, b2b: 30 },
-    { id: "FASTING_INSULINE_AS", name: "Fasting Insuline", type: "test", mrp: 800, b2b: 350 },
-    { id: "HBA1C_AS", name: "HbA1C", type: "test", mrp: 550, b2b: 130 },
-    { id: "BILIRUBIN_TOTAL_AS", name: "Bilirubin-Total", type: "test", mrp: 190, b2b: 96 },
-    { id: "BILIRUBIN_DIRECT_AS", name: "Bilirubin-Direct", type: "test", mrp: 190, b2b: 96 },
-    { id: "SGPT_AS", name: "SGPT", type: "test", mrp: 190, b2b: 40 },
-    { id: "SGOT_AS", name: "SGOT", type: "test", mrp: 190, b2b: 40 },
-    { id: "GGT_AS", name: "GGT", type: "test", mrp: 280, b2b: 182 },
-    { id: "CREATININE_AS", name: "Creatinine", type: "test", mrp: 190, b2b: 50 },
-    { id: "UREA_AS", name: "Urea", type: "test", mrp: 190, b2b: 108 },
-    { id: "BUN_AS", name: "BUN", type: "test", mrp: 190, b2b: 108 },
-    { id: "URIC_ACID_AS", name: "Uric Acid", type: "test", mrp: 190, b2b: 50 },
-    { id: "CALCIUM_AS", name: "Calcium", type: "test", mrp: 190, b2b: 114 },
-    { id: "LIPID_PROFILE_AS", name: "Lipid Profile", type: "test", mrp: 600, b2b: 185 },
-    { id: "TOTAL_CHOLESTROL_AS", name: "Total Cholestrol", type: "test", mrp: 190, b2b: 108 },
-    { id: "HDL_AS", name: "HDL", type: "test", mrp: 220, b2b: 132 },
-    { id: "LDL_AS", name: "LDL", type: "test", mrp: 400, b2b: 240 },
-    { id: "LDH_AS", name: "LDH", type: "test", mrp: 500, b2b: 150 },
-    { id: "SODIUM_AS", name: "Sodium", type: "test", mrp: 180, b2b: 108 },
-    { id: "CHLORIDES_AS", name: "Chlorides", type: "test", mrp: 150, b2b: 90 },
-    { id: "PHOSPHOROUS_AS", name: "Phosphorous", type: "test", mrp: 190, b2b: 114 },
-    { id: "POTASSIUM_AS", name: "Potassium", type: "test", mrp: 180, b2b: 108 },
-    { id: "IRON_STUDY_AS", name: "Iron Study", type: "test", mrp: 800, b2b: 300 },
-    { id: "VIT_D3_AS", name: "Vit D3", type: "test", mrp: 1300, b2b: 250 },
-    { id: "VIT_B12_AS", name: "Vit B12", type: "test", mrp: 850, b2b: 250 },
-    { id: "TSH_AS", name: "TSH", type: "test", mrp: 370, b2b: 50 },
-    { id: "CRP_AS", name: "CRP", type: "test", mrp: 450, b2b: 150 },
-    { id: "HSCRP_AS", name: "HSCRP", type: "test", mrp: 850, b2b: 350 },
-    { id: "CPK_MB_AS", name: "CPK-MB", type: "test", mrp: 850, b2b: 350 },
-    { id: "CPK_TOTAL_AS", name: "CPK-Total", type: "test", mrp: 550, b2b: 300 },
-    { id: "TROPI_AS", name: "Trop-I", type: "test", mrp: 1200, b2b: 750 },
-    { id: "D_DIMER_AS", name: "D-Dimer", type: "test", mrp: 1200, b2b: 500 },
-    { id: "PT_INR_AS", name: "PT INR", type: "test", mrp: 330, b2b: 120 },
-    { id: "APTT_AS", name: "ApTT", type: "test", mrp: 600, b2b: 330 },
-    { id: "HIV_AS", name: "HIV", type: "test", mrp: 600, b2b: 350 },
-    { id: "HCV_AS", name: "HCV", type: "test", mrp: 900, b2b: 525 },
-    { id: "HBSAG_AS", name: "HBsAg", type: "test", mrp: 550, b2b: 440 },
-    { id: "VDRL_AS", name: "VDRL", type: "test", mrp: 370, b2b: 180 },
-    { id: "URINE_CULTURE_AS", name: "Urine Culture", type: "test", mrp: 950, b2b: 400 },
-    { id: "URINE_ROUTINE_AS", name: "Urine Routine", type: "test", mrp: 160, b2b: 60 },
-    { id: "RA_FACTOR_AS", name: "RA Factor", type: "test", mrp: 500, b2b: 270 },
-    { id: "MP_AS", name: "MP", type: "test", mrp: 120, b2b: 72 },
-    { id: "WIDAL_AS", name: "Widal", type: "test", mrp: 250, b2b: 150 },
-    { id: "DENGUE_NSI_AS", name: "Dengue NSI", type: "test", mrp: 800, b2b: 300 },
-    { id: "DENGUE_IGG_AS", name: "Dengue IGG", type: "test", mrp: 800, b2b: 300 },
-    { id: "DENGUE_IGM_AS", name: "Dengue IGM", type: "test", mrp: 800, b2b: 350 },
-    { id: "MP_ANTIGEN_AS", name: "MP-Antigen", type: "test", mrp: 450, b2b: 315 },
-    { id: "BETA_HCG_AS", name: "Beta HCG", type: "test", mrp: 850, b2b: 200 },
-    { id: "HOMOCYSTEN_AS", name: "Homocysten", type: "test", mrp: 1450, b2b: 500 },
-    { id: "CA125_FEMALE_AS", name: "CA125 (Female)", type: "test", mrp: 1200, b2b: 500 },
-    { id: "PSA_MALE_AS", name: "PSA (Male)", type: "test", mrp: 900, b2b: 350 },
-    { id: "IGE_AS", name: "IGE", type: "test", mrp: 950, b2b: 400 },
-    { id: "TROPT_AS", name: "Trop-T", type: "test", mrp: 1500, b2b: 1050 },
-    { id: "ANTI_CCP_AS", name: "Anti CCP", type: "test", mrp: 1550, b2b: 650 },
-    { id: "ANA_AS", name: "ANA", type: "test", mrp: 950, b2b: 500 },
-    { id: "TOTAL_PROTIEN_AS", name: "Total Protien", type: "test", mrp: 250, b2b: 80 },
-    { id: "COVID_ANTIBODY_AS", name: "Covid Antibody", type: "test", mrp: 1000, b2b: 500 },
-    { id: "FNAC_AS", name: "FNAC", type: "test", mrp: 1500, b2b: 1050 },
-    { id: "PP_INSULINE_AS", name: "PP Insuline", type: "test", mrp: 850, b2b: 560 },
-    { id: "CEA_AS", name: "CEA", type: "test", mrp: 800, b2b: 400 },
-    { id: "AFPL_AS", name: "AFPL", type: "test", mrp: 900, b2b: 450 },
-    { id: "HB_ELECTROPHORESIS_AS", name: "Hb Electrophoresis", type: "test", mrp: 950, b2b: 450 },
-    { id: "FT3_AS", name: "FT3", type: "test", mrp: 280, b2b: 80 },
-    { id: "FT4_AS", name: "FT4", type: "test", mrp: 280, b2b: 80 },
-    { id: "URINE_PROTEIN_CREATININE_RATIO_AS", name: "Urine Protein Creatinine Ratio", type: "test", mrp: 420, b2b: 240 },
-    { id: "PROTEIN_WITH_AG_RATIO_AS", name: "Protein with A/G Ratio", type: "test", mrp: 250, b2b: 80 },
-    { id: "LIPASE_AS", name: "Lipase", type: "test", mrp: 750, b2b: 300 },
-    { id: "ESTRADIOL_AS", name: "Estradiol", type: "test", mrp: 780, b2b: 300 },
-    { id: "PUS_CULTURE_AEROBIC_AS", name: "PUS Culture (Aerobic)", type: "test", mrp: 950, b2b: 400 },
-    { id: "FT3_FT4_AS", name: "FT3  FT4", type: "test", mrp: 560, b2b: 160 },
-    { id: "FECAL_CALPROTECTIN_AS", name: "Fecal Calprotectin", type: "test", mrp: 2800, b2b: 2240 },
-    { id: "BLOOD_CULTURE_1_SE_AS", name: "Blood Culture 1 SE", type: "test", mrp: 1500, b2b: 800 },
-    { id: "NT_PRO_BNP_AS", name: "NT-Pro BNP", type: "test", mrp: 2500, b2b: 1100 },
-    { id: "HBS_ANTIGEN_AS", name: "HBS Antigen", type: "test", mrp: 550, b2b: 350 },
-    { id: "MANTOUX_TEST_AS", name: "Mantoux Test", type: "test", mrp: 150, b2b: 135 },
-    { id: "RETICULATE_COUNT_AS", name: "Reticulate Count", type: "test", mrp: 400, b2b: 210 },
-    { id: "DIRECT_COOMBS_TEST_AS", name: "Direct Coombs Test", type: "test", mrp: 550, b2b: 150 },
-    { id: "MICROALBUMINURIA_AS", name: "Microalbuminuria", type: "test", mrp: 620, b2b: 250 },
-    { id: "TOTAL_TESTOSTERON_AS", name: "Total Testosteron", type: "test", mrp: 780, b2b: 350 },
-    { id: "FREE_TESTOSTERON_AS", name: "Free Testosteron", type: "test", mrp: 1550, b2b: 750 },
-    { id: "PROTEIN_C_AS", name: "Protein C", type: "test", mrp: 4500, b2b: 4050 },
-    { id: "PROTEIN_S_AS", name: "Protein S", type: "test", mrp: 4500, b2b: 4050 },
-    { id: "LUPUS_ANTICOAGULANT_AS", name: "Lupus Anticoagulant", type: "test", mrp: 1800, b2b: 800 },
-    { id: "FIBRINOGEN_LEVEL_AS", name: "Fibrinogen Level", type: "test", mrp: 850, b2b: 400 },
-    { id: "ANTI_DSDNA_NCX_AS", name: "Anti dsDNA NCX", type: "test", mrp: 1750, b2b: 1000 },
-    { id: "APOLIPOPROTEIN_A1_B_AS", name: "Apolipoprotein A-1 & B", type: "test", mrp: 1100, b2b: 770 },
-    { id: "FOLIC_ACID_LEVEL_AS", name: "Folic Acid Level", type: "test", mrp: 1100, b2b: 500 },
-    { id: "ALLERGY_COMPREHENSIVE_AS", name: "Allergy Comprehensive", type: "test", mrp: 5500, b2b: 3850 },
-    { id: "MALERIA_ANTIGEN_AS", name: "Maleria Antigen", type: "test", mrp: 450, b2b: 315 },
-    { id: "URINE_GLUCOSE_FASTING_AS", name: "Urine Glucose (Fasting)", type: "test", mrp: 50, b2b: 30 },
-    { id: "FACTOR_V_AS", name: "Factor V", type: "test", mrp: 5500, b2b: 4400 },
-    { id: "FERRITINE_AS", name: "Ferritine", type: "test", mrp: 950, b2b: 400 },
-    { id: "HAV_AS", name: "HAV", type: "test", mrp: 1200, b2b: 550 },
-    { id: "HEV_AS", name: "HEV", type: "test", mrp: 1500, b2b: 600 },
-    { id: "RA_TEST_AS", name: "RA Test", type: "test", mrp: 500, b2b: 270 },
-    { id: "IRON_PROFILE_WITH_FERRITINE_AS", name: "Iron Profile with Ferritine", type: "test", mrp: null, b2b: null },
-    { id: "ALLERGY_DRUG_TEST_AS", name: "Allergy Drug Test", type: "test", mrp: 7500, b2b: 5250 },
-    { id: "IGA_TTG_AS", name: "IGA TTG", type: "test", mrp: 800, b2b: 500 },
-    { id: "PERIPHERAL_SMEAR_AS", name: "Peripheral Smear", type: "test", mrp: 150, b2b: 60 },
-    { id: "PTT_AS", name: "PTT", type: "test", mrp: 600, b2b: 330 },
-    { id: "CORTISOL_8_AM_AS", name: "Cortisol 8 AM", type: "test", mrp: 850, b2b: 350 },
-    { id: "H_PYLORI_STOOL_AS", name: "H. Pylori Stool", type: "test", mrp: 1250, b2b: 960 },
-    { id: "CHIKUNGUNYA_IGG_AS", name: "Chikungunya IgG", type: "test", mrp: 900, b2b: 810 },
-    { id: "FBA_AS", name: "FBA", type: "test", mrp: null, b2b: null },
-    { id: "PROTEIN_ELECTROPHORESIS_AS", name: "Protein Electrophoresis", type: "test", mrp: 1200, b2b: 500 },
-    { id: "SPUTUM_TB_CULTURE_ABS_AS", name: "Sputum TB Culture & ABS", type: "test", mrp: 150, b2b: 90 },
-    { id: "COMPLEMENT_C3_C4_AS", name: "Complement C3 & C4", type: "test", mrp: null, b2b: null },
-    { id: "DHEAS_AS", name: "DHEAS", type: "test", mrp: 1150, b2b: 600 },
-    { id: "DHEA_AS", name: "DHEA", type: "test", mrp: 3000, b2b: 2100 },
-    { id: "TORCH_COMPLEX_AS", name: "Torch Complex", type: "test", mrp: 2800, b2b: 1200 },
-    { id: "ZINC_LEVEL_AS", name: "Zinc Level", type: "test", mrp: 2200, b2b: 1980 },
-    { id: "MAGNESIUM_AS", name: "Magnesium", type: "test", mrp: 400, b2b: 280 },
-    { id: "ESTROGEN_AS", name: "Estrogen", type: "test", mrp: null, b2b: null },
-    { id: "C_PEPTIDE_RANDOM_AS", name: "C-Peptide Random", type: "test", mrp: 1150, b2b: 550 },
-    { id: "B2_GLYCOPROTEIN_1_IGG_AS", name: "B2 Glycoprotein 1 IgG", type: "test", mrp: 1200, b2b: 500 },
-    { id: "KARYOTYPING_HUSBAND_AS", name: "Karyotyping - Husband", type: "test", mrp: 4000, b2b: 2800 },
-    { id: "KARYOTYPING_WIFE_AS", name: "Karyotyping - Wife", type: "test", mrp: 4000, b2b: 2800 },
-    { id: "INFLUENZA_SCREENING_FOR_ABF_AS", name: "Influenza Screening for ABF", type: "test", mrp: null, b2b: null },
-    { id: "PSA_FREE_TOTAL_AS", name: "PSA Free & Total", type: "test", mrp: 850, b2b: 350 },
-    { id: "LH_AS", name: "LH", type: "test", mrp: 550, b2b: 180 },
-    { id: "FSH_AS", name: "FSH", type: "test", mrp: 550, b2b: 180 },
-    { id: "SEMEN_ANALYSIS_AS", name: "Semen Analysis", type: "test", mrp: 1100, b2b: 770 },
-    { id: "ALKALINE_PHOSPHATASE_AS", name: "Alkaline Phosphatase", type: "test", mrp: null, b2b: null },
-    { id: "GLOBULIN_AS", name: "Globulin", type: "test", mrp: null, b2b: null },
-    { id: "BUN_CREATININE_RATIO_AS", name: "BUN / Creatinine Ratio", type: "test", mrp: null, b2b: null },
-    { id: "UREA_G_RATIO_AS", name: "Urea/G Ratio", type: "test", mrp: null, b2b: null },
-    { id: "T3_AS", name: "T3", type: "test", mrp: 250, b2b: null },
-    { id: "T4_AS", name: "T4", type: "test", mrp: 250, b2b: null },
-    { id: "STOOL_ROUTINE_AS", name: "Stool Routine", type: "test", mrp: 170, b2b: 90 },
-    { id: "ALBUMIN_AS", name: "Albumin", type: "test", mrp: 400, b2b: 320 },
-    { id: "BILLIRUBIN_INDIRECT_AS", name: "Billirubin Indirect", type: "test", mrp: null, b2b: null },
-    { id: "BICARBONATE_AS", name: "Bicarbonate", type: "test", mrp: null, b2b: null },
-    { id: "AMYLASE_AS", name: "Amylase", type: "test", mrp: 700, b2b: 275 },
-    { id: "ACTH_AS", name: "ACTH", type: "test", mrp: 1800, b2b: null },
-    { id: "THROAT_SWAB_C_S_AS", name: "Throat Swab C/S", type: "test", mrp: 950, b2b: 400 },
-    { id: "ASO_TITER_AS", name: "ASO Titer", type: "test", mrp: 650, b2b: 390 }
-  ],
-
-  combos: [
-    { id: "LFT_AS", name: "LFT", type: "combo", contains: ["Bilirubin-Total", "Bilirubin-Direct", "Billirubin Indirect", "SGPT", "SGOT", "Alkaline Phosphatase", "GGT", "Total Protien", "Albumin", "Globulin", "Protein with A/G Ratio"], mrp: 850, b2b: 220 },
-    { id: "RFT_AS", name: "RFT", type: "combo", contains: ["BUN", "Urea", "Uric Acid", "Calcium", "Phosphorous", "Sodium", "Potassium", "Chlorides", "Bicarbonate", "Creatinine"], mrp: 1100, b2b: 990 },
-    { id: "ELECTROLYTES_AS", name: "Electrolytes", type: "combo", contains: ["Sodium", "Potassium", "Chlorides", "Bicarbonate"], mrp: 450, b2b: 130 },
-    { id: "TRIPLE_H_AS", name: "Triple H", type: "combo", contains: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
-    { id: "TOTAL_TFT_AS", name: "Total TFT", type: "combo", contains: ["T3", "T4", "TSH"], mrp: 550, b2b: 110 },
-    { id: "FREE_TFT_AS", name: "Free TFT", type: "combo", contains: ["FT3", "FT4", "TSH"], mrp: 650, b2b: 220 }
-  ],
-
-  packages: [
-    { id: "GOODNESS_A1_AS", name: "GOODNESS A1", type: "package", contains: ["CBC", "FBS", "PP", "HbA1C", "Total TFT", "Iron Study", "Vit D3", "Vit B12", "Lipid Profile", "LFT", "RFT"], mrp: 2500, b2b: 1200 },
-    { id: "GOODNESS_E_AS", name: "GOODNESS E", type: "package", contains: ["FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Uric Acid", "CBC"], mrp: 1000, b2b: 450 },
-    { id: "GOODNESS_G_AS", name: "GOODNESS G", type: "package", contains: ["CBC", "FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Total TFT", "Uric Acid"], mrp: 1500, b2b: 550 },
-    { id: "GOODNESS_BB_FEMALE_AS", name: "GOODNESS BB FEMALE", type: "package", contains: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)"], mrp: 3500, b2b: 1500 },
-    { id: "GOODNESS_BA_MALE_AS", name: "GOODNESS BA MALE", type: "package", contains: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "PSA (Male)"], mrp: 3500, b2b: 1400 },
-    { id: "GOODNESS_C_AS", name: "GOODNESS C", type: "package", contains: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
-    { id: "GOODNESS_F_AS", name: "GOODNES F", type: "package", contains: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
-    { id: "GODNESS_3H_AS", name: "GODNESS 3H ", type: "package", contains: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
-    { id: "FEVER_PROFILE_AS", name: "FEVER PROFILE", type: "package", contains: ["CBC", "ESR", "SGPT", "SGOT", "CRP", "Dengue NSI", "Maleria Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 }
-  ]
-},
-
-
-  {
-  name: "Dr. Jariwala Laboratory",
-
-  tests: [
-    { id: "CBC_J", name: "CBC", type: "test", mrp: 280, b2b: 168 },
-    { id: "BLOOD_GROUP_J", name: "Blood Group", type: "test", mrp: 150, b2b: 90 },
-    { id: "ESR_J", name: "ESR", type: "test", mrp: 90, b2b: 54 },
-    { id: "FBS_J", name: "FBS", type: "test", mrp: 70, b2b: 46 },
-    { id: "PP_J", name: "PP", type: "test", mrp: 70, b2b: 46 },
-    { id: "RBS_J", name: "RBS", type: "test", mrp: 70, b2b: 46 },
-    { id: "FASTING_INSULINE_J", name: "Fasting Insuline", type: "test", mrp: 715, b2b: 501 },
-    { id: "HBA1C_J", name: "HbA1C", type: "test", mrp: 520, b2b: 338 },
-    { id: "LFT_J", name: "LFT", type: "test", mrp: 900, b2b: 585 },
-    { id: "BILIRUBIN_TOTAL_J", name: "Bilirubin-Total", type: "test", mrp: 200, b2b: 120 },
-    { id: "BILIRUBIN_DIRECT_J", name: "Bilirubin-Direct", type: "test", mrp: 200, b2b: 120 },
-    { id: "SGPT_J", name: "SGPT", type: "test", mrp: 180, b2b: 108 },
-    { id: "SGOT_J", name: "SGOT", type: "test", mrp: 180, b2b: 108 },
-    { id: "GGT_J", name: "GGT", type: "test", mrp: 200, b2b: 126 },
-    { id: "RFT_J", name: "RFT", type: "test", mrp: 1350, b2b: 878 },
-    { id: "CREATININE_J", name: "Creatinine", type: "test", mrp: 180, b2b: 108 },
-    { id: "UREA_J", name: "Urea", type: "test", mrp: 180, b2b: 108 },
-    { id: "BUN_J", name: "BUN", type: "test", mrp: null, b2b: null },
-    { id: "URIC_ACID_J", name: "Uric Acid", type: "test", mrp: 180, b2b: 108 },
-    { id: "CALCIUM_J", name: "Calcium", type: "test", mrp: 275, b2b: 176 },
-    { id: "LIPID_PROFILE_J", name: "Lipid Profile", type: "test", mrp: 550, b2b: 352 },
-    { id: "TOTAL_CHOLESTROL_J", name: "Total Cholestrol", type: "test", mrp: 180, b2b: 108 },
-    { id: "HDL_J", name: "HDL", type: "test", mrp: 180, b2b: 106 },
-    { id: "LDL_J", name: "LDL", type: "test", mrp: 320, b2b: 224 },
-    { id: "LDH_J", name: "LDH", type: "test", mrp: 350, b2b: 263 },
-    { id: "ELECTROLYTES_J", name: "Electrolytes", type: "test", mrp: 400, b2b: 240 },
-    { id: "SODIUM_J", name: "Sodium", type: "test", mrp: null, b2b: null },
-    { id: "CHLORIDES_J", name: "Chlorides", type: "test", mrp: null, b2b: null },
-    { id: "PHOSPHOROUS_J", name: "Phosphorous", type: "test", mrp: null, b2b: null },
-    { id: "POTASSIUM_J", name: "Potassium", type: "test", mrp: null, b2b: null },
-    { id: "IRON_STUDY_J", name: "Iron Study", type: "test", mrp: 520, b2b: 333 },
-    { id: "VIT_D3_J", name: "Vit D3", type: "test", mrp: 1500, b2b: 450 },
-    { id: "VIT_B12_J", name: "Vit B12", type: "test", mrp: 950, b2b: 285 },
-    { id: "TOTAL_TFT_J", name: "Total TFT", type: "test", mrp: 580, b2b: 232 },
-    { id: "TSH_J", name: "TSH", type: "test", mrp: 320, b2b: 128 },
-    { id: "FREE_TFT_J", name: "Free TFT", type: "test", mrp: 680, b2b: 272 },
-    { id: "CRP_J", name: "CRP", type: "test", mrp: 500, b2b: 225 },
-    { id: "HSCRP_J", name: "HSCRP", type: "test", mrp: 700, b2b: 420 },
-    { id: "CPK_MB_J", name: "CPK-MB", type: "test", mrp: 850, b2b: 536 },
-    { id: "CPK_TOTAL_J", name: "CPK-Total", type: "test", mrp: 380, b2b: 236 },
-    { id: "TROPI_J", name: "Trop-I", type: "test", mrp: 770, b2b: 539 },
-    { id: "D_DIMER_J", name: "D-Dimer", type: "test", mrp: 1150, b2b: 736 },
-    { id: "PT_INR_J", name: "PT INR", type: "test", mrp: 300, b2b: 195 },
-    { id: "APTT_J", name: "ApTT", type: "test", mrp: 400, b2b: 240 },
-    { id: "HIV_J", name: "HIV", type: "test", mrp: 400, b2b: 280 },
-    { id: "HCV_J", name: "HCV", type: "test", mrp: 750, b2b: 600 },
-    { id: "HBSAG_J", name: "HBsAg", type: "test", mrp: null, b2b: null },
-    { id: "VDRL_J", name: "VDRL", type: "test", mrp: 165, b2b: 106 },
-    { id: "TRIPLE_H_J", name: "Triple H", type: "test", mrp: null, b2b: null },
-    { id: "URINE_CULTURE_J", name: "Urine Culture", type: "test", mrp: 800, b2b: 560 },
-    { id: "URINE_ROUTINE_J", name: "Urine Routine", type: "test", mrp: 110, b2b: 70 },
-    { id: "RA_FACTOR_J", name: "RA Factor", type: "test", mrp: 275, b2b: 176 },
-    { id: "MP_J", name: "MP", type: "test", mrp: 180, b2b: 106 },
-    { id: "WIDAL_J", name: "Widal", type: "test", mrp: 165, b2b: 106 },
-    { id: "DENGUE_NSI_J", name: "Dengue NSI", type: "test", mrp: 880, b2b: 563 },
-    { id: "DENGUE_IGG_J", name: "Dengue IGG", type: "test", mrp: 880, b2b: 563 },
-    { id: "DENGUE_IGM_J", name: "Dengue IGM", type: "test", mrp: 880, b2b: 563 },
-    { id: "MP_ANTIGEN_J", name: "MP-Antigen", type: "test", mrp: 500, b2b: 315 },
-    { id: "BETA_HCG_J", name: "Beta HCG", type: "test", mrp: 500, b2b: 355 },
-    { id: "HOMOCYSTEN_J", name: "Homocysten", type: "test", mrp: 1200, b2b: 744 },
-    { id: "CA125_FEMALE_J", name: "CA125 (Female)", type: "test", mrp: 1050, b2b: 683 },
-    { id: "PSA_MALE_J", name: "PSA (Male)", type: "test", mrp: 1450, b2b: 1001 },
-    { id: "IGE_J", name: "IGE", type: "test", mrp: 770, b2b: 539 },
-    { id: "TROPT_J", name: "Trop-T", type: "test", mrp: 770, b2b: 539 },
-    { id: "ANTI_CCP_J", name: "Anti CCP", type: "test", mrp: 1250, b2b: 813 },
-    { id: "ANA_J", name: "ANA", type: "test", mrp: 950, b2b: 599 },
-    { id: "TOTAL_PROTIEN_J", name: "Total Protien", type: "test", mrp: 200, b2b: 120 },
-    { id: "COVID_ANTIBODY_J", name: "Covid Antibody", type: "test", mrp: 500, b2b: 350 },
-    { id: "FNAC_J", name: "FNAC", type: "test", mrp: 800, b2b: 560 },
-    { id: "PP_INSULINE_J", name: "PP Insuline", type: "test", mrp: 715, b2b: 501 },
-    { id: "CEA_J", name: "CEA", type: "test", mrp: 850, b2b: 578 },
-    { id: "AFPL_J", name: "AFPL", type: "test", mrp: 700, b2b: 462 },
-    { id: "HB_ELECTROPHORESIS_J", name: "Hb Electrophoresis", type: "test", mrp: null, b2b: null },
-    { id: "FT3_J", name: "FT3", type: "test", mrp: 240, b2b: 120 },
-    { id: "FT4_J", name: "FT4", type: "test", mrp: 240, b2b: 120 },
-    { id: "URINE_PROTEIN_CREATININE_RATIO_J", name: "Urine Protein Creatinine Ratio", type: "test", mrp: null, b2b: null },
-    { id: "PROTEIN_WITH_AG_RATIO_J", name: "Protein with A/G Ratio", type: "test", mrp: null, b2b: null },
-    { id: "LIPASE_J", name: "Lipase", type: "test", mrp: 700, b2b: 490 },
-    { id: "ESTRADIOL_J", name: "Estradiol", type: "test", mrp: 600, b2b: 414 },
-    { id: "PUS_CULTURE_AEROBIC_J", name: "PUS Culture (Aerobic)", type: "test", mrp: 800, b2b: 560 },
-    { id: "FT3_FT4_J", name: "FT3  FT4", type: "test", mrp: 480, b2b: 240 },
-    { id: "FECAL_CALPROTECTIN_J", name: "Fecal Calprotectin", type: "test", mrp: 3000, b2b: 1920 },
-    { id: "BLOOD_CULTURE_1_SE_J", name: "Blood Culture 1 SE", type: "test", mrp: 1050, b2b: 735 },
-    { id: "NT_PRO_BNP_J", name: "NT-Pro BNP", type: "test", mrp: 2035, b2b: 1302 },
-    { id: "HBS_ANTIGEN_J", name: "HBS Antigen", type: "test", mrp: null, b2b: null },
-    { id: "MANTOUX_TEST_J", name: "Mantoux Test", type: "test", mrp: 120, b2b: 71 },
-    { id: "RETICULATE_COUNT_J", name: "Reticulate Count", type: "test", mrp: 180, b2b: 108 },
-    { id: "DIRECT_COOMBS_TEST_J", name: "Direct Coombs Test", type: "test", mrp: 300, b2b: 177 },
-    { id: "MICROALBUMINURIA_J", name: "Microalbuminuria", type: "test", mrp: 550, b2b: 352 },
-    { id: "TOTAL_TESTOSTERON_J", name: "Total Testosteron", type: "test", mrp: 600, b2b: 426 },
-    { id: "FREE_TESTOSTERON_J", name: "Free Testosteron", type: "test", mrp: 1600, b2b: 1440 },
-    { id: "PROTEIN_C_J", name: "Protein C", type: "test", mrp: 3300, b2b: 2640 },
-    { id: "PROTEIN_S_J", name: "Protein S", type: "test", mrp: 3300, b2b: 2640 },
-    { id: "LUPUS_ANTICOAGULANT_J", name: "Lupus Anticoagulant", type: "test", mrp: null, b2b: null },
-    { id: "FIBRINOGEN_LEVEL_J", name: "Fibrinogen Level", type: "test", mrp: 700, b2b: 420 },
-    { id: "ANTI_DSDNA_NCX_J", name: "Anti dsDNA NCX", type: "test", mrp: 935, b2b: 598 },
-    { id: "APOLIPOPROTEIN_A1_B_J", name: "Apolipoprotein A-1 & B", type: "test", mrp: 700, b2b: 385 },
-    { id: "FOLIC_ACID_LEVEL_J", name: "Folic Acid Level", type: "test", mrp: 900, b2b: 612 },
-    { id: "ALLERGY_COMPREHENSIVE_J", name: "Allergy Comprehensive", type: "test", mrp: null, b2b: null },
-    { id: "MALERIA_ANTIGEN_J", name: "Maleria Antigen", type: "test", mrp: 500, b2b: 315 },
-    { id: "URINE_GLUCOSE_FASTING_J", name: "Urine Glucose (Fasting)", type: "test", mrp: null, b2b: null },
-    { id: "FACTOR_V_J", name: "Factor V", type: "test", mrp: null, b2b: null },
-    { id: "FERRITINE_J", name: "Ferritine", type: "test", mrp: 750, b2b: 525 },
-    { id: "HAV_J", name: "HAV", type: "test", mrp: 950, b2b: 665 },
-    { id: "HEV_J", name: "HEV", type: "test", mrp: 1050, b2b: 693 },
-    { id: "RA_TEST_J", name: "RA Test", type: "test", mrp: 275, b2b: 176 },
-    { id: "IRON_PROFILE_WITH_FERRITINE_J", name: "Iron Profile with Ferritine", type: "test", mrp: null, b2b: null },
-    { id: "ALLERGY_DRUG_TEST_J", name: "Allergy Drug Test", type: "test", mrp: null, b2b: null },
-    { id: "IGA_TTG_J", name: "IGA TTG", type: "test", mrp: 1430, b2b: 1001 },
-    { id: "PERIPHERAL_SMEAR_J", name: "Peripheral Smear", type: "test", mrp: null, b2b: null },
-    { id: "PTT_J", name: "PTT", type: "test", mrp: 300, b2b: 195 },
-    { id: "CORTISOL_8_AM_J", name: "Cortisol 8 AM", type: "test", mrp: 600, b2b: 434 },
-    { id: "H_PYLORI_STOOL_J", name: "H. Pylori Stool", type: "test", mrp: 750, b2b: 458 },
-    { id: "CHIKUNGUNYA_IGG_J", name: "Chikungunya IgG", type: "test", mrp: null, b2b: null },
-    { id: "FBA_J", name: "FBA", type: "test", mrp: null, b2b: null },
-    { id: "PROTEIN_ELECTROPHORESIS_J", name: "Protein Electrophoresis", type: "test", mrp: 950, b2b: 608 },
-    { id: "SPUTUM_TB_CULTURE_ABS_J", name: "Sputum TB Culture & ABS", type: "test", mrp: 800, b2b: 560 },
-    { id: "COMPLEMENT_C3_C4_J", name: "Complement C3 & C4", type: "test", mrp: null, b2b: null },
-    { id: "DHEAS_J", name: "DHEAS", type: "test", mrp: 850, b2b: 587 },
-    { id: "DHEA_J", name: "DHEA", type: "test", mrp: null, b2b: null },
-    { id: "TORCH_COMPLEX_J", name: "Torch Complex", type: "test", mrp: null, b2b: null },
-    { id: "ZINC_LEVEL_J", name: "Zinc Level", type: "test", mrp: null, b2b: null },
-    { id: "MAGNESIUM_J", name: "Magnesium", type: "test", mrp: 450, b2b: 284 },
-    { id: "ESTROGEN_J", name: "Estrogen", type: "test", mrp: null, b2b: null },
-    { id: "C_PEPTIDE_RANDOM_J", name: "C-Peptide Random", type: "test", mrp: null, b2b: null },
-    { id: "B2_GLYCOPROTEIN_1_IGG_J", name: "B2 Glycoprotein 1 IgG", type: "test", mrp: null, b2b: null },
-    { id: "KARYOTYPING_HUSBAND_J", name: "Karyotyping - Husband", type: "test", mrp: null, b2b: null },
-    { id: "KARYOTYPING_WIFE_J", name: "Karyotyping - Wife", type: "test", mrp: null, b2b: null },
-    { id: "INFLUENZA_SCREENING_FOR_ABF_J", name: "Influenza Screening for ABF", type: "test", mrp: 1650, b2b: 1056 },
-    { id: "PSA_FREE_TOTAL_J", name: "PSA Free & Total", type: "test", mrp: 1450, b2b: 1001 },
-    { id: "LH_J", name: "LH", type: "test", mrp: 525, b2b: 263 },
-    { id: "FSH_J", name: "FSH", type: "test", mrp: 525, b2b: 263 },
-    { id: "SEMEN_ANALYSIS_J", name: "Semen Analysis", type: "test", mrp: 300, b2b: 300 },
-    { id: "ALKALINE_PHOSPHATASE_J", name: "Alkaline Phosphatase", type: "test", mrp: null, b2b: null },
-    { id: "GLOBULIN_J", name: "Globulin", type: "test", mrp: null, b2b: null },
-    { id: "BUN_CREATININE_RATIO_J", name: "BUN / Creatinine Ratio", type: "test", mrp: null, b2b: null },
-    { id: "UREA_G_RATIO_J", name: "Urea/G Ratio", type: "test", mrp: null, b2b: null },
-    { id: "T3_J", name: "T3", type: "test", mrp: null, b2b: null },
-    { id: "T4_J", name: "T4", type: "test", mrp: null, b2b: null },
-    { id: "STOOL_ROUTINE_J", name: "Stool Routine", type: "test", mrp: 110, b2b: 70 },
-    { id: "ALBUMIN_J", name: "Albumin", type: "test", mrp: null, b2b: null },
-    { id: "BILLIRUBIN_INDIRECT_J", name: "Billirubin Indirect", type: "test", mrp: null, b2b: null },
-    { id: "BICARBONATE_J", name: "Bicarbonate", type: "test", mrp: null, b2b: null },
-    { id: "AMYLASE_J", name: "Amylase", type: "test", mrp: null, b2b: null },
-    { id: "ACTH_J", name: "ACTH", type: "test", mrp: null, b2b: null },
-    { id: "THROAT_SWAB_C_S_J", name: "Throat Swab C/S", type: "test", mrp: null, b2b: null },
-    { id: "ASO_TITER_J", name: "ASO Titer", type: "test", mrp: null, b2b: null }
-  ],
-
-  combos: [],
-
-  packages: []
-},
-
+/* =========================================================================
+   DATA LAYER — const labsData = [...]
+   contains[] items reference {type:'test'|'combo'|'package', id} within the SAME lab.
+   Nesting is unlimited (package -> combo -> combo -> test demonstrated below).
+   ========================================================================= */
+const labsData = [
 {
-  name: "General Diagnostics",
-
-  tests: [
-    { id: "CBC_GD", name: "CBC", type: "test", mrp: 190, b2b: 60 },
-    { id: "BLOOD_GROUP_GD", name: "Blood Group", type: "test", mrp: 220, b2b: 50 },
-    { id: "ESR_GD", name: "ESR", type: "test", mrp: 200, b2b: 50 },
-    { id: "FBS_GD", name: "FBS", type: "test", mrp: 70, b2b: 15 },
-    { id: "PP_GD", name: "PP", type: "test", mrp: 70, b2b: 15 },
-    { id: "RBS_GD", name: "RBS", type: "test", mrp: 70, b2b: 15 },
-    { id: "FASTING_INSULINE_GD", name: "Fasting Insuline", type: "test", mrp: 770, b2b: 150 },
-    { id: "HBA1C_GD", name: "HbA1C", type: "test", mrp: 495, b2b: 60 },
-    { id: "BILIRUBIN_TOTAL_GD", name: "Bilirubin-Total", type: "test", mrp: 130, b2b: 22 },
-    { id: "BILIRUBIN_DIRECT_GD", name: "Bilirubin-Direct", type: "test", mrp: 130, b2b: 24 },
-    { id: "SGPT_GD", name: "SGPT", type: "test", mrp: 190, b2b: 24 },
-    { id: "SGOT_GD", name: "SGOT", type: "test", mrp: 190, b2b: 22 },
-    { id: "GGT_GD", name: "GGT", type: "test", mrp: 242, b2b: 60 },
-    { id: "CREATININE_GD", name: "Creatinine", type: "test", mrp: 180, b2b: 22 },
-    { id: "UREA_GD", name: "Urea", type: "test", mrp: 165, b2b: 25 },
-    { id: "BUN_GD", name: "BUN", type: "test", mrp: 220, b2b: 60 },
-    { id: "URIC_ACID_GD", name: "Uric Acid", type: "test", mrp: 220, b2b: 22 },
-    { id: "CALCIUM_GD", name: "Calcium", type: "test", mrp: 176, b2b: 22 },
-    { id: "LIPID_PROFILE_GD", name: "Lipid Profile", type: "test", mrp: 715, b2b: 100 },
-    { id: "TOTAL_CHOLESTROL_GD", name: "Total Cholestrol", type: "test", mrp: 180, b2b: 10 },
-    { id: "HDL_GD", name: "HDL", type: "test", mrp: 180, b2b: 10 },
-    { id: "LDL_GD", name: "LDL", type: "test", mrp: 300, b2b: 50 },
-    { id: "LDH_GD", name: "LDH", type: "test", mrp: 363, b2b: 60 },
-    { id: "SODIUM_GD", name: "Sodium", type: "test", mrp: 275, b2b: 40 },
-    { id: "CHLORIDES_GD", name: "Chlorides", type: "test", mrp: 275, b2b: 40 },
-    { id: "PHOSPHOROUS_GD", name: "Phosphorous", type: "test", mrp: 275, b2b: 40 },
-    { id: "POTASSIUM_GD", name: "Potassium", type: "test", mrp: 220, b2b: 40 },
-    { id: "IRON_STUDY_GD", name: "Iron Study", type: "test", mrp: 660, b2b: 150 },
-    { id: "VIT_D3_GD", name: "Vit D3", type: "test", mrp: 1280, b2b: 200 },
-    { id: "VIT_B12_GD", name: "Vit B12", type: "test", mrp: 990, b2b: 160 },
-    { id: "TSH_GD", name: "TSH", type: "test", mrp: 275, b2b: 20 },
-    { id: "CRP_GD", name: "CRP", type: "test", mrp: 495, b2b: 150 },
-    { id: "HSCRP_GD", name: "HSCRP", type: "test", mrp: 750, b2b: 175 },
-    { id: "CPK_MB_GD", name: "CPK-MB", type: "test", mrp: 715, b2b: 200 },
-    { id: "CPK_TOTAL_GD", name: "CPK-Total", type: "test", mrp: 385, b2b: 125 },
-    { id: "TROPI_GD", name: "Trop-I", type: "test", mrp: 1200, b2b: 650 },
-    { id: "D_DIMER_GD", name: "D-Dimer", type: "test", mrp: 1650, b2b: 375 },
-    { id: "PT_INR_GD", name: "PT INR", type: "test", mrp: 450, b2b: 105 },
-    { id: "APTT_GD", name: "ApTT", type: "test", mrp: 418, b2b: 200 },
-    { id: "HIV_GD", name: "HIV", type: "test", mrp: 475, b2b: 120 },
-    { id: "HCV_GD", name: "HCV", type: "test", mrp: 935, b2b: 99 },
-    { id: "HBSAG_GD", name: "HBsAg", type: "test", mrp: 450, b2b: 250 },
-    { id: "VDRL_GD", name: "VDRL", type: "test", mrp: 220, b2b: 75 },
-    { id: "URINE_CULTURE_GD", name: "Urine Culture", type: "test", mrp: 950, b2b: 120 },
-    { id: "URINE_ROUTINE_GD", name: "Urine Routine", type: "test", mrp: 300, b2b: 100 },
-    { id: "RA_FACTOR_GD", name: "RA Factor", type: "test", mrp: 495, b2b: 200 },
-    { id: "MP_GD", name: "MP", type: "test", mrp: 275, b2b: 100 },
-    { id: "WIDAL_GD", name: "Widal", type: "test", mrp: 330, b2b: 60 },
-    { id: "DENGUE_NSI_GD", name: "Dengue NSI", type: "test", mrp: 660, b2b: 250 },
-    { id: "DENGUE_IGG_GD", name: "Dengue IGG", type: "test", mrp: 660, b2b: 275 },
-    { id: "DENGUE_IGM_GD", name: "Dengue IGM", type: "test", mrp: 660, b2b: 275 },
-    { id: "MP_ANTIGEN_GD", name: "MP-Antigen", type: "test", mrp: 700, b2b: 100 },
-    { id: "BETA_HCG_GD", name: "Beta HCG", type: "test", mrp: 550, b2b: 160 },
-    { id: "HOMOCYSTEN_GD", name: "Homocysten", type: "test", mrp: 1155, b2b: 400 },
-    { id: "CA125_FEMALE_GD", name: "CA125 (Female)", type: "test", mrp: 1155, b2b: 350 },
-    { id: "PSA_MALE_GD", name: "PSA (Male)", type: "test", mrp: 935, b2b: 300 },
-    { id: "IGE_GD", name: "IGE", type: "test", mrp: 825, b2b: 195 },
-    { id: "TROPT_GD", name: "Trop-T", type: "test", mrp: 1800, b2b: 700 },
-    { id: "ANTI_CCP_GD", name: "Anti CCP", type: "test", mrp: 1375, b2b: 385 },
-    { id: "ANA_GD", name: "ANA", type: "test", mrp: 750, b2b: 175 },
-    { id: "TOTAL_PROTIEN_GD", name: "Total Protien", type: "test", mrp: 200, b2b: 22 },
-    { id: "COVID_ANTIBODY_GD", name: "Covid Antibody", type: "test", mrp: 700, b2b: 270 },
-    { id: "FNAC_GD", name: "FNAC", type: "test", mrp: 1150, b2b: 330 },
-    { id: "PP_INSULINE_GD", name: "PP Insuline", type: "test", mrp: 770, b2b: 150 },
-    { id: "CEA_GD", name: "CEA", type: "test", mrp: 715, b2b: 250 },
-    { id: "AFPL_GD", name: "AFPL", type: "test", mrp: 750, b2b: 295 },
-    { id: "HB_ELECTROPHORESIS_GD", name: "Hb Electrophoresis", type: "test", mrp: 600, b2b: 315 },
-    { id: "FT3_GD", name: "FT3", type: "test", mrp: 275, b2b: 60 },
-    { id: "FT4_GD", name: "FT4", type: "test", mrp: 300, b2b: 60 },
-    { id: "URINE_PROTEIN_CREATININE_RATIO_GD", name: "Urine Protein Creatinine Ratio", type: "test", mrp: 900, b2b: 150 },
-    { id: "PROTEIN_WITH_AG_RATIO_GD", name: "Protein with A/G Ratio", type: "test", mrp: 400, b2b: 150 },
-    { id: "LIPASE_GD", name: "Lipase", type: "test", mrp: 620, b2b: 120 },
-    { id: "ESTRADIOL_GD", name: "Estradiol", type: "test", mrp: 605, b2b: 165 },
-    { id: "PUS_CULTURE_AEROBIC_GD", name: "PUS Culture (Aerobic)", type: "test", mrp: 1455, b2b: 945 },
-    { id: "FT3_FT4_GD", name: "FT3  FT4", type: "test", mrp: 575, b2b: 120 },
-    { id: "FECAL_CALPROTECTIN_GD", name: "Fecal Calprotectin", type: "test", mrp: 3630, b2b: 2340 },
-    { id: "BLOOD_CULTURE_1_SE_GD", name: "Blood Culture 1 SE", type: "test", mrp: 1045, b2b: 530 },
-    { id: "NT_PRO_BNP_GD", name: "NT-Pro BNP", type: "test", mrp: 3450, b2b: 2500 },
-    { id: "HBS_ANTIGEN_GD", name: "HBS Antigen", type: "test", mrp: 450, b2b: 250 },
-    { id: "MANTOUX_TEST_GD", name: "Mantoux Test", type: "test", mrp: null, b2b: null },
-    { id: "RETICULATE_COUNT_GD", name: "Reticulate Count", type: "test", mrp: 550, b2b: 20 },
-    { id: "DIRECT_COOMBS_TEST_GD", name: "Direct Coombs Test", type: "test", mrp: 825, b2b: 160 },
-    { id: "MICROALBUMINURIA_GD", name: "Microalbuminuria", type: "test", mrp: 800, b2b: 350 },
-    { id: "TOTAL_TESTOSTERON_GD", name: "Total Testosteron", type: "test", mrp: 605, b2b: 100 },
-    { id: "FREE_TESTOSTERON_GD", name: "Free Testosteron", type: "test", mrp: 1485, b2b: 340 },
-    { id: "PROTEIN_C_GD", name: "Protein C", type: "test", mrp: 5350, b2b: 2600 },
-    { id: "PROTEIN_S_GD", name: "Protein S", type: "test", mrp: 4950, b2b: 2600 },
-    { id: "LUPUS_ANTICOAGULANT_GD", name: "Lupus Anticoagulant", type: "test", mrp: 2650, b2b: 600 },
-    { id: "FIBRINOGEN_LEVEL_GD", name: "Fibrinogen Level", type: "test", mrp: 1250, b2b: 900 },
-    { id: "ANTI_DSDNA_NCX_GD", name: "Anti dsDNA NCX", type: "test", mrp: 1650, b2b: 200 },
-    { id: "APOLIPOPROTEIN_A1_B_GD", name: "Apolipoprotein A-1 & B", type: "test", mrp: null, b2b: null },
-    { id: "FOLIC_ACID_LEVEL_GD", name: "Folic Acid Level", type: "test", mrp: 1045, b2b: 160 },
-    { id: "ALLERGY_COMPREHENSIVE_GD", name: "Allergy Comprehensive", type: "test", mrp: null, b2b: null },
-    { id: "MALERIA_ANTIGEN_GD", name: "Maleria Antigen", type: "test", mrp: 700, b2b: 100 },
-    { id: "URINE_GLUCOSE_FASTING_GD", name: "Urine Glucose (Fasting)", type: "test", mrp: 70, b2b: 25 },
-    { id: "FACTOR_V_GD", name: "Factor V", type: "test", mrp: 7086, b2b: 4200 },
-    { id: "FERRITINE_GD", name: "Ferritine", type: "test", mrp: 800, b2b: 160 },
-    { id: "HAV_GD", name: "HAV", type: "test", mrp: 880, b2b: 275 },
-    { id: "HEV_GD", name: "HEV", type: "test", mrp: 1210, b2b: 375 },
-    { id: "RA_TEST_GD", name: "RA Test", type: "test", mrp: 495, b2b: 200 },
-    { id: "IRON_PROFILE_WITH_FERRITINE_GD", name: "Iron Profile with Ferritine", type: "test", mrp: null, b2b: null },
-    { id: "ALLERGY_DRUG_TEST_GD", name: "Allergy Drug Test", type: "test", mrp: 5900, b2b: 1700 },
-    { id: "IGA_TTG_GD", name: "IGA TTG", type: "test", mrp: 1210, b2b: 280 },
-    { id: "PERIPHERAL_SMEAR_GD", name: "Peripheral Smear", type: "test", mrp: 300, b2b: 100 },
-    { id: "PTT_GD", name: "PTT", type: "test", mrp: 450, b2b: 105 },
-    { id: "CORTISOL_8_AM_GD", name: "Cortisol 8 AM", type: "test", mrp: 605, b2b: 295 },
-    { id: "H_PYLORI_STOOL_GD", name: "H. Pylori Stool", type: "test", mrp: 1500, b2b: 1200 },
-    { id: "CHIKUNGUNYA_IGG_GD", name: "Chikungunya IgG", type: "test", mrp: 825, b2b: 500 },
-    { id: "FBA_GD", name: "FBA", type: "test", mrp: null, b2b: null },
-    { id: "PROTEIN_ELECTROPHORESIS_GD", name: "Protein Electrophoresis", type: "test", mrp: 660, b2b: 350 },
-    { id: "SPUTUM_TB_CULTURE_ABS_GD", name: "Sputum TB Culture & ABS", type: "test", mrp: null, b2b: null },
-    { id: "COMPLEMENT_C3_C4_GD", name: "Complement C3 & C4", type: "test", mrp: null, b2b: null },
-    { id: "DHEAS_GD", name: "DHEAS", type: "test", mrp: 1045, b2b: 275 },
-    { id: "DHEA_GD", name: "DHEA", type: "test", mrp: 2965, b2b: 2150 },
-    { id: "TORCH_COMPLEX_GD", name: "Torch Complex", type: "test", mrp: 1430, b2b: 800 },
-    { id: "ZINC_LEVEL_GD", name: "Zinc Level", type: "test", mrp: 880, b2b: 460 },
-    { id: "MAGNESIUM_GD", name: "Magnesium", type: "test", mrp: 440, b2b: 50 },
-    { id: "ESTROGEN_GD", name: "Estrogen", type: "test", mrp: null, b2b: null },
-    { id: "C_PEPTIDE_RANDOM_GD", name: "C-Peptide Random", type: "test", mrp: null, b2b: null },
-    { id: "B2_GLYCOPROTEIN_1_IGG_GD", name: "B2 Glycoprotein 1 IgG", type: "test", mrp: 1100, b2b: 660 },
-    { id: "KARYOTYPING_HUSBAND_GD", name: "Karyotyping - Husband", type: "test", mrp: 4400, b2b: 1500 },
-    { id: "KARYOTYPING_WIFE_GD", name: "Karyotyping - Wife", type: "test", mrp: 4400, b2b: 1500 },
-    { id: "INFLUENZA_SCREENING_FOR_ABF_GD", name: "Influenza Screening for ABF", type: "test", mrp: null, b2b: null },
-    { id: "PSA_FREE_TOTAL_GD", name: "PSA Free & Total", type: "test", mrp: 1760, b2b: 465 },
-    { id: "LH_GD", name: "LH", type: "test", mrp: 495, b2b: 100 },
-    { id: "FSH_GD", name: "FSH", type: "test", mrp: 495, b2b: 100 },
-    { id: "SEMEN_ANALYSIS_GD", name: "Semen Analysis", type: "test", mrp: null, b2b: null },
-    { id: "ALKALINE_PHOSPHATASE_GD", name: "Alkaline Phosphatase", type: "test", mrp: null, b2b: null },
-    { id: "GLOBULIN_GD", name: "Globulin", type: "test", mrp: null, b2b: null },
-    { id: "BUN_CREATININE_RATIO_GD", name: "BUN / Creatinine Ratio", type: "test", mrp: null, b2b: null },
-    { id: "UREA_G_RATIO_GD", name: "Urea/G Ratio", type: "test", mrp: null, b2b: null },
-    { id: "T3_GD", name: "T3", type: "test", mrp: null, b2b: null },
-    { id: "T4_GD", name: "T4", type: "test", mrp: null, b2b: null },
-    { id: "STOOL_ROUTINE_GD", name: "Stool Routine", type: "test", mrp: 220, b2b: 60 },
-    { id: "ALBUMIN_GD", name: "Albumin", type: "test", mrp: null, b2b: null },
-    { id: "BILLIRUBIN_INDIRECT_GD", name: "Billirubin Indirect", type: "test", mrp: null, b2b: null },
-    { id: "BICARBONATE_GD", name: "Bicarbonate", type: "test", mrp: null, b2b: null },
-    { id: "AMYLASE_GD", name: "Amylase", type: "test", mrp: null, b2b: null },
-    { id: "ACTH_GD", name: "ACTH", type: "test", mrp: null, b2b: null },
-    { id: "THROAT_SWAB_C_S_GD", name: "Throat Swab C/S", type: "test", mrp: null, b2b: null },
-    { id: "ASO_TITER_GD", name: "ASO Titer", type: "test", mrp: null, b2b: null }
+  id:'lab1', name:'General Diagnostics',
+  tests:[
+    {id:'l1_001', name:'CBC', mrp:300, b2b:60},
+    {id:'l1_002', name:'Blood Group', mrp:220, b2b:50},
+    {id:'l1_003', name:'ESR', mrp:200, b2b:50},
+    {id:'l1_004', name:'FBS', mrp:70, b2b:15},
+    {id:'l1_005', name:'PP', mrp:70, b2b:15},
+    {id:'l1_006', name:'RBS', mrp:70, b2b:15},
+    {id:'l1_007', name:'Fasting Insuline', mrp:770, b2b:150},
+    {id:'l1_008', name:'HbA1C', mrp:495, b2b:60},
+    {id:'l1_009', name:'Bilirubin-Total', mrp:130, b2b:22},
+    {id:'l1_010', name:'Bilirubin-Direct', mrp:130, b2b:24},
+    {id:'l1_011', name:'SGPT', mrp:190, b2b:24},
+    {id:'l1_012', name:'SGOT', mrp:190, b2b:22},
+    {id:'l1_013', name:'GGT', mrp:242, b2b:60},
+    {id:'l1_014', name:'Creatinine', mrp:180, b2b:22},
+    {id:'l1_015', name:'Urea', mrp:165, b2b:25},
+    {id:'l1_016', name:'BUN', mrp:220, b2b:60},
+    {id:'l1_017', name:'Uric Acid', mrp:220, b2b:22},
+    {id:'l1_018', name:'Calcium', mrp:176, b2b:22},
+    {id:'l1_019', name:'Lipid Profile', mrp:715, b2b:100},
+    {id:'l1_020', name:'Total Cholestrol', mrp:180, b2b:10},
+    {id:'l1_021', name:'HDL', mrp:180, b2b:10},
+    {id:'l1_022', name:'LDL', mrp:300, b2b:50},
+    {id:'l1_023', name:'LDH', mrp:363, b2b:60},
+    {id:'l1_024', name:'Sodium', mrp:275, b2b:40},
+    {id:'l1_025', name:'Chlorides', mrp:275, b2b:40},
+    {id:'l1_026', name:'Phosphorous', mrp:275, b2b:40},
+    {id:'l1_027', name:'Potassium', mrp:220, b2b:40},
+    {id:'l1_028', name:'Iron Study', mrp:660, b2b:150},
+    {id:'l1_029', name:'Vit D3', mrp:1280, b2b:200},
+    {id:'l1_030', name:'Vit B12', mrp:990, b2b:160},
+    {id:'l1_031', name:'TSH', mrp:275, b2b:20},
+    {id:'l1_032', name:'CRP', mrp:495, b2b:150},
+    {id:'l1_033', name:'HSCRP', mrp:750, b2b:175},
+    {id:'l1_034', name:'CPK-MB', mrp:715, b2b:200},
+    {id:'l1_035', name:'CPK-Total', mrp:385, b2b:125},
+    {id:'l1_036', name:'Trop-I', mrp:1200, b2b:650},
+    {id:'l1_037', name:'D-Dimer', mrp:1650, b2b:375},
+    {id:'l1_038', name:'PT INR', mrp:450, b2b:105},
+    {id:'l1_039', name:'ApTT', mrp:418, b2b:200},
+    {id:'l1_040', name:'HIV', mrp:475, b2b:120},
+    {id:'l1_041', name:'HCV', mrp:935, b2b:99},
+    {id:'l1_042', name:'HBsAg', mrp:450, b2b:250},
+    {id:'l1_043', name:'VDRL', mrp:220, b2b:75},
+    {id:'l1_044', name:'Urine Culture', mrp:950, b2b:120},
+    {id:'l1_045', name:'Urine Routine', mrp:300, b2b:100},
+    {id:'l1_046', name:'RA Factor', mrp:495, b2b:200},
+    {id:'l1_047', name:'MP', mrp:275, b2b:100},
+    {id:'l1_048', name:'Widal', mrp:330, b2b:60},
+    {id:'l1_049', name:'Dengue NSI', mrp:660, b2b:250},
+    {id:'l1_050', name:'Dengue IGG', mrp:660, b2b:275},
+    {id:'l1_051', name:'Dengue IGM', mrp:660, b2b:275},
+    {id:'l1_052', name:'MP-Antigen', mrp:700, b2b:100},
+    {id:'l1_053', name:'Beta HCG', mrp:550, b2b:160},
+    {id:'l1_054', name:'Homocysten', mrp:1155, b2b:400},
+    {id:'l1_055', name:'CA125 (Female)', mrp:1155, b2b:350},
+    {id:'l1_056', name:'PSA (Male)', mrp:935, b2b:300},
+    {id:'l1_057', name:'IGE', mrp:825, b2b:195},
+    {id:'l1_058', name:'Trop-T', mrp:1800, b2b:700},
+    {id:'l1_059', name:'Anti CCP', mrp:1375, b2b:385},
+    {id:'l1_060', name:'ANA', mrp:750, b2b:175},
+    {id:'l1_061', name:'Total Protien', mrp:200, b2b:22},
+    {id:'l1_062', name:'Covid Antibody', mrp:700, b2b:270},
+    {id:'l1_063', name:'FNAC', mrp:1150, b2b:330},
+    {id:'l1_064', name:'PP Insuline', mrp:770, b2b:150},
+    {id:'l1_065', name:'CEA', mrp:715, b2b:250},
+    {id:'l1_066', name:'AFPL', mrp:750, b2b:295},
+    {id:'l1_067', name:'Hb Electrophoresis', mrp:600, b2b:315},
+    {id:'l1_068', name:'FT3', mrp:275, b2b:60},
+    {id:'l1_069', name:'FT4', mrp:300, b2b:60},
+    {id:'l1_070', name:'Urine Protein Creatinine Ratio', mrp:900, b2b:150},
+    {id:'l1_071', name:'Protein with A/G Ratio', mrp:400, b2b:150},
+    {id:'l1_072', name:'Lipase', mrp:620, b2b:120},
+    {id:'l1_073', name:'Estradiol', mrp:605, b2b:165},
+    {id:'l1_074', name:'PUS Culture (Aerobic)', mrp:1455, b2b:945},
+    {id:'l1_075', name:'FT3 FT4', mrp:575, b2b:120},
+    {id:'l1_076', name:'Fecal Calprotectin', mrp:3630, b2b:2340},
+    {id:'l1_077', name:'Blood Culture 1 SE', mrp:1045, b2b:530},
+    {id:'l1_078', name:'NT-Pro BNP', mrp:3450, b2b:2500},
+    {id:'l1_079', name:'HBS Antigen', mrp:450, b2b:250},
+    {id:'l1_080', name:'Mantoux Test', mrp:null, b2b:null},
+    {id:'l1_081', name:'Reticulate Count', mrp:550, b2b:20},
+    {id:'l1_082', name:'Direct Coombs Test', mrp:825, b2b:160},
+    {id:'l1_083', name:'Microalbuminuria', mrp:800, b2b:350},
+    {id:'l1_084', name:'Total Testosteron', mrp:605, b2b:100},
+    {id:'l1_085', name:'Free Testosteron', mrp:1485, b2b:340},
+    {id:'l1_086', name:'Protein C', mrp:5350, b2b:2600},
+    {id:'l1_087', name:'Protein S', mrp:4950, b2b:2600},
+    {id:'l1_088', name:'Lupus Anticoagulant', mrp:2650, b2b:600},
+    {id:'l1_089', name:'Fibrinogen Level', mrp:1250, b2b:900},
+    {id:'l1_090', name:'Anti dsDNA NCX', mrp:1650, b2b:200},
+    {id:'l1_091', name:'Apolipoprotein A-1 & B', mrp:null, b2b:null},
+    {id:'l1_092', name:'Folic Acid Level', mrp:1045, b2b:160},
+    {id:'l1_093', name:'Allergy Comprehensive', mrp:null, b2b:null},
+    {id:'l1_094', name:'Maleria Antigen', mrp:700, b2b:100},
+    {id:'l1_095', name:'Urine Glucose (Fasting)', mrp:70, b2b:25},
+    {id:'l1_096', name:'Factor V', mrp:7086, b2b:4200},
+    {id:'l1_097', name:'Ferritine', mrp:800, b2b:160},
+    {id:'l1_098', name:'HAV', mrp:880, b2b:275},
+    {id:'l1_099', name:'HEV', mrp:1210, b2b:375},
+    {id:'l1_100', name:'RA Test', mrp:495, b2b:200},
+    {id:'l1_101', name:'Iron Profile with Ferritine', mrp:null, b2b:null},
+    {id:'l1_102', name:'Allergy Drug Test', mrp:5900, b2b:1700},
+    {id:'l1_103', name:'IGA TTG', mrp:1210, b2b:280},
+    {id:'l1_104', name:'Peripheral Smear', mrp:300, b2b:100},
+    {id:'l1_105', name:'PTT', mrp:450, b2b:105},
+    {id:'l1_106', name:'Cortisol 8 AM', mrp:605, b2b:295},
+    {id:'l1_107', name:'H. Pylori Stool', mrp:1500, b2b:1200},
+    {id:'l1_108', name:'Chikungunya IgG', mrp:825, b2b:500},
+    {id:'l1_109', name:'FBA', mrp:null, b2b:null},
+    {id:'l1_110', name:'Protein Electrophoresis', mrp:660, b2b:350},
+    {id:'l1_111', name:'Sputum TB Culture & ABS', mrp:null, b2b:null},
+    {id:'l1_112', name:'Complement C3 & C4', mrp:null, b2b:null},
+    {id:'l1_113', name:'DHEAS', mrp:1045, b2b:275},
+    {id:'l1_114', name:'DHEA', mrp:2965, b2b:2150},
+    {id:'l1_115', name:'Torch Complex', mrp:1430, b2b:800},
+    {id:'l1_116', name:'Zinc Level', mrp:880, b2b:460},
+    {id:'l1_117', name:'Magnesium', mrp:440, b2b:50},
+    {id:'l1_118', name:'Estrogen', mrp:null, b2b:null},
+    {id:'l1_119', name:'C-Peptide Random', mrp:null, b2b:null},
+    {id:'l1_120', name:'B2 Glycoprotein 1 IgG', mrp:1100, b2b:660},
+    {id:'l1_121', name:'Karyotyping - Husband', mrp:4400, b2b:1500},
+    {id:'l1_122', name:'Karyotyping - Wife', mrp:4400, b2b:1500},
+    {id:'l1_123', name:'Influenza Screening for ABF', mrp:null, b2b:null},
+    {id:'l1_124', name:'PSA Free & Total', mrp:1760, b2b:465},
+    {id:'l1_125', name:'LH', mrp:495, b2b:100},
+    {id:'l1_126', name:'FSH', mrp:495, b2b:100},
+    {id:'l1_127', name:'Semen Analysis', mrp:null, b2b:null},
+    {id:'l1_128', name:'Alkaline Phosphatase', mrp:210, b2b:22},
+    {id:'l1_129', name:'Globulin', mrp:null, b2b:null},
+    {id:'l1_130', name:'BUN / Creatinine Ratio', mrp:null, b2b:null},
+    {id:'l1_131', name:'Urea/G Ratio', mrp:null, b2b:null},
+    {id:'l1_132', name:'T3', mrp:null, b2b:null},
+    {id:'l1_133', name:'T4', mrp:null, b2b:null},
+    {id:'l1_134', name:'Stool Routine', mrp:220, b2b:60},
+    {id:'l1_135', name:'Albumin', mrp:165, b2b:24},
+    {id:'l1_136', name:'Billirubin Indirect', mrp:null, b2b:null},
+    {id:'l1_137', name:'Bicarbonate', mrp:450, b2b:250},
+    {id:'l1_138', name:'Amylase', mrp:450, b2b:135},
+    {id:'l1_139', name:'ACTH', mrp:1950, b2b:550},
+    {id:'l1_140', name:'Throat Swab C/S', mrp:null, b2b:null},
+    {id:'l1_141', name:'ASO Titer', mrp:null, b2b:null},
+    {id:'l1_142', name:'AMH', mrp:2142, b2b:600},
+    {id:'l1_143', name:'PTH ', mrp:1450, b2b:null},
+    {id:'l1_144', name:'Apo B: Apo A1 ratio', mrp:null, b2b:null},
+    {id:'l1_145', name:'BT CT ', mrp:null, b2b:null},
+    {id:'l1_146', name:'HPV DNA', mrp:2500, b2b:1500},
+    {id:'l1_147', name:'Extra Test', mrp:0, b2b:0},
+    {id:'l1_148', name:'Anti tpo antibody', mrp:1150, b2b:600},
+    {id:'l1_149', name:'Apolipoprotein A-1 ', mrp:495, b2b:180},
+    {id:'l1_150', name:'Apolipoprotein B', mrp:495, b2b:180},
+    {id:'l1_151', name:'STOOL CAL PROTEIN', mrp:null, b2b:null},
+    {id:'l1_152', name:'Phadiatop', mrp:1450, b2b:1150},
+    {id:'l1_153', name:'Prolactin', mrp:605, b2b:100},
+    {id:'l1_154', name:'Progesteron', mrp:605, b2b:160},
+    {id:'l1_155', name:'SPECIFIC CARDIAC PROFILE', mrp:1500, b2b:1000},
+    {id:'l1_156', name:'LIPOPROTEIN', mrp:1045, b2b:225},
+    {id:'l1_157', name:'H PYLORI ANTIGEN DETECTION FROM STOOL ', mrp:1500, b2b:1200},
+    {id:'l1_158', name:'TYPHII DOT IGM ', mrp:605, b2b:200},
+    {id:'l1_159', name:'Osmolarity Serum', mrp:900, b2b:250},
+    {id:'l1_160', name:'Osmolarity Urine', mrp:990, b2b:350},
+    {id:'l1_161', name:'Dual Marker', mrp:2200, b2b:500},
+    {id:'l1_162', name:'THYPHI IgM ', mrp:605, b2b:200}
   ],
-
-  combos: [
-    { id: "LFT_GD", name: "LFT", type: "combo", contains: ["Bilirubin-Total", "Bilirubin-Direct", "SGOT", "SGPT", "Total Protien", "Protein with A/G Ratio", "GGT", "Alkaline Phosphatase", "Globulin", "Albumin", "Billirubin Indirect"], mrp: 1045, b2b: 150 },
-    { id: "RFT_GD", name: "RFT", type: "combo", contains: ["BUN", "Calcium", "Albumin", "Creatinine", "Phosphorous", "Uric Acid", "Globulin", "Sodium", "Potassium", "Chlorides", "BUN / Creatinine Ratio", "Urea"], mrp: 1150, b2b: 863 },
-    { id: "ELECTROLYTES_GD", name: "Electrolytes", type: "combo", contains: ["Sodium", "Potassium", "Chlorides"], mrp: 520, b2b: 100 },
-    { id: "TOTAL_TFT_GD", name: "Total TFT", type: "combo", contains: ["T3", "T4", "TSH"], mrp: 495, b2b: 60 },
-    { id: "FREE_TFT_GD", name: "Free TFT", type: "combo", contains: ["FT3", "FT4", "TSH"], mrp: 1045, b2b: 140 },
-    { id: "TRIPLE_H_GD", name: "Triple H", type: "combo", contains: ["HCV", "HBsAg", "HIV"], mrp: 1730, b2b: 350 }
+  combos:[
+    {id:'l1_c001', name:'LFT', mrp:1045, b2b:150, contains:[
+      {type:'test', id:'l1_009'}, {type:'test', id:'l1_010'}, {type:'test', id:'l1_012'},
+      {type:'test', id:'l1_011'}, {type:'test', id:'l1_061'}, {type:'test', id:'l1_071'},
+      {type:'test', id:'l1_013'}, {type:'test', id:'l1_128'}, {type:'test', id:'l1_129'},
+      {type:'test', id:'l1_135'}, {type:'test', id:'l1_136'}
+    ]},
+    {id:'l1_c002', name:'RFT', mrp:1150, b2b:863, contains:[
+      {type:'test', id:'l1_016'}, {type:'test', id:'l1_018'}, {type:'test', id:'l1_135'},
+      {type:'test', id:'l1_014'}, {type:'test', id:'l1_026'}, {type:'test', id:'l1_017'},
+      {type:'test', id:'l1_129'}, {type:'test', id:'l1_024'}, {type:'test', id:'l1_027'},
+      {type:'test', id:'l1_025'}, {type:'test', id:'l1_130'}, {type:'test', id:'l1_015'}
+    ]},
+    {id:'l1_c003', name:'Electrolytes', mrp:520, b2b:100, contains:[
+      {type:'test', id:'l1_024'}, {type:'test', id:'l1_027'}, {type:'test', id:'l1_025'}
+    ]},
+    {id:'l1_c004', name:'Total TFT', mrp:495, b2b:60, contains:[
+      {type:'test', id:'l1_132'}, {type:'test', id:'l1_133'}, {type:'test', id:'l1_031'}
+    ]},
+    {id:'l1_c005', name:'Free TFT', mrp:1045, b2b:140, contains:[
+      {type:'test', id:'l1_068'}, {type:'test', id:'l1_069'}, {type:'test', id:'l1_031'}
+    ]},
+    {id:'l1_c006', name:'Triple H', mrp:1730, b2b:350, contains:[
+      {type:'test', id:'l1_041'}, {type:'test', id:'l1_042'}, {type:'test', id:'l1_040'}
+    ]},
+    {id:'l1_c007', name:'Viral marker', mrp:1730, b2b:350, contains:[
+      {type:'test', id:'l1_042'}, {type:'test', id:'l1_041'}, {type:'test', id:'l1_040'}
+    ]},
+    {id:'l1_c008', name:'SPECIFIC CARDIAC PROFILE', mrp:1500, b2b:1000, contains:[
+      {type:'test', id:'l1_033'}, {type:'test', id:'l1_054'}, {type:'test', id:'l1_091'}
+    ]}
   ],
-
-  packages: [
-    { id: "GD_LIFE_A1_GD", name: "GD Life A1", type: "package", contains: ["Iron Study", "RFT", "CBC", "LFT", "Lipid Profile", "Total TFT"], mrp: 1400, b2b: 295 },
-    { id: "GD_LIFE_A3_GD", name: "GD Life A3", type: "package", contains: ["FBS", "LFT", "Lipid Profile", "TSH", "CBC", "RFT"], mrp: 1200, b2b: 230 },
-    { id: "GD_WELLNESS_1_3_GD", name: "GD Wellness 1.3", type: "package", contains: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "Vit D3", "Vit B12", "Total TFT"], mrp: 1800, b2b: 600 },
-    { id: "ALPHA_WELLNESS_1_3_GD", name: "ALPHA WELLNESS 1.3", type: "package", contains: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "RFT", "Vit D3", "Vit B12", "CBC", "ESR", "CRP", "Total TFT"], mrp: 2150, b2b: 750 },
-    { id: "COMPREHENSIVE_FULL_BODY_CHECKUP_GD", name: "COMPREHENSIVE FULL BODY CHECKUP", type: "package", contains: ["CBC", "Vit B12", "Vit D3", "HBsAg", "Urine Routine", "Peripheral Smear", "ESR", "Electrolytes", "Iron Study", "LFT", "Lipid Profile", "CRP"], mrp: 2000, b2b: 1050 },
-    { id: "GD_WELLNESS_15_1_GD", name: "GD WELLNESS 15.1", type: "package", contains: ["Iron Study", "LFT", "Lipid Profile", "RFT", "Total TFT"], mrp: 1000, b2b: 550 },
-    { id: "GD_LIFE_A6_GD", name: "GD LIFE - A6", type: "package", contains: ["Homocysten", "Iron Study", "LFT", "Lipid Profile", "Total TFT", "HbA1C", "RFT", "Vit B12", "Vit D3"], mrp: 1800, b2b: 750 },
-    { id: "SUMMER_HEALTH_PACKAGE_GD", name: "Summer Health Package", type: "package", contains: ["Iron Study", "Total TFT", "LFT", "HbA1C", "RFT", "Vit D3", "Vit B12", "Lipid Profile", "Electrolytes", "CBC", "Urine Routine"], mrp: 2000, b2b: 700 }
+  packages:[
+    {id:'l1_p001', name:'GD Life A1', mrp:1400, b2b:295, contains:[
+      {type:'test', id:'l1_028'}, {type:'combo', id:'l1_c002'}, {type:'test', id:'l1_001'},
+      {type:'combo', id:'l1_c001'}, {type:'test', id:'l1_019'}, {type:'combo', id:'l1_c004'}
+    ]},
+    {id:'l1_p002', name:'GD Life A3', mrp:1200, b2b:230, contains:[
+      {type:'test', id:'l1_004'}, {type:'combo', id:'l1_c001'}, {type:'test', id:'l1_019'},
+      {type:'test', id:'l1_031'}, {type:'test', id:'l1_001'}, {type:'combo', id:'l1_c002'}
+    ]},
+    {id:'l1_p003', name:'GD Wellness 1.3', mrp:1800, b2b:600, contains:[
+      {type:'test', id:'l1_084'}, {type:'test', id:'l1_028'}, {type:'combo', id:'l1_c001'},
+      {type:'test', id:'l1_019'}, {type:'test', id:'l1_008'}, {type:'test', id:'l1_029'},
+      {type:'test', id:'l1_030'}, {type:'combo', id:'l1_c004'}
+    ]},
+    {id:'l1_p004', name:'ALPHA WELLNESS 1.3', mrp:2150, b2b:750, contains:[
+      {type:'test', id:'l1_084'}, {type:'test', id:'l1_028'}, {type:'combo', id:'l1_c001'},
+      {type:'test', id:'l1_019'}, {type:'test', id:'l1_008'}, {type:'combo', id:'l1_c002'},
+      {type:'test', id:'l1_029'}, {type:'test', id:'l1_030'}, {type:'test', id:'l1_001'},
+      {type:'test', id:'l1_003'}, {type:'test', id:'l1_032'}, {type:'combo', id:'l1_c004'}
+    ]},
+    {id:'l1_p005', name:'COMPREHENSIVE FULL BODY CHECKUP', mrp:2000, b2b:1050, contains:[
+      {type:'test', id:'l1_001'}, {type:'test', id:'l1_030'}, {type:'test', id:'l1_029'},
+      {type:'test', id:'l1_042'}, {type:'test', id:'l1_045'}, {type:'test', id:'l1_104'},
+      {type:'test', id:'l1_003'}, {type:'combo', id:'l1_c003'}, {type:'test', id:'l1_028'},
+      {type:'combo', id:'l1_c001'}, {type:'test', id:'l1_019'}, {type:'test', id:'l1_032'}
+    ]},
+    {id:'l1_p006', name:'GD WELLNESS 15.1', mrp:1000, b2b:550, contains:[
+      {type:'test', id:'l1_028'}, {type:'combo', id:'l1_c001'}, {type:'test', id:'l1_019'},
+      {type:'combo', id:'l1_c002'}, {type:'combo', id:'l1_c004'}
+    ]},
+    {id:'l1_p007', name:'GD LIFE - A6', mrp:1800, b2b:750, contains:[
+      {type:'test', id:'l1_054'}, {type:'test', id:'l1_028'}, {type:'combo', id:'l1_c001'},
+      {type:'test', id:'l1_019'}, {type:'combo', id:'l1_c004'}, {type:'test', id:'l1_008'},
+      {type:'combo', id:'l1_c002'}, {type:'test', id:'l1_030'}, {type:'test', id:'l1_029'}
+    ]},
+    {id:'l1_p008', name:'GD Health Heaven', mrp:2499, b2b:650, contains:[
+      {type:'test', id:'l1_001'}, {type:'test', id:'l1_008'}, {type:'test', id:'l1_028'},
+      {type:'combo', id:'l1_c004'}, {type:'combo', id:'l1_c001'}, {type:'combo', id:'l1_c002'},
+      {type:'test', id:'l1_030'}, {type:'test', id:'l1_029'}, {type:'test', id:'l1_004'},
+      {type:'test', id:'l1_045'}, {type:'test', id:'l1_019'}
+    ]},
+    {id:'l1_p009', name:'Summer Health Package', mrp:2000, b2b:700, contains:[
+      {type:'test', id:'l1_028'}, {type:'combo', id:'l1_c004'}, {type:'combo', id:'l1_c001'},
+      {type:'test', id:'l1_008'}, {type:'combo', id:'l1_c002'}, {type:'test', id:'l1_029'},
+      {type:'test', id:'l1_030'}, {type:'test', id:'l1_019'}, {type:'combo', id:'l1_c003'},
+      {type:'test', id:'l1_001'}, {type:'test', id:'l1_045'}
+    ]},
+    {id:'l1_p010', name:'Tax Saver Health Package', mrp:2500, b2b:950, contains:[
+      {type:'test', id:'l1_029'}, {type:'test', id:'l1_030'}, {type:'test', id:'l1_046'},
+      {type:'test', id:'l1_003'}, {type:'combo', id:'l1_c003'}, {type:'test', id:'l1_028'},
+      {type:'combo', id:'l1_c001'}, {type:'test', id:'l1_019'}, {type:'combo', id:'l1_c004'},
+      {type:'test', id:'l1_008'}, {type:'combo', id:'l1_c002'}, {type:'test', id:'l1_001'},
+      {type:'test', id:'l1_033'}, {type:'test', id:'l1_091'}, {type:'test', id:'l1_144'}
+    ]},
+    {id:'l1_p011', name:'GD ADVANCE MEN PACKAGE', mrp:2200, b2b:900, contains:[
+      {type:'test', id:'l1_045'}, {type:'test', id:'l1_028'}, {type:'combo', id:'l1_c001'},
+      {type:'combo', id:'l1_c002'}, {type:'test', id:'l1_019'}, {type:'test', id:'l1_029'},
+      {type:'test', id:'l1_008'}, {type:'combo', id:'l1_c004'}, {type:'test', id:'l1_072'},
+      {type:'combo', id:'l1_c003'}, {type:'test', id:'l1_056'}, {type:'test', id:'l1_138'},
+      {type:'test', id:'l1_030'}, {type:'combo', id:'l1_c008'}
+    ]}
   ]
-}
-  ];
+},
+{
+  id:'lab2', name:'Ajay Shah Laboratory',
+  tests:[
+    {id:'l2_001', name:'CBC', mrp:300, b2b:80},
+    {id:'l2_002', name:'Blood Group', mrp:180, b2b:80},
+    {id:'l2_003', name:'ESR', mrp:150, b2b:60},
+    {id:'l2_004', name:'FBS', mrp:80, b2b:30},
+    {id:'l2_005', name:'PP', mrp:80, b2b:30},
+    {id:'l2_006', name:'RBS', mrp:80, b2b:30},
+    {id:'l2_007', name:'Fasting Insuline', mrp:800, b2b:350},
+    {id:'l2_008', name:'HbA1C', mrp:550, b2b:130},
+    {id:'l2_009', name:'Bilirubin-Total', mrp:190, b2b:96},
+    {id:'l2_010', name:'Bilirubin-Direct', mrp:190, b2b:96},
+    {id:'l2_011', name:'SGPT', mrp:190, b2b:40},
+    {id:'l2_012', name:'SGOT', mrp:190, b2b:40},
+    {id:'l2_013', name:'GGT', mrp:280, b2b:182},
+    {id:'l2_014', name:'Creatinine', mrp:190, b2b:50},
+    {id:'l2_015', name:'Urea', mrp:190, b2b:108},
+    {id:'l2_016', name:'BUN', mrp:190, b2b:108},
+    {id:'l2_017', name:'Uric Acid', mrp:190, b2b:50},
+    {id:'l2_018', name:'Calcium', mrp:190, b2b:114},
+    {id:'l2_019', name:'Lipid Profile', mrp:600, b2b:185},
+    {id:'l2_020', name:'Total Cholestrol', mrp:190, b2b:108},
+    {id:'l2_021', name:'HDL', mrp:220, b2b:132},
+    {id:'l2_022', name:'LDL', mrp:400, b2b:240},
+    {id:'l2_023', name:'LDH', mrp:500, b2b:150},
+    {id:'l2_024', name:'Sodium', mrp:180, b2b:108},
+    {id:'l2_025', name:'Chlorides', mrp:150, b2b:90},
+    {id:'l2_026', name:'Phosphorous', mrp:190, b2b:114},
+    {id:'l2_027', name:'Potassium', mrp:180, b2b:108},
+    {id:'l2_028', name:'Iron Study', mrp:800, b2b:300},
+    {id:'l2_029', name:'Vit D3', mrp:1300, b2b:250},
+    {id:'l2_030', name:'Vit B12', mrp:850, b2b:250},
+    {id:'l2_031', name:'TSH', mrp:370, b2b:50},
+    {id:'l2_032', name:'CRP', mrp:450, b2b:150},
+    {id:'l2_033', name:'HSCRP', mrp:850, b2b:350},
+    {id:'l2_034', name:'CPK-MB', mrp:850, b2b:350},
+    {id:'l2_035', name:'CPK-Total', mrp:550, b2b:300},
+    {id:'l2_036', name:'Trop-I', mrp:1200, b2b:750},
+    {id:'l2_037', name:'D-Dimer', mrp:1200, b2b:500},
+    {id:'l2_038', name:'PT INR', mrp:330, b2b:120},
+    {id:'l2_039', name:'ApTT', mrp:600, b2b:330},
+    {id:'l2_040', name:'HIV', mrp:600, b2b:350},
+    {id:'l2_041', name:'HCV', mrp:900, b2b:525},
+    {id:'l2_042', name:'HBsAg', mrp:550, b2b:440},
+    {id:'l2_043', name:'VDRL', mrp:370, b2b:180},
+    {id:'l2_044', name:'Urine Culture', mrp:950, b2b:400},
+    {id:'l2_045', name:'Urine Routine', mrp:160, b2b:60},
+    {id:'l2_046', name:'RA Factor', mrp:500, b2b:270},
+    {id:'l2_047', name:'MP', mrp:120, b2b:72},
+    {id:'l2_048', name:'Widal', mrp:250, b2b:150},
+    {id:'l2_049', name:'Dengue NSI', mrp:800, b2b:300},
+    {id:'l2_050', name:'Dengue IGG', mrp:800, b2b:300},
+    {id:'l2_051', name:'Dengue IGM', mrp:800, b2b:350},
+    {id:'l2_052', name:'MP-Antigen', mrp:450, b2b:315},
+    {id:'l2_053', name:'Beta HCG', mrp:850, b2b:200},
+    {id:'l2_054', name:'Homocysten', mrp:1450, b2b:500},
+    {id:'l2_055', name:'CA125 (Female)', mrp:1200, b2b:500},
+    {id:'l2_056', name:'PSA (Male)', mrp:900, b2b:350},
+    {id:'l2_057', name:'IGE', mrp:950, b2b:400},
+    {id:'l2_058', name:'Trop-T', mrp:1500, b2b:1050},
+    {id:'l2_059', name:'Anti CCP', mrp:1550, b2b:650},
+    {id:'l2_060', name:'ANA', mrp:950, b2b:500},
+    {id:'l2_061', name:'Total Protien', mrp:250, b2b:80},
+    {id:'l2_062', name:'Covid Antibody', mrp:1000, b2b:500},
+    {id:'l2_063', name:'FNAC', mrp:1500, b2b:1050},
+    {id:'l2_064', name:'PP Insuline', mrp:850, b2b:560},
+    {id:'l2_065', name:'CEA', mrp:800, b2b:400},
+    {id:'l2_066', name:'AFPL', mrp:900, b2b:450},
+    {id:'l2_067', name:'Hb Electrophoresis', mrp:950, b2b:450},
+    {id:'l2_068', name:'FT3', mrp:280, b2b:80},
+    {id:'l2_069', name:'FT4', mrp:280, b2b:80},
+    {id:'l2_070', name:'Urine Protein Creatinine Ratio', mrp:420, b2b:240},
+    {id:'l2_071', name:'Protein with A/G Ratio', mrp:250, b2b:80},
+    {id:'l2_072', name:'Lipase', mrp:750, b2b:300},
+    {id:'l2_073', name:'Estradiol', mrp:780, b2b:300},
+    {id:'l2_074', name:'PUS Culture (Aerobic)', mrp:950, b2b:400},
+    {id:'l2_075', name:'FT3 FT4', mrp:560, b2b:160},
+    {id:'l2_076', name:'Fecal Calprotectin', mrp:2800, b2b:2240},
+    {id:'l2_077', name:'Blood Culture 1 SE', mrp:1500, b2b:800},
+    {id:'l2_078', name:'NT-Pro BNP', mrp:2500, b2b:1100},
+    {id:'l2_079', name:'HBS Antigen', mrp:550, b2b:350},
+    {id:'l2_080', name:'Mantoux Test', mrp:150, b2b:135},
+    {id:'l2_081', name:'Reticulate Count', mrp:400, b2b:210},
+    {id:'l2_082', name:'Direct Coombs Test', mrp:550, b2b:150},
+    {id:'l2_083', name:'Microalbuminuria', mrp:620, b2b:250},
+    {id:'l2_084', name:'Total Testosteron', mrp:780, b2b:350},
+    {id:'l2_085', name:'Free Testosteron', mrp:1550, b2b:750},
+    {id:'l2_086', name:'Protein C', mrp:4500, b2b:4050},
+    {id:'l2_087', name:'Protein S', mrp:4500, b2b:4050},
+    {id:'l2_088', name:'Lupus Anticoagulant', mrp:1800, b2b:800},
+    {id:'l2_089', name:'Fibrinogen Level', mrp:850, b2b:400},
+    {id:'l2_090', name:'Anti dsDNA NCX', mrp:1750, b2b:1000},
+    {id:'l2_091', name:'Apolipoprotein A-1 & B', mrp:1100, b2b:770},
+    {id:'l2_092', name:'Folic Acid Level', mrp:1100, b2b:500},
+    {id:'l2_093', name:'Allergy Comprehensive', mrp:5500, b2b:3850},
+    {id:'l2_094', name:'Maleria Antigen', mrp:450, b2b:315},
+    {id:'l2_095', name:'Urine Glucose (Fasting)', mrp:50, b2b:30},
+    {id:'l2_096', name:'Factor V', mrp:5500, b2b:4400},
+    {id:'l2_097', name:'Ferritine', mrp:950, b2b:400},
+    {id:'l2_098', name:'HAV', mrp:1200, b2b:550},
+    {id:'l2_099', name:'HEV', mrp:1500, b2b:600},
+    {id:'l2_100', name:'RA Test', mrp:500, b2b:270},
+    {id:'l2_101', name:'Iron Profile with Ferritine', mrp:null, b2b:null},
+    {id:'l2_102', name:'Allergy Drug Test', mrp:7500, b2b:5250},
+    {id:'l2_103', name:'IGA TTG', mrp:800, b2b:500},
+    {id:'l2_104', name:'Peripheral Smear', mrp:150, b2b:60},
+    {id:'l2_105', name:'PTT', mrp:600, b2b:330},
+    {id:'l2_106', name:'Cortisol 8 AM', mrp:850, b2b:350},
+    {id:'l2_107', name:'H. Pylori Stool', mrp:1250, b2b:960},
+    {id:'l2_108', name:'Chikungunya IgG', mrp:900, b2b:810},
+    {id:'l2_109', name:'FBA', mrp:null, b2b:null},
+    {id:'l2_110', name:'Protein Electrophoresis', mrp:1200, b2b:500},
+    {id:'l2_111', name:'Sputum TB Culture & ABS', mrp:150, b2b:90},
+    {id:'l2_112', name:'Complement C3 & C4', mrp:null, b2b:null},
+    {id:'l2_113', name:'DHEAS', mrp:1150, b2b:600},
+    {id:'l2_114', name:'DHEA', mrp:3000, b2b:2100},
+    {id:'l2_115', name:'Torch Complex', mrp:2800, b2b:1200},
+    {id:'l2_116', name:'Zinc Level', mrp:2200, b2b:1980},
+    {id:'l2_117', name:'Magnesium', mrp:400, b2b:280},
+    {id:'l2_118', name:'Estrogen', mrp:null, b2b:null},
+    {id:'l2_119', name:'C-Peptide Random', mrp:1150, b2b:550},
+    {id:'l2_120', name:'B2 Glycoprotein 1 IgG', mrp:1200, b2b:500},
+    {id:'l2_121', name:'Karyotyping - Husband', mrp:4000, b2b:2800},
+    {id:'l2_122', name:'Karyotyping - Wife', mrp:4000, b2b:2800},
+    {id:'l2_123', name:'Influenza Screening for ABF', mrp:null, b2b:null},
+    {id:'l2_124', name:'PSA Free & Total', mrp:850, b2b:350},
+    {id:'l2_125', name:'LH', mrp:550, b2b:180},
+    {id:'l2_126', name:'FSH', mrp:550, b2b:180},
+    {id:'l2_127', name:'Semen Analysis', mrp:1100, b2b:770},
+    {id:'l2_128', name:'Alkaline Phosphatase', mrp:null, b2b:null},
+    {id:'l2_129', name:'Globulin', mrp:null, b2b:null},
+    {id:'l2_130', name:'BUN / Creatinine Ratio', mrp:0, b2b:0},
+    {id:'l2_131', name:'Urea/G Ratio', mrp:null, b2b:null},
+    {id:'l2_132', name:'T3', mrp:250, b2b:null},
+    {id:'l2_133', name:'T4', mrp:250, b2b:null},
+    {id:'l2_134', name:'Stool Routine', mrp:170, b2b:90},
+    {id:'l2_135', name:'Albumin', mrp:400, b2b:320},
+    {id:'l2_136', name:'Billirubin Indirect', mrp:null, b2b:null},
+    {id:'l2_137', name:'Bicarbonate', mrp:600, b2b:360},
+    {id:'l2_138', name:'Amylase', mrp:700, b2b:275},
+    {id:'l2_139', name:'ACTH', mrp:1800, b2b:null},
+    {id:'l2_140', name:'Throat Swab C/S', mrp:950, b2b:400},
+    {id:'l2_141', name:'ASO Titer', mrp:650, b2b:390},
+    {id:'l2_142', name:'AMH', mrp:2000, b2b:1000},
+    {id:'l2_143', name:'PTH ', mrp:1600, b2b:1120},
+    {id:'l2_144', name:'Apo B: Apo A1 ratio', mrp:null, b2b:null},
+    {id:'l2_145', name:'BT CT ', mrp:null, b2b:null},
+    {id:'l2_146', name:'HPV DNA', mrp:2800, b2b:2520},
+    {id:'l2_147', name:'Extra Test', mrp:0, b2b:0},
+    {id:'l2_148', name:'Anti tpo antibody', mrp:1100, b2b:600},
+    {id:'l2_149', name:'Apolipoprotein A-1 ', mrp:550, b2b:385},
+    {id:'l2_150', name:'Apolipoprotein B', mrp:550, b2b:385},
+    {id:'l2_151', name:'STOOL CAL PROTEIN', mrp:2800, b2b:2240},
+    {id:'l2_152', name:'Phadiatop', mrp:2300, b2b:2070},
+    {id:'l2_153', name:'Prolactin', mrp:600, b2b:200},
+    {id:'l2_154', name:'Progesteron', mrp:800, b2b:300},
+    {id:'l2_155', name:'SPECIFIC CARDIAC PROFILE', mrp:null, b2b:null},
+    {id:'l2_156', name:'LIPOPROTEIN', mrp:1200, b2b:840},
+    {id:'l2_157', name:'H PYLORI ANTIGEN DETECTION FROM STOOL ', mrp:1250, b2b:1000},
+    {id:'l2_158', name:'TYPHII DOT IGM ', mrp:600, b2b:480},
+    {id:'l2_159', name:'Osmolarity Serum', mrp:1500, b2b:1350},
+    {id:'l2_160', name:'Osmolarity Urine', mrp:1500, b2b:1350},
+    {id:'l2_161', name:'Dual Marker', mrp:2500, b2b:2250},
+    {id:'l2_162', name:'THYPHI IgM ', mrp:600, b2b:480}
+  ],
+  combos:[
+    {id:'l2_c001', name:'LFT', mrp:850, b2b:220, contains:[
+      {type:'test', id:'l2_009'}, {type:'test', id:'l2_010'}, {type:'test', id:'l2_136'},
+      {type:'test', id:'l2_011'}, {type:'test', id:'l2_012'}, {type:'test', id:'l2_128'},
+      {type:'test', id:'l2_013'}, {type:'test', id:'l2_061'}, {type:'test', id:'l2_135'},
+      {type:'test', id:'l2_129'}, {type:'test', id:'l2_071'}
+    ]},
+    {id:'l2_c002', name:'RFT', mrp:1100, b2b:990, contains:[
+      {type:'test', id:'l2_016'}, {type:'test', id:'l2_015'}, {type:'test', id:'l2_017'},
+      {type:'test', id:'l2_018'}, {type:'test', id:'l2_026'}, {type:'test', id:'l2_024'},
+      {type:'test', id:'l2_027'}, {type:'test', id:'l2_025'}, {type:'test', id:'l2_137'},
+      {type:'test', id:'l2_014'}
+    ]},
+    {id:'l2_c003', name:'Electrolytes', mrp:450, b2b:130, contains:[
+      {type:'test', id:'l2_024'}, {type:'test', id:'l2_027'}, {type:'test', id:'l2_025'},
+      {type:'test', id:'l2_137'}
+    ]},
+    {id:'l2_c004', name:'Triple H', mrp:1500, b2b:650, contains:[
+      {type:'test', id:'l2_040'}, {type:'test', id:'l2_041'}, {type:'test', id:'l2_042'}
+    ]},
+    {id:'l2_c005', name:'Total TFT', mrp:550, b2b:110, contains:[
+      {type:'test', id:'l2_132'}, {type:'test', id:'l2_133'}, {type:'test', id:'l2_031'}
+    ]},
+    {id:'l2_c006', name:'Free TFT', mrp:650, b2b:220, contains:[
+      {type:'test', id:'l2_068'}, {type:'test', id:'l2_069'}, {type:'test', id:'l2_031'}
+    ]}
+  ],
+  packages:[
+    {id:'l2_p001', name:'GOODNESS A1', mrp:2500, b2b:1200, contains:[
+      {type:'test', id:'l2_001'}, {type:'test', id:'l2_004'}, {type:'test', id:'l2_005'},
+      {type:'test', id:'l2_008'}, {type:'combo', id:'l2_c005'}, {type:'test', id:'l2_028'},
+      {type:'test', id:'l2_029'}, {type:'test', id:'l2_030'}, {type:'test', id:'l2_019'},
+      {type:'combo', id:'l2_c001'}, {type:'combo', id:'l2_c002'}
+    ]},
+    {id:'l2_p002', name:'GOODNESS E', mrp:1000, b2b:450, contains:[
+      {type:'test', id:'l2_004'}, {type:'test', id:'l2_005'}, {type:'test', id:'l2_008'},
+      {type:'test', id:'l2_019'}, {type:'test', id:'l2_014'}, {type:'test', id:'l2_017'},
+      {type:'test', id:'l2_001'}
+    ]},
+    {id:'l2_p003', name:'GOODNESS G', mrp:1500, b2b:550, contains:[
+      {type:'test', id:'l2_001'}, {type:'test', id:'l2_004'}, {type:'test', id:'l2_005'},
+      {type:'test', id:'l2_008'}, {type:'test', id:'l2_019'}, {type:'test', id:'l2_014'},
+      {type:'combo', id:'l2_c005'}, {type:'test', id:'l2_017'}
+    ]},
+    {id:'l2_p004', name:'GOODNESS BB FEMALE', mrp:3500, b2b:1500, contains:[
+      {type:'test', id:'l2_001'}, {type:'test', id:'l2_004'}, {type:'test', id:'l2_008'},
+      {type:'test', id:'l2_019'}, {type:'test', id:'l2_033'}, {type:'combo', id:'l2_c001'},
+      {type:'combo', id:'l2_c002'}, {type:'test', id:'l2_007'}, {type:'test', id:'l2_030'},
+      {type:'test', id:'l2_029'}, {type:'combo', id:'l2_c005'}, {type:'test', id:'l2_054'},
+      {type:'test', id:'l2_055'}
+    ]},
+    {id:'l2_p005', name:'GOODNESS BA MALE', mrp:3500, b2b:1400, contains:[
+      {type:'test', id:'l2_001'}, {type:'test', id:'l2_004'}, {type:'test', id:'l2_008'},
+      {type:'test', id:'l2_019'}, {type:'test', id:'l2_033'}, {type:'combo', id:'l2_c001'},
+      {type:'combo', id:'l2_c002'}, {type:'test', id:'l2_007'}, {type:'test', id:'l2_030'},
+      {type:'test', id:'l2_029'}, {type:'combo', id:'l2_c005'}, {type:'test', id:'l2_054'},
+      {type:'test', id:'l2_056'}
+    ]},
+    {id:'l2_p006', name:'GOODNESS C', mrp:2200, b2b:1200, contains:[
+      {type:'test', id:'l2_012'}, {type:'test', id:'l2_023'}, {type:'test', id:'l2_034'},
+      {type:'test', id:'l2_036'}
+    ]},
+    {id:'l2_p007', name:'GOODNESS F', mrp:2000, b2b:600, contains:[
+      {type:'test', id:'l2_001'}, {type:'test', id:'l2_008'}, {type:'combo', id:'l2_c001'},
+      {type:'test', id:'l2_019'}, {type:'combo', id:'l2_c002'}
+    ]},
+    {id:'l2_p008', name:'GOODNESS 3H ', mrp:1500, b2b:650, contains:[
+      {type:'test', id:'l2_040'}, {type:'test', id:'l2_041'}, {type:'test', id:'l2_042'}
+    ]},
+    {id:'l2_p009', name:'FEVER PROFILE', mrp:3000, b2b:950, contains:[
+      {type:'test', id:'l2_001'}, {type:'test', id:'l2_003'}, {type:'test', id:'l2_011'},
+      {type:'test', id:'l2_012'}, {type:'test', id:'l2_032'}, {type:'test', id:'l2_049'},
+      {type:'test', id:'l2_094'}, {type:'test', id:'l2_045'}, {type:'test', id:'l2_048'}
+    ]},
+    {id:'l2_p010', name:'ANC PROFILE ', mrp:2100, b2b:1890, contains:[
+      {type:'test', id:'l2_001'}, {type:'test', id:'l2_002'}, {type:'test', id:'l2_004'},
+      {type:'test', id:'l2_031'}, {type:'combo', id:'l2_c004'}, {type:'test', id:'l2_043'},
+      {type:'test', id:'l2_067'}, {type:'test', id:'l2_045'}
+    ]},
+    {id:'l2_p011', name:'GD ADVANCE MEN PACKAGE', mrp:2200, b2b:900, contains:[
+      {type:'test', id:'l2_045'}, {type:'test', id:'l2_028'}, {type:'combo', id:'l2_c001'},
+      {type:'combo', id:'l2_c002'}, {type:'test', id:'l2_019'}, {type:'test', id:'l2_029'},
+      {type:'test', id:'l2_008'}, {type:'combo', id:'l2_c005'}, {type:'test', id:'l2_072'},
+      {type:'combo', id:'l2_c003'}, {type:'test', id:'l2_056'}, {type:'test', id:'l2_138'},
+      {type:'test', id:'l2_030'}, {type:'test', id:'l2_155'}
+    ]}
+  ]
+},
+{
+  id:'lab3', name:'Jariwala Laboratory',
+  tests:[
+    {id:'l3_001', name:'CBC', mrp:280, b2b:168},
+    {id:'l3_002', name:'Blood Group', mrp:150, b2b:90},
+    {id:'l3_003', name:'ESR', mrp:90, b2b:54},
+    {id:'l3_004', name:'FBS', mrp:70, b2b:46},
+    {id:'l3_005', name:'PP', mrp:70, b2b:46},
+    {id:'l3_006', name:'RBS', mrp:70, b2b:46},
+    {id:'l3_007', name:'Fasting Insuline', mrp:715, b2b:501},
+    {id:'l3_008', name:'HbA1C', mrp:520, b2b:338},
+    {id:'l3_009', name:'LFT', mrp:900, b2b:585},
+    {id:'l3_010', name:'Bilirubin-Total', mrp:200, b2b:120},
+    {id:'l3_011', name:'Bilirubin-Direct', mrp:200, b2b:120},
+    {id:'l3_012', name:'SGPT', mrp:180, b2b:108},
+    {id:'l3_013', name:'SGOT', mrp:180, b2b:108},
+    {id:'l3_014', name:'GGT', mrp:200, b2b:126},
+    {id:'l3_015', name:'RFT', mrp:1350, b2b:878},
+    {id:'l3_016', name:'Creatinine', mrp:180, b2b:108},
+    {id:'l3_017', name:'Urea', mrp:180, b2b:108},
+    {id:'l3_018', name:'BUN', mrp:null, b2b:null},
+    {id:'l3_019', name:'Uric Acid', mrp:180, b2b:108},
+    {id:'l3_020', name:'Calcium', mrp:275, b2b:176},
+    {id:'l3_021', name:'Lipid Profile', mrp:550, b2b:352},
+    {id:'l3_022', name:'Total Cholestrol', mrp:180, b2b:108},
+    {id:'l3_023', name:'HDL', mrp:180, b2b:106},
+    {id:'l3_024', name:'LDL', mrp:320, b2b:224},
+    {id:'l3_025', name:'LDH', mrp:350, b2b:263},
+    {id:'l3_026', name:'Electrolytes', mrp:400, b2b:240},
+    {id:'l3_027', name:'Sodium', mrp:null, b2b:null},
+    {id:'l3_028', name:'Chlorides', mrp:null, b2b:null},
+    {id:'l3_029', name:'Phosphorous', mrp:null, b2b:null},
+    {id:'l3_030', name:'Potassium', mrp:null, b2b:null},
+    {id:'l3_031', name:'Iron Study', mrp:520, b2b:333},
+    {id:'l3_032', name:'Vit D3', mrp:1500, b2b:450},
+    {id:'l3_033', name:'Vit B12', mrp:950, b2b:285},
+    {id:'l3_034', name:'Total TFT', mrp:580, b2b:232},
+    {id:'l3_035', name:'TSH', mrp:320, b2b:128},
+    {id:'l3_036', name:'Free TFT', mrp:680, b2b:272},
+    {id:'l3_037', name:'CRP', mrp:500, b2b:225},
+    {id:'l3_038', name:'HSCRP', mrp:700, b2b:420},
+    {id:'l3_039', name:'CPK-MB', mrp:850, b2b:536},
+    {id:'l3_040', name:'CPK-Total', mrp:380, b2b:236},
+    {id:'l3_041', name:'Trop-I', mrp:770, b2b:539},
+    {id:'l3_042', name:'D-Dimer', mrp:1150, b2b:736},
+    {id:'l3_043', name:'PT INR', mrp:300, b2b:195},
+    {id:'l3_044', name:'ApTT', mrp:400, b2b:240},
+    {id:'l3_045', name:'HIV', mrp:400, b2b:280},
+    {id:'l3_046', name:'HCV', mrp:750, b2b:600},
+    {id:'l3_047', name:'HBsAg', mrp:null, b2b:null},
+    {id:'l3_048', name:'VDRL', mrp:165, b2b:106},
+    {id:'l3_049', name:'Triple H', mrp:null, b2b:null},
+    {id:'l3_050', name:'Urine Culture', mrp:800, b2b:560},
+    {id:'l3_051', name:'Urine Routine', mrp:110, b2b:70},
+    {id:'l3_052', name:'RA Factor', mrp:275, b2b:176},
+    {id:'l3_053', name:'MP', mrp:180, b2b:106},
+    {id:'l3_054', name:'Widal', mrp:165, b2b:106},
+    {id:'l3_055', name:'Dengue NSI', mrp:880, b2b:563},
+    {id:'l3_056', name:'Dengue IGG', mrp:880, b2b:563},
+    {id:'l3_057', name:'Dengue IGM', mrp:880, b2b:563},
+    {id:'l3_058', name:'MP-Antigen', mrp:500, b2b:315},
+    {id:'l3_059', name:'Beta HCG', mrp:500, b2b:355},
+    {id:'l3_060', name:'Homocysten', mrp:1200, b2b:744},
+    {id:'l3_061', name:'CA125 (Female)', mrp:1050, b2b:683},
+    {id:'l3_062', name:'PSA (Male)', mrp:750, b2b:497},
+    {id:'l3_063', name:'IGE', mrp:770, b2b:539},
+    {id:'l3_064', name:'Trop-T', mrp:770, b2b:539},
+    {id:'l3_065', name:'Anti CCP', mrp:1250, b2b:813},
+    {id:'l3_066', name:'ANA', mrp:950, b2b:599},
+    {id:'l3_067', name:'Total Protien', mrp:200, b2b:120},
+    {id:'l3_068', name:'Covid Antibody', mrp:500, b2b:350},
+    {id:'l3_069', name:'FNAC', mrp:800, b2b:560},
+    {id:'l3_070', name:'PP Insuline', mrp:715, b2b:501},
+    {id:'l3_071', name:'CEA', mrp:850, b2b:578},
+    {id:'l3_072', name:'AFPL', mrp:700, b2b:462},
+    {id:'l3_073', name:'Hb Electrophoresis', mrp:null, b2b:null},
+    {id:'l3_074', name:'FT3', mrp:240, b2b:120},
+    {id:'l3_075', name:'FT4', mrp:240, b2b:120},
+    {id:'l3_076', name:'Urine Protein Creatinine Ratio', mrp:null, b2b:null},
+    {id:'l3_077', name:'Protein with A/G Ratio', mrp:null, b2b:null},
+    {id:'l3_078', name:'Lipase', mrp:700, b2b:490},
+    {id:'l3_079', name:'Estradiol', mrp:600, b2b:414},
+    {id:'l3_080', name:'PUS Culture (Aerobic)', mrp:800, b2b:560},
+    {id:'l3_081', name:'FT3 FT4', mrp:480, b2b:240},
+    {id:'l3_082', name:'Fecal Calprotectin', mrp:3000, b2b:1920},
+    {id:'l3_083', name:'Blood Culture 1 SE', mrp:1050, b2b:735},
+    {id:'l3_084', name:'NT-Pro BNP', mrp:2035, b2b:1302},
+    {id:'l3_085', name:'HBS Antigen', mrp:null, b2b:null},
+    {id:'l3_086', name:'Mantoux Test', mrp:120, b2b:71},
+    {id:'l3_087', name:'Reticulate Count', mrp:180, b2b:108},
+    {id:'l3_088', name:'Direct Coombs Test', mrp:300, b2b:177},
+    {id:'l3_089', name:'Microalbuminuria', mrp:550, b2b:352},
+    {id:'l3_090', name:'Total Testosteron', mrp:600, b2b:426},
+    {id:'l3_091', name:'Free Testosteron', mrp:1600, b2b:1440},
+    {id:'l3_092', name:'Protein C', mrp:3300, b2b:2640},
+    {id:'l3_093', name:'Protein S', mrp:3300, b2b:2640},
+    {id:'l3_094', name:'Lupus Anticoagulant', mrp:null, b2b:null},
+    {id:'l3_095', name:'Fibrinogen Level', mrp:700, b2b:420},
+    {id:'l3_096', name:'Anti dsDNA NCX', mrp:935, b2b:598},
+    {id:'l3_097', name:'Apolipoprotein A-1 & B', mrp:700, b2b:385},
+    {id:'l3_098', name:'Folic Acid Level', mrp:900, b2b:612},
+    {id:'l3_099', name:'Allergy Comprehensive', mrp:null, b2b:null},
+    {id:'l3_100', name:'Maleria Antigen', mrp:500, b2b:315},
+    {id:'l3_101', name:'Urine Glucose (Fasting)', mrp:null, b2b:null},
+    {id:'l3_102', name:'Factor V', mrp:null, b2b:null},
+    {id:'l3_103', name:'Ferritine', mrp:750, b2b:525},
+    {id:'l3_104', name:'HAV', mrp:950, b2b:665},
+    {id:'l3_105', name:'HEV', mrp:1050, b2b:693},
+    {id:'l3_106', name:'RA Test', mrp:275, b2b:176},
+    {id:'l3_107', name:'Iron Profile with Ferritine', mrp:null, b2b:null},
+    {id:'l3_108', name:'Allergy Drug Test', mrp:null, b2b:null},
+    {id:'l3_109', name:'IGA TTG', mrp:1430, b2b:1001},
+    {id:'l3_110', name:'Peripheral Smear', mrp:null, b2b:null},
+    {id:'l3_111', name:'PTT', mrp:300, b2b:195},
+    {id:'l3_112', name:'Cortisol 8 AM', mrp:600, b2b:434},
+    {id:'l3_113', name:'H. Pylori Stool', mrp:750, b2b:458},
+    {id:'l3_114', name:'Chikungunya IgG', mrp:null, b2b:null},
+    {id:'l3_115', name:'FBA', mrp:null, b2b:null},
+    {id:'l3_116', name:'Protein Electrophoresis', mrp:950, b2b:608},
+    {id:'l3_117', name:'Sputum TB Culture & ABS', mrp:800, b2b:560},
+    {id:'l3_118', name:'Complement C3 & C4', mrp:null, b2b:null},
+    {id:'l3_119', name:'DHEAS', mrp:850, b2b:587},
+    {id:'l3_120', name:'DHEA', mrp:null, b2b:null},
+    {id:'l3_121', name:'Torch Complex', mrp:null, b2b:null},
+    {id:'l3_122', name:'Zinc Level', mrp:null, b2b:null},
+    {id:'l3_123', name:'Magnesium', mrp:450, b2b:284},
+    {id:'l3_124', name:'Estrogen', mrp:null, b2b:null},
+    {id:'l3_125', name:'C-Peptide Random', mrp:null, b2b:null},
+    {id:'l3_126', name:'B2 Glycoprotein 1 IgG', mrp:null, b2b:null},
+    {id:'l3_127', name:'Karyotyping - Husband', mrp:null, b2b:null},
+    {id:'l3_128', name:'Karyotyping - Wife', mrp:null, b2b:null},
+    {id:'l3_129', name:'Influenza Screening for ABF', mrp:1650, b2b:1056},
+    {id:'l3_130', name:'PSA Free & Total', mrp:1450, b2b:1001},
+    {id:'l3_131', name:'LH', mrp:525, b2b:263},
+    {id:'l3_132', name:'FSH', mrp:525, b2b:263},
+    {id:'l3_133', name:'Semen Analysis', mrp:300, b2b:300},
+    {id:'l3_134', name:'Alkaline Phosphatase', mrp:null, b2b:null},
+    {id:'l3_135', name:'Globulin', mrp:null, b2b:null},
+    {id:'l3_136', name:'BUN / Creatinine Ratio', mrp:null, b2b:null},
+    {id:'l3_137', name:'Urea/G Ratio', mrp:null, b2b:null},
+    {id:'l3_138', name:'T3', mrp:null, b2b:null},
+    {id:'l3_139', name:'T4', mrp:null, b2b:null},
+    {id:'l3_140', name:'Stool Routine', mrp:110, b2b:70},
+    {id:'l3_141', name:'Albumin', mrp:null, b2b:null},
+    {id:'l3_142', name:'Billirubin Indirect', mrp:null, b2b:null},
+    {id:'l3_143', name:'Bicarbonate', mrp:null, b2b:null},
+    {id:'l3_144', name:'Amylase', mrp:null, b2b:null},
+    {id:'l3_145', name:'ACTH', mrp:null, b2b:null},
+    {id:'l3_146', name:'Throat Swab C/S', mrp:null, b2b:null},
+    {id:'l3_147', name:'ASO Titer', mrp:null, b2b:null},
+    {id:'l3_148', name:'AMH', mrp:2050, b2b:1415},
+    {id:'l3_149', name:'PTH ', mrp:1320, b2b:924},
+    {id:'l3_150', name:'Apo B: Apo A1 ratio', mrp:null, b2b:null},
+    {id:'l3_151', name:'BT CT ', mrp:null, b2b:null},
+    {id:'l3_152', name:'HPV DNA', mrp:null, b2b:null},
+    {id:'l3_153', name:'Extra Test', mrp:0, b2b:0},
+    {id:'l3_154', name:'Anti tpo antibody', mrp:900, b2b:612},
+    {id:'l3_155', name:'Apolipoprotein A-1 ', mrp:700, b2b:385},
+    {id:'l3_156', name:'Apolipoprotein B', mrp:700, b2b:385},
+    {id:'l3_157', name:'STOOL CAL PROTEIN', mrp:null, b2b:null},
+    {id:'l3_158', name:'Phadiatop', mrp:null, b2b:null},
+    {id:'l3_159', name:'Prolactin', mrp:525, b2b:263},
+    {id:'l3_160', name:'Progesteron', mrp:605, b2b:303},
+    {id:'l3_161', name:'SPECIFIC CARDIAC PROFILE', mrp:null, b2b:null},
+    {id:'l3_162', name:'LIPOPROTEIN', mrp:900, b2b:567},
+    {id:'l3_163', name:'H PYLORI ANTIGEN DETECTION FROM STOOL ', mrp:750, b2b:458},
+    {id:'l3_164', name:'TYPHII DOT IGM ', mrp:385, b2b:245},
+    {id:'l3_165', name:'Osmolarity Serum', mrp:338, b2b:246},
+    {id:'l3_166', name:'Osmolarity Urine', mrp:338, b2b:246},
+    {id:'l3_167', name:'Dual Marker', mrp:null, b2b:null},
+    {id:'l3_168', name:'THYPHI IgM ', mrp:385, b2b:264}
+  ],
+  combos:[],
+  packages:[]
+}];
 
+/* =========================================================================
+   UTILITY LAYER
+   ========================================================================= */
+const Utils = {
+  normalize(str){ return (str||'').toString().trim().toLowerCase().replace(/\s+/g,' '); },
+  capitalize(str){ return str ? str.charAt(0).toUpperCase()+str.slice(1) : str; },
+  capitalizeWords(str){ return (str||'').replace(/\b\w/g, c=>c.toUpperCase()); },
+  formatCurrency(n){
+    const num = Number(n)||0;
+    return '₹' + num.toLocaleString('en-IN', {maximumFractionDigits:2});
+  },
+  escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str === undefined || str === null ? '' : String(str);
+    return d.innerHTML;
+  },
+  debounce(fn, wait=200){
+    let t;
+    return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); };
+  },
+  highlight(text, query){
+    if(!query) return Utils.escapeHtml(text);
+    const safe = Utils.escapeHtml(text);
+    const q = Utils.escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return safe.replace(new RegExp('('+q+')','ig'), '<mark>$1</mark>');
+  },
+  iconFor(type){
+    return type==='test' ? 'fa-vial' : type==='combo' ? 'fa-layer-group' : 'fa-box-archive';
+  }
+};
 
-// ============================================================
-// APPLICATION LOGIC WITH CRASH PROTECTION
-// ============================================================
+/* =========================================================================
+   DATA INDEX + EXPANSION LAYER
+   Recursively expands every Combo/Package into a flat set of normalized
+   individual test names. Uses memoization (expansionCache) and cycle
+   detection so repeated recursion is never re-computed.
+   ========================================================================= */
+const DB = { labsById:new Map(), errors:[] };
+const expansionCache = new Map(); // key: "labId:type:id" -> Set<normalizedTestName>
 
-let normalizedEntities = [];
-let selectedItems = [];
-let optimizedPlan = [];
-let selectedLabs = new Set([labsData[0].name]);
-let isOptimizing = false;
+function buildDatabase(){
+  DB.labsById.clear();
+  DB.errors.length = 0;
+  expansionCache.clear();
 
-function currency(v) { return (v !== null && v !== undefined) ? "₹" + Number(v).toLocaleString() : "₹0"; }
-function unique(arr) { return [...new Set(arr)]; }
-function uniqueById(arr) { const map = new Map(); arr.forEach(item => { if(item && item.id) map.set(item.id, item); }); return [...map.values()]; }
+  if(!Array.isArray(labsData) || labsData.length===0){
+    DB.errors.push('No laboratory data available.');
+    return;
+  }
+  const seenLabIds = new Set();
+  for(const lab of labsData){
+    if(!lab || !lab.id || !lab.name){ DB.errors.push('A laboratory entry is missing an id/name and was skipped.'); continue; }
+    if(seenLabIds.has(lab.id)){ DB.errors.push(`Duplicate lab id "${lab.id}" was skipped.`); continue; }
+    seenLabIds.add(lab.id);
 
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2000);
-}
-
-function focusSearchInput() { 
-  document.getElementById("searchInput").focus();
-}
-
-function clearSearchInput() {
-  const searchInput = document.getElementById("searchInput");
-  searchInput.value = "";
-  searchInput.focus();
-  renderSelectionList();
-}
-
-async function copyToClipboard(text, successMessage) {
-  if (!text || text.trim() === "") { showToast("Nothing to copy"); return false; }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast(successMessage || "Copied successfully");
-    return true;
-  } catch (err) {
-    try {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      textarea.style.position = "fixed";
-      textarea.style.top = "-9999px";
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      textarea.remove();
-      showToast(successMessage || "Copied successfully");
-      return true;
-    } catch (e) {
-      showToast("Copy failed");
-      return false;
+    const testsById = new Map(), combosById = new Map(), packagesById = new Map();
+    for(const t of lab.tests||[]){
+      if(!t || !t.id){ DB.errors.push(`Lab "${lab.id}": a test is missing an id.`); continue; }
+      if(testsById.has(t.id)){ DB.errors.push(`Lab "${lab.id}": duplicate test id "${t.id}".`); continue; }
+      testsById.set(t.id, t);
     }
+    for(const c of lab.combos||[]){
+      if(!c || !c.id){ DB.errors.push(`Lab "${lab.id}": a combo is missing an id.`); continue; }
+      if(combosById.has(c.id)){ DB.errors.push(`Lab "${lab.id}": duplicate combo id "${c.id}".`); continue; }
+      if(!c.contains || c.contains.length===0){ DB.errors.push(`Lab "${lab.id}": combo "${c.id}" ("${c.name||'unnamed'}") has no contents and will never cover any test.`); }
+      combosById.set(c.id, c);
+    }
+    for(const p of lab.packages||[]){
+      if(!p || !p.id){ DB.errors.push(`Lab "${lab.id}": a package is missing an id.`); continue; }
+      if(packagesById.has(p.id)){ DB.errors.push(`Lab "${lab.id}": duplicate package id "${p.id}".`); continue; }
+      if(!p.contains || p.contains.length===0){ DB.errors.push(`Lab "${lab.id}": package "${p.id}" ("${p.name||'unnamed'}") has no contents and will never cover any test.`); }
+      packagesById.set(p.id, p);
+    }
+    DB.labsById.set(lab.id, {lab, testsById, combosById, packagesById});
   }
 }
 
-function buildLabLookup(lab) {
-  const lookup = {};
-  if (lab.tests) lab.tests.forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
-  if (lab.combos) lab.combos.forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
-  if (lab.packages) lab.packages.forEach(i => { if (i) { lookup[i.id] = i; lookup[i.name] = i; } });
-  return lookup;
+function getEntity(labEntry, type, id){
+  if(type==='test') return labEntry.testsById.get(id);
+  if(type==='combo') return labEntry.combosById.get(id);
+  if(type==='package') return labEntry.packagesById.get(id);
+  return null;
 }
 
-function normalizeEntity(entity, lookup) {
-  if (!entity) return entity;
-  const visited = new Set();
-  function expand(item) {
-    if (!item || visited.has(item.id)) return [];
-    visited.add(item.id);
-    if (item.type === "test") return [item.name];
-    let res = [];
-    if (item.contains && Array.isArray(item.contains)) {
-      item.contains.forEach(name => {
-        try {
-          const child = lookup[name] || Object.values(lookup).find(x => x && x.name === name);
-          if (child) {
-            if (child.type === "test") res.push(child.name);
-            else res.push(...expand(child));
-          } else res.push(name);
-        } catch(e) { res.push(name); }
+// Recursive expansion with memoization + cycle detection. Returns a Set of normalized test names.
+function expandEntity(labEntry, type, id, visiting){
+  const key = `${labEntry.lab.id}:${type}:${id}`;
+  if(expansionCache.has(key)) return expansionCache.get(key);
+  if(visiting.has(key)){
+    DB.errors.push(`Circular reference detected at "${key}". The cycle was broken safely.`);
+    return new Set();
+  }
+  visiting.add(key);
+  const covers = new Set();
+
+  if(type==='test'){
+    const t = labEntry.testsById.get(id);
+    if(!t){ DB.errors.push(`Lab "${labEntry.lab.id}": referenced test "${id}" does not exist.`); }
+    else covers.add(Utils.normalize(t.name));
+  } else {
+    const entity = getEntity(labEntry, type, id);
+    if(!entity){ DB.errors.push(`Lab "${labEntry.lab.id}": referenced ${type} "${id}" does not exist.`); }
+    else {
+      for(const child of entity.contains || []){
+        if(!child || !child.type || !child.id){
+          DB.errors.push(`Lab "${labEntry.lab.id}": invalid nested reference inside ${type} "${id}".`);
+          continue;
+        }
+        const childCovers = expandEntity(labEntry, child.type, child.id, visiting);
+        childCovers.forEach(name=>covers.add(name));
+      }
+    }
+  }
+  visiting.delete(key);
+  expansionCache.set(key, covers);
+  return covers;
+}
+
+function expandAll(){
+  for(const labEntry of DB.labsById.values()){
+    for(const id of labEntry.testsById.keys()) expandEntity(labEntry, 'test', id, new Set());
+    for(const id of labEntry.combosById.keys()) expandEntity(labEntry, 'combo', id, new Set());
+    for(const id of labEntry.packagesById.keys()) expandEntity(labEntry, 'package', id, new Set());
+  }
+}
+
+/* =========================================================================
+   HIERARCHY ENGINE
+   Builds parent → child and ancestor → descendant relationships (per lab,
+   entity-key based: "labId:type:id") so the optimizer and UI can reason
+   about nesting without re-walking `contains[]` repeatedly. Computed once
+   and cached for the lifetime of the dataset.
+   ========================================================================= */
+DB.directChildrenOf = new Map(); // entityKey -> [{type,id,key}] (immediate contains)
+DB.parentsOf = new Map();        // entityKey -> Set<parentKey> (immediate parents)
+DB.ancestorsOf = new Map();      // entityKey -> Set<ancestorKey> (transitive, memoized)
+DB.descendantsOf = new Map();    // entityKey -> Set<descendantKey> (transitive, memoized, entities not just tests)
+
+function entityKey(labId, type, id){ return `${labId}:${type}:${id}`; }
+
+function buildHierarchy(){
+  DB.directChildrenOf.clear(); DB.parentsOf.clear(); DB.ancestorsOf.clear(); DB.descendantsOf.clear();
+
+  // Pass 1: direct parent/child edges from contains[].
+  for(const labEntry of DB.labsById.values()){
+    const labId = labEntry.lab.id;
+    const registerParent = (parentType, parentId) => {
+      const parentEntity = getEntity(labEntry, parentType, parentId);
+      if(!parentEntity) return;
+      const parentKey = entityKey(labId, parentType, parentId);
+      const children = (parentEntity.contains || []).filter(ch => ch && ch.type && ch.id);
+      DB.directChildrenOf.set(parentKey, children.map(ch => ({ type:ch.type, id:ch.id, key:entityKey(labId, ch.type, ch.id) })));
+      for(const ch of children){
+        const childKey = entityKey(labId, ch.type, ch.id);
+        if(!DB.parentsOf.has(childKey)) DB.parentsOf.set(childKey, new Set());
+        DB.parentsOf.get(childKey).add(parentKey);
+      }
+    };
+    for(const id of labEntry.combosById.keys()) registerParent('combo', id);
+    for(const id of labEntry.packagesById.keys()) registerParent('package', id);
+  }
+
+  // Pass 2: transitive ancestors, memoized with cycle-safe recursion.
+  function getAncestors(key, visiting){
+    if(DB.ancestorsOf.has(key)) return DB.ancestorsOf.get(key);
+    if(visiting.has(key)) return new Set(); // cycle guard (already reported by expansion layer)
+    visiting.add(key);
+    const result = new Set();
+    const parents = DB.parentsOf.get(key);
+    if(parents){
+      for(const p of parents){
+        result.add(p);
+        getAncestors(p, visiting).forEach(a=>result.add(a));
+      }
+    }
+    visiting.delete(key);
+    DB.ancestorsOf.set(key, result);
+    return result;
+  }
+  for(const labEntry of DB.labsById.values()){
+    const labId = labEntry.lab.id;
+    for(const id of labEntry.testsById.keys()) getAncestors(entityKey(labId,'test',id), new Set());
+    for(const id of labEntry.combosById.keys()) getAncestors(entityKey(labId,'combo',id), new Set());
+    for(const id of labEntry.packagesById.keys()) getAncestors(entityKey(labId,'package',id), new Set());
+  }
+
+  // Pass 3: transitive descendants (derived from ancestors — every key that lists X as an ancestor is a descendant of X).
+  for(const [key, ancestors] of DB.ancestorsOf){
+    ancestors.forEach(a=>{
+      if(!DB.descendantsOf.has(a)) DB.descendantsOf.set(a, new Set());
+      DB.descendantsOf.get(a).add(key);
+    });
+  }
+}
+
+function isAncestor(labId, ancestorType, ancestorId, descendantType, descendantId){
+  const ancestorKey = entityKey(labId, ancestorType, ancestorId);
+  const descKey = entityKey(labId, descendantType, descendantId);
+  const ancestors = DB.ancestorsOf.get(descKey);
+  return !!ancestors && ancestors.has(ancestorKey);
+}
+
+/* Flattened catalog used everywhere in the UI + optimizer. */
+let CATALOG = [];
+function buildCatalog(){
+  CATALOG = [];
+  for(const labEntry of DB.labsById.values()){
+    const lab = labEntry.lab;
+    for(const [id, t] of labEntry.testsById){
+      CATALOG.push({
+        labId:lab.id, labName:lab.name, type:'test', id, name:t.name,
+        mrp:Number(t.mrp)||0, b2b:Number(t.b2b ?? t.mrp)||0,
+        covers: expansionCache.get(`${lab.id}:test:${id}`) || new Set(), contains: []
       });
     }
-    return res;
+    for(const [id, c] of labEntry.combosById){
+      CATALOG.push({
+        labId:lab.id, labName:lab.name, type:'combo', id, name:c.name,
+        mrp:Number(c.mrp)||0, b2b:Number(c.b2b ?? c.mrp)||0,
+        covers: expansionCache.get(`${lab.id}:combo:${id}`) || new Set(), contains: c.contains||[]
+      });
+    }
+    for(const [id, p] of labEntry.packagesById){
+      CATALOG.push({
+        labId:lab.id, labName:lab.name, type:'package', id, name:p.name,
+        mrp:Number(p.mrp)||0, b2b:Number(p.b2b ?? p.mrp)||0,
+        covers: expansionCache.get(`${lab.id}:package:${id}`) || new Set(), contains: p.contains||[]
+      });
+    }
   }
-  try {
-    return { ...entity, covers: unique(expand(entity)) };
-  } catch(e) {
-    return { ...entity, covers: [entity.name] };
+}
+
+/* Requirement catalog: entities merged by normalized name across all labs, used to
+   populate the selection lists and to resolve a chip into its universe of tests. */
+let REQUIREMENT_CATALOG = new Map();
+function buildRequirementCatalog(){
+  REQUIREMENT_CATALOG = new Map();
+  for(const item of CATALOG){
+    const key = Utils.normalize(item.name);
+    if(!REQUIREMENT_CATALOG.has(key)){
+      REQUIREMENT_CATALOG.set(key, {key, label:item.name, type:item.type, covers:new Set(item.covers)});
+    } else {
+      item.covers.forEach(c=>REQUIREMENT_CATALOG.get(key).covers.add(c));
+    }
   }
 }
 
-function buildNormalizedEntities() {
-  normalizedEntities = [];
-  labsData.forEach(lab => {
-    const lookup = buildLabLookup(lab);
-    if (lab.tests) lab.tests.forEach(e => { if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name }); });
-    if (lab.combos) lab.combos.forEach(e => { if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name }); });
-    if (lab.packages) lab.packages.forEach(e => { if (e) normalizedEntities.push({ ...normalizeEntity(e, lookup), lab: lab.name }); });
-  });
-}
+/* =========================================================================
+   APPLICATION STATE
+   ========================================================================= */
+const state = {
+  search:'',
+  selectedRequirements: new Map(),   // key -> {key,label,type,covers}
+  selectedLabs: new Set(),           // lab ids
+  lastResult: null
+};
 
-function getAllSelectableItems() {
-  const map = new Map();
-  normalizedEntities.forEach(e => {
-    if (!e || !e.name) return;
-    const key = e.name + "_" + e.type;
-    if (!map.has(key)) map.set(key, { name: e.name, type: e.type, covers: e.covers || [e.name] });
-  });
-  return [...map.values()];
-}
+/* =========================================================================
+   CANDIDATE BUILDER LAYER
+   Turns the raw catalog (restricted to selected labs) into a clean,
+   minimal candidate pool before the optimizer ever runs:
+     1. Drop candidates that cover none of the required tests.
+     2. Merge candidates with identical coverage, keeping only the
+        cheapest representative(s) — duplicate-coverage pruning.
+     3. Remove dominated candidates — if candidate A covers a superset of
+        candidate B's coverage for equal or lower cost, B can never appear
+        in an optimal plan and is discarded before the search even begins
+        (dominance / subset pruning).
+   This shrinks the branching factor dramatically and is what makes exact
+   search practical on large datasets (hundreds of combos/packages).
+   ========================================================================= */
+function countBits(mask){ let c=0n; let m=mask; while(m){ m &= (m-1n); c++; } return Number(c); }
 
-function getRequiredTests() {
-  let tests = [];
-  selectedItems.forEach(item => {
-    try {
-      const ent = normalizedEntities.find(x => x && x.name === item.name && x.type === item.type);
-      if (ent && ent.covers && Array.isArray(ent.covers)) tests.push(...ent.covers);
-      else if (ent) tests.push(ent.name);
-    } catch(e) { tests.push(item.name); }
-  });
-  return unique(tests);
-}
-
-function toggleItemSelection(item, isChecked) {
-  if (isChecked) {
-    if (!selectedItems.some(x => x.name === item.name && x.type === item.type)) selectedItems.push(item);
-  } else {
-    selectedItems = selectedItems.filter(x => !(x.name === item.name && x.type === item.type));
+function buildCandidatePool(labFilteredCatalog, nameIndex, n){
+  // Step 1 — project each entity's coverage onto the required universe.
+  let candidates = [];
+  for(const item of labFilteredCatalog){
+    let mask = 0n;
+    for(const cov of item.covers){
+      const idx = nameIndex.get(cov);
+      if(idx !== undefined) mask |= (1n << BigInt(idx));
+    }
+    if(mask !== 0n){
+      candidates.push({
+        ...item, mask, cost:item.b2b, coverCount:countBits(mask),
+        _key: entityKey(item.labId, item.type, item.id)
+      });
+    }
   }
-  renderSelectionList();
-  renderSelectedItems();
-  clearSearchInput();
+
+  // Step 2 — duplicate coverage pruning: merge candidates with identical
+  // coverage masks, keeping only the cheapest representative(s).
+  const byMask = new Map();
+  for(const cand of candidates){
+    const key = cand.mask.toString();
+    if(!byMask.has(key)) byMask.set(key, []);
+    byMask.get(key).push(cand);
+  }
+  candidates = [];
+  for(const group of byMask.values()){
+    const minCost = Math.min(...group.map(c=>c.cost));
+    candidates.push(...group.filter(c=>c.cost === minCost));
+  }
+
+  // Step 3 — dominance / subset pruning: remove any candidate whose coverage
+  // is a strict subset of another candidate's coverage at equal-or-lower cost.
+  // Sorting by coverage size descending first means broader candidates are tested as dominators early.
+  const survivors = [];
+  const sorted = candidates.slice().sort((a,b)=> b.coverCount - a.coverCount || a.cost - b.cost);
+  for(const cand of sorted){
+    let dominated = false;
+    for(const other of survivors){
+      if(other === cand) continue;
+      const isSuperset = (other.mask & cand.mask) === cand.mask;
+      const strictlyBroader = other.mask !== cand.mask;
+      if(isSuperset && strictlyBroader && other.cost <= cand.cost){ dominated = true; break; }
+    }
+    if(!dominated) survivors.push(cand);
+  }
+  return survivors;
 }
 
-function renderSelectionList() {
-  const container = document.getElementById("selectionList");
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const items = getAllSelectableItems().filter(i => i.name.toLowerCase().includes(search));
-  container.innerHTML = "";
-  items.forEach(item => {
-    const checked = selectedItems.some(x => x.name === item.name && x.type === item.type);
-    const div = document.createElement("div");
-    div.className = "checkbox-item";
-    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div><strong>${escapeHtml(item.name)}</strong><div style="font-size:12px; color:#64748b;">${item.type.toUpperCase()}</div></div>`;
-    const chk = div.querySelector("input");
-    div.addEventListener("click", (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.closest('input')) return;
-      const newChecked = !chk.checked;
-      chk.checked = newChecked;
-      toggleItemSelection(item, newChecked);
-    });
-    chk.addEventListener("change", (e) => {
-      e.stopPropagation();
-      toggleItemSelection(item, chk.checked);
-    });
-    container.appendChild(div);
-  });
-}
+/* =========================================================================
+   OPTIMIZATION LAYER
+   A mathematically complete, exact weighted set-cover Branch & Bound solver,
+   accelerated with a memoized transposition table. There are NO iteration
+   caps and NO time-based cutoffs — the search always runs to completion and
+   the returned plan is provably the cheapest valid combination. Greedy
+   heuristics are never used to decide the answer.
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
-}
+   TWO-PHASE DESIGN
+   -----------------
+   Phase 1 — EXACT COST ORACLE (state memoization / transposition table):
+     `minCostToCover(remainingMask)` is a pure, memoized recursive function:
+     the minimum cost is a function of `remainingMask` ALONE (it does not
+     depend on how we got there), so once a given remaining-coverage state
+     has been solved, its optimal cost is cached forever and instantly
+     reused every time the exact same state is reached again via a
+     different order of choices. Overlapping Combos/Packages routinely
+     produce many different candidate orderings that converge on the same
+     remaining state — this is precisely the combinatorial-explosion
+     source that a transposition table eliminates. This phase alone proves
+     the true minimum achievable B2B cost (`optimalCost`).
 
-function renderSelectedItems() {
-  const cont = document.getElementById("selectedItemsContainer");
-  cont.innerHTML = "";
-  selectedItems.forEach(item => {
-    const chip = document.createElement("div");
-    chip.className = "chip";
-    chip.innerHTML = `${escapeHtml(item.name)}<button>&times;</button>`;
-    chip.querySelector("button").addEventListener("click", () => {
-      selectedItems = selectedItems.filter(x => !(x.name === item.name && x.type === item.type));
-      renderSelectionList();
-      renderSelectedItems();
-    });
-    cont.appendChild(chip);
-  });
-}
+   Phase 2 — TIE-BREAK-AWARE ENUMERATION, perfectly pruned:
+     A second search enumerates *only* the branches that Phase 1 has
+     already proven can still reach `optimalCost` (using the memoized
+     costs as an exact — not merely admissible — lower bound), threading
+     the actual chosen entities so every tie-break criterion (including
+     laboratory reuse, which depends on what's already in the plan) is
+     evaluated correctly on complete, real candidate combinations.
 
-function renderLabFilters() {
-  const cont = document.getElementById("labFilters");
-  cont.innerHTML = "";
-  labsData.forEach(lab => {
-    const checked = selectedLabs.has(lab.name);
-    const div = document.createElement("div");
-    div.className = "checkbox-item";
-    div.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><div>${escapeHtml(lab.name)}</div>`;
-    div.querySelector("input").addEventListener("change", e => {
-      if (e.target.checked) {
-        selectedLabs.add(lab.name);
-      } else {
-        selectedLabs.delete(lab.name);
+   WHY THIS IS STILL COMPLETE (Select vs. Skip, made efficient):
+   At every node we pick one still-uncovered required test and consider
+   every candidate that could cover it — skipping all of them is not a
+   valid branch (the element would remain uncovered). Because the
+   candidate list for that element contains *every* candidate in the whole
+   pool that covers it — including whichever one the true optimum uses —
+   the optimum is always reachable down some branch, regardless of
+   branching order (this is the standard exact-cover decomposition,
+   generalized Algorithm X / Knuth's DLX idea for the weighted case).
+   Branching order only affects search *speed*, never completeness, and
+   memoized values are correct regardless of which order was used to
+   derive them.
+
+   PRUNING & SEARCH-SPACE REDUCTION (all safe — never cuts a potentially
+   optimal or potentially tie-break-superior branch):
+     • Cost pruning              — a partial cost already worse than the
+                                    incumbent cannot lead anywhere useful
+                                    (strict ">" so exact ties still reach
+                                    full tie-break comparison).
+     • Exact lower bound (memo)  — `cost + minCostToCover(remainingMask)`
+                                    is not an estimate but the true minimum
+                                    possible completion cost, so pruning on
+                                    it is perfectly safe and far tighter
+                                    than any heuristic bound.
+     • Coverage / dead-end /
+       impossible-state detection— a required element with zero covering
+                                    candidates aborts the branch instantly.
+     • Dominance & duplicate-
+       coverage pruning (static) — the Candidate Builder already removes
+                                    globally dominated / duplicate-coverage
+                                    entities before search begins.
+     • Dynamic dominance
+       reduction (per node)      — candidates competing for the *same*
+                                    still-uncovered element are re-checked
+                                    for dominance using only their EFFECTIVE
+                                    (remaining-mask-restricted) coverage —
+                                    catching redundancies that only become
+                                    apparent once some tests are already
+                                    covered, tightening branching further
+                                    than the static pass alone.
+     • Hierarchy pruning         — needs no bookkeeping at all: a
+                                    descendant's coverage is always a
+                                    subset of its ancestor's, so once an
+                                    ancestor Package/Combo is chosen, every
+                                    bit its descendants could ever cover is
+                                    already cleared from `remainingMask` —
+                                    descendants simply never appear as
+                                    candidates for any bit that's still
+                                    outstanding. This is enforced for free
+                                    by the remaining-mask bookkeeping.
+     • Forced-selection
+       propagation                — whenever the fail-first (Minimum-
+                                    Remaining-Value) element has exactly
+                                    one eligible candidate, the loop below
+                                    has nothing to branch on and that
+                                    candidate is effectively mandatory,
+                                    collapsing to a single deterministic step.
+     • Branch ordering            — within each element's candidate list,
+                                    the cheapest / most cost-effective /
+                                    Package-before-Combo-before-Test options
+                                    are tried first so strong solutions (and
+                                    strong pruning bounds) are found early.
+     • Symmetry handling          — the Candidate Builder's duplicate-
+                                    coverage merge already collapses truly
+                                    interchangeable candidates from the same
+                                    lab down to one, while still preserving
+                                    distinct laboratories at equal cost (they
+                                    are NOT symmetric — lab identity matters
+                                    for the "fewest laboratories" /
+                                    "laboratory reuse" tie-breaks).
+   ========================================================================= */
+function optimize(){
+  // 1) Build required universe (normalized test names) from all selected chips.
+  const requiredNamesAll = new Set();
+  state.selectedRequirements.forEach(req => req.covers.forEach(c=>requiredNamesAll.add(c)));
+  if(requiredNamesAll.size===0) throw new Error('The selected items do not resolve to any individual test.');
+
+  // 2) Restrict candidate pool to the laboratories the user has enabled.
+  const labFilteredCatalog = CATALOG.filter(it=>state.selectedLabs.has(it.labId));
+  if(labFilteredCatalog.length===0) throw new Error('No catalog items available for the selected laboratories.');
+
+  // 3) Determine which required names are actually coverable by selected labs.
+  //    Missing tests are reported clearly and excluded from the universe —
+  //    the remaining required tests are still optimized in full.
+  const coverableNames = new Set();
+  for(const item of labFilteredCatalog){
+    item.covers.forEach(c=>{ if(requiredNamesAll.has(c)) coverableNames.add(c); });
+  }
+  const uncoverable = Array.from(requiredNamesAll).filter(nm=>!coverableNames.has(nm));
+  const universe = Array.from(coverableNames);
+  const n = universe.length;
+  if(n===0) throw new Error('None of the selected tests are available in the chosen laboratories.');
+  const nameIndex = new Map(universe.map((nm,i)=>[nm,i]));
+
+  // 4) Candidate Builder: dedupe, merge identical coverage, strip dominated entities.
+  const candidates = buildCandidatePool(labFilteredCatalog, nameIndex, n);
+  if(candidates.length===0) throw new Error('No lab entity covers the selected requirement.');
+
+  // 5) Index candidates by the universe bit they cover (for MRV / fail-first
+  //    branching), ordered dynamically by cost-effectiveness: most uncovered-
+  //    tests-per-rupee first, then broader coverage, then lower absolute
+  //    cost, then Package-before-Combo-before-Test — never price alone.
+  const TYPE_RANK = { package:0, combo:1, test:2 };
+  const candidatesByBit = Array.from({length:n}, ()=>[]);
+  for(const cand of candidates){
+    for(let i=0;i<n;i++){
+      if(cand.mask & (1n << BigInt(i))) candidatesByBit[i].push(cand);
+    }
+  }
+  for(let i=0;i<n;i++){
+    candidatesByBit[i].sort((a,b)=>
+      (a.cost / a.coverCount) - (b.cost / b.coverCount) ||
+      b.coverCount - a.coverCount ||
+      a.cost - b.cost ||
+      TYPE_RANK[a.type] - TYPE_RANK[b.type]
+    );
+  }
+
+  const fullMask = universe.reduce((m,_,i)=> m | (1n << BigInt(i)), 0n);
+
+  function buildSolution(chosen){
+    let totalMRP=0, totalB2B=0, packageCount=0, comboCount=0, testCount=0;
+    const labCounts = new Map();
+    for(const c of chosen){
+      totalMRP += c.mrp; totalB2B += c.cost;
+      labCounts.set(c.labId, (labCounts.get(c.labId)||0) + 1);
+      if(c.type==='package') packageCount++; else if(c.type==='combo') comboCount++; else testCount++;
+    }
+    // maxLabReuse = size of the largest single-laboratory cluster in this plan —
+    // a higher value means the plan is more consolidated into fewer, reused labs.
+    let maxLabReuse = 0;
+    labCounts.forEach(v=>{ if(v>maxLabReuse) maxLabReuse = v; });
+    return { entities:chosen, totalMRP, totalB2B, packageCount, comboCount, testCount, labCount:labCounts.size, maxLabReuse };
+  }
+
+  // Multi-priority tie-break comparator, applied whenever B2B cost ties:
+  // (1) lowest B2B  (2) lowest MRP  (3) fewest entities  (4) more Packages
+  // (5) more Combos  (6) fewer individual Tests  (7) highest reuse of an
+  // already-used laboratory  (8) fewest laboratories overall.
+  function isBetter(a, b){
+    if(a.totalB2B !== b.totalB2B) return a.totalB2B < b.totalB2B;
+    if(a.totalMRP !== b.totalMRP) return a.totalMRP < b.totalMRP;
+    if(a.entities.length !== b.entities.length) return a.entities.length < b.entities.length;
+    if(a.packageCount !== b.packageCount) return a.packageCount > b.packageCount;
+    if(a.comboCount !== b.comboCount) return a.comboCount > b.comboCount;
+    if(a.testCount !== b.testCount) return a.testCount < b.testCount;
+    if(a.maxLabReuse !== b.maxLabReuse) return a.maxLabReuse > b.maxLabReuse;
+    if(a.labCount !== b.labCount) return a.labCount < b.labCount;
+    return false;
+  }
+
+  // Dynamic dominance reduction: given the candidates competing to cover a
+  // specific still-uncovered element, re-evaluate dominance using only their
+  // EFFECTIVE coverage against the current `remainingMask` (stronger than the
+  // static, global-coverage dominance check done once in the Candidate
+  // Builder, because two candidates that looked incomparable globally can
+  // become directly comparable once most of the universe is already covered).
+  function reduceDominated(list, remainingMask){
+    if(list.length <= 1) return list;
+    const withEff = list.map(c => ({ c, eff: c.mask & remainingMask }));
+    withEff.sort((a,b)=> countBits(b.eff) - countBits(a.eff) || a.c.cost - b.c.cost);
+    const survivors = [];
+    for(const item of withEff){
+      let dominated = false;
+      for(const s of survivors){
+        const supersetOrEqual = (s.eff & item.eff) === item.eff;
+        if(supersetOrEqual && s.c.cost <= item.c.cost && s.c !== item.c && !(s.eff===item.eff && s.c.cost===item.c.cost && s.c.labId===item.c.labId)){
+          dominated = true; break;
+        }
       }
-      if (document.getElementById("comparisonCard").style.display === "block") {
-        renderComparisonViewOnly();
-      }
-    });
-    cont.appendChild(div);
-  });
+      if(!dominated) survivors.push(item);
+    }
+    // Preserve original cost-effectiveness ordering among survivors.
+    const survivorSet = new Set(survivors.map(s=>s.c));
+    return list.filter(c=>survivorSet.has(c));
+  }
+
+  // Fail-first (Minimum-Remaining-Value) element selection: finds the still-
+  // uncovered element with the fewest eligible candidates, applying dynamic
+  // dominance reduction only to the winning element's list (kept cheap by
+  // not reducing every bit's list on every node — only the one we branch on).
+  function pickElement(remainingMask){
+    let bestBit=-1, bestCount=Infinity;
+    for(let i=0;i<n;i++){
+      if(!(remainingMask & (1n << BigInt(i)))) continue;
+      const cnt = candidatesByBit[i].length;
+      if(cnt < bestCount){ bestCount = cnt; bestBit = i; if(cnt<=1) break; }
+    }
+    if(bestBit === -1) return { bit:-1, list:null };
+    const reduced = reduceDominated(candidatesByBit[bestBit], remainingMask);
+    return { bit:bestBit, list:reduced };
+  }
+
+  // ---------------------------------------------------------------------
+  // PHASE 1 — exact cost oracle with a memoized transposition table.
+  // costMemo maps a remainingMask (as a string key) to the true minimum
+  // additional cost required to fully cover it. Every distinct state is
+  // solved exactly once, no matter how many different branches reach it.
+  // ---------------------------------------------------------------------
+  const costMemo = new Map();
+  function minCostToCover(remainingMask){
+    if(remainingMask === 0n) return 0;
+    const key = remainingMask.toString();
+    const cached = costMemo.get(key);
+    if(cached !== undefined) return cached;
+    const { bit, list } = pickElement(remainingMask);
+    if(bit === -1 || !list || list.length === 0){ costMemo.set(key, Infinity); return Infinity; }
+    let localBest = Infinity;
+    for(const cand of list){
+      const sub = minCostToCover(remainingMask & ~cand.mask);
+      if(sub === Infinity) continue;
+      const total = cand.cost + sub;
+      if(total < localBest) localBest = total;
+    }
+    costMemo.set(key, localBest);
+    return localBest;
+  }
+
+  const optimalCost = minCostToCover(fullMask);
+  if(optimalCost === Infinity) throw new Error('No valid combination could cover the selected tests with the chosen laboratories.');
+
+  // ---------------------------------------------------------------------
+  // PHASE 2 — enumerate only cost-optimal completions (using the now-
+  // memoized exact costs as a perfect pruning oracle) and pick the best
+  // one by the full multi-criteria tie-break, including laboratory reuse.
+  // ---------------------------------------------------------------------
+  let best = null;
+  function search(remainingMask, chosen, cost){
+    if(remainingMask === 0n){
+      const candidateSolution = buildSolution(chosen.slice());
+      if(!best || isBetter(candidateSolution, best)) best = candidateSolution;
+      return;
+    }
+    // Exact-bound pruning: costMemo is guaranteed populated for every state
+    // reachable here (Phase 1 already explored this exact branching
+    // structure in full), so this is a proof — not an estimate.
+    const exactRemaining = minCostToCover(remainingMask);
+    if(cost + exactRemaining > optimalCost) return;
+
+    const { bit, list } = pickElement(remainingMask);
+    if(bit === -1 || !list || list.length === 0) return;
+
+    for(const cand of list){
+      const nextMask = remainingMask & ~cand.mask;
+      const sub = minCostToCover(nextMask);
+      if(sub === Infinity) continue;
+      const projected = cost + cand.cost;
+      if(projected + sub > optimalCost) continue; // provably cannot reach the optimum via this candidate
+      chosen.push(cand);
+      search(nextMask, chosen, projected);
+      chosen.pop();
+    }
+  }
+  search(fullMask, [], 0);
+
+  if(!best) throw new Error('No valid combination could cover the selected tests with the chosen laboratories.');
+
+  // 8) Cleanup pass — strip any entity that contributes nothing beyond the others.
+  best = cleanupSolution(best, buildSolution);
+
+  // 9) Validation layer.
+  const validation = validateSolution(best, universe);
+
+  return { ...best, uncoverable, validation };
 }
 
-function renderEntityCard(entity) {
-  if (!entity) return '';
-  return `<div class="entity-card" data-entity-name="${escapeHtml(entity.name)}" data-entity-type="${entity.type}">
-    <div style="display:flex;justify-content:space-between;">
-      <h4>${escapeHtml(entity.name)}</h4>
-      <span class="badge ${entity.type}">${entity.type}</span>
-    </div>
-    <div class="price-block">
-      <div style="display:flex;justify-content:space-between;"><span>MRP</span><span>${currency(entity.mrp)}</span></div>
-      <div class="b2b-highlight"><div style="display:flex;justify-content:space-between;"><span>B2B PRICE</span><span class="b2b-price">${currency(entity.b2b)}</span></div></div>
-    </div>
-    ${entity.type !== "test" ? `<button class="info-btn" data-id="${entity.id}"><i class="fas fa-info-circle"></i> Details</button>` : ""}
+// Removes entities that contribute zero unique coverage once the rest of the
+// plan is considered. When several entities are equally redundant, individual
+// Tests are stripped before Combos, and Combos before Packages, so that the
+// most consolidated (fewest-entity) representation of the plan survives.
+function cleanupSolution(sol, buildSolution){
+  const typeRank = { test:0, combo:1, package:2 };
+  let entities = sol.entities.slice();
+  let changed = true;
+  while(changed){
+    changed = false;
+    const order = entities.map((e,idx)=>idx).sort((ia,ib)=> typeRank[entities[ia].type]-typeRank[entities[ib].type]);
+    for(const i of order){
+      let unionOthers = 0n;
+      entities.forEach((e,idx)=>{ if(idx!==i) unionOthers |= e.mask; });
+      if((entities[i].mask & ~unionOthers) === 0n){
+        entities.splice(i,1);
+        changed = true;
+        break;
+      }
+    }
+  }
+  return buildSolution(entities);
+}
+
+// Strong validation layer: every required test covered, no entity redundant,
+// and — using the Hierarchy Engine — no ancestor/descendant pair selected
+// together (which would always imply duplicate coverage).
+function validateSolution(sol, universe){
+  const fullMask = universe.reduce((m,_,i)=> m | (1n << BigInt(i)), 0n);
+  let union = 0n;
+  sol.entities.forEach(e=> union |= e.mask);
+  const coversAll = (union & fullMask) === fullMask;
+
+  let noRedundancy = true;
+  for(let i=0;i<sol.entities.length;i++){
+    let unionOthers = 0n;
+    sol.entities.forEach((e,idx)=>{ if(idx!==i) unionOthers |= e.mask; });
+    if((sol.entities[i].mask & ~unionOthers) === 0n){ noRedundancy = false; break; }
+  }
+
+  let noParentChildDuplication = true;
+  outer:
+  for(const a of sol.entities){
+    for(const b of sol.entities){
+      if(a === b) continue;
+      if(isAncestor(a.labId, a.type, a.id, b.type, b.id)){ noParentChildDuplication = false; break outer; }
+    }
+  }
+
+  return { coversAll, noRedundancy, noParentChildDuplication };
+}
+
+/* =========================================================================
+   RENDERING LAYER
+   ========================================================================= */
+function renderSelectionLists(){
+  const groups = { test:[], combo:[], package:[] };
+  const q = Utils.normalize(state.search);
+  for(const item of REQUIREMENT_CATALOG.values()){
+    if(q && !Utils.normalize(item.label).includes(q)) continue;
+    groups[item.type].push(item);
+  }
+  const mapping = { test:'selTestsList', combo:'selCombosList', package:'selPackagesList' };
+  for(const type of Object.keys(mapping)){
+    const list = groups[type].sort((a,b)=>a.label.localeCompare(b.label));
+    const el = document.getElementById(mapping[type]);
+    if(list.length===0){ el.innerHTML = `<div class="empty-hint">No ${type}s match your search.</div>`; continue; }
+    const frag = document.createDocumentFragment();
+    for(const item of list){
+      const row = document.createElement('div');
+      row.className = 'sel-item';
+      const checked = state.selectedRequirements.has(item.key);
+      const uid = 'chk_'+item.key.replace(/[^a-z0-9]/gi,'_');
+      row.innerHTML = `
+        <input type="checkbox" id="${uid}" data-key="${item.key}" ${checked?'checked':''}>
+        <label for="${uid}">${Utils.highlight(item.label, state.search)}</label>`;
+      frag.appendChild(row);
+    }
+    el.innerHTML=''; el.appendChild(frag);
+  }
+}
+
+function renderChips(){
+  const wrap = document.getElementById('chipsWrap');
+  document.getElementById('chipsCount').textContent = state.selectedRequirements.size;
+  if(state.selectedRequirements.size===0){
+    wrap.innerHTML = `<p class="empty-hint">No items selected yet. Tick tests, combos, or packages above to add them here.</p>`;
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  for(const req of state.selectedRequirements.values()){
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `<i class="fa-solid ${Utils.iconFor(req.type)}"></i><span>${Utils.escapeHtml(req.label)}</span>
+      <button class="chip-remove" data-key="${req.key}" aria-label="Remove ${Utils.escapeHtml(req.label)}"><i class="fa-solid fa-xmark"></i></button>`;
+    frag.appendChild(chip);
+  }
+  wrap.innerHTML=''; wrap.appendChild(frag);
+}
+
+function renderLabFilters(){
+  const wrap = document.getElementById('labFiltersWrap');
+  if(labsData.length===0){ wrap.innerHTML = '<p class="empty-hint">No laboratories configured.</p>'; return; }
+  const frag = document.createDocumentFragment();
+  for(const lab of labsData){
+    const label = document.createElement('label');
+    label.className = 'lab-filter-chip';
+    const checked = state.selectedLabs.has(lab.id);
+    label.innerHTML = `<input type="checkbox" value="${lab.id}" ${checked?'checked':''}><i class="fa-solid fa-hospital"></i> ${Utils.escapeHtml(lab.name)}`;
+    frag.appendChild(label);
+  }
+  wrap.innerHTML=''; wrap.appendChild(frag);
+}
+
+function renderComparison(){
+  const wrap = document.getElementById('comparisonSection');
+  const q = Utils.normalize(state.search);
+  const labsToShow = labsData.filter(l=>state.selectedLabs.has(l.id));
+  if(labsToShow.length===0){
+    wrap.innerHTML = `<p class="empty-hint">No laboratories selected. Enable at least one lab filter above to browse its catalog.</p>`;
+    return;
+  }
+
+  // The comparison catalog is focused strictly on the user's current
+  // selection: Individual Tests are shown only if they are themselves
+  // selected; Combos/Packages are shown only if they contain at least one
+  // selected test. With nothing selected yet, nothing to compare exists.
+  const hasSelection = state.selectedRequirements.size > 0;
+  if(!hasSelection){
+    wrap.innerHTML = `<p class="empty-hint">Select at least one test, combo, or package above to see matching laboratory items here.</p>`;
+    return;
+  }
+  const requiredNames = new Set();
+  const selectedTestNames = new Set();
+  state.selectedRequirements.forEach(req => {
+    req.covers.forEach(c=>requiredNames.add(c));
+    if(req.type==='test') selectedTestNames.add(req.key);
+  });
+  function isSelectedTest(item){ return selectedTestNames.has(Utils.normalize(item.name)); }
+  function isRelevantBundle(item){
+    for(const cov of item.covers){ if(requiredNames.has(cov)) return true; }
+    return false;
+  }
+
+  const frag = document.createDocumentFragment();
+  for(const lab of labsToShow){
+    const items = CATALOG.filter(c=>c.labId===lab.id && (!q || Utils.normalize(c.name).includes(q)));
+    const byType = { test:[], combo:[], package:[] };
+    items.forEach(it=>{
+      if(it.type==='test'){ if(isSelectedTest(it)) byType.test.push(it); return; }
+      if(isRelevantBundle(it)) byType[it.type].push(it);
+    });
+    const shownCount = byType.test.length + byType.combo.length + byType.package.length;
+
+    const panel = document.createElement('div');
+    panel.className = 'lab-panel';
+    panel.innerHTML = `
+      <div class="lab-panel-header">
+        <h3><i class="fa-solid fa-hospital"></i> ${Utils.escapeHtml(lab.name)}</h3>
+        <span class="lab-count">${shownCount} item${shownCount===1?'':'s'}</span>
+        <i class="fa-solid fa-chevron-down chevron"></i>
+      </div>
+      <div class="lab-panel-body">
+        ${renderAccordionSection('Individual Tests','fa-vial', byType.test, lab.id)}
+        ${renderAccordionSection('Combos','fa-layer-group', byType.combo, lab.id)}
+        ${renderAccordionSection('Packages','fa-box-archive', byType.package, lab.id)}
+      </div>`;
+    frag.appendChild(panel);
+  }
+  wrap.innerHTML=''; wrap.appendChild(frag);
+}
+
+function renderAccordionSection(title, icon, items, labId){
+  if(items.length===0){
+    return `<p class="empty-hint"><strong>${Utils.escapeHtml(title)}:</strong> No matching items.</p>`;
+  }
+  items = items.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  return `
+  <div class="accordion">
+    <div class="accordion-header"><i class="fa-solid ${icon}"></i> ${title} <span class="acc-count">${items.length}</span> <i class="fa-solid fa-chevron-right acc-chevron"></i></div>
+    <div class="accordion-body"><div class="card-grid">
+      ${items.map(it=>renderEntityCard(it, labId)).join('')}
+    </div></div>
   </div>`;
 }
 
-function openModal(entity) {
-  if (!entity) return;
-  document.getElementById("modalTitle").innerHTML = escapeHtml(entity.name);
-  document.getElementById("modalBody").innerHTML = `
-    <div style="margin-bottom: 12px;"><strong>Type:</strong> ${entity.type}</div>
-    <div style="margin-bottom: 12px;"><strong>MRP:</strong> ${currency(entity.mrp)}</div>
-    <div class="b2b-highlight" style="margin-bottom: 16px;"><strong>B2B:</strong> ${currency(entity.b2b)}</div>
-    ${entity.contains ? `<div style="margin-bottom: 12px;"><strong>Contains:</strong><ul>${entity.contains.map(c => `<li>${escapeHtml(c)}</li>`).join("")}</ul></div>` : ""}
-    <div><strong>Expanded Tests:</strong><ul>${(entity.covers || []).map(c => `<li>${escapeHtml(c)}</li>`).join("")}</ul></div>
-  `;
-  document.getElementById("infoModal").classList.add("active");
+function renderEntityCard(it, labId){
+  const coverageRow = it.type!=='test'
+    ? `<div><span class="price-label">Tests</span><span class="price-val b2b">${it.covers.size}</span></div>`
+    : '';
+  return `
+  <div class="entity-card">
+    <div class="entity-card-top">
+      <span class="badge badge-${it.type}">${Utils.capitalize(it.type)}</span>
+      <button class="info-btn" data-lab="${labId}" data-type="${it.type}" data-id="${it.id}" aria-label="Details for ${Utils.escapeHtml(it.name)}"><i class="fa-solid fa-circle-info"></i></button>
+    </div>
+    <h4>${Utils.escapeHtml(it.name)}</h4>
+    <div class="entity-price-row">
+      <div><span class="price-label">MRP</span><span class="price-val mrp">${Utils.formatCurrency(it.mrp)}</span></div>
+      <div><span class="price-label">B2B</span><span class="price-val b2b">${Utils.formatCurrency(it.b2b)}</span></div>
+      ${coverageRow}
+    </div>
+  </div>`;
 }
 
-document.getElementById("closeModal").addEventListener("click", () => document.getElementById("infoModal").classList.remove("active"));
-document.getElementById("infoModal").addEventListener("click", (e) => {
-  if (e.target === document.getElementById("infoModal")) {
-    document.getElementById("infoModal").classList.remove("active");
+function renderResults(result){
+  const section = document.getElementById('resultsSection');
+  section.classList.remove('hidden');
+
+  const savings = result.totalMRP - result.totalB2B;
+  const savingsPct = result.totalMRP > 0 ? (savings/result.totalMRP*100).toFixed(1) : '0.0';
+
+  document.getElementById('sumMrp').textContent = Utils.formatCurrency(result.totalMRP);
+  document.getElementById('sumB2b').textContent = Utils.formatCurrency(result.totalB2B);
+  document.getElementById('sumSavings').textContent = Utils.formatCurrency(savings);
+  document.getElementById('sumSavingsPct').textContent = `${savingsPct}% saved`;
+  document.getElementById('sumEntities').textContent = result.entities.length;
+  document.getElementById('sumLabs').textContent = result.labCount;
+
+  const warnWrap = document.getElementById('resultWarnings');
+  const warnings = [];
+  if(result.uncoverable && result.uncoverable.length){
+    warnings.push(`These required tests are not offered by any selected laboratory and were excluded from the plan: ${result.uncoverable.map(n=>Utils.capitalizeWords(n)).join(', ')}.`);
   }
-});
-
-function attachInfoButtons() {
-  document.querySelectorAll(".info-btn").forEach(btn => {
-    btn.removeEventListener("click", infoClickHandler);
-    btn.addEventListener("click", infoClickHandler);
-  });
-}
-
-function infoClickHandler(e) {
-  e.stopPropagation();
-  const entity = normalizedEntities.find(ent => ent && ent.id === e.currentTarget.dataset.id);
-  if (entity) openModal(entity);
-}
-
-function attachComparisonCardClick() {
-  document.querySelectorAll(".entity-card").forEach(card => {
-    card.removeEventListener("click", comparisonCardHandler);
-    card.addEventListener("click", comparisonCardHandler);
-  });
-}
-
-function comparisonCardHandler(e) {
-  if (e.target.closest('.info-btn')) return;
-  const card = e.currentTarget;
-  const name = card.getAttribute("data-entity-name");
-  const type = card.getAttribute("data-entity-type");
-  const selectableItem = getAllSelectableItems().find(i => i.name === name && i.type === type);
-  if (selectableItem) {
-    const isSelected = selectedItems.some(x => x.name === selectableItem.name && x.type === selectableItem.type);
-    toggleItemSelection(selectableItem, !isSelected);
+  if(!result.validation.coversAll){
+    warnings.push('Validation warning: some required tests may not be fully covered by this plan.');
   }
-}
-
-function renderComparisonViewOnly() {
-  const container = document.getElementById("comparisonView");
-  container.innerHTML = "";
-  const required = getRequiredTests();
-  if (required.length === 0) {
-    container.innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">Select tests then click Optimize Planning</div>`;
-    return;
+  if(!result.validation.noRedundancy){
+    warnings.push('Validation warning: a redundant entity may still be present in this plan.');
   }
-  const visible = labsData.filter(l => selectedLabs.has(l.name));
-  if (visible.length === 0) {
-    container.innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">Please select at least one lab from Lab Filters</div>`;
-    return;
+  if(!result.validation.noParentChildDuplication){
+    warnings.push('Validation warning: a parent Package/Combo and one of its own children were selected together.');
   }
-  visible.forEach(lab => {
-    const entities = normalizedEntities.filter(x => x && x.lab === lab.name && x.covers && x.covers.some(t => required.includes(t)));
-    const tests = entities.filter(x => x.type === "test");
-    const combos = entities.filter(x => x.type === "combo");
-    const packages = entities.filter(x => x.type === "package");
-    const block = document.createElement("div");
-    block.className = "lab-block";
-    block.innerHTML = `
-      <div class="lab-header">
-        <h2><i class="fas fa-hospital-user" style="color:#1ECAD3;"></i> ${escapeHtml(lab.name)}</h2>
-        <span class="accordion-icon"><i class="fas fa-chevron-down"></i></span>
-      </div>
-      <div class="lab-body">
-        <div class="accordion-section">
-          <div class="section-header"><span>🧪 Individual Tests (${tests.length})</span><span class="section-arrow">▼</span></div>
-          <div class="section-content"><div class="entity-grid">${tests.map(renderEntityCard).join("")}</div></div>
-        </div>
-        <div class="accordion-section">
-          <div class="section-header"><span>⚡ Combos (${combos.length})</span><span class="section-arrow">▼</span></div>
-          <div class="section-content"><div class="entity-grid">${combos.map(renderEntityCard).join("")}</div></div>
-        </div>
-        <div class="accordion-section">
-          <div class="section-header"><span>📦 Packages (${packages.length})</span><span class="section-arrow">▼</span></div>
-          <div class="section-content"><div class="entity-grid">${packages.map(renderEntityCard).join("")}</div></div>
-        </div>
-      </div>
-    `;
-    container.appendChild(block);
-  });
-  
-  document.querySelectorAll(".section-header").forEach(header => {
-    header.removeEventListener("click", accordionToggle);
-    header.addEventListener("click", accordionToggle);
-  });
-  attachInfoButtons();
-  attachComparisonCardClick();
-}
-
-function accordionToggle(e) {
-  const header = e.currentTarget;
-  const content = header.nextElementSibling;
-  const arrow = header.querySelector(".section-arrow");
-  if (content.classList.contains("open")) {
-    content.classList.remove("open");
-    if (arrow) arrow.style.transform = "rotate(0deg)";
+  if(warnings.length){
+    warnWrap.innerHTML = warnings.map(w=>`<div class="warning-banner"><i class="fa-solid fa-triangle-exclamation"></i> ${Utils.escapeHtml(w)}</div>`).join('');
   } else {
-    content.classList.add("open");
-    if (arrow) arrow.style.transform = "rotate(180deg)";
+    warnWrap.innerHTML = `<div class="success-banner"><i class="fa-solid fa-circle-check"></i> All required tests are covered with zero redundancy — mathematically verified global optimum.</div>`;
+  }
+
+  const byLab = new Map();
+  for(const e of result.entities){
+    if(!byLab.has(e.labId)) byLab.set(e.labId, []);
+    byLab.get(e.labId).push(e);
+  }
+  const labGroupWrap = document.getElementById('labGroupWrap');
+  const frag = document.createDocumentFragment();
+  for(const [labId, items] of byLab){
+    const lab = labsData.find(l=>l.id===labId);
+    const subtotal = items.reduce((s,i)=>s+i.cost,0);
+    const div = document.createElement('div');
+    div.className = 'lab-result-card';
+    div.innerHTML = `
+      <div class="lab-result-header">
+        <h4><i class="fa-solid fa-hospital"></i> ${Utils.escapeHtml(lab ? lab.name : labId)}</h4>
+        <button class="btn btn-outline btn-sm" data-copy-lab="${labId}" data-copy-lab-name="${Utils.escapeHtml(lab?lab.name:labId)}"><i class="fa-solid fa-copy"></i> Copy</button>
+      </div>
+      <ul class="lab-result-list">
+        ${items.map(it=>`<li><span class="badge badge-${it.type}">${Utils.capitalize(it.type)}</span> <span class="item-name">${Utils.escapeHtml(it.name)}</span> <span class="item-price">${Utils.formatCurrency(it.cost)}</span></li>`).join('')}
+      </ul>
+      <div class="lab-result-total">Subtotal: <strong>${Utils.formatCurrency(subtotal)}</strong></div>`;
+    frag.appendChild(div);
+  }
+  labGroupWrap.innerHTML=''; labGroupWrap.appendChild(frag);
+  section.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* Modal rendering */
+/* Recursively renders a nested Package/Combo tree (unlimited depth) into the
+   existing .modal-list markup, indenting each level so the full hierarchy
+   — not just the immediate children — is visible in one place. */
+function renderHierarchyList(labEntry, contains, depth){
+  return contains.map(ch=>{
+    const childObj = labEntry ? getEntity(labEntry, ch.type, ch.id) : null;
+    const name = childObj ? childObj.name : '(missing reference)';
+    const indent = depth > 0 ? `<span class="muted">${'—&nbsp;'.repeat(depth)}</span>` : '';
+    let html = `<li>${indent}<span class="badge badge-${ch.type}">${Utils.capitalize(ch.type)}</span> ${Utils.escapeHtml(name)}</li>`;
+    if(childObj && childObj.contains && childObj.contains.length){
+      html += renderHierarchyList(labEntry, childObj.contains, depth+1);
+    }
+    return html;
+  }).join('');
+}
+
+function openModal(labId, type, id){
+  const item = CATALOG.find(c=>c.labId===labId && c.type===type && c.id===id);
+  if(!item){ toast('Item details could not be found.', 'error'); return; }
+  document.getElementById('modalTitle').textContent = item.name;
+  document.getElementById('modalLab').textContent = item.labName;
+  document.getElementById('modalBadge').innerHTML = `<span class="badge badge-${item.type}">${Utils.capitalize(item.type)}</span>`;
+  document.getElementById('modalMrp').textContent = Utils.formatCurrency(item.mrp);
+  document.getElementById('modalB2b').textContent = Utils.formatCurrency(item.b2b);
+
+  const containsWrap = document.getElementById('modalContains');
+  const labEntry = DB.labsById.get(labId);
+  if(item.contains && item.contains.length){
+    containsWrap.innerHTML = renderHierarchyList(labEntry, item.contains, 0);
+  } else {
+    containsWrap.innerHTML = `<li class="muted">This is an individual test — it has no sub-components.</li>`;
+  }
+
+  const testsWrap = document.getElementById('modalTests');
+  const sortedCovers = Array.from(item.covers).sort();
+  testsWrap.innerHTML = sortedCovers.length
+    ? sortedCovers.map(nm=>`<li><i class="fa-solid fa-vial" style="color:var(--accent-dark)"></i> ${Utils.escapeHtml(Utils.capitalizeWords(nm))}</li>`).join('')
+    : `<li class="muted">No underlying tests found.</li>`;
+  document.getElementById('modalCount').textContent = sortedCovers.length;
+
+  document.getElementById('modalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+/* =========================================================================
+   CLIPBOARD LAYER
+   ========================================================================= */
+function buildLabCopyText(labId){
+  const result = state.lastResult;
+  if(!result) return '';
+  const items = result.entities.filter(e=>e.labId===labId);
+  if(items.length===0) return '';
+  const lab = labsData.find(l=>l.id===labId);
+  const labName = lab ? lab.name : labId;
+  const lines = [labName, '-'.repeat(labName.length)];
+  let subtotal = 0;
+  for(const it of items){
+    lines.push(`• ${it.name} (${Utils.capitalize(it.type)}) — ${Utils.formatCurrency(it.cost)}`);
+    subtotal += it.cost;
+  }
+  lines.push(`Subtotal: ${Utils.formatCurrency(subtotal)}`);
+  return lines.join('\n');
+}
+function buildAllCopyText(){
+  const result = state.lastResult;
+  if(!result) return '';
+  const labIds = Array.from(new Set(result.entities.map(e=>e.labId)));
+  const blocks = labIds.map(id=>buildLabCopyText(id));
+  blocks.push(`GRAND TOTAL\nTotal MRP: ${Utils.formatCurrency(result.totalMRP)}\nTotal B2B: ${Utils.formatCurrency(result.totalB2B)}\nSavings: ${Utils.formatCurrency(result.totalMRP-result.totalB2B)}`);
+  return blocks.join('\n\n');
+}
+async function copyText(text, label){
+  if(!text){ toast('Nothing to copy yet.', 'warning'); return; }
+  try{
+    await navigator.clipboard.writeText(text);
+    toast(`${label} copied to clipboard.`, 'success');
+  }catch(err){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast(`${label} copied to clipboard.`, 'success');
+    }catch(err2){
+      toast('Could not copy to clipboard on this device.', 'error');
+    }
   }
 }
 
-function updateTotals(mrp, b2b) {
-  document.getElementById("totalMRP").innerHTML = currency(mrp);
-  document.getElementById("totalB2B").innerHTML = currency(b2b);
-  document.getElementById("totalSavings").innerHTML = currency(mrp - b2b);
+/* =========================================================================
+   UI LAYER — toasts, spinner, event wiring
+   ========================================================================= */
+function toast(message, type='info'){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  const icon = type==='success' ? 'fa-circle-check' : type==='error' ? 'fa-circle-exclamation' : type==='warning' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+  el.innerHTML = `<i class="fa-solid ${icon}"></i><span>${Utils.escapeHtml(message)}</span>`;
+  wrap.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(), 300); }, 3600);
 }
 
-function renderOptimizedPlan() {
-  const cont = document.getElementById("optimizedResults");
-  cont.innerHTML = "";
-  if (!optimizedPlan.length) return;
-  let totalMRP = 0, totalB2B = 0, group = {};
-  optimizedPlan.forEach(i => {
-    totalMRP += (i.mrp || 0);
-    totalB2B += (i.b2b || 0);
-    if (!group[i.lab]) group[i.lab] = [];
-    group[i.lab].push(i);
-  });
-  const listDiv = document.createElement("div");
-  optimizedPlan.forEach(item => {
-    const el = document.createElement("div");
-    el.className = "optimized-item";
-    el.innerHTML = `
-      <div style="display:flex;justify-content:space-between;">
-        <div><strong>${escapeHtml(item.name)}</strong><div class="muted">${escapeHtml(item.lab)}</div></div>
-        <span class="badge ${item.type}">${item.type}</span>
-      </div>
-      <div style="font-size:13px; margin-top:8px;"><i class="fas fa-dna"></i> Covers: ${(item.covers || []).map(c => escapeHtml(c)).join(", ")}</div>
-      <div class="price-block"><div>MRP ${currency(item.mrp)}</div><div class="b2b-highlight">B2B ${currency(item.b2b)}</div></div>
-    `;
-    listDiv.appendChild(el);
-  });
-  cont.appendChild(listDiv);
-  const groupDiv = document.createElement("div");
-  groupDiv.className = "lab-grouping-section";
-  groupDiv.innerHTML = "<h4><i class='fas fa-building'></i> Lab-wise Grouping</h4>";
-  Object.entries(group).forEach(([lab, items]) => {
-    const cardDiv = document.createElement("div");
-    cardDiv.className = "lab-group-card";
-    const itemNames = [...new Set(items.map(i => i.name))];
-    const copyText = itemNames.join(", ");
-    cardDiv.innerHTML = `
-      <div class="lab-group-header">
-        <span class="lab-group-title"><i class="fas fa-flask" style="color:#1ECAD3;"></i> ${escapeHtml(lab)}</span>
-        <button class="btn-lab-copy copy-lab-btn" data-lab="${escapeHtml(lab)}" data-copy-text="${copyText.replace(/"/g, '&quot;')}"><i class="fas fa-copy"></i> Copy Items (${items.length})</button>
-      </div>
-      <ul class="lab-items-list">${items.map(i => `<li>${escapeHtml(i.name)}</li>`).join("")}</ul>
-    `;
-    groupDiv.appendChild(cardDiv);
-  });
-  cont.appendChild(groupDiv);
-  updateTotals(totalMRP, totalB2B);
-  document.querySelectorAll('.copy-lab-btn').forEach(btn => {
-    btn.removeEventListener('click', handleLabCopy);
-    btn.addEventListener('click', handleLabCopy);
-  });
+function showSpinner(show){
+  document.getElementById('spinnerOverlay').classList.toggle('show', show);
 }
 
-function handleLabCopy(e) {
-  e.stopPropagation();
-  const labName = e.currentTarget.getAttribute('data-lab');
-  const copyText = e.currentTarget.getAttribute('data-copy-text');
-  if (copyText && copyText.trim()) copyToClipboard(copyText, `Copied ${labName} items`);
-  else showToast(`No items to copy for ${labName}`);
-}
-
-// SAFE OPTIMIZATION WITH CRASH PROTECTION
-function optimizePlan() {
-  if (isOptimizing) return;
-  isOptimizing = true;
-  const btn = document.getElementById("optimizeBtn");
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<span class="loading-overlay"></span> Optimizing...';
-  btn.style.opacity = "0.7";
-  btn.style.pointerEvents = "none";
-  
-  setTimeout(() => {
-    try {
-      const required = getRequiredTests();
-      if (required.length === 0) {
-        optimizedPlan = [];
-        updateTotals(0, 0);
-        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">Select items to view optimized plan</div>`;
-        document.getElementById("comparisonCard").style.display = "block";
-        document.getElementById("resultsSection").style.display = "grid";
-        renderComparisonViewOnly();
-        isOptimizing = false;
-        btn.innerHTML = originalHtml;
-        btn.style.opacity = "1";
-        btn.style.pointerEvents = "auto";
-        return;
-      }
-      
-      // Limit number of tests for DP safety (max 20 tests to prevent memory issues)
-      const MAX_TESTS = 20;
-      let safeTests = required;
-      let wasTruncated = false;
-      if (required.length > MAX_TESTS) {
-        safeTests = required.slice(0, MAX_TESTS);
-        wasTruncated = true;
-        console.warn(`Tests truncated from ${required.length} to ${MAX_TESTS} for performance`);
-      }
-      
-      renderComparisonViewOnly();
-      document.getElementById("comparisonCard").style.display = "block";
-      
-      let entities = normalizedEntities.filter(x => x && selectedLabs.has(x.lab));
-      entities = entities.filter(e => e.covers && Array.isArray(e.covers) && e.covers.some(t => safeTests.includes(t)));
-      
-      if (entities.length === 0) {
-        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">⚠️ No items available to cover the selected tests from the chosen labs.</div>`;
-        document.getElementById("resultsSection").style.display = "grid";
-        isOptimizing = false;
-        btn.innerHTML = originalHtml;
-        btn.style.opacity = "1";
-        btn.style.pointerEvents = "auto";
-        return;
-      }
-      
-      const bitMap = {};
-      safeTests.forEach((t, i) => bitMap[t] = i);
-      const maskEnt = entities.map(e => {
-        let mask = 0;
-        if (e.covers) {
-          e.covers.forEach(t => { 
-            if (bitMap.hasOwnProperty(t)) mask |= (1 << bitMap[t]); 
-          });
-        }
-        return { ...e, mask };
-      });
-      
-      const target = (1 << safeTests.length) - 1;
-      
-      // Safety check: if target is too large (more than 2^20), use greedy fallback
-      if (target > 1048575) { // 2^20 - 1
-        console.warn("Target mask too large, using fallback greedy selection");
-        const greedyPlan = [];
-        const coveredTests = new Set();
-        const sortedEntities = [...maskEnt].sort((a, b) => (a.b2b / (a.covers?.length || 1)) - (b.b2b / (b.covers?.length || 1)));
-        for (const entity of sortedEntities) {
-          const newTests = entity.covers.filter(t => safeTests.includes(t) && !coveredTests.has(t));
-          if (newTests.length > 0) {
-            greedyPlan.push(entity);
-            newTests.forEach(t => coveredTests.add(t));
-          }
-          if (coveredTests.size === safeTests.length) break;
-        }
-        if (coveredTests.size === safeTests.length) {
-          optimizedPlan = uniqueById(greedyPlan);
-          renderOptimizedPlan();
-          document.getElementById("resultsSection").style.display = "grid";
-          if (wasTruncated) showToast("Note: Optimized with limited tests for performance");
-          isOptimizing = false;
-          btn.innerHTML = originalHtml;
-          btn.style.opacity = "1";
-          btn.style.pointerEvents = "auto";
-          return;
-        }
-      }
-      
-      const dp = Array(target + 1).fill(Infinity);
-      const parent = Array(target + 1).fill(null);
-      dp[0] = 0;
-      
-      for (let cur = 0; cur <= target; cur++) {
-        if (dp[cur] === Infinity) continue;
-        for (const e of maskEnt) {
-          const nxt = cur | e.mask;
-          const newCost = dp[cur] + e.b2b;
-          if (newCost < dp[nxt]) {
-            dp[nxt] = newCost;
-            parent[nxt] = { prevMask: cur, entity: e };
-          }
-        }
-      }
-      
-      if (dp[target] === Infinity) {
-        document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#64748b;">⚠️ Insufficient coverage - selected tests cannot be covered by items from selected labs.</div>`;
-        document.getElementById("resultsSection").style.display = "grid";
-        isOptimizing = false;
-        btn.innerHTML = originalHtml;
-        btn.style.opacity = "1";
-        btn.style.pointerEvents = "auto";
-        return;
-      }
-      
-      let cur = target, chosen = [];
-      let safetyCounter = 0;
-      const MAX_ITERATIONS = 100;
-      while (cur !== 0 && safetyCounter < MAX_ITERATIONS) {
-        const step = parent[cur];
-        if (!step) break;
-        chosen.push(step.entity);
-        cur = step.prevMask;
-        safetyCounter++;
-      }
-      optimizedPlan = uniqueById(chosen.reverse());
-      renderOptimizedPlan();
-      document.getElementById("resultsSection").style.display = "grid";
-      if (wasTruncated) showToast("Note: Optimized with limited tests for performance");
-    } catch (error) {
-      console.error("Optimization error:", error);
-      showToast("Optimization encountered an issue. Please try with fewer selections.");
-      document.getElementById("optimizedResults").innerHTML = `<div style="padding:24px;text-align:center;color:#dc2626;">⚠️ Optimization failed. Please try with a different combination of tests.</div>`;
-      document.getElementById("resultsSection").style.display = "grid";
-    } finally {
-      isOptimizing = false;
-      btn.innerHTML = originalHtml;
-      btn.style.opacity = "1";
-      btn.style.pointerEvents = "auto";
+function runOptimization(){
+  if(state.selectedRequirements.size===0){ toast('Select at least one test, combo or package before optimizing.', 'warning'); return; }
+  if(state.selectedLabs.size===0){ toast('Select at least one laboratory to compare.', 'warning'); return; }
+  showSpinner(true);
+  setTimeout(()=>{
+    try{
+      const result = optimize();
+      state.lastResult = result;
+      renderResults(result);
+      toast('Optimized plan generated successfully.', 'success');
+    }catch(err){
+      console.error(err);
+      toast('Optimization failed: ' + err.message, 'error');
+    }finally{
+      showSpinner(false);
     }
-  }, 50);
+  }, 30);
 }
 
-document.getElementById("copyAllBtn").addEventListener("click", async () => {
-  if (optimizedPlan.length === 0) { showToast("Nothing to copy"); return; }
-  const text = [...new Set(optimizedPlan.map(x => x.name))].join(", ");
-  copyToClipboard(text, "Copied all lab items");
-});
+function handleSelectionChange(e){
+  const cb = e.target.closest('input[type=checkbox]');
+  if(!cb) return;
+  const key = cb.dataset.key;
+  const req = REQUIREMENT_CATALOG.get(key);
+  if(!req) return;
+  if(cb.checked) state.selectedRequirements.set(key, req);
+  else state.selectedRequirements.delete(key);
 
-document.getElementById("searchInput").addEventListener("input", renderSelectionList);
-document.getElementById("optimizeBtn").addEventListener("click", optimizePlan);
-document.getElementById("clearAllBtn").addEventListener("click", () => {
-  selectedItems = [];
-  document.getElementById("searchInput").value = "";
-  renderSelectionList();
-  renderSelectedItems();
-  document.getElementById("comparisonCard").style.display = "none";
-  document.getElementById("resultsSection").style.display = "none";
-  optimizedPlan = [];
-  updateTotals(0, 0);
-  focusSearchInput();
-});
+  // Every selection (check or uncheck) clears the search bar and keeps
+  // keyboard focus inside it, so the user can immediately type the next
+  // search term without clicking back into the field.
+  const searchInput = document.getElementById('searchInput');
+  state.search = '';
+  searchInput.value = '';
 
-buildNormalizedEntities();
-renderSelectionList();
-renderSelectedItems();
-renderLabFilters();
-focusSearchInput();
-document.getElementById("comparisonCard").style.display = "none";
-document.getElementById("resultsSection").style.display = "none";
+  renderChips();
+  renderSelectionLists();
+  renderComparison();
+  searchInput.focus();
+}
+
+function wireEvents(){
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', Utils.debounce((e)=>{
+    state.search = e.target.value;
+    renderSelectionLists();
+    renderComparison();
+  }, 150));
+
+  ['selTestsList','selCombosList','selPackagesList'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', handleSelectionChange);
+  });
+
+  document.getElementById('chipsWrap').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.chip-remove');
+    if(!btn) return;
+    state.selectedRequirements.delete(btn.dataset.key);
+    renderChips();
+    renderSelectionLists();
+    renderComparison();
+  });
+
+  document.getElementById('labFiltersWrap').addEventListener('change', (e)=>{
+    const cb = e.target.closest('input[type=checkbox]');
+    if(!cb) return;
+    if(cb.checked) state.selectedLabs.add(cb.value); else state.selectedLabs.delete(cb.value);
+    renderComparison();
+  });
+
+  document.getElementById('btnOptimize').addEventListener('click', runOptimization);
+
+  document.getElementById('btnClear').addEventListener('click', ()=>{
+    state.selectedRequirements.clear();
+    state.lastResult = null;
+    renderChips(); renderSelectionLists(); renderComparison();
+    document.getElementById('resultsSection').classList.add('hidden');
+    toast('Selection cleared.', 'info');
+  });
+
+  document.getElementById('btnSelectAllLabs').addEventListener('click', ()=>{
+    state.selectedLabs = new Set(labsData.map(l=>l.id));
+    renderLabFilters(); renderComparison();
+    toast('All laboratories selected.', 'info');
+  });
+  document.getElementById('btnDeselectAllLabs').addEventListener('click', ()=>{
+    state.selectedLabs.clear();
+    renderLabFilters(); renderComparison();
+    toast('All laboratories deselected.', 'info');
+  });
+
+  document.getElementById('comparisonSection').addEventListener('click', (e)=>{
+    const infoBtn = e.target.closest('.info-btn');
+    if(infoBtn){ openModal(infoBtn.dataset.lab, infoBtn.dataset.type, infoBtn.dataset.id); return; }
+    const accHeader = e.target.closest('.accordion-header');
+    if(accHeader){ accHeader.parentElement.classList.toggle('open'); return; }
+    const labHeader = e.target.closest('.lab-panel-header');
+    if(labHeader){ labHeader.parentElement.classList.toggle('collapsed'); }
+  });
+
+  document.getElementById('resultsSection').addEventListener('click', (e)=>{
+    const copyBtn = e.target.closest('[data-copy-lab]');
+    if(copyBtn){ copyText(buildLabCopyText(copyBtn.dataset.copyLab), `${copyBtn.dataset.copyLabName} plan`); return; }
+    if(e.target.closest('#btnCopyAll')){ copyText(buildAllCopyText(), 'Full optimized plan'); }
+  });
+
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id==='modalOverlay' || e.target.closest('.modal-close')) closeModal();
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeModal();
+    if(e.key === '/' && document.activeElement !== searchInput){
+      e.preventDefault(); searchInput.focus();
+    }
+  });
+}
+
+/* =========================================================================
+   BOOTSTRAP
+   ========================================================================= */
+function init(){
+  try{
+    buildDatabase();
+    expandAll();
+    buildHierarchy();
+    buildCatalog();
+    buildRequirementCatalog();
+    state.selectedLabs = new Set(labsData.map(l=>l.id));
+
+    renderSelectionLists();
+    renderChips();
+    renderLabFilters();
+    renderComparison();
+    wireEvents();
+
+    document.getElementById('searchInput').focus();
+
+    if(DB.errors.length){
+      console.warn('Pathology Lab Optimizer — data issues detected:', DB.errors);
+      toast(`Loaded with ${DB.errors.length} data issue(s) — see console for details.`, 'warning');
+    }
+  }catch(err){
+    console.error('Fatal initialization error:', err);
+    document.querySelector('main').innerHTML = `
+      <div class="panel">
+        <div class="warning-banner"><i class="fa-solid fa-triangle-exclamation"></i>
+        The application could not start due to a data error: ${Utils.escapeHtml(err.message)}. Please check the laboratory data and reload.</div>
+      </div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
 </script>
- <script src="pwa.js"></script>
 </body>
 </html>
