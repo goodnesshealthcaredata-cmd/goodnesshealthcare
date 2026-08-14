@@ -2068,12 +2068,10 @@ function addContactRow(formId, data = null) {
     <div class="field-group">
       <label>Contact Person Name</label>
       <input type="text" id="contactName-${formId}-${rowCount}" placeholder="Enter name" value="${nameValue}" />
-      <div class="error-message" id="contactNameError-${formId}-${rowCount}">Please enter a valid name</div>
     </div>
     <div class="field-group">
       <label>Contact Number</label>
       <input type="tel" id="contactNumber-${formId}-${rowCount}" placeholder="Enter 10-digit number" value="${numberValue}" />
-      <div class="error-message" id="contactNumberError-${formId}-${rowCount}">Please enter a valid 10-digit number</div>
     </div>
     <button class="remove-contact-btn" data-form="${formId}" data-index="${rowCount}">✕ Remove</button>
   `;
