@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LabManager Pro · Tests & Packages</title>
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js">
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js">
+  </script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== RESET & BASE ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', -apple-system, system-ui, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 24px 32px;
+    }
+    .app-container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* ===== HEADER ===== */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e8ecf1;
+    }
+    .app-header .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-header .logo i {
+      font-size: 28px;
+      padding: 12px;
+      border-radius: 14px;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    .app-header .logo h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #1a1a2e, #4f46e5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .app-header .logo span {
+      font-weight: 400;
+      font-size: 0.85rem;
+      color: #6b7280;
+      -webkit-text-fill-color: #6b7280;
+      margin-left: 8px;
+    }
+    .app-header .lab-indicator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 20px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    /* ===== TABS ===== */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      background: white;
+      padding: 6px;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      margin-bottom: 28px;
+      border: 1px solid #e8ecf1;
+    }
+    .tab-btn {
+      padding: 12px 28px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-radius: 12px;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn:hover {
+      background: #f3f4f6;
+      color: #1a1a2e;
+    }
+    .tab-btn.active {
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .tab-btn i {
+      font-size: 1rem;
+    }
+
+    /* ===== TAB CONTENT ===== */
+    .tab-content {
+      display: none;
+      background: white;
+      border-radius: 20px;
+      padding: 32px 36px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e8ecf1;
+      animation: fadeIn 0.3s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== SECTION HEADERS ===== */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      letter-spacing: -0.3px;
+    }
+    .section-header .subtitle {
+      color: #6b7280;
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+    .action-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    .form-card {
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 20px;
+      border: 2px solid;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    .form-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+    .form-card .form-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #1a1a2e;
+    }
+    .form-card .form-title i {
+      font-size: 1.2rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .form-group {
+      margin-bottom: 4px;
+    }
+    .form-group label {
+      font-weight: 500;
+      font-size: 0.85rem;
+      display: block;
+      margin-bottom: 6px;
+      color: #374151;
+      letter-spacing: 0.2px;
+    }
+    .form-group label .required {
+      color: #ef4444;
+      margin-left: 2px;
+    }
+    .form-group label .optional {
+      color: #9ca3af;
+      font-weight: 400;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      background: white;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      color: #1a1a2e;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+      background: white;
+    }
+    .form-group input::placeholder {
+      color: #9ca3af;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    }
+    .btn-success {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+    }
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #e5e7eb;
+      color: #374151;
+    }
+    .btn-outline:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      transform: translateY(-2px);
+    }
+    .btn-sm {
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+    }
+
+    /* ===== LAB SELECTOR ===== */
+    .lab-selector-wrapper {
+      border-radius: 14px;
+      padding: 4px;
+      display: inline-flex;
+      border: 2px solid #e5e7eb;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    .lab-selector-wrapper:focus-within {
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+    .lab-selector-wrapper select {
+      border: none;
+      background: transparent;
+      padding: 10px 16px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: #1a1a2e;
+      cursor: pointer;
+      font-family: inherit;
+      min-width: 200px;
+    }
+    .lab-selector-wrapper select:focus {
+      outline: none;
+    }
+
+    /* ===== TABLE FOR TESTS ===== */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 2px solid #e8ecf1;
+    }
+    .test-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    .test-table thead {
+      background: #f8f9fc;
+    }
+    .test-table th {
+      padding: 14px 20px;
+      text-align: left;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #e8ecf1;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .test-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid #f0f2f5;
+      color: #1a1a2e;
+    }
+    .test-table tbody tr:hover {
+      background: #f8f9fc;
+    }
+    .test-table .missing {
+      color: #ef4444;
+      font-weight: 500;
+    }
+    .test-table .missing-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* ===== PACKAGE ITEMS ===== */
+    .package-item {
+      background: white;
+      border: 2px solid #e8ecf1;
+      border-radius: 14px;
+      padding: 18px 22px;
+      margin-bottom: 14px;
+      transition: all 0.2s ease;
+    }
+    .package-item:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    .package-item .pkg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .package-item .pkg-name {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #1a1a2e;
+    }
+    .package-item .pkg-tests {
+      margin-top: 14px;
+      padding-left: 28px;
+      border-left: 4px solid;
+      background: #f8f9fc;
+      padding: 12px 20px;
+      border-radius: 8px;
+    }
+    .package-item .pkg-tests .test-ref {
+      font-size: 0.95rem;
+      padding: 4px 0;
+      color: #374151;
+    }
+    .package-item .pkg-tests .test-ref i {
+      margin-right: 8px;
+      font-size: 0.7rem;
+    }
+    .package-item .missing-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: #fee2e2;
+      color: #dc2626;
+      margin-left: 8px;
+    }
+
+    /* ===== SEARCHABLE SELECTOR ===== */
+    .search-select-container {
+      position: relative;
+      width: 100%;
+    }
+    .search-select-container input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      background: white;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .search-select-container input[type="text"]:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+    .search-select-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 50;
+      padding: 6px 0;
+      display: none;
+    }
+    .search-select-dropdown.show {
+      display: block;
+    }
+    .search-select-option {
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .search-select-option:hover {
+      background: #f3f4f6;
+    }
+    .search-select-option .opt-general {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #1a1a2e;
+    }
+    .search-select-option .opt-lab {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-left: 4px;
+    }
+    .search-select-option .opt-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 2px solid #d1d5db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      color: white;
+    }
+    .search-select-option.selected .opt-check {
+      background: #4f46e5;
+      border-color: #4f46e5;
+    }
+    .chip {
+      padding: 6px 16px 6px 18px;
+      border-radius: 40px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 8px 4px 0;
+      font-size: 0.9rem;
+      border: 2px solid #e5e7eb;
+      transition: all 0.2s ease;
+      background: white;
+    }
+    .chip:hover {
+      border-color: #4f46e5;
+    }
+    .chip .remove {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: all 0.2s ease;
+      color: #ef4444;
+    }
+    .chip .remove:hover {
+      transform: scale(1.2);
+    }
+
+    /* ===== EMPTY STATES ===== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+    .empty-state i {
+      font-size: 3.5rem;
+      color: #d1d5db;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .empty-state h3 {
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+      font-size: 1.2rem;
+    }
+    .empty-state p {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    /* ===== CODE BLOCK ===== */
+    .code-block {
+      background: #1a1a2e;
+      color: #e5e7eb;
+      padding: 28px;
+      border-radius: 14px;
+      overflow: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      max-height: 520px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 16px;
+      border: 2px solid #2d2d44;
+      position: relative;
+    }
+    .code-block::before {
+      content: '📄 OUTPUT';
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 0.7rem;
+      color: #6b7280;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* ===== FILTER CONTROLS ===== */
+    .filter-bar {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 2px solid #e8ecf1;
+      margin-bottom: 24px;
+      background: white;
+      transition: all 0.3s ease;
+    }
+    .filter-bar select,
+    .filter-bar input {
+      padding: 10px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      background: white;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      color: #1a1a2e;
+    }
+    .filter-bar select:focus,
+    .filter-bar input:focus {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+    .filter-bar select {
+      min-width: 150px;
+      cursor: pointer;
+    }
+    .filter-bar input {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      background: #1a1a2e;
+      color: white;
+      padding: 14px 28px;
+      border-radius: 14px;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 500;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 2px solid #2d2d44;
+      animation: slideUp 0.3s ease;
+    }
+    .toast.success {
+      background: #10b981;
+      border-color: #059669;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* ===== BADGE ===== */
+    .badge-lab {
+      padding: 4px 16px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: inline-block;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 820px) {
+      body { padding: 16px; }
+      .tab-content { padding: 20px 18px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .app-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .tabs { flex-wrap: wrap; }
+      .tab-btn { flex: 1; justify-content: center; padding: 10px 16px; font-size: 0.85rem; }
+      .section-header { flex-direction: column; align-items: flex-start; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .filter-bar select { min-width: auto; }
+      .test-table { font-size: 0.8rem; }
+      .test-table th, .test-table td { padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+      <div class="logo">
+        <i class="fas fa-flask" id="headerIcon"></i>
+        <div>
+          <h1>LabManager <span>Pro</span></h1>
+        </div>
+      </div>
+      <div class="lab-indicator" id="labIndicator">
+        <i class="fas fa-microscope"></i>
+        <span id="currentLabName">Dr. Ajay Shah Laboratory</span>
+      </div>
+    </header>
+
+    <!-- ===== TABS ===== -->
+    <div class="tabs" id="mainTabs">
+      <button class="tab-btn active" data-tab="add"><i class="fas fa-plus-circle"></i> Add New</button>
+      <button class="tab-btn" data-tab="list"><i class="fas fa-list-ul"></i> Lab Wise List</button>
+      <button class="tab-btn" data-tab="output"><i class="fas fa-code"></i> Output Format</button>
+    </div>
+
+    <!-- ===== TAB 1: ADD NEW ===== -->
+    <div id="tab-add" class="tab-content active">
+      <div class="section-header">
+        <div>
+          <h2>Manage Tests & Packages</h2>
+          <span class="subtitle">Add, edit, or delete laboratory data</span>
+        </div>
+        <div class="action-group">
+          <button class="btn btn-primary" id="showTestFormBtn"><i class="fas fa-flask"></i> Add Test</button>
+          <button class="btn btn-success" id="showPackageFormBtn"><i class="fas fa-cube"></i> Add Package</button>
+          <button class="btn btn-outline" id="showEditSearchBtn"><i class="fas fa-pen"></i> Edit / Delete</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="font-weight: 500; font-size: 0.9rem; display: block; margin-bottom: 6px; color: #374151;">
+          <i class="fas fa-microscope"></i> Select Laboratory
+        </label>
+        <div class="lab-selector-wrapper" id="labSelectorWrapper">
+          <select id="addLabSelect"></select>
+        </div>
+      </div>
+
+      <!-- TEST FORM -->
+      <div id="testFormContainer" class="form-card" style="display:none;">
+        <div class="form-title">
+          <i class="fas fa-flask"></i> Single Test
+          <span class="badge-lab" id="testEditBadge" style="display:none; margin-left: 12px;">✏️ Editing</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>General Test Name <span class="required">*</span></label>
+            <input id="testGeneral" placeholder="e.g. Complete Blood Count" />
+          </div>
+          <div class="form-group">
+            <label>Lab-Specific Name <span class="optional">(optional)</span></label>
+            <input id="testLabName" placeholder="e.g. CBC Complete" />
+          </div>
+          <div class="form-group">
+            <label>MRP (₹) <span class="optional">(optional)</span></label>
+            <input type="number" id="testMrp" placeholder="500" />
+          </div>
+          <div class="form-group">
+            <label>B2B (₹) <span class="optional">(optional)</span></label>
+            <input type="number" id="testB2b" placeholder="250" />
+          </div>
+        </div>
+        <input type="hidden" id="testEditId" />
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button class="btn btn-success" id="saveTestBtn"><i class="fas fa-save"></i> Save Test</button>
+          <button class="btn btn-outline" id="cancelTestBtn">Cancel</button>
+        </div>
+        <div id="testMsg" style="margin-top: 12px; color: #6b7280; font-size: 0.9rem;"></div>
+      </div>
+
+      <!-- PACKAGE FORM -->
+      <div id="packageFormContainer" class="form-card" style="display:none;">
+        <div class="form-title">
+          <i class="fas fa-cube"></i> Package
+          <span class="badge-lab" id="pkgEditBadge" style="display:none; margin-left: 12px;">✏️ Editing</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Package Name <span class="required">*</span></label>
+            <input id="pkgName" placeholder="e.g. Health Check Panel" />
+          </div>
+          <div class="form-group">
+            <label>MRP (₹) <span class="optional">(optional)</span></label>
+            <input type="number" id="pkgMrp" placeholder="1800" />
+          </div>
+          <div class="form-group">
+            <label>B2B (₹) <span class="optional">(optional)</span></label>
+            <input type="number" id="pkgB2b" placeholder="1080" />
+          </div>
+          <div class="form-group">
+            <label>Select Tests <span class="required">*</span></label>
+            <div class="search-select-container" id="pkgTestSelector">
+              <input type="text" id="pkgTestSearch" placeholder="🔍 Search tests by name..." autocomplete="off" />
+              <div class="search-select-dropdown" id="pkgTestDropdown"></div>
+            </div>
+            <div id="pkgSelectedTests" style="display: flex; flex-wrap: wrap; margin-top: 10px; gap: 4px;"></div>
+            <div id="pkgTestEmptyMsg" style="margin-top: 6px; color: #6b7280; font-size: 0.85rem;"></div>
+          </div>
+        </div>
+        <input type="hidden" id="pkgEditId" />
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button class="btn btn-success" id="savePackageBtn"><i class="fas fa-save"></i> Save Package</button>
+          <button class="btn btn-outline" id="cancelPkgBtn">Cancel</button>
+        </div>
+        <div id="pkgMsg" style="margin-top: 12px; color: #6b7280; font-size: 0.9rem;"></div>
+      </div>
+
+      <!-- EDIT SEARCH -->
+      <div id="editSearchContainer" class="form-card" style="display:none;">
+        <div class="form-title"><i class="fas fa-pen"></i> Edit or Delete</div>
+        <input class="search-box" id="editSearchInput" placeholder="Search test or package..." style="width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:12px; font-size:0.95rem;" />
+        <div id="editSearchResults" style="margin-top: 16px;"></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 2: LAB WISE LIST ===== -->
+    <div id="tab-list" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2>Lab Wise Data</h2>
+          <span class="subtitle">Browse tests and packages by laboratory</span>
+        </div>
+      </div>
+
+      <div class="filter-bar" id="filterBar">
+        <select id="listLabSelect"></select>
+        <select id="listTypeSelect">
+          <option value="tests">🧪 Tests</option>
+          <option value="packages">📦 Packages</option>
+        </select>
+        <select id="listFilterSelect">
+          <option value="all">📊 All Data</option>
+          <option value="missing-data">⚠️ Missing Data</option>
+          <option value="missing-test">🔍 Missing Test</option>
+          <option value="missing-mrp">💰 Missing MRP</option>
+          <option value="missing-b2b">💳 Missing B2B</option>
+        </select>
+        <input class="search-box" id="listSearch" placeholder="🔍 Filter..." style="flex:1; min-width:160px;" />
+      </div>
+
+      <div id="listContainer"></div>
+    </div>
+
+    <!-- ===== TAB 3: OUTPUT ===== -->
+    <div id="tab-output" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h2>Output Format</h2>
+          <span class="subtitle">Generate and copy the LAB_DATA structure</span>
+        </div>
+        <div class="action-group">
+          <button class="btn btn-primary" id="generateOutputBtn"><i class="fas fa-sync"></i> Generate</button>
+          <button class="btn btn-success" id="copyOutputBtn"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+      </div>
+      <div class="code-block" id="outputCode">// Click "Generate" to load data from Firebase</div>
+      <div id="outputMsg" style="margin-top: 12px; color: #6b7280; font-size: 0.9rem;"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== FIREBASE =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZn1isgreU_1YcVl7dQ5haa28gZ-vCrM4",
+      authDomain: "goodnessdata-41725.firebaseapp.com",
+      databaseURL: "https://goodnessdata-41725-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "goodnessdata-41725",
+      storageBucket: "goodnessdata-41725.firebasestorage.app",
+      messagingSenderId: "356636455950",
+      appId: "1:356636455950:web:f2116a8d24e7de927cb85f",
+      measurementId: "G-BYVYDV76XW"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ===== CONSTANTS =====
+    const LAB_NAMES = { 1: "Dr. Ajay Shah Laboratory", 2: "Dr. Jariwala Laboratory", 3: "General Diagnostics",
+      4: "Trucheck Diagnostics" };
+    const LAB_KEYS = [1, 2, 3, 4];
+    const LAB_COLORS = {
+      1: {
+        bg: "#f3e8ff",
+        border: "#c084fc",
+        text: "#4c1d95",
+        light: "#e9d5ff",
+        gradient: "rgba(192, 132, 252, 0.25)",
+        name: "Dr. Ajay Shah Laboratory",
+        tabBg: "#f3e8ff",
+        tabBorder: "#c084fc",
+        tabText: "#4c1d95",
+        icon: "#7c3aed"
+      },
+      2: {
+        bg: "#eff6ff",
+        border: "#60a5fa",
+        text: "#1e3a8a",
+        light: "#dbeafe",
+        gradient: "rgba(96, 165, 250, 0.25)",
+        name: "Dr. Jariwala Laboratory",
+        tabBg: "#eff6ff",
+        tabBorder: "#60a5fa",
+        tabText: "#1e3a8a",
+        icon: "#2563eb"
+      },
+      3: {
+        bg: "#f0fdf4",
+        border: "#4ade80",
+        text: "#166534",
+        light: "#dcfce7",
+        gradient: "rgba(74, 222, 128, 0.25)",
+        name: "General Diagnostics",
+        tabBg: "#f0fdf4",
+        tabBorder: "#4ade80",
+        tabText: "#166534",
+        icon: "#16a34a"
+      },
+      4: {
+        bg: "#fdf2f2",
+        border: "#f87171",
+        text: "#991b1b",
+        light: "#fee2e2",
+        gradient: "rgba(248, 113, 113, 0.25)",
+        name: "Trucheck Diagnostics",
+        tabBg: "#fdf2f2",
+        tabBorder: "#f87171",
+        tabText: "#991b1b",
+        icon: "#dc2626"
+      }
+    };
+
+    function normalize(str) { return (str || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+    function makeId(str) { return (str || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') ||
+        'id-' + Date.now(); }
+
+    function toast(msg, isSuccess = false) {
+      let d = document.createElement('div');
+      d.className = 'toast' + (isSuccess ? ' success' : '');
+      d.innerHTML = (isSuccess ? '✓ ' : '') + msg;
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 2500);
+    }
+
+    // ===== THEME APPLICATION =====
+    function applyLabTheme(labKey) {
+      const colors = LAB_COLORS[labKey];
+      if (!colors) return;
+
+      const headerIcon = document.getElementById('headerIcon');
+      headerIcon.style.background = colors.icon;
+      headerIcon.style.color = 'white';
+
+      const indicator = document.getElementById('labIndicator');
+      indicator.style.background = colors.light;
+      indicator.style.border = `2px solid ${colors.border}`;
+      indicator.style.color = colors.text;
+      document.getElementById('currentLabName').textContent = colors.name;
+
+      const wrapper = document.getElementById('labSelectorWrapper');
+      wrapper.style.borderColor = colors.border;
+      wrapper.style.background = colors.light;
+
+      const activeTab = document.querySelector('.tab-btn.active');
+      if (activeTab) {
+        activeTab.style.background = colors.text;
+        activeTab.style.color = 'white';
+      }
+
+      document.querySelectorAll('.form-card').forEach(card => {
+        card.style.borderColor = colors.border;
+        card.style.background = `linear-gradient(135deg, white, ${colors.light})`;
+      });
+
+      const filterBar = document.getElementById('filterBar');
+      if (filterBar) {
+        filterBar.style.borderColor = colors.border;
+        filterBar.style.background = `linear-gradient(135deg, white, ${colors.light})`;
+      }
+    }
+
+    // ===== DATA =====
+    let allData = null;
+
+    function loadFirebaseData(cb) {
+      db.ref('/labData').once('value').then(snap => {
+        let val = snap.val();
+        if (val) allData = val;
+        else allData = null;
+        cb();
+      }).catch(e => { toast('Firebase error: ' + e.message);
+        cb(); });
+    }
+
+    function saveFirebaseData(cb) {
+      if (!allData) return;
+      db.ref('/labData').set(allData).then(() => { if (cb) cb(); }).catch(e => toast('Save error: ' + e.message));
+    }
+
+    function ensureLabs() {
+      if (!allData) allData = {};
+      LAB_KEYS.forEach(k => {
+        if (!allData[k]) allData[k] = { name: LAB_NAMES[k], tests: [], packages: [] };
+        if (!allData[k].tests) allData[k].tests = [];
+        if (!allData[k].packages) allData[k].packages = [];
+      });
+    }
+
+    // ===== HELPER: Check if value is missing =====
+    function isMissing(value) {
+      return value === undefined || value === null || value === '' || value === '""';
+    }
+
+    // ===== RENDER LIST =====
+    function renderList() {
+      if (!allData) {
+        document.getElementById('listContainer').innerHTML =
+          '<div class="empty-state"><i class="fas fa-flask"></i><h3>No Data Available</h3><p>Start by adding your first test or package.</p></div>';
+        return;
+      }
+      const labKey = parseInt(document.getElementById('listLabSelect').value);
+      const type = document.getElementById('listTypeSelect').value;
+      const filterType = document.getElementById('listFilterSelect').value;
+      const search = document.getElementById('listSearch').value.trim().toLowerCase();
+      const lab = allData[labKey];
+      if (!lab) return;
+      const colors = LAB_COLORS[labKey];
+      const container = document.getElementById('listContainer');
+      container.innerHTML = '';
+      
+      // Apply theme to filter bar
+      const filterBar = document.getElementById('filterBar');
+      filterBar.style.borderColor = colors.border;
+      filterBar.style.background = `linear-gradient(135deg, white, ${colors.light})`;
+      
+      if (type === 'tests') {
+        let tests = lab.tests || [];
+        
+        // Apply filter
+        if (filterType === 'missing-data') {
+          tests = tests.filter(t => isMissing(t.labName) || isMissing(t.mrp) || isMissing(t.b2b));
+        } else if (filterType === 'missing-test') {
+          tests = tests.filter(t => isMissing(t.labName));
+        } else if (filterType === 'missing-mrp') {
+          tests = tests.filter(t => isMissing(t.mrp));
+        } else if (filterType === 'missing-b2b') {
+          tests = tests.filter(t => isMissing(t.b2b));
+        }
+        
+        if (search) tests = tests.filter(t => (t.generalName || '').toLowerCase().includes(search) || (t.labName || '')
+          .toLowerCase().includes(search));
+          
+        if (!tests.length) {
+          container.innerHTML =
+            '<div class="empty-state"><i class="fas fa-vial"></i><h3>No Tests Found</h3><p>Try adjusting your filters or add a new test.</p></div>';
+          return;
+        }
+        
+        // Render as table
+        const tableWrapper = document.createElement('div');
+        tableWrapper.className = 'table-wrapper';
+        
+        const table = document.createElement('table');
+        table.className = 'test-table';
+        
+        // Header
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+          <tr>
+            <th>General Test Name</th>
+            <th>Lab Specific Test Name</th>
+            <th>MRP</th>
+            <th>B2B</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+        
+        // Body
+        const tbody = document.createElement('tbody');
+        tests.forEach(t => {
+          const tr = document.createElement('tr');
+          const hasMissing = isMissing(t.labName) || isMissing(t.mrp) || isMissing(t.b2b);
+          if (hasMissing) {
+            tr.style.background = '#fef2f2';
+          }
+          
+          const generalName = t.generalName || '';
+          const labName = t.labName || '';
+          const mrp = (t.mrp !== undefined && t.mrp !== '') ? '₹' + t.mrp : '<span class="missing">Missing</span>';
+          const b2b = (t.b2b !== undefined && t.b2b !== '') ? '₹' + t.b2b : '<span class="missing">Missing</span>';
+          
+          tr.innerHTML = `
+            <td><strong>${generalName}</strong> ${hasMissing ? '<span class="missing-badge">⚠️ Missing</span>' : ''}</td>
+            <td>${labName || '<span style="color:#9ca3af;">Not specified</span>'}</td>
+            <td>${mrp}</td>
+            <td>${b2b}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        tableWrapper.appendChild(table);
+        container.appendChild(tableWrapper);
+        
+      } else {
+        // Packages
+        let pkgs = lab.packages || [];
+        
+        // Apply filter for packages
+        if (filterType === 'missing-data' || filterType === 'missing-mrp' || filterType === 'missing-b2b') {
+          pkgs = pkgs.filter(p => {
+            if (filterType === 'missing-data') {
+              return isMissing(p.mrp) || isMissing(p.b2b);
+            } else if (filterType === 'missing-mrp') {
+              return isMissing(p.mrp);
+            } else if (filterType === 'missing-b2b') {
+              return isMissing(p.b2b);
+            }
+            return true;
+          });
+        } else if (filterType === 'missing-test') {
+          // For packages, missing-test filter doesn't apply, but we keep all
+          // Actually, we can check if any test in the package has missing labName
+          pkgs = pkgs.filter(p => {
+            const tests = p.tests || [];
+            return tests.some(t => isMissing(t.labName));
+          });
+        }
+        
+        if (search) pkgs = pkgs.filter(p => (p.packageName || '').toLowerCase().includes(search));
+        
+        if (!pkgs.length) {
+          container.innerHTML =
+            '<div class="empty-state"><i class="fas fa-cube"></i><h3>No Packages Found</h3><p>Try adjusting your filters or add a new package.</p></div>';
+          return;
+        }
+        
+        pkgs.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'package-item';
+          div.style.borderLeftColor = colors.border;
+          div.style.borderLeftWidth = '4px';
+          
+          const hasMissing = isMissing(p.mrp) || isMissing(p.b2b);
+          const mrpDisplay = (p.mrp !== undefined && p.mrp !== '') ? '₹' + p.mrp : '<span style="color:#ef4444;">Missing</span>';
+          const b2bDisplay = (p.b2b !== undefined && p.b2b !== '') ? '₹' + p.b2b : '<span style="color:#ef4444;">Missing</span>';
+          
+          let testsHtml = (p.tests || []).map(t => {
+            const hasLabMissing = isMissing(t.labName);
+            return `<div class="test-ref"><i class="fas fa-circle" style="color:${hasLabMissing ? '#ef4444' : colors.border}"></i> ${t.generalName || ''} — ${t.labName || (hasLabMissing ? '<span style="color:#ef4444;">Missing</span>' : '')}</div>`;
+          }).join('');
+          
+          div.innerHTML = `
+            <div class="pkg-header">
+              <span class="pkg-name">${p.packageName || ''} ${hasMissing ? '<span class="missing-tag">⚠️ Missing Data</span>' : ''}</span>
+              <div class="right" style="display:flex; gap:20px; font-weight:500;">
+                <span>MRP ${mrpDisplay}</span>
+                <span>B2B ${b2bDisplay}</span>
+              </div>
+            </div>
+            <div class="pkg-tests" style="border-left-color:${colors.border}">${testsHtml}</div>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    // ===== OUTPUT GENERATION =====
+    function generateOutput() {
+      ensureLabs();
+      let out = {};
+      LAB_KEYS.forEach(k => {
+        let lab = allData[k];
+        if (!lab) { out[k] = { name: LAB_NAMES[k], tests: [], packages: [] }; return; }
+        let tests = (lab.tests || []).map(t => ({
+          id: t.id || makeId(t.generalName || ''),
+          generalName: t.generalName || '',
+          labName: t.labName || '',
+          mrp: (t.mrp !== undefined && t.mrp !== '') ? t.mrp : "",
+          b2b: (t.b2b !== undefined && t.b2b !== '') ? t.b2b : ""
+        }));
+        let packages = (lab.packages || []).map(p => {
+          let pkgTests = (p.tests || []).map(t => ({ generalName: t.generalName || '', labName: t.labName || '' }));
+          return {
+            id: p.id || makeId(p.packageName || ''),
+            packageName: p.packageName || '',
+            tests: pkgTests,
+            mrp: (p.mrp !== undefined && p.mrp !== '') ? p.mrp : "",
+            b2b: (p.b2b !== undefined && p.b2b !== '') ? p.b2b : ""
+          };
+        });
+        out[k] = { name: lab.name || LAB_NAMES[k], tests, packages };
+      });
+      let outputStr = 'const LAB_DATA = ' + JSON.stringify(out, null, 2);
+      document.getElementById('outputCode').innerText = outputStr;
+      return outputStr;
+    }
+
+    // ===== PACKAGE TEST SELECTOR =====
+    let selectedPkgTests = [];
+    let pkgTestOptions = [];
+
+    function refreshPkgTestOptions(labKey) {
+      const lab = allData ? allData[labKey] : null;
+      if (!lab) { pkgTestOptions = []; return; }
+      pkgTestOptions = (lab.tests || []).map(t => ({
+        id: t.id || makeId(t.generalName || ''),
+        generalName: t.generalName || '',
+        labName: t.labName || ''
+      }));
+      renderPkgTestDropdown();
+      renderPkgSelectedTests();
+      const emptyMsg = document.getElementById('pkgTestEmptyMsg');
+      if (!pkgTestOptions.length) {
+        emptyMsg.innerHTML = '<i class="fas fa-info-circle"></i> No tests available. Please add Single Tests first.';
+      } else {
+        emptyMsg.innerText = '';
+      }
+    }
+
+    function renderPkgTestDropdown(filter = '') {
+      const dropdown = document.getElementById('pkgTestDropdown');
+      dropdown.innerHTML = '';
+      const f = filter.toLowerCase().trim();
+      let opts = pkgTestOptions;
+      if (f) opts = opts.filter(t => (t.generalName || '').toLowerCase().includes(f) || (t.labName || '').toLowerCase()
+        .includes(f));
+      if (!opts.length) {
+        const div = document.createElement('div');
+        div.className = 'search-select-option';
+        div.style.justifyContent = 'center';
+        div.style.color = '#9ca3af';
+        div.innerText = 'No matching tests';
+        dropdown.appendChild(div);
+        return;
+      }
+      const colors = LAB_COLORS[parseInt(document.getElementById('addLabSelect').value)];
+      opts.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'search-select-option';
+        const isSelected = selectedPkgTests.some(s => s.id === t.id);
+        if (isSelected) div.classList.add('selected');
+        div.innerHTML =
+          `<span class="opt-check" style="${isSelected ? `background:${colors.text};border-color:${colors.border}` : ''}">${isSelected ? '✓' : ''}</span><span class="opt-general">${t.generalName}</span><span class="opt-lab">— ${t.labName || ''}</span>`;
+        div.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          togglePkgTest(t);
+        });
+        dropdown.appendChild(div);
+      });
+    }
+
+    function togglePkgTest(test) {
+      const idx = selectedPkgTests.findIndex(s => s.id === test.id);
+      if (idx > -1) selectedPkgTests.splice(idx, 1);
+      else {
+        if (selectedPkgTests.some(s => s.generalName === test.generalName && s.labName === test.labName)) return;
+        selectedPkgTests.push({ ...test });
+      }
+      renderPkgSelectedTests();
+      renderPkgTestDropdown(document.getElementById('pkgTestSearch').value);
+    }
+
+    function renderPkgSelectedTests() {
+      const container = document.getElementById('pkgSelectedTests');
+      container.innerHTML = '';
+      if (!selectedPkgTests.length) {
+        container.innerHTML = '<span style="color:#9ca3af; font-size:0.9rem;">No tests selected</span>';
+        return;
+      }
+      const colors = LAB_COLORS[parseInt(document.getElementById('addLabSelect').value)];
+      selectedPkgTests.forEach((item, idx) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.style.borderColor = colors.border;
+        chip.style.background = colors.light;
+        chip.innerHTML =
+          `${item.generalName} — ${item.labName || ''} <span class="remove" data-idx="${idx}" style="color:${colors.text}">✕</span>`;
+        chip.querySelector('.remove').addEventListener('click', (e) => {
+          const i = parseInt(e.target.dataset.idx);
+          selectedPkgTests.splice(i, 1);
+          renderPkgSelectedTests();
+          renderPkgTestDropdown(document.getElementById('pkgTestSearch').value);
+        });
+        container.appendChild(chip);
+      });
+    }
+
+    // ===== FORM RESET =====
+    function resetForms() {
+      document.getElementById('testFormContainer').style.display = 'none';
+      document.getElementById('packageFormContainer').style.display = 'none';
+      document.getElementById('editSearchContainer').style.display = 'none';
+      document.getElementById('testEditBadge').style.display = 'none';
+      document.getElementById('pkgEditBadge').style.display = 'none';
+      document.getElementById('testEditId').value = '';
+      document.getElementById('pkgEditId').value = '';
+      document.getElementById('testGeneral').value = '';
+      document.getElementById('testLabName').value = '';
+      document.getElementById('testMrp').value = '';
+      document.getElementById('testB2b').value = '';
+      document.getElementById('pkgName').value = '';
+      document.getElementById('pkgMrp').value = '';
+      document.getElementById('pkgB2b').value = '';
+      document.getElementById('testMsg').innerText = '';
+      document.getElementById('pkgMsg').innerText = '';
+      document.getElementById('pkgTestSearch').value = '';
+      selectedPkgTests = [];
+      renderPkgSelectedTests();
+      renderPkgTestDropdown('');
+    }
+
+    // ===== SAVE TEST =====
+    function saveTest() {
+      const labKey = parseInt(document.getElementById('addLabSelect').value);
+      const general = document.getElementById('testGeneral').value.trim();
+      const labName = document.getElementById('testLabName').value.trim();
+      const mrp = document.getElementById('testMrp').value.trim() === '' ? '' : parseFloat(document.getElementById('testMrp')
+        .value);
+      const b2b = document.getElementById('testB2b').value.trim() === '' ? '' : parseFloat(document.getElementById('testB2b')
+        .value);
+      if (!general) { document.getElementById('testMsg').innerHTML =
+          '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> General Test Name is required.'; return; }
+      const lab = allData[labKey];
+      if (!lab) return;
+      const editingId = document.getElementById('testEditId').value;
+      const dup = (lab.tests || []).find(t => {
+        if (editingId && t.id === editingId) return false;
+        return normalize(t.generalName) === normalize(general);
+      });
+      if (dup) { document.getElementById('testMsg').innerHTML =
+          '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> A test with this General Name already exists.'; return; }
+      const id = editingId || makeId(general);
+      const newTest = { id, generalName: general, labName: labName || '', mrp: mrp, b2b: b2b };
+      if (editingId) {
+        let idx = (lab.tests || []).findIndex(t => t.id === editingId);
+        if (idx > -1) lab.tests[idx] = newTest;
+        else { toast('Error: test not found'); return; }
+      } else {
+        if (!lab.tests) lab.tests = [];
+        lab.tests.push(newTest);
+      }
+      saveFirebaseData(() => { toast('Test saved successfully!', true);
+        resetForms();
+        renderList();
+        refreshPkgTestOptions(labKey); });
+    }
+
+    // ===== SAVE PACKAGE =====
+    function savePackage() {
+      const labKey = parseInt(document.getElementById('addLabSelect').value);
+      const pkgName = document.getElementById('pkgName').value.trim();
+      const mrp = document.getElementById('pkgMrp').value.trim() === '' ? '' : parseFloat(document.getElementById('pkgMrp')
+        .value);
+      const b2b = document.getElementById('pkgB2b').value.trim() === '' ? '' : parseFloat(document.getElementById('pkgB2b')
+        .value);
+      if (!pkgName) { document.getElementById('pkgMsg').innerHTML =
+          '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Package Name is required.'; return; }
+      if (!selectedPkgTests.length) { document.getElementById('pkgMsg').innerHTML =
+          '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Please select at least one test.'; return; }
+      const lab = allData[labKey];
+      if (!lab) return;
+      const editingId = document.getElementById('pkgEditId').value;
+      const dup = (lab.packages || []).find(p => {
+        if (editingId && p.id === editingId) return false;
+        return normalize(p.packageName) === normalize(pkgName);
+      });
+      if (dup) { document.getElementById('pkgMsg').innerHTML =
+          '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> A package with this name already exists.'; return; }
+      const id = editingId || makeId(pkgName);
+      const tests = selectedPkgTests.map(t => ({ generalName: t.generalName || '', labName: t.labName || '' }));
+      const newPkg = { id, packageName: pkgName, tests, mrp, b2b };
+      if (editingId) {
+        let idx = (lab.packages || []).findIndex(p => p.id === editingId);
+        if (idx > -1) lab.packages[idx] = newPkg;
+        else { toast('Error: package not found'); return; }
+      } else {
+        if (!lab.packages) lab.packages = [];
+        lab.packages.push(newPkg);
+      }
+      saveFirebaseData(() => { toast('Package saved successfully!', true);
+        resetForms();
+        renderList(); });
+    }
+
+    // ===== TAB SWITCHING =====
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.background = 'transparent';
+        btn.style.color = '#6b7280';
+      });
+      
+      const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+        const labKey = parseInt(document.getElementById('addLabSelect').value);
+        const colors = LAB_COLORS[labKey];
+        if (colors) {
+          activeBtn.style.background = colors.text;
+          activeBtn.style.color = 'white';
+        }
+      }
+      
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const content = document.getElementById('tab-' + tabId);
+      if (content) content.classList.add('active');
+      
+      if (tabId === 'list') renderList();
+      if (tabId === 'output') generateOutput();
+    }
+
+    // ===== INIT =====
+    function init() {
+      loadFirebaseData(() => {
+        ensureLabs();
+        const selects = ['addLabSelect', 'listLabSelect'];
+        selects.forEach(id => {
+          const sel = document.getElementById(id);
+          sel.innerHTML = '';
+          LAB_KEYS.forEach(k => {
+            const opt = document.createElement('option');
+            opt.value = k;
+            opt.textContent = LAB_NAMES[k];
+            sel.appendChild(opt);
+          });
+          sel.value = '1';
+          sel.addEventListener('change', function() {
+            const key = parseInt(this.value);
+            applyLabTheme(key);
+            if (id === 'addLabSelect') {
+              refreshPkgTestOptions(key);
+              resetForms();
+              const activeTab = document.querySelector('.tab-btn.active');
+              if (activeTab) {
+                const colors = LAB_COLORS[key];
+                if (colors) {
+                  activeTab.style.background = colors.text;
+                  activeTab.style.color = 'white';
+                }
+              }
+            }
+            if (id === 'listLabSelect') renderList();
+          });
+        });
+        applyLabTheme(1);
+        refreshPkgTestOptions(1);
+        renderList();
+        generateOutput();
+
+        // ===== EVENT BINDINGS =====
+        document.getElementById('showTestFormBtn').addEventListener('click', () => {
+          resetForms();
+          document.getElementById('testFormContainer').style.display = 'block';
+          document.getElementById('testEditBadge').style.display = 'none';
+          document.getElementById('testEditId').value = '';
+          const key = parseInt(document.getElementById('addLabSelect').value);
+          const colors = LAB_COLORS[key];
+          if (colors) {
+            document.getElementById('testFormContainer').style.borderColor = colors.border;
+            document.getElementById('testFormContainer').style.background =
+              `linear-gradient(135deg, white, ${colors.light})`;
+          }
+        });
+        document.getElementById('showPackageFormBtn').addEventListener('click', () => {
+          resetForms();
+          document.getElementById('packageFormContainer').style.display = 'block';
+          document.getElementById('pkgEditBadge').style.display = 'none';
+          document.getElementById('pkgEditId').value = '';
+          const key = parseInt(document.getElementById('addLabSelect').value);
+          const colors = LAB_COLORS[key];
+          if (colors) {
+            document.getElementById('packageFormContainer').style.borderColor = colors.border;
+            document.getElementById('packageFormContainer').style.background =
+              `linear-gradient(135deg, white, ${colors.light})`;
+          }
+          refreshPkgTestOptions(key);
+        });
+        document.getElementById('showEditSearchBtn').addEventListener('click', () => {
+          resetForms();
+          document.getElementById('editSearchContainer').style.display = 'block';
+          document.getElementById('editSearchInput').value = '';
+          document.getElementById('editSearchResults').innerHTML = '';
+          const key = parseInt(document.getElementById('addLabSelect').value);
+          const colors = LAB_COLORS[key];
+          if (colors) {
+            document.getElementById('editSearchContainer').style.borderColor = colors.border;
+            document.getElementById('editSearchContainer').style.background =
+              `linear-gradient(135deg, white, ${colors.light})`;
+          }
+        });
+
+        document.getElementById('cancelTestBtn').addEventListener('click', resetForms);
+        document.getElementById('cancelPkgBtn').addEventListener('click', resetForms);
+        document.getElementById('saveTestBtn').addEventListener('click', saveTest);
+        document.getElementById('savePackageBtn').addEventListener('click', savePackage);
+
+        // Package search selector
+        const searchInput = document.getElementById('pkgTestSearch');
+        const dropdown = document.getElementById('pkgTestDropdown');
+        searchInput.addEventListener('focus', () => dropdown.classList.add('show'));
+        searchInput.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('show'), 180));
+        searchInput.addEventListener('input', function() {
+          renderPkgTestDropdown(this.value);
+          dropdown.classList.add('show');
+        });
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.search-select-container')) dropdown.classList.remove('show');
+        });
+
+        // Edit search
+        document.getElementById('editSearchInput').addEventListener('input', function() {
+          const labKey = parseInt(document.getElementById('addLabSelect').value);
+          const lab = allData?.[labKey];
+          if (!lab) return;
+          const colors = LAB_COLORS[labKey];
+          const q = this.value.trim().toLowerCase();
+          const container = document.getElementById('editSearchResults');
+          container.innerHTML = '';
+          if (!q) return;
+          let found = false;
+          (lab.tests || []).forEach(t => {
+            if ((t.generalName || '').toLowerCase().includes(q) || (t.labName || '').toLowerCase().includes(
+              q)) {
+              found = true;
+              const div = document.createElement('div');
+              div.className = 'list-item';
+              if (colors) {
+                div.style.borderLeftColor = colors.border;
+              }
+              div.innerHTML =
+                `<div class="left"><span class="general">${t.generalName} <span style="font-weight:400;color:#6b7280;font-size:0.8rem;">(test)</span></span><span class="labname">${t.labName || ''}</span></div>
+                  <div><button class="btn btn-sm btn-primary editTestBtn" data-id="${t.id}" style="${colors ? `background:${colors.text}` : ''}"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger delTestBtn" data-id="${t.id}"><i class="fas fa-trash"></i></button></div>`;
+              container.appendChild(div);
+            }
+          });
+          (lab.packages || []).forEach(p => {
+            if ((p.packageName || '').toLowerCase().includes(q)) {
+              found = true;
+              const div = document.createElement('div');
+              div.className = 'list-item';
+              if (colors) {
+                div.style.borderLeftColor = colors.border;
+              }
+              div.innerHTML =
+                `<div class="left"><span class="general">${p.packageName} <span style="font-weight:400;color:#6b7280;font-size:0.8rem;">(package)</span></span><span class="labname">${p.tests?.length||0} tests</span></div>
+                  <div><button class="btn btn-sm btn-primary editPkgBtn" data-id="${p.id}" style="${colors ? `background:${colors.text}` : ''}"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger delPkgBtn" data-id="${p.id}"><i class="fas fa-trash"></i></button></div>`;
+              container.appendChild(div);
+            }
+          });
+          if (!found) container.innerHTML =
+            '<div style="padding:16px; color:#6b7280; text-align:center;">No matches found</div>';
+
+          container.querySelectorAll('.editTestBtn').forEach(b => b.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const labKey = parseInt(document.getElementById('addLabSelect').value);
+            const lab = allData[labKey];
+            const test = (lab.tests || []).find(t => t.id === id);
+            if (!test) return;
+            const colors = LAB_COLORS[labKey];
+            resetForms();
+            document.getElementById('testFormContainer').style.display = 'block';
+            if (colors) {
+              document.getElementById('testFormContainer').style.borderColor = colors.border;
+              document.getElementById('testFormContainer').style.background =
+                `linear-gradient(135deg, white, ${colors.light})`;
+              document.getElementById('testEditBadge').style.background = colors.light;
+              document.getElementById('testEditBadge').style.color = colors.text;
+            }
+            document.getElementById('testEditBadge').style.display = 'inline';
+            document.getElementById('testGeneral').value = test.generalName || '';
+            document.getElementById('testLabName').value = test.labName || '';
+            document.getElementById('testMrp').value = (test.mrp !== undefined && test.mrp !== '') ? test.mrp : '';
+            document.getElementById('testB2b').value = (test.b2b !== undefined && test.b2b !== '') ? test.b2b : '';
+            document.getElementById('testEditId').value = id;
+            document.getElementById('testMsg').innerHTML = '<i class="fas fa-edit"></i> Editing test';
+            document.getElementById('editSearchContainer').style.display = 'none';
+          }));
+          container.querySelectorAll('.editPkgBtn').forEach(b => b.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const labKey = parseInt(document.getElementById('addLabSelect').value);
+            const lab = allData[labKey];
+            const pkg = (lab.packages || []).find(p => p.id === id);
+            if (!pkg) return;
+            const colors = LAB_COLORS[labKey];
+            resetForms();
+            document.getElementById('packageFormContainer').style.display = 'block';
+            if (colors) {
+              document.getElementById('packageFormContainer').style.borderColor = colors.border;
+              document.getElementById('packageFormContainer').style.background =
+                `linear-gradient(135deg, white, ${colors.light})`;
+              document.getElementById('pkgEditBadge').style.background = colors.light;
+              document.getElementById('pkgEditBadge').style.color = colors.text;
+            }
+            document.getElementById('pkgEditBadge').style.display = 'inline';
+            document.getElementById('pkgName').value = pkg.packageName || '';
+            document.getElementById('pkgMrp').value = (pkg.mrp !== undefined && pkg.mrp !== '') ? pkg.mrp : '';
+            document.getElementById('pkgB2b').value = (pkg.b2b !== undefined && pkg.b2b !== '') ? pkg.b2b : '';
+            document.getElementById('pkgEditId').value = id;
+            selectedPkgTests = (pkg.tests || []).map(t => ({ id: makeId(t.generalName || ''), generalName: t
+                .generalName || '', labName: t.labName || '' }));
+            renderPkgSelectedTests();
+            document.getElementById('pkgMsg').innerHTML = '<i class="fas fa-edit"></i> Editing package';
+            document.getElementById('editSearchContainer').style.display = 'none';
+            const lk = parseInt(document.getElementById('addLabSelect').value);
+            refreshPkgTestOptions(lk);
+            renderPkgTestDropdown('');
+          }));
+          container.querySelectorAll('.delTestBtn').forEach(b => b.addEventListener('click', function() {
+            if (!confirm('Delete this test?')) return;
+            const id = this.dataset.id;
+            const labKey = parseInt(document.getElementById('addLabSelect').value);
+            const lab = allData[labKey];
+            lab.tests = (lab.tests || []).filter(t => t.id !== id);
+            saveFirebaseData(() => { toast('Test deleted');
+              renderList();
+              refreshPkgTestOptions(labKey);
+              document.getElementById('editSearchInput').dispatchEvent(new Event('input')); });
+          }));
+          container.querySelectorAll('.delPkgBtn').forEach(b => b.addEventListener('click', function() {
+            if (!confirm('Delete this package?')) return;
+            const id = this.dataset.id;
+            const labKey = parseInt(document.getElementById('addLabSelect').value);
+            const lab = allData[labKey];
+            lab.packages = (lab.packages || []).filter(p => p.id !== id);
+            saveFirebaseData(() => { toast('Package deleted');
+              renderList();
+              document.getElementById('editSearchInput').dispatchEvent(new Event('input')); });
+          }));
+        });
+
+        // List controls
+        document.getElementById('listTypeSelect').addEventListener('change', renderList);
+        document.getElementById('listFilterSelect').addEventListener('change', renderList);
+        document.getElementById('listSearch').addEventListener('input', renderList);
+
+        // Output
+        document.getElementById('generateOutputBtn').addEventListener('click', () => {
+          generateOutput();
+          toast('Output generated', true);
+        });
+        document.getElementById('copyOutputBtn').addEventListener('click', () => {
+          const code = document.getElementById('outputCode').innerText;
+          if (!code || code.startsWith('//')) { toast('Nothing to copy'); return; }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(() => toast('✓ Copied to Clipboard', true))
+              .catch(() => { fallbackCopy(code); });
+          } else {
+            fallbackCopy(code);
+          }
+        });
+
+        function fallbackCopy(text) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand('copy');
+            toast('✓ Copied to Clipboard', true);
+          } catch (e) { toast('Copy failed'); }
+          document.body.removeChild(ta);
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabId = this.dataset.tab;
+            switchTab(tabId);
+          });
+        });
+
+        const initialTab = document.querySelector('.tab-btn.active');
+        if (initialTab) {
+          const labKey = parseInt(document.getElementById('addLabSelect').value);
+          const colors = LAB_COLORS[labKey];
+          if (colors) {
+            initialTab.style.background = colors.text;
+            initialTab.style.color = 'white';
+          }
+        }
+
+        renderList();
+        generateOutput();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
