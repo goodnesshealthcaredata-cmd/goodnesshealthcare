@@ -417,7 +417,7 @@ const LAB_DATA = {
         "generalName": "Dengue NS1",
         "labName": "",
         "mrp": 800,
-        "b2b": 350
+        "b2b": 300
       },
       {
         "id": "dengue-igg",
@@ -1636,7 +1636,8 @@ const PHLEBOTOMIST_SUGGESTIONS = [
 "Kaushal",
 "Ajay Shah Phlebotomist",
 "Jariwala Phlebotomist",
-"Unknown"
+"Unknown",
+"NA"
 ];
 
 // Doctor suggestions
