@@ -1,1082 +1,1686 @@
-/* ========================= Data Definitions ========================= */
+// ============================================================
+//  DATA.JS - All labs with consistent structure
+// ============================================================
 
-// Predefined areas for typeahead
-const PREDEFINED_AREAS = [
-  "Borivali West", "Borivali East", "Dahisar West", "Dahisar East",
-"Kandivali West", "Kandivali East", "Malad West", "Malad East",
-"Mira Road West", "Mira Road East", "Goregaon West", "Goregaon East",
-"Andheri West", "Andheri East", "Gorai", "Charkop",
-"Old MHB", "New MHB", "Babhai", "Kajupada",
-"Ashok Van", "Magathane", "Kulupwadi", "IC Colony",
-"Kandarpada", "Malvani", "Eksar", "Anand Nagar", "Yogi Nagar"
+const LAB_DATA = {
+  "1": {
+    "name": "Dr. Ajay Shah Laboratory",
+    "tests": [
+      {
+        "id": "cbc",
+        "generalName": "CBC",
+        "labName": "CBC",
+        "mrp": 300,
+        "b2b": 80
+      },
+      {
+        "id": "blood-group",
+        "generalName": "Blood Group",
+        "labName": "Blood Group & RH",
+        "mrp": 180,
+        "b2b": 80
+      },
+      {
+        "id": "esr",
+        "generalName": "ESR",
+        "labName": "ESR",
+        "mrp": 150,
+        "b2b": 60
+      },
+      {
+        "id": "fbs",
+        "generalName": "FBS",
+        "labName": "Glucose - Fasting",
+        "mrp": 80,
+        "b2b": 30
+      },
+      {
+        "id": "pp",
+        "generalName": "PP",
+        "labName": "Glucose - Post Prandial",
+        "mrp": 80,
+        "b2b": 30
+      },
+      {
+        "id": "rbs",
+        "generalName": "RBS",
+        "labName": "Glucose - Random",
+        "mrp": 80,
+        "b2b": 30
+      },
+      {
+        "id": "insulin-fasting",
+        "generalName": "Insulin Fasting",
+        "labName": "Insulin Fasting",
+        "mrp": 800,
+        "b2b": 350
+      },
+      {
+        "id": "insulin-random",
+        "generalName": "Insulin Random",
+        "labName": "Insulin Random",
+        "mrp": 800,
+        "b2b": 350
+      },
+      {
+        "id": "hba1c",
+        "generalName": "HbA1C",
+        "labName": "Glyco Hemoglobin (HbA1c)",
+        "mrp": 550,
+        "b2b": 130
+      },
+      {
+        "id": "hbsag",
+        "generalName": "HBsAg",
+        "labName": "",
+        "mrp": 550,
+        "b2b": 385
+      },
+      {
+        "id": "hbeag",
+        "generalName": "HBeAg",
+        "labName": "Hepatitis B Envelope Antigen (HBe Ag)",
+        "mrp": 1200,
+        "b2b": 840
+      },
+      {
+        "id": "bilirubin-total",
+        "generalName": "Bilirubin Total",
+        "labName": "Bilirubin level Total",
+        "mrp": 190,
+        "b2b": 114
+      },
+      {
+        "id": "bilirubin-direct",
+        "generalName": "Bilirubin-Direct",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "bilirubin-indirect",
+        "generalName": "Bilirubin-Indirect",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "sgpt",
+        "generalName": "SGPT",
+        "labName": "SGPT (ALT)",
+        "mrp": 190,
+        "b2b": 40
+      },
+      {
+        "id": "sgot",
+        "generalName": "SGOT",
+        "labName": "SGOT (AST)",
+        "mrp": 190,
+        "b2b": 40
+      },
+      {
+        "id": "ggt",
+        "generalName": "GGT",
+        "labName": "Gamma Glutamyl Transferase (GGT)",
+        "mrp": 280,
+        "b2b": 196
+      },
+      {
+        "id": "creatinine",
+        "generalName": "Creatinine",
+        "labName": "Creatinine",
+        "mrp": 190,
+        "b2b": 50
+      },
+      {
+        "id": "urea",
+        "generalName": "Urea",
+        "labName": "Urea",
+        "mrp": 190,
+        "b2b": 114
+      },
+      {
+        "id": "bun",
+        "generalName": "BUN",
+        "labName": "Blood Urea Nitrogen (BUN)",
+        "mrp": 190,
+        "b2b": 114
+      },
+      {
+        "id": "uric-acid",
+        "generalName": "Uric Acid",
+        "labName": "Uric Acid",
+        "mrp": 190,
+        "b2b": 50
+      },
+      {
+        "id": "calcium",
+        "generalName": "Calcium",
+        "labName": "Calcium",
+        "mrp": 190,
+        "b2b": 114
+      },
+      {
+        "id": "lipid-profile",
+        "generalName": "Lipid Profile",
+        "labName": "Lipid Profile",
+        "mrp": 600,
+        "b2b": 185
+      },
+      {
+        "id": "total-cholesterol",
+        "generalName": "Total Cholesterol",
+        "labName": "Cholesterol",
+        "mrp": 190,
+        "b2b": 114
+      },
+      {
+        "id": "hdl-cholesterol",
+        "generalName": "HDL Cholesterol",
+        "labName": "HDL Cholesterol",
+        "mrp": 220,
+        "b2b": 132
+      },
+      {
+        "id": "ldl-cholesterol",
+        "generalName": "LDL Cholesterol",
+        "labName": "LDL Cholesterol (Direct)",
+        "mrp": 400,
+        "b2b": 240
+      },
+      {
+        "id": "ldh",
+        "generalName": "LDH",
+        "labName": "LDH",
+        "mrp": 500,
+        "b2b": 150
+      },
+      {
+        "id": "ldh-fluid",
+        "generalName": "LDH Fluid",
+        "labName": "LDH, Body Fluids",
+        "mrp": 500,
+        "b2b": 350
+      },
+      {
+        "id": "ldh-ascitic-fluid",
+        "generalName": "LDH Ascitic Fluid",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "sodium",
+        "generalName": "Sodium",
+        "labName": "Sodium",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "chloride",
+        "generalName": "Chloride",
+        "labName": "Chloride",
+        "mrp": 150,
+        "b2b": 90
+      },
+      {
+        "id": "phosphorus",
+        "generalName": "Phosphorus",
+        "labName": "Phosphorus Inorganic",
+        "mrp": 190,
+        "b2b": 114
+      },
+      {
+        "id": "potassium",
+        "generalName": "Potassium",
+        "labName": "Potassium",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "iron-study",
+        "generalName": "Iron Study",
+        "labName": "Iron Studies (TIBC)",
+        "mrp": 800,
+        "b2b": 300
+      },
+      {
+        "id": "vit-d3",
+        "generalName": "Vit D3",
+        "labName": "25 OH Cholecalciferol (D2+D3)",
+        "mrp": 1300,
+        "b2b": 250
+      },
+      {
+        "id": "vit-b12",
+        "generalName": "Vit B12",
+        "labName": "Vitamin B - 12 Level",
+        "mrp": 850,
+        "b2b": 250
+      },
+      {
+        "id": "t3",
+        "generalName": "T3",
+        "labName": "Triiodothyronine - T3",
+        "mrp": 250,
+        "b2b": 80
+      },
+      {
+        "id": "t4",
+        "generalName": "T4",
+        "labName": "Thyroxine -T4",
+        "mrp": 250,
+        "b2b": 80
+      },
+      {
+        "id": "tsh",
+        "generalName": "TSH",
+        "labName": "TSH",
+        "mrp": 370,
+        "b2b": 50
+      },
+      {
+        "id": "ft3",
+        "generalName": "FT3",
+        "labName": "Free Triiodothyronine(Free T3)",
+        "mrp": 280,
+        "b2b": 80
+      },
+      {
+        "id": "ft4",
+        "generalName": "FT4",
+        "labName": "Free Thyroxine(Free T4)",
+        "mrp": 280,
+        "b2b": 80
+      },
+      {
+        "id": "crp",
+        "generalName": "CRP",
+        "labName": "C- Reactive Protein",
+        "mrp": 480,
+        "b2b": 150
+      },
+      {
+        "id": "hscrp",
+        "generalName": "HSCRP",
+        "labName": "High Sensitive CRP",
+        "mrp": 900,
+        "b2b": 350
+      },
+      {
+        "id": "cpk-mb",
+        "generalName": "CPK-MB",
+        "labName": "CPK-MB level",
+        "mrp": 850,
+        "b2b": 350
+      },
+      {
+        "id": "cpk-total",
+        "generalName": "CPK-Total",
+        "labName": "CPK Total",
+        "mrp": 550,
+        "b2b": 330
+      },
+      {
+        "id": "trop-i",
+        "generalName": "Trop-I",
+        "labName": "",
+        "mrp": 1200,
+        "b2b": 750
+      },
+      {
+        "id": "trop-t",
+        "generalName": "Trop-T",
+        "labName": "Troponin T",
+        "mrp": 1500,
+        "b2b": 1050
+      },
+      {
+        "id": "d-dimer",
+        "generalName": "D-Dimer",
+        "labName": "DDimer",
+        "mrp": 1200,
+        "b2b": 500
+      },
+      {
+        "id": "pt-inr",
+        "generalName": "PT INR",
+        "labName": "Prothrombin Time (Photooptical clot detection)",
+        "mrp": 330,
+        "b2b": 120
+      },
+      {
+        "id": "aptt",
+        "generalName": "ApTT",
+        "labName": "Activated Partial Thromboplastin Time (Photooptical clot detection)",
+        "mrp": 600,
+        "b2b": 330
+      },
+      {
+        "id": "hiv",
+        "generalName": "HIV",
+        "labName": "HIV I & II",
+        "mrp": 600,
+        "b2b": 350
+      },
+      {
+        "id": "hcv",
+        "generalName": "HCV",
+        "labName": "HCV MANUAL",
+        "mrp": 900,
+        "b2b": 525
+      },
+      {
+        "id": "vdrl",
+        "generalName": "VDRL",
+        "labName": "",
+        "mrp": 370,
+        "b2b": 180
+      },
+      {
+        "id": "urine-culture",
+        "generalName": "Urine Culture",
+        "labName": "",
+        "mrp": 950,
+        "b2b": 400
+      },
+      {
+        "id": "urine-routine",
+        "generalName": "Urine Routine",
+        "labName": "",
+        "mrp": 160,
+        "b2b": 60
+      },
+      {
+        "id": "ra-factor",
+        "generalName": "RA Factor",
+        "labName": "",
+        "mrp": 500,
+        "b2b": 270
+      },
+      {
+        "id": "mp",
+        "generalName": "MP",
+        "labName": "",
+        "mrp": 120,
+        "b2b": 72
+      },
+      {
+        "id": "widal",
+        "generalName": "Widal",
+        "labName": "",
+        "mrp": 250,
+        "b2b": 150
+      },
+      {
+        "id": "dengue-ns1",
+        "generalName": "Dengue NS1",
+        "labName": "",
+        "mrp": 800,
+        "b2b": 300
+      },
+      {
+        "id": "dengue-igg",
+        "generalName": "Dengue IgG",
+        "labName": "",
+        "mrp": 800,
+        "b2b": 300
+      },
+      {
+        "id": "dengue-igm",
+        "generalName": "Dengue IgM",
+        "labName": "",
+        "mrp": 800,
+        "b2b": 350
+      },
+      {
+        "id": "mp-antigen",
+        "generalName": "MP-Antigen",
+        "labName": "",
+        "mrp": 450,
+        "b2b": 315
+      },
+      {
+        "id": "beta-hcg",
+        "generalName": "Beta HCG",
+        "labName": "",
+        "mrp": 850,
+        "b2b": 200
+      },
+      {
+        "id": "homocysten",
+        "generalName": "Homocysten",
+        "labName": "",
+        "mrp": 1450,
+        "b2b": 500
+      },
+      {
+        "id": "ca125-female",
+        "generalName": "CA125 (Female)",
+        "labName": "",
+        "mrp": 1200,
+        "b2b": 500
+      },
+      {
+        "id": "psa-male",
+        "generalName": "PSA (Male)",
+        "labName": "",
+        "mrp": 900,
+        "b2b": 350
+      },
+      {
+        "id": "ige",
+        "generalName": "IgE",
+        "labName": "",
+        "mrp": 950,
+        "b2b": 400
+      },
+      {
+        "id": "anti-ccp",
+        "generalName": "Anti CCP",
+        "labName": "",
+        "mrp": 1550,
+        "b2b": 650
+      },
+      {
+        "id": "ana",
+        "generalName": "ANA",
+        "labName": "",
+        "mrp": 950,
+        "b2b": 500
+      },
+      {
+        "id": "total-protien",
+        "generalName": "Total Protien",
+        "labName": "",
+        "mrp": 250,
+        "b2b": 80
+      },
+      {
+        "id": "covid-antibody",
+        "generalName": "Covid Antibody",
+        "labName": "",
+        "mrp": 1000,
+        "b2b": 500
+      },
+      {
+        "id": "fnac",
+        "generalName": "FNAC",
+        "labName": "",
+        "mrp": 1500,
+        "b2b": 1050
+      },
+      {
+        "id": "cea",
+        "generalName": "CEA",
+        "labName": "",
+        "mrp": 800,
+        "b2b": 400
+      },
+      {
+        "id": "afpl",
+        "generalName": "AFPL",
+        "labName": "",
+        "mrp": 900,
+        "b2b": 450
+      },
+      {
+        "id": "hb-electrophoresis",
+        "generalName": "Hb Electrophoresis",
+        "labName": "",
+        "mrp": 950,
+        "b2b": 450
+      },
+      {
+        "id": "urine-protein-creatinine-ratio",
+        "generalName": "Urine Protein Creatinine Ratio",
+        "labName": "",
+        "mrp": 420,
+        "b2b": 240
+      },
+      {
+        "id": "protein-with-a-g-ratio",
+        "generalName": "Protein with A/G Ratio",
+        "labName": "",
+        "mrp": 250,
+        "b2b": 80
+      },
+      {
+        "id": "lipase",
+        "generalName": "Lipase",
+        "labName": "",
+        "mrp": 750,
+        "b2b": 300
+      },
+      {
+        "id": "estradiol",
+        "generalName": "Estradiol",
+        "labName": "",
+        "mrp": 780,
+        "b2b": 300
+      },
+      {
+        "id": "pus-culture-aerobic",
+        "generalName": "PUS Culture (Aerobic)",
+        "labName": "",
+        "mrp": 950,
+        "b2b": 400
+      },
+      {
+        "id": "fecal-calprotectin",
+        "generalName": "Fecal Calprotectin",
+        "labName": "",
+        "mrp": 2800,
+        "b2b": 2240
+      },
+      {
+        "id": "blood-culture-1-se",
+        "generalName": "Blood Culture 1 SE",
+        "labName": "",
+        "mrp": 1500,
+        "b2b": 800
+      },
+      {
+        "id": "nt-pro-bnp",
+        "generalName": "NT-Pro BNP",
+        "labName": "",
+        "mrp": 2500,
+        "b2b": 1100
+      },
+      {
+        "id": "hbs-antigen",
+        "generalName": "HBS Antigen",
+        "labName": "",
+        "mrp": 550,
+        "b2b": 350
+      },
+      {
+        "id": "mantoux-test",
+        "generalName": "Mantoux Test",
+        "labName": "",
+        "mrp": 150,
+        "b2b": 135
+      },
+      {
+        "id": "reticulate-count",
+        "generalName": "Reticulate Count",
+        "labName": "",
+        "mrp": 400,
+        "b2b": 210
+      },
+      {
+        "id": "direct-coombs-test",
+        "generalName": "Direct Coombs Test",
+        "labName": "",
+        "mrp": 550,
+        "b2b": 150
+      },
+      {
+        "id": "microalbuminuria",
+        "generalName": "Microalbuminuria",
+        "labName": "",
+        "mrp": 620,
+        "b2b": 250
+      },
+      {
+        "id": "total-testosterone",
+        "generalName": "Total Testosterone",
+        "labName": "",
+        "mrp": 780,
+        "b2b": 350
+      },
+      {
+        "id": "free-testosterone",
+        "generalName": "Free Testosterone",
+        "labName": "",
+        "mrp": 1550,
+        "b2b": 750
+      },
+      {
+        "id": "protein-c",
+        "generalName": "Protein C",
+        "labName": "",
+        "mrp": 4500,
+        "b2b": 4050
+      },
+      {
+        "id": "protein-s",
+        "generalName": "Protein S",
+        "labName": "",
+        "mrp": 4500,
+        "b2b": 4050
+      },
+      {
+        "id": "lupus-anticoagulant",
+        "generalName": "Lupus Anticoagulant",
+        "labName": "",
+        "mrp": 1800,
+        "b2b": 800
+      },
+      {
+        "id": "fibrinogen-level",
+        "generalName": "Fibrinogen Level",
+        "labName": "",
+        "mrp": 850,
+        "b2b": 400
+      },
+      {
+        "id": "anti-dsdna-ncx",
+        "generalName": "Anti dsDNA NCX",
+        "labName": "",
+        "mrp": 1750,
+        "b2b": 1000
+      },
+      {
+        "id": "apolipoprotein-a-1-b",
+        "generalName": "Apolipoprotein A1 & B",
+        "labName": "",
+        "mrp": 1100,
+        "b2b": 770
+      },
+      {
+        "id": "folic-acid-level",
+        "generalName": "Folic Acid Level",
+        "labName": "",
+        "mrp": 1100,
+        "b2b": 500
+      },
+      {
+        "id": "allergy-comprehensive",
+        "generalName": "Allergy Comprehensive",
+        "labName": "",
+        "mrp": 5500,
+        "b2b": 3850
+      },
+      {
+        "id": "maleria-antigen",
+        "generalName": "Maleria Antigen",
+        "labName": "",
+        "mrp": 450,
+        "b2b": 315
+      },
+      {
+        "id": "fasting-urine-glucose",
+        "generalName": "Fasting Urine Glucose",
+        "labName": "",
+        "mrp": 50,
+        "b2b": 30
+      },
+      {
+        "id": "factor-v",
+        "generalName": "Factor V",
+        "labName": "",
+        "mrp": 5500,
+        "b2b": 4400
+      },
+      {
+        "id": "ferritin",
+        "generalName": "Ferritin",
+        "labName": "",
+        "mrp": 950,
+        "b2b": 400
+      },
+      {
+        "id": "hav",
+        "generalName": "HAV",
+        "labName": "",
+        "mrp": 1200,
+        "b2b": 550
+      },
+      {
+        "id": "hev",
+        "generalName": "HEV",
+        "labName": "",
+        "mrp": 1500,
+        "b2b": 600
+      },
+      {
+        "id": "ra-test",
+        "generalName": "RA Test",
+        "labName": "",
+        "mrp": 500,
+        "b2b": 270
+      },
+      {
+        "id": "egfr",
+        "generalName": "eGFR",
+        "labName": "",
+        "mrp": 300,
+        "b2b": 150
+      },
+      {
+        "id": "iron-profile-with-ferritine",
+        "generalName": "Iron Profile with Ferritine",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "allergy-drug-test",
+        "generalName": "Allergy Drug Test",
+        "labName": "",
+        "mrp": 7500,
+        "b2b": 5250
+      },
+      {
+        "id": "iga-ttg",
+        "generalName": "IgA tTG",
+        "labName": "",
+        "mrp": 800,
+        "b2b": 500
+      },
+      {
+        "id": "peripheral-smear",
+        "generalName": "Peripheral Smear",
+        "labName": "",
+        "mrp": 150,
+        "b2b": 60
+      },
+      {
+        "id": "cortisol-8-am",
+        "generalName": "Cortisol 8 AM",
+        "labName": "",
+        "mrp": 850,
+        "b2b": 350
+      },
+      {
+        "id": "h-pylori-stool",
+        "generalName": "H. Pylori Stool",
+        "labName": "",
+        "mrp": 1250,
+        "b2b": 960
+      },
+      {
+        "id": "chikungunya-igg",
+        "generalName": "Chikungunya IgG",
+        "labName": "",
+        "mrp": 900,
+        "b2b": 810
+      },
+      {
+        "id": "fba",
+        "generalName": "FBA",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "protein-electrophoresis",
+        "generalName": "Protein Electrophoresis",
+        "labName": "",
+        "mrp": 1200,
+        "b2b": 500
+      },
+      {
+        "id": "sputum-tb-culture-abs",
+        "generalName": "Sputum TB Culture & ABS",
+        "labName": "",
+        "mrp": 150,
+        "b2b": 90
+      },
+      {
+        "id": "complement-c3-c4",
+        "generalName": "Complement C3 & C4",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "dheas",
+        "generalName": "DHEAS",
+        "labName": "",
+        "mrp": 1150,
+        "b2b": 600
+      },
+      {
+        "id": "dhea",
+        "generalName": "DHEA",
+        "labName": "",
+        "mrp": 3000,
+        "b2b": 2100
+      },
+      {
+        "id": "torch-complex",
+        "generalName": "Torch Complex",
+        "labName": "",
+        "mrp": 2800,
+        "b2b": 1200
+      },
+      {
+        "id": "zinc-level",
+        "generalName": "Zinc Level",
+        "labName": "",
+        "mrp": 2200,
+        "b2b": 1980
+      },
+      {
+        "id": "magnesium",
+        "generalName": "Magnesium",
+        "labName": "",
+        "mrp": 400,
+        "b2b": 280
+      },
+      {
+        "id": "estrogen",
+        "generalName": "Estrogen",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "c-peptide-random",
+        "generalName": "C-Peptide Random",
+        "labName": "",
+        "mrp": 1150,
+        "b2b": 550
+      },
+      {
+        "id": "b2-glycoprotein-1-igg",
+        "generalName": "B2 Glycoprotein 1 IgG",
+        "labName": "",
+        "mrp": 1200,
+        "b2b": 500
+      },
+      {
+        "id": "karyotyping-husband",
+        "generalName": "Karyotyping - Husband",
+        "labName": "",
+        "mrp": 4000,
+        "b2b": 2800
+      },
+      {
+        "id": "karyotyping-wife",
+        "generalName": "Karyotyping - Wife",
+        "labName": "",
+        "mrp": 4000,
+        "b2b": 2800
+      },
+      {
+        "id": "influenza-screening-for-abf",
+        "generalName": "Influenza Screening for ABF",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "psa-free-total",
+        "generalName": "PSA Free & Total",
+        "labName": "",
+        "mrp": 850,
+        "b2b": 350
+      },
+      {
+        "id": "lh",
+        "generalName": "LH",
+        "labName": "",
+        "mrp": 550,
+        "b2b": 180
+      },
+      {
+        "id": "fsh",
+        "generalName": "FSH",
+        "labName": "",
+        "mrp": 550,
+        "b2b": 180
+      },
+      {
+        "id": "semen-analysis",
+        "generalName": "Semen Analysis",
+        "labName": "",
+        "mrp": 1100,
+        "b2b": 770
+      },
+      {
+        "id": "alkaline-phosphatase",
+        "generalName": "Alkaline Phosphatase",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "globulin",
+        "generalName": "Globulin",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "bun-creatinine-ratio",
+        "generalName": "BUN / Creatinine Ratio",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "urea-g-ratio",
+        "generalName": "Urea/G Ratio",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "stool-routine",
+        "generalName": "Stool Routine",
+        "labName": "",
+        "mrp": 170,
+        "b2b": 90
+      },
+      {
+        "id": "albumin",
+        "generalName": "Albumin",
+        "labName": "",
+        "mrp": 400,
+        "b2b": 320
+      },
+      {
+        "id": "bicarbonate",
+        "generalName": "Bicarbonate",
+        "labName": "",
+        "mrp": 600,
+        "b2b": 360
+      },
+      {
+        "id": "amylase",
+        "generalName": "Amylase",
+        "labName": "",
+        "mrp": 700,
+        "b2b": 275
+      },
+      {
+        "id": "acth",
+        "generalName": "ACTH",
+        "labName": "",
+        "mrp": 1800,
+        "b2b": 1620
+      },
+      {
+        "id": "throat-swab-c-s",
+        "generalName": "Throat Swab C/S",
+        "labName": "",
+        "mrp": 950,
+        "b2b": 400
+      },
+      {
+        "id": "aso-titer",
+        "generalName": "ASO Titer",
+        "labName": "",
+        "mrp": 650,
+        "b2b": 390
+      },
+      {
+        "id": "amh",
+        "generalName": "AMH",
+        "labName": "",
+        "mrp": 2000,
+        "b2b": 1000
+      },
+      {
+        "id": "pth",
+        "generalName": "PTH",
+        "labName": "",
+        "mrp": 1600,
+        "b2b": 1120
+      },
+      {
+        "id": "apo-b-apo-a1-ratio",
+        "generalName": "Apo B: Apo A1 ratio",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "bt-ct",
+        "generalName": "BT CT",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "hpv-dna",
+        "generalName": "HPV DNA",
+        "labName": "",
+        "mrp": 2800,
+        "b2b": 2520
+      },
+      {
+        "id": "anti-tpo-antibody",
+        "generalName": "Anti-TPO Antibody",
+        "labName": "",
+        "mrp": 1100,
+        "b2b": 600
+      },
+      {
+        "id": "apolipoprotein-a-1",
+        "generalName": "Apolipoprotein A1",
+        "labName": "",
+        "mrp": 550,
+        "b2b": 385
+      },
+      {
+        "id": "apolipoprotein-b",
+        "generalName": "Apolipoprotein B",
+        "labName": "",
+        "mrp": 550,
+        "b2b": 385
+      },
+      {
+        "id": "stool-calprotectin",
+        "generalName": "Stool Calprotectin",
+        "labName": "",
+        "mrp": 2800,
+        "b2b": 2240
+      },
+      {
+        "id": "phadiatop",
+        "generalName": "Phadiatop",
+        "labName": "",
+        "mrp": 2300,
+        "b2b": 2070
+      },
+      {
+        "id": "prolactin",
+        "generalName": "Prolactin",
+        "labName": "",
+        "mrp": 600,
+        "b2b": 200
+      },
+      {
+        "id": "progesterone",
+        "generalName": "Progesterone",
+        "labName": "",
+        "mrp": 800,
+        "b2b": 300
+      },
+      {
+        "id": "specific-cardiac-profile",
+        "generalName": "Specific Cardiac Profile",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "lipoprotein",
+        "generalName": "Lipoprotein",
+        "labName": "",
+        "mrp": 1200,
+        "b2b": 840
+      },
+      {
+        "id": "h-pylori-stool-antigen-test",
+        "generalName": "H. Pylori Stool Antigen Test",
+        "labName": "",
+        "mrp": 1250,
+        "b2b": 1000
+      },
+      {
+        "id": "typhidot-igm",
+        "generalName": "Typhidot IgM",
+        "labName": "",
+        "mrp": 600,
+        "b2b": 480
+      },
+      {
+        "id": "osmolarity-serum",
+        "generalName": "Osmolarity Serum",
+        "labName": "",
+        "mrp": 1500,
+        "b2b": 1350
+      },
+      {
+        "id": "osmolarity-urine",
+        "generalName": "Osmolarity Urine",
+        "labName": "",
+        "mrp": 1500,
+        "b2b": 1350
+      },
+      {
+        "id": "dual-marker",
+        "generalName": "Dual Marker",
+        "labName": "",
+        "mrp": 2500,
+        "b2b": 2250
+      },
+      {
+        "id": "extra-test",
+        "generalName": "Extra Test",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "lft",
+        "generalName": "LFT",
+        "labName": "Liver Function Test",
+        "mrp": 900,
+        "b2b": 220
+      },
+      {
+        "id": "rft",
+        "generalName": "RFT",
+        "labName": "LIFECHECK-AS RENAL FUNCTION TEST",
+        "mrp": 1000,
+        "b2b": 600
+      },
+      {
+        "id": "electrolytes",
+        "generalName": "Electrolytes",
+        "labName": "Electrolytes",
+        "mrp": 480,
+        "b2b": 130
+      },
+      {
+        "id": "total-tft",
+        "generalName": "Total TFT",
+        "labName": "Thyroid Function Test",
+        "mrp": 550,
+        "b2b": 110
+      },
+      {
+        "id": "free-tft",
+        "generalName": "Free TFT",
+        "labName": "Free Thyroid Profile",
+        "mrp": 650,
+        "b2b": 200
+      },
+      {
+        "id": "triple-h",
+        "generalName": "Triple H",
+        "labName": "Goodness 3H",
+        "mrp": 1500,
+        "b2b": 650
+      }
+    ],
+    "packages": [
+      {
+        "id": "goodness-a1",
+        "packageName": "Goodness A1",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "FBS",
+            "labName": "Glucose - Fasting"
+          },
+          {
+            "generalName": "PP",
+            "labName": "Glucose - Post Prandial"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Function Test"
+          },
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (TIBC)"
+          },
+          {
+            "generalName": "Vit D3",
+            "labName": "25 OH Cholecalciferol (D2+D3)"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B - 12 Level"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "Liver Function Test"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "LIFECHECK-AS RENAL FUNCTION TEST"
+          }
+        ],
+        "mrp": 2500,
+        "b2b": 1200
+      },
+      {
+        "id": "goodness-e",
+        "packageName": "Goodness E",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "FBS",
+            "labName": "Glucose - Fasting"
+          },
+          {
+            "generalName": "PP",
+            "labName": "Glucose - Post Prandial"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "Creatinine",
+            "labName": "Creatinine"
+          },
+          {
+            "generalName": "Uric Acid",
+            "labName": "Uric Acid"
+          }
+        ],
+        "mrp": 1000,
+        "b2b": 450
+      },
+      {
+        "id": "goodness-g",
+        "packageName": "Goodness G",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "FBS",
+            "labName": "Glucose - Fasting"
+          },
+          {
+            "generalName": "PP",
+            "labName": "Glucose - Post Prandial"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "Creatinine",
+            "labName": "Creatinine"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Function Test"
+          },
+          {
+            "generalName": "Uric Acid",
+            "labName": "Uric Acid"
+          }
+        ],
+        "mrp": 1500,
+        "b2b": 550
+      },
+      {
+        "id": "goodness-bb-female",
+        "packageName": "Goodness BB (Female)",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "FBS",
+            "labName": "Glucose - Fasting"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "HSCRP",
+            "labName": "High Sensitive CRP"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "Liver Function Test"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "LIFECHECK-AS RENAL FUNCTION TEST"
+          },
+          {
+            "generalName": "Insulin Fasting",
+            "labName": "Insulin Fasting"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B - 12 Level"
+          },
+          {
+            "generalName": "Vit D3",
+            "labName": "25 OH Cholecalciferol (D2+D3)"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Function Test"
+          },
+          {
+            "generalName": "Homocysten",
+            "labName": ""
+          },
+          {
+            "generalName": "CA125 (Female)",
+            "labName": ""
+          }
+        ],
+        "mrp": 3500,
+        "b2b": 1500
+      },
+      {
+        "id": "goodness-ba-male",
+        "packageName": "Goodness BA (Male)",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "FBS",
+            "labName": "Glucose - Fasting"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "HSCRP",
+            "labName": "High Sensitive CRP"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "Liver Function Test"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "LIFECHECK-AS RENAL FUNCTION TEST"
+          },
+          {
+            "generalName": "Insulin Fasting",
+            "labName": "Insulin Fasting"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B - 12 Level"
+          },
+          {
+            "generalName": "Vit D3",
+            "labName": "25 OH Cholecalciferol (D2+D3)"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Function Test"
+          },
+          {
+            "generalName": "Homocysten",
+            "labName": ""
+          },
+          {
+            "generalName": "PSA (Male)",
+            "labName": ""
+          }
+        ],
+        "mrp": 3500,
+        "b2b": 1400
+      },
+      {
+        "id": "goodness-c",
+        "packageName": "Goodness C",
+        "tests": [
+          {
+            "generalName": "SGOT",
+            "labName": "SGOT (AST)"
+          },
+          {
+            "generalName": "LDH",
+            "labName": "LDH"
+          },
+          {
+            "generalName": "CPK-MB",
+            "labName": "CPK-MB level"
+          },
+          {
+            "generalName": "Trop-I",
+            "labName": ""
+          }
+        ],
+        "mrp": 2200,
+        "b2b": 1200
+      },
+      {
+        "id": "goodness-f",
+        "packageName": "Goodness F",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "Liver Function Test"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "LIFECHECK-AS RENAL FUNCTION TEST"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          }
+        ],
+        "mrp": 2000,
+        "b2b": 600
+      },
+      {
+        "id": "goodness-3h",
+        "packageName": "Goodness 3H",
+        "tests": [
+          {
+            "generalName": "HIV",
+            "labName": "HIV I & II"
+          },
+          {
+            "generalName": "HCV",
+            "labName": "HCV MANUAL"
+          },
+          {
+            "generalName": "HBsAg",
+            "labName": ""
+          }
+        ],
+        "mrp": 1500,
+        "b2b": 650
+      },
+      {
+        "id": "fever-profile",
+        "packageName": "Fever Profile",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "ESR",
+            "labName": "ESR"
+          },
+          {
+            "generalName": "SGOT",
+            "labName": "SGOT (AST)"
+          },
+          {
+            "generalName": "SGPT",
+            "labName": "SGPT (ALT)"
+          },
+          {
+            "generalName": "CRP",
+            "labName": "C- Reactive Protein"
+          },
+          {
+            "generalName": "Dengue NS1",
+            "labName": ""
+          },
+          {
+            "generalName": "Maleria Antigen",
+            "labName": ""
+          },
+          {
+            "generalName": "Urine Routine",
+            "labName": ""
+          },
+          {
+            "generalName": "Widal",
+            "labName": ""
+          }
+        ],
+        "mrp": 3000,
+        "b2b": 950
+      },
+      {
+        "id": "anc-profile",
+        "packageName": "ANC Profile",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "Blood Group",
+            "labName": "Blood Group & RH"
+          },
+          {
+            "generalName": "FBS",
+            "labName": "Glucose - Fasting"
+          },
+          {
+            "generalName": "TSH",
+            "labName": "TSH"
+          },
+          {
+            "generalName": "Triple H",
+            "labName": "Goodness 3H"
+          },
+          {
+            "generalName": "VDRL",
+            "labName": ""
+          },
+          {
+            "generalName": "Hb Electrophoresis",
+            "labName": ""
+          },
+          {
+            "generalName": "Urine Routine",
+            "labName": ""
+          }
+        ],
+        "mrp": 2100,
+        "b2b": 1890
+      }
+    ]
+  },
+  "2": {
+    "name": "Dr. Jariwala Laboratory",
+    "tests": [],
+    "packages": []
+  },
+  "3": {
+    "name": "General Diagnostics",
+    "tests": [],
+    "packages": []
+  },
+  "4": {
+    "name": "Trucheck Diagnostics",
+    "tests": [],
+    "packages": []
+  }
+}
+
+// Phlebotomist suggestions
+const PHLEBOTOMIST_SUGGESTIONS = [
+  "Rahul Sharma", "Amit Patel", "Priya Singh", "Sneha Reddy",
+  "Vikram Joshi", "Anita Desai", "Rajesh Kumar", "Meera Iyer",
+  "Sanjay Gupta", "Kavita Nair", "Arjun Mehta", "Neha Shah"
 ];
 
-// Predefined doctors
-const PREDEFINED_DOCTORS = [
-"Self",
-"Dr. Shruti Gogate",
-"Dr. Snehal Sawant",
-"Dr. Satish Sawant",
-"Dr. Sushama Dubal",
-"Dr. Reshma Bhivgude",
-"Dr. Sushama Dabhade",
-"Dr. Sunil Dabhade",
-"Dr. Jagat Shah",
-"Dr. Pravin Arlekar",
-"Dr. Avinash Diwate",
-"Dr. Sejal.p Jain",
-"Dr. Maxim D'mello",
-"Dr. Anushka Khot",
-"Dr. Aparna Arlekar",
-"Dr. Hemalatta Patel",
-"Dr. Nitul Parikh",
-"Dr. Aniruddha Gokhale",
-"Dr. Umesh Khanna",
-"Dr. V V Kelkar",
-"Dr. Sachin Kamat",
-"Dr. Pradeep Gadge",
-"Dr. Dakshata Padhye",
-"Dr. Vijay Sharnagat",
-"Dr. Anand Ambesange",
-"Dr. R B Kandha",
-"Dr. Kashyap Thakar",
-"Dr. V V Prabhu",
-"Dr. Rajesh Ghagare",
-"Dr. Nazeen Menon",
-"Dr. A C Chaube",
-"Dr. Shailendra Telang",
-"Dr. A L Seth",
-"Dr. Yogini Gada",
-"Dr. Ajay Yadav"
+// Doctor suggestions
+const DOCTOR_SUGGESTIONS = [
+  "Dr. Sharma", "Dr. Patel", "Dr. Singh", "Dr. Kumar", 
+  "Dr. Gupta", "Dr. Joshi", "Dr. Reddy", "Dr. Mehta",
+  "Dr. Desai", "Dr. Iyer", "Dr. Shah", "Dr. Nair"
 ];
 
-// Predefined care of relationships
-const PREDEFINED_CARE_OF = [
-"Soni",
-"Sumit",
-"Prerana",
-"Purabiya",
-"Anish",
-"Ashok Sir",
-"Kunal",
-"Eva",
-"Vaishali Dhumal",
-"Kalpana Sister",
-"Megha Sister",
-"Sindhu Sister",
-"Yogita Sister",
-"Sandeep Bijam",
-"Viru Gupta",
-"Kashish",
-"Dr. Shruti Gogate",
-"Dr. Snehal Sawant",
-"Dr. Satish Sawant",
-"Dr. Sushama Dubal",
-"Dr. Reshma Bhivgude",
-"Dr. Jagat Shah",
-"Dr. Pravin Arlekar",
-"Dr. Avinash Diwate",
-"Dr. Sejal.p Jain",
-"Dr. Maxim D'mello",
-"Dr. Anushka Khot",
-"Dr. Aparna Arlekar",
-"Dr. Hemalatta Patel",
-"Dr. Nitul Parikh",
-"Dr. Aniruddha Gokhale",
-"Dr. Umesh Khanna",
-"Dr. V V Kelkar",
-"Dr. Sachin Kamat",
-"Dr. Pradeep Gadge",
-"Dr. Dakshata Padhye",
-"Dr. Vijay Sharnagat",
-"Dr. Anand Ambesange",
-"Dr. R B Kandha",
-"Dr. Kashyap Thakar",
-"Dr. V V Prabhu",
-"Dr. Rajesh Ghagare",
-"Dr. Nazeen Menon",
-"Dr. A C Chaube",
-"Dr. Shailendra Telang",
-"Dr. A L Seth",
-"Dr. Yogini Gada",
-"Dr. Ajay Yadav"
+// Care of Person suggestions
+const CARE_OF_PERSON_SUGGESTIONS = [
+  "None", "Mr.", "Mrs.", "Ms.", "Dr.", "Prof.", 
+  "Father", "Mother", "Brother", "Sister", "Spouse",
+  "Uncle", "Aunt", "Grandfather", "Grandmother"
 ];
 
-// Predefined phlebotomists
-const PREDEFINED_PHLEBOTOMISTS = [
-"Soni",
-"Sumit",
-"Anish",
-"Prerana",
-"Kunal",
-"Ashok",
-"Purabiya",
-"Megha",
-"Sindhu",
-"Kavita",
-"Hemlatta",
-"Yash",
-"Amar",
-"Yogita",
-"Ajay Shah"
-];
-
-/* ========================= Tube Types Definition (Centralized) ========================= */
-const TUBE_TYPES = {
-  "EDTA": {
-    name: "EDTA Tube (Purple)",
-    displayName: "EDTA Tube",
-    imageUrl: "https://lh3.googleusercontent.com/d/1iHKiKtrFMgpLEkyIRUnhz4cl9LZ9XFux"
+// ============================================================
+//  LAB CONFIGURATION
+// ============================================================
+const LAB_COLORS = {
+  1: {
+    bg: "#f3e8ff",
+    border: "#c084fc",
+    text: "#4c1d95",
+    light: "#e9d5ff",
+    gradient: "rgba(192, 132, 252, 0.25)",
+    name: "Dr. Ajay Shah Laboratory",
+    tabBg: "#f3e8ff",
+    tabBorder: "#c084fc",
+    tabText: "#4c1d95"
   },
-  "Fluoride": {
-    name: "Fluoride Tube (Grey)",
-    displayName: "Fluoride Tube",
-    imageUrl: "https://lh3.googleusercontent.com/d/1MZdwsqJlSHhRbVEUrm_TYv4InUWs5kdV"
+  2: {
+    bg: "#eff6ff",
+    border: "#60a5fa",
+    text: "#1e3a8a",
+    light: "#dbeafe",
+    gradient: "rgba(96, 165, 250, 0.25)",
+    name: "Dr. Jariwala Laboratory",
+    tabBg: "#eff6ff",
+    tabBorder: "#60a5fa",
+    tabText: "#1e3a8a"
   },
-  "Plain": {
-    name: "Plain Tube (Red)",
-    displayName: "Plain Tube",
-    imageUrl: "https://lh3.googleusercontent.com/d/1O9o_bmtUvZ3cuiOqfRog1wFzYY4UxRkt"
+  3: {
+    bg: "#f0fdf4",
+    border: "#4ade80",
+    text: "#166534",
+    light: "#dcfce7",
+    gradient: "rgba(74, 222, 128, 0.25)",
+    name: "General Diagnostics",
+    tabBg: "#f0fdf4",
+    tabBorder: "#4ade80",
+    tabText: "#166534"
   },
-  "Citrate": {
-    name: "Citrate Tube (Blue)",
-    displayName: "Citrate Tube",
-    imageUrl: "https://lh3.googleusercontent.com/d/1_jb-6BP-Dr5W3Aj8DFc6faCaX6tRhC3A"
-  },
-  "Serum": {
-    name: "Serum Tube (Yellow)",
-    displayName: "Serum Tube",
-    imageUrl: "https://lh3.googleusercontent.com/d/1-9Fvi0XRk92RSAas4uHubJrhvu569UWd"
-  },
-  "Urine": {
-    name: "Urine Container",
-    displayName: "Urine Container",
-    imageUrl: "https://lh3.googleusercontent.com/d/1bjZq6bvMic2Azyd11-aasyQss3AOeFZw"
+  4: {
+    bg: "#fdf2f2",
+    border: "#f87171",
+    text: "#991b1b",
+    light: "#fee2e2",
+    gradient: "rgba(248, 113, 113, 0.25)",
+    name: "Trucheck Diagnostics",
+    tabBg: "#fdf2f2",
+    tabBorder: "#f87171",
+    tabText: "#991b1b"
   }
 };
-
-/* ========================= Test to Tube Mapping ========================= */
-const TEST_TUBE_MAPPING = {
-"CBC": ["EDTA"],
-"Blood Group": ["EDTA"],
-"ESR": ["EDTA"],
-"FBS": ["Fluoride"],
-"PP": ["Fluoride"],
-"RBS": ["Fluoride"],
-"Fasting Insuline": ["Fluoride"],
-"HbA1C": ["EDTA"],
-"LFT": ["Plain"],
-"Bilirubin-Total": ["Plain"],
-"Bilirubin-Direct": ["Plain"],
-"SGPT": ["Plain"],
-"SGOT": ["Plain"],
-"GGT": ["Fluoride"],
-"RFT": ["Plain"],
-"Creatinine": ["Plain"],
-"Urea": ["Plain"],
-"BUN": ["Plain"],
-"Uric Acid": ["Plain"],
-"Calcium": ["Plain"],
-"Lipid Profile": ["Plain"],
-"Total Cholestrol": ["Plain"],
-"HDL": ["Plain"],
-"LDL": ["Plain"],
-"LDH": ["Plain"],
-"Electrolytes": ["Plain"],
-"Sodium": ["Plain"],
-"Chlorides": ["Plain"],
-"Phosphorous": ["Plain"],
-"Potassium": ["Plain"],
-"Iron Study": ["Plain"],
-"Vit D3": ["Plain"],
-"Vit B12": ["Plain"],
-"Total TFT": ["Plain"],
-"TSH": ["Plain"],
-"Free TFT": ["Plain"],
-"CRP": ["Plain"],
-"HSCRP": ["Plain"],
-"CPK-MB": ["Plain"],
-"CPK-Total": ["Plain"],
-"Trop-I": ["Plain"],
-"D-Dimer": ["Citrate"],
-"PT INR": ["Citrate"],
-"ApTT": ["Citrate"],
-"HIV": ["Plain"],
-"HCV": ["Plain"],
-"HBsAg": ["Plain"],
-"VDRL": ["Plain"],
-"Triple H": ["Plain"],
-"Urine Culture": ["Urine"],
-"Urine Routine": ["Urine"],
-"RA Factor": ["Plain"],
-"MP": ["EDTA"],
-"Widal": ["Plain"],
-"Dengue NSI": ["Plain"],
-"Dengue IGG": ["Plain"],
-"Dengue IGM": ["Plain"],
-"MP-Antigen": ["EDTA"],
-"Beta HCG": ["Plain"],
-"Homocysten": ["EDTA"],
-"CA125 (Female)": ["Serum"],
-"PSA (Male)": ["Serum"],
-"IGE": ["Serum"],
-"Trop-T": ["Plain"],
-"Anti CCP": ["Plain"],
-"ANA": ["Plain"],
-"Total Protien": ["Plain"],
-"Covid Antibody": ["Plain"],
-"FNAC": [""],
-"PP Insuline": ["Fluoride"],
-"CEA": ["Plain"],
-"AFPL": ["Serum"],
-"Hb Electrophoresis": ["EDTA"],
-"FT3": ["Plain"],
-"FT4": ["Plain"],
-"Urine Protein Creatinine Ratio": ["Urine"],
-"Protein with A/G Ratio": ["Plain"],
-"Lipase": ["Plain"],
-"Estradiol": [""],
-"PUS Culture (Aerobic)": ["Pus"],
-"FT3 FT4": ["Plain"],
-"Fecal Calprotectin": ["Stool"],
-"Blood Culture 1 SE": ["Blood Culture Bottle"],
-"NT-Pro BNP": ["EDTA"],
-"HBS Antigen": ["Plain"],
-"Mantoux Test": [""],
-"Reticulate Count": ["EDTA"],
-"Direct Coombs Test": ["EDTA"],
-"Microalbuminuria": ["Urine"],
-"Total Testosteron": ["Plain"],
-"Free Testosteron": ["Plain"],
-"Protein C": ["Plain"],
-"Protein S": ["Plain"],
-"Lupus Anticoagulant": [""],
-"Fibrinogen Level": ["Citrate"],
-"Anti dsDNA NCX": [""],
-"Apolipoprotein A-1 & B": [""],
-"Folic Acid Level": ["Plain"],
-"Allergy Comprehensive": [""],
-"Maleria Antigen": ["Plain"],
-"Urine Glucose (Fasting)": ["Urine"],
-"Factor V": ["EDTA"],
-"Ferritine": ["Plain"],
-"HAV": ["Plain"],
-"HEV": ["Plain"],
-"RA Test": ["Plain"],
-"Iron Profile with Ferritine": ["Plain"],
-"Allergy Drug Test": ["Plain"],
-"IGA TTG": ["Plain"],
-"Peripheral Smear": [""],
-"PTT": ["Citrate"],
-"Cortisol 8 AM": ["Plain"],
-"H. Pylori Stool": ["Stool"],
-"Chikungunya IgG": ["Plain"],
-"FBA": ["Plain"],
-"Protein Electrophoresis": ["Plain"],
-"Sputum TB Culture & ABS": ["Urine"],
-"Complement C3 & C4": [""],
-"DHEAS": [""],
-"DHEA": [""],
-"Torch Complex": ["Serum"],
-"Zinc Level": ["Plain"],
-"Magnesium": ["Plain"],
-"Estrogen": ["Plain"],
-"C-Peptide Random": ["Plain"],
-"B2 Glycoprotein 1 IgG": ["Plain"],
-"Karyotyping - Husband": ["SODIUM Heparin"],
-"Karyotyping - Wife": ["SODIUM Heparin"],
-"Influenza Screening for ABF": ["SWAB KIT "],
-"PSA Free & Total": ["Plain"],
-"LH": ["Plain"],
-"FSH": ["Plain"],
-"Semen Analysis": ["Semen Sample"],
-"Alkaline Phosphatase": ["Plain"],
-"Globulin": ["Serum"],
-"BUN / Creatinine Ratio": ["Serum"],
-"Urea/G Ratio": ["Serum"],
-"T3": ["Serum"],
-"T4": ["Serum"],
-"Stool Routine": ["Stool"],
-"Albumin": ["Serum"],
-"Billirubin Indirect": ["Serum"],
-"Bicarbonate": ["Serum"],
-"Amylase": ["Serum"],
-"ACTH": ["EDTA"],
-"Throat Swab C/S": ["SWAB KIT "],
-"ASO Titer": ["Serum"],
-"AMH": ["Serum"],
-"PTH ": ["Serum"],
-"Apo B: Apo A1 ratio": ["Serum"],
-"BT CT ": [""],
-"HPV DNA": ["Serum"],
-"Extra Test": [""]
-  
-};
-
-
-/* ========================= Test Data per Lab ========================= */
-const TESTS_DATA = {
-lab1: [{ name: "CBC", mrp: 300, b2b: 80 },
-{ name: "Blood Group", mrp: 180, b2b: 80 },
-{ name: "ESR", mrp: 150, b2b: 60 },
-{ name: "FBS", mrp: 80, b2b: 30 },
-{ name: "PP", mrp: 80, b2b: 30 },
-{ name: "RBS", mrp: 80, b2b: 30 },
-{ name: "Fasting Insuline", mrp: 800, b2b: 350 },
-{ name: "HbA1C", mrp: 550, b2b: 130 },
-{ name: "LFT", mrp: 900, b2b: 220 },
-{ name: "Bilirubin-Total", mrp: 190, b2b: 96 },
-{ name: "Bilirubin-Direct", mrp: 190, b2b: 96 },
-{ name: "SGPT", mrp: 190, b2b: 40 },
-{ name: "SGOT", mrp: 190, b2b: 40 },
-{ name: "GGT", mrp: 280, b2b: 182 },
-{ name: "RFT", mrp: 1000, b2b: 600 },
-{ name: "Creatinine", mrp: 190, b2b: 50 },
-{ name: "Urea", mrp: 190, b2b: 108 },
-{ name: "BUN", mrp: 190, b2b: 108 },
-{ name: "Uric Acid", mrp: 190, b2b: 50 },
-{ name: "Calcium", mrp: 190, b2b: 108 },
-{ name: "Lipid Profile", mrp: 600, b2b: 185 },
-{ name: "Total Cholestrol", mrp: 190, b2b: 108 },
-{ name: "HDL", mrp: 220, b2b: 132 },
-{ name: "LDL", mrp: 400, b2b: 240 },
-{ name: "LDH", mrp: 500, b2b: 150 },
-{ name: "Electrolytes", mrp: 480, b2b: 130 },
-{ name: "Sodium", mrp: 180, b2b: 108 },
-{ name: "Chlorides", mrp: 150, b2b: 90 },
-{ name: "Phosphorous", mrp: 190, b2b: 114 },
-{ name: "Potassium", mrp: 180, b2b: 108 },
-{ name: "Iron Study", mrp: 800, b2b: 300 },
-{ name: "Vit D3", mrp: 1300, b2b: 250 },
-{ name: "Vit B12", mrp: 850, b2b: 250 },
-{ name: "Total TFT", mrp: 550, b2b: 110 },
-{ name: "TSH", mrp: 370, b2b: 50 },
-{ name: "Free TFT", mrp: 650, b2b: 200 },
-{ name: "CRP", mrp: 450, b2b: 150 },
-{ name: "HSCRP", mrp: 850, b2b: 350 },
-{ name: "CPK-MB", mrp: 850, b2b: 350 },
-{ name: "CPK-Total", mrp: 550, b2b: 300 },
-{ name: "Trop-I", mrp: 1200, b2b: 750 },
-{ name: "D-Dimer", mrp: 1200, b2b: 500 },
-{ name: "PT INR", mrp: 330, b2b: 120 },
-{ name: "ApTT", mrp: 600, b2b: 330 },
-{ name: "HIV", mrp: 600, b2b: 350 },
-{ name: "HCV", mrp: 900, b2b: 525 },
-{ name: "HBsAg", mrp: 550, b2b: 440 },
-{ name: "VDRL", mrp: 370, b2b: 180 },
-{ name: "Triple H", mrp: 1500, b2b: 650 },
-{ name: "Urine Culture", mrp: 950, b2b: 400 },
-{ name: "Urine Routine", mrp: 160, b2b: 60 },
-{ name: "RA Factor", mrp: 500, b2b: 270 },
-{ name: "MP", mrp: 120, b2b: 72 },
-{ name: "Widal", mrp: 250, b2b: 150 },
-{ name: "Dengue NSI", mrp: 800, b2b: 300 },
-{ name: "Dengue IGG", mrp: 800, b2b: 300 },
-{ name: "Dengue IGM", mrp: 800, b2b: 350 },
-{ name: "MP-Antigen", mrp: 450, b2b: 315 },
-{ name: "Beta HCG", mrp: 850, b2b: 200 },
-{ name: "Homocysten", mrp: 1450, b2b: 500 },
-{ name: "CA125 (Female)", mrp: 1200, b2b: 500 },
-{ name: "PSA (Male)", mrp: 900, b2b: 350 },
-{ name: "IGE", mrp: 950, b2b: 400 },
-{ name: "Trop-T", mrp: 1500, b2b: 1050 },
-{ name: "Anti CCP", mrp: 1550, b2b: 650 },
-{ name: "ANA", mrp: 950, b2b: 500 },
-{ name: "Total Protien", mrp: 250, b2b: 80 },
-{ name: "Covid Antibody", mrp: 1000, b2b: 500 },
-{ name: "FNAC", mrp: 1500, b2b: 1050 },
-{ name: "PP Insuline", mrp: 850, b2b: 560 },
-{ name: "CEA", mrp: 800, b2b: 400 },
-{ name: "AFPL", mrp: 900, b2b: 450 },
-{ name: "Hb Electrophoresis", mrp: 950, b2b: 450 },
-{ name: "FT3", mrp: 280, b2b: 80 },
-{ name: "FT4", mrp: 280, b2b: 80 },
-{ name: "Urine Protein Creatinine Ratio", mrp: 420, b2b: 240 },
-{ name: "Protein with A/G Ratio", mrp: 250, b2b: 80 },
-{ name: "Lipase", mrp: 750, b2b: 300 },
-{ name: "Estradiol", mrp: 780, b2b: 300 },
-{ name: "PUS Culture (Aerobic)", mrp: 950, b2b: 400 },
-{ name: "FT3 FT4", mrp: 560, b2b: 160 },
-{ name: "Fecal Calprotectin", mrp: 2800, b2b: 2240 },
-{ name: "Blood Culture 1 SE", mrp: 1500, b2b: 800 },
-{ name: "NT-Pro BNP", mrp: 2500, b2b: 1100 },
-{ name: "HBS Antigen", mrp: 550, b2b: 350 },
-{ name: "Mantoux Test", mrp: 150, b2b: 135 },
-{ name: "Reticulate Count", mrp: 400, b2b: 210 },
-{ name: "Direct Coombs Test", mrp: 550, b2b: 150 },
-{ name: "Microalbuminuria", mrp: 620, b2b: 250 },
-{ name: "Total Testosteron", mrp: 780, b2b: 350 },
-{ name: "Free Testosteron", mrp: 1550, b2b: 750 },
-{ name: "Protein C", mrp: 4500, b2b: 4050 },
-{ name: "Protein S", mrp: 4500, b2b: 4050 },
-{ name: "Lupus Anticoagulant", mrp: 1800, b2b: 800 },
-{ name: "Fibrinogen Level", mrp: 850, b2b: 400 },
-{ name: "Anti dsDNA NCX", mrp: 1750, b2b: 1000 },
-{ name: "Apolipoprotein A-1 & B", mrp: 1100, b2b: 770 },
-{ name: "Folic Acid Level", mrp: 1100, b2b: 500 },
-{ name: "Allergy Comprehensive", mrp: 5500, b2b: 3850 },
-{ name: "Maleria Antigen", mrp: 450, b2b: 315 },
-{ name: "Urine Glucose (Fasting)", mrp: 50, b2b: 30 },
-{ name: "Factor V", mrp: 5500, b2b: 4400 },
-{ name: "Ferritine", mrp: 950, b2b: 400 },
-{ name: "HAV", mrp: 1200, b2b: 550 },
-{ name: "HEV", mrp: 1500, b2b: 600 },
-{ name: "RA Test", mrp: 500, b2b: 270 },
-{ name: "Iron Profile with Ferritine", mrp: null, b2b: null },
-{ name: "Allergy Drug Test", mrp: 7500, b2b: 5250 },
-{ name: "IGA TTG", mrp: 800, b2b: 500 },
-{ name: "Peripheral Smear", mrp: 150, b2b: 60 },
-{ name: "PTT", mrp: 600, b2b: 330 },
-{ name: "Cortisol 8 AM", mrp: 850, b2b: 350 },
-{ name: "H. Pylori Stool", mrp: 1250, b2b: 960 },
-{ name: "Chikungunya IgG", mrp: 900, b2b: 810 },
-{ name: "FBA", mrp: null, b2b: null },
-{ name: "Protein Electrophoresis", mrp: 1200, b2b: 500 },
-{ name: "Sputum TB Culture & ABS", mrp: 150, b2b: 90 },
-{ name: "Complement C3 & C4", mrp: null, b2b: null },
-{ name: "DHEAS", mrp: 1150, b2b: 600 },
-{ name: "DHEA", mrp: 3000, b2b: 2100 },
-{ name: "Torch Complex", mrp: 2800, b2b: 1200 },
-{ name: "Zinc Level", mrp: 2200, b2b: 1980 },
-{ name: "Magnesium", mrp: 400, b2b: 280 },
-{ name: "Estrogen", mrp: null, b2b: null },
-{ name: "C-Peptide Random", mrp: 1150, b2b: 550 },
-{ name: "B2 Glycoprotein 1 IgG", mrp: 1200, b2b: 500 },
-{ name: "Karyotyping - Husband", mrp: 4000, b2b: 2800 },
-{ name: "Karyotyping - Wife", mrp: 4000, b2b: 2800 },
-{ name: "Influenza Screening for ABF", mrp: null, b2b: null },
-{ name: "PSA Free & Total", mrp: 850, b2b: 350 },
-{ name: "LH", mrp: 550, b2b: 180 },
-{ name: "FSH", mrp: 550, b2b: 180 },
-{ name: "Semen Analysis", mrp: 1100, b2b: 770 },
-{ name: "Alkaline Phosphatase", mrp: null, b2b: null },
-{ name: "Globulin", mrp: null, b2b: null },
-{ name: "BUN / Creatinine Ratio", mrp: null, b2b: null },
-{ name: "Urea/G Ratio", mrp: null, b2b: null },
-{ name: "T3", mrp: 250, b2b: null },
-{ name: "T4", mrp: 250, b2b: null },
-{ name: "Stool Routine", mrp: 170, b2b: 90 },
-{ name: "Albumin", mrp: 400, b2b: 320 },
-{ name: "Billirubin Indirect", mrp: null, b2b: null },
-{ name: "Bicarbonate", mrp: null, b2b: null },
-{ name: "Amylase", mrp: 700, b2b: 275 },
-{ name: "ACTH", mrp: 1800, b2b: null },
-{ name: "Throat Swab C/S", mrp: 950, b2b: 400 },
-{ name: "ASO Titer", mrp: 650, b2b: 390 },
-{ name: "AMH", mrp: 2000, b2b: 1000 },
-{ name: "PTH ", mrp: 1600, b2b: 1120 },
-{ name: "Apo B: Apo A1 ratio", mrp: null, b2b: null },
-{ name: "BT CT ", mrp: null, b2b: null },
-{ name: "HPV DNA", mrp: 2800, b2b: 2520 },
-{ name: "Anti tpo antibody", mrp: 1100, b2b: 600 },
-  { name: "Apolipoprotein A-1", mrp: 550, b2b: 385 },
-  { name: "Apolipoprotein B", mrp: 550, b2b: 385 },
-  { name: "STOOL CAL PROTEIN", mrp: 2800, b2b: 2240 },
-  { name: "Phadiatop", mrp: 2300, b2b: 2070 },
-  { name: "Prolactin", mrp: 600, b2b: 200 },
-  { name: "Progesteron", mrp: 800, b2b: 300 },
-  { name: "LIPOPROTEIN", mrp: 1200, b2b: 840 },
-  { name: "H PYLORI ANTIGEN DETECTION FROM STOOL", mrp: 1250, b2b: 1000 },
-  { name: "TYPHII DOT IGM", mrp: 600, b2b: 480 },
-  { name: "Osmolarity Serum", mrp: 1500, b2b: 1350 },
-  { name: "Osmolarity Urine", mrp: 1500, b2b: 1350 },
-  { name: "Dual Marker", mrp: 2500, b2b: 2250 },
-  { name: "THYPHI IgM", mrp: 600, b2b: 480 },
-{ name: "Extra Test", mrp: 0, b2b: 0 }],
-
-lab2: [{ name: "CBC", mrp: 280, b2b: 168 },
-{ name: "Blood Group", mrp: 150, b2b: 90 },
-{ name: "ESR", mrp: 90, b2b: 54 },
-{ name: "FBS", mrp: 70, b2b: 46 },
-{ name: "PP", mrp: 70, b2b: 46 },
-{ name: "RBS", mrp: 70, b2b: 46 },
-{ name: "Fasting Insuline", mrp: 715, b2b: 501 },
-{ name: "HbA1C", mrp: 520, b2b: 338 },
-{ name: "LFT", mrp: 900, b2b: 585 },
-{ name: "Bilirubin-Total", mrp: 200, b2b: 120 },
-{ name: "Bilirubin-Direct", mrp: 200, b2b: 120 },
-{ name: "SGPT", mrp: 180, b2b: 108 },
-{ name: "SGOT", mrp: 180, b2b: 108 },
-{ name: "GGT", mrp: 200, b2b: 126 },
-{ name: "RFT", mrp: 1350, b2b: 878 },
-{ name: "Creatinine", mrp: 180, b2b: 108 },
-{ name: "Urea", mrp: 180, b2b: 108 },
-{ name: "BUN", mrp: null, b2b: null },
-{ name: "Uric Acid", mrp: 180, b2b: 108 },
-{ name: "Calcium", mrp: 275, b2b: 176 },
-{ name: "Lipid Profile", mrp: 550, b2b: 352 },
-{ name: "Total Cholestrol", mrp: 180, b2b: 108 },
-{ name: "HDL", mrp: 180, b2b: 106 },
-{ name: "LDL", mrp: 320, b2b: 224 },
-{ name: "LDH", mrp: 350, b2b: 263 },
-{ name: "Electrolytes", mrp: 400, b2b: 240 },
-{ name: "Sodium", mrp: null, b2b: null },
-{ name: "Chlorides", mrp: null, b2b: null },
-{ name: "Phosphorous", mrp: null, b2b: null },
-{ name: "Potassium", mrp: null, b2b: null },
-{ name: "Iron Study", mrp: 520, b2b: 333 },
-{ name: "Vit D3", mrp: 1500, b2b: 450 },
-{ name: "Vit B12", mrp: 950, b2b: 285 },
-{ name: "Total TFT", mrp: 580, b2b: 232 },
-{ name: "TSH", mrp: 320, b2b: 128 },
-{ name: "Free TFT", mrp: 680, b2b: 272 },
-{ name: "CRP", mrp: 500, b2b: 225 },
-{ name: "HSCRP", mrp: 700, b2b: 420 },
-{ name: "CPK-MB", mrp: 850, b2b: 536 },
-{ name: "CPK-Total", mrp: 380, b2b: 236 },
-{ name: "Trop-I", mrp: 770, b2b: 539 },
-{ name: "D-Dimer", mrp: 1150, b2b: 736 },
-{ name: "PT INR", mrp: 300, b2b: 195 },
-{ name: "ApTT", mrp: 400, b2b: 240 },
-{ name: "HIV", mrp: 400, b2b: 280 },
-{ name: "HCV", mrp: 750, b2b: 600 },
-{ name: "HBsAg", mrp: null, b2b: null },
-{ name: "VDRL", mrp: 165, b2b: 106 },
-{ name: "Triple H", mrp: null, b2b: null },
-{ name: "Urine Culture", mrp: 800, b2b: 560 },
-{ name: "Urine Routine", mrp: 110, b2b: 70 },
-{ name: "RA Factor", mrp: 275, b2b: 176 },
-{ name: "MP", mrp: 180, b2b: 106 },
-{ name: "Widal", mrp: 165, b2b: 106 },
-{ name: "Dengue NSI", mrp: 880, b2b: 563 },
-{ name: "Dengue IGG", mrp: 880, b2b: 563 },
-{ name: "Dengue IGM", mrp: 880, b2b: 563 },
-{ name: "MP-Antigen", mrp: 500, b2b: 315 },
-{ name: "Beta HCG", mrp: 500, b2b: 355 },
-{ name: "Homocysten", mrp: 1200, b2b: 744 },
-{ name: "CA125 (Female)", mrp: 1050, b2b: 683 },
-{ name: "PSA (Male)", mrp: 750, b2b: 497 },
-{ name: "IGE", mrp: 770, b2b: 539 },
-{ name: "Trop-T", mrp: 770, b2b: 539 },
-{ name: "Anti CCP", mrp: 1250, b2b: 813 },
-{ name: "ANA", mrp: 950, b2b: 599 },
-{ name: "Total Protien", mrp: 200, b2b: 120 },
-{ name: "Covid Antibody", mrp: 500, b2b: 350 },
-{ name: "FNAC", mrp: 800, b2b: 560 },
-{ name: "PP Insuline", mrp: 715, b2b: 501 },
-{ name: "CEA", mrp: 850, b2b: 578 },
-{ name: "AFPL", mrp: 700, b2b: 462 },
-{ name: "Hb Electrophoresis", mrp: null, b2b: null },
-{ name: "FT3", mrp: 240, b2b: 120 },
-{ name: "FT4", mrp: 240, b2b: 120 },
-{ name: "Urine Protein Creatinine Ratio", mrp: null, b2b: null },
-{ name: "Protein with A/G Ratio", mrp: null, b2b: null },
-{ name: "Lipase", mrp: 700, b2b: 490 },
-{ name: "Estradiol", mrp: 600, b2b: 414 },
-{ name: "PUS Culture (Aerobic)", mrp: 800, b2b: 560 },
-{ name: "FT3 FT4", mrp: 480, b2b: 240 },
-{ name: "Fecal Calprotectin", mrp: 3000, b2b: 1920 },
-{ name: "Blood Culture 1 SE", mrp: 1050, b2b: 735 },
-{ name: "NT-Pro BNP", mrp: 2035, b2b: 1302 },
-{ name: "HBS Antigen", mrp: null, b2b: null },
-{ name: "Mantoux Test", mrp: 120, b2b: 71 },
-{ name: "Reticulate Count", mrp: 180, b2b: 108 },
-{ name: "Direct Coombs Test", mrp: 300, b2b: 177 },
-{ name: "Microalbuminuria", mrp: 550, b2b: 352 },
-{ name: "Total Testosteron", mrp: 600, b2b: 426 },
-{ name: "Free Testosteron", mrp: 1600, b2b: 1440 },
-{ name: "Protein C", mrp: 3300, b2b: 2640 },
-{ name: "Protein S", mrp: 3300, b2b: 2640 },
-{ name: "Lupus Anticoagulant", mrp: null, b2b: null },
-{ name: "Fibrinogen Level", mrp: 700, b2b: 420 },
-{ name: "Anti dsDNA NCX", mrp: 935, b2b: 598 },
-{ name: "Apolipoprotein A-1 & B", mrp: 700, b2b: 385 },
-{ name: "Folic Acid Level", mrp: 900, b2b: 612 },
-{ name: "Allergy Comprehensive", mrp: null, b2b: null },
-{ name: "Maleria Antigen", mrp: 500, b2b: 315 },
-{ name: "Urine Glucose (Fasting)", mrp: null, b2b: null },
-{ name: "Factor V", mrp: null, b2b: null },
-{ name: "Ferritine", mrp: 750, b2b: 525 },
-{ name: "HAV", mrp: 950, b2b: 665 },
-{ name: "HEV", mrp: 1050, b2b: 693 },
-{ name: "RA Test", mrp: 275, b2b: 176 },
-{ name: "Iron Profile with Ferritine", mrp: null, b2b: null },
-{ name: "Allergy Drug Test", mrp: null, b2b: null },
-{ name: "IGA TTG", mrp: 1430, b2b: 1001 },
-{ name: "Peripheral Smear", mrp: null, b2b: null },
-{ name: "PTT", mrp: 300, b2b: 195 },
-{ name: "Cortisol 8 AM", mrp: 600, b2b: 434 },
-{ name: "H. Pylori Stool", mrp: 750, b2b: 458 },
-{ name: "Chikungunya IgG", mrp: null, b2b: null },
-{ name: "FBA", mrp: null, b2b: null },
-{ name: "Protein Electrophoresis", mrp: 950, b2b: 608 },
-{ name: "Sputum TB Culture & ABS", mrp: 800, b2b: 560 },
-{ name: "Complement C3 & C4", mrp: null, b2b: null },
-{ name: "DHEAS", mrp: 850, b2b: 587 },
-{ name: "DHEA", mrp: null, b2b: null },
-{ name: "Torch Complex", mrp: null, b2b: null },
-{ name: "Zinc Level", mrp: null, b2b: null },
-{ name: "Magnesium", mrp: 450, b2b: 284 },
-{ name: "Estrogen", mrp: null, b2b: null },
-{ name: "C-Peptide Random", mrp: null, b2b: null },
-{ name: "B2 Glycoprotein 1 IgG", mrp: null, b2b: null },
-{ name: "Karyotyping - Husband", mrp: null, b2b: null },
-{ name: "Karyotyping - Wife", mrp: null, b2b: null },
-{ name: "Influenza Screening for ABF", mrp: 1650, b2b: 1056 },
-{ name: "PSA Free & Total", mrp: 1450, b2b: 1001 },
-{ name: "LH", mrp: 525, b2b: 263 },
-{ name: "FSH", mrp: 525, b2b: 263 },
-{ name: "Semen Analysis", mrp: 300, b2b: 300 },
-{ name: "Alkaline Phosphatase", mrp: null, b2b: null },
-{ name: "Globulin", mrp: null, b2b: null },
-{ name: "BUN / Creatinine Ratio", mrp: null, b2b: null },
-{ name: "Urea/G Ratio", mrp: null, b2b: null },
-{ name: "T3", mrp: null, b2b: null },
-{ name: "T4", mrp: null, b2b: null },
-{ name: "Stool Routine", mrp: 110, b2b: 70 },
-{ name: "Albumin", mrp: null, b2b: null },
-{ name: "Billirubin Indirect", mrp: null, b2b: null },
-{ name: "Bicarbonate", mrp: null, b2b: null },
-{ name: "Amylase", mrp: null, b2b: null },
-{ name: "ACTH", mrp: null, b2b: null },
-{ name: "Throat Swab C/S", mrp: null, b2b: null },
-{ name: "ASO Titer", mrp: null, b2b: null },
-{ name: "AMH", mrp: 2050, b2b: 1415 },
-{ name: "PTH ", mrp: 1320, b2b: 924 },
-{ name: "Apo B: Apo A1 ratio", mrp: null, b2b: null },
-{ name: "BT CT ", mrp: null, b2b: null },
-{ name: "HPV DNA", mrp: null, b2b: null },
-{ name: "Anti tpo antibody", mrp: 900, b2b: 612 },
-  { name: "Apolipoprotein A-1", mrp: 700, b2b: 385 },
-  { name: "Apolipoprotein B", mrp: 700, b2b: 385 },
-  { name: "Prolactin", mrp: 525, b2b: 263 },
-  { name: "Progesteron", mrp: 605, b2b: 303 },
-  { name: "LIPOPROTEIN", mrp: 900, b2b: 567 },
-  { name: "H PYLORI ANTIGEN DETECTION FROM STOOL", mrp: 750, b2b: 458 },
-  { name: "TYPHII DOT IGM", mrp: 385, b2b: 245 },
-  { name: "Osmolarity Serum", mrp: 338, b2b: 246 },
-  { name: "Osmolarity Urine", mrp: 338, b2b: 246 },
-  { name: "THYPHI IgM", mrp: 385, b2b: 264 },
-{ name: "Extra Test", mrp: 0, b2b: 0 }],
-
-lab3: [{ name: "CBC", mrp: 190, b2b: 60 },
-{ name: "Blood Group", mrp: 220, b2b: 50 },
-{ name: "ESR", mrp: 200, b2b: 50 },
-{ name: "FBS", mrp: 70, b2b: 15 },
-{ name: "PP", mrp: 70, b2b: 15 },
-{ name: "RBS", mrp: 70, b2b: 15 },
-{ name: "Fasting Insuline", mrp: 770, b2b: 150 },
-{ name: "HbA1C", mrp: 495, b2b: 60 },
-{ name: "LFT", mrp: 1045, b2b: 150 },
-{ name: "Bilirubin-Total", mrp: 130, b2b: 22 },
-{ name: "Bilirubin-Direct", mrp: 130, b2b: 24 },
-{ name: "SGPT", mrp: 190, b2b: 24 },
-{ name: "SGOT", mrp: 190, b2b: 22 },
-{ name: "GGT", mrp: 242, b2b: 60 },
-{ name: "RFT", mrp: 900, b2b: 210 },
-{ name: "Creatinine", mrp: 180, b2b: 22 },
-{ name: "Urea", mrp: 165, b2b: 25 },
-{ name: "BUN", mrp: 220, b2b: 60 },
-{ name: "Uric Acid", mrp: 220, b2b: 22 },
-{ name: "Calcium", mrp: 176, b2b: 22 },
-{ name: "Lipid Profile", mrp: 715, b2b: 100 },
-{ name: "Total Cholestrol", mrp: 180, b2b: 10 },
-{ name: "HDL", mrp: 180, b2b: 10 },
-{ name: "LDL", mrp: 300, b2b: 50 },
-{ name: "LDH", mrp: 363, b2b: 60 },
-{ name: "Electrolytes", mrp: 520, b2b: 100 },
-{ name: "Sodium", mrp: 275, b2b: 40 },
-{ name: "Chlorides", mrp: 275, b2b: 40 },
-{ name: "Phosphorous", mrp: 275, b2b: 40 },
-{ name: "Potassium", mrp: 220, b2b: 40 },
-{ name: "Iron Study", mrp: 660, b2b: 150 },
-{ name: "Vit D3", mrp: 1280, b2b: 200 },
-{ name: "Vit B12", mrp: 990, b2b: 160 },
-{ name: "Total TFT", mrp: 495, b2b: 60 },
-{ name: "TSH", mrp: 275, b2b: 20 },
-{ name: "Free TFT", mrp: 1045, b2b: 140 },
-{ name: "CRP", mrp: 495, b2b: 150 },
-{ name: "HSCRP", mrp: 750, b2b: 175 },
-{ name: "CPK-MB", mrp: 715, b2b: 200 },
-{ name: "CPK-Total", mrp: 385, b2b: 125 },
-{ name: "Trop-I", mrp: 1200, b2b: 650 },
-{ name: "D-Dimer", mrp: 1650, b2b: 375 },
-{ name: "PT INR", mrp: 450, b2b: 105 },
-{ name: "ApTT", mrp: 418, b2b: 200 },
-{ name: "HIV", mrp: 475, b2b: 120 },
-{ name: "HCV", mrp: 935, b2b: 99 },
-{ name: "HBsAg", mrp: 450, b2b: 250 },
-{ name: "VDRL", mrp: 220, b2b: 75 },
-{ name: "Triple H", mrp: 1730, b2b: 350 },
-{ name: "Urine Culture", mrp: 950, b2b: 120 },
-{ name: "Urine Routine", mrp: 300, b2b: 100 },
-{ name: "RA Factor", mrp: 495, b2b: 200 },
-{ name: "MP", mrp: 275, b2b: 100 },
-{ name: "Widal", mrp: 330, b2b: 60 },
-{ name: "Dengue NSI", mrp: 660, b2b: 250 },
-{ name: "Dengue IGG", mrp: 660, b2b: 275 },
-{ name: "Dengue IGM", mrp: 660, b2b: 275 },
-{ name: "MP-Antigen", mrp: 700, b2b: 100 },
-{ name: "Beta HCG", mrp: 550, b2b: 160 },
-{ name: "Homocysten", mrp: 1155, b2b: 400 },
-{ name: "CA125 (Female)", mrp: 1155, b2b: 350 },
-{ name: "PSA (Male)", mrp: 935, b2b: 300 },
-{ name: "IGE", mrp: 825, b2b: 195 },
-{ name: "Trop-T", mrp: 1800, b2b: 700 },
-{ name: "Anti CCP", mrp: 1375, b2b: 385 },
-{ name: "ANA", mrp: 750, b2b: 175 },
-{ name: "Total Protien", mrp: 200, b2b: 22 },
-{ name: "Covid Antibody", mrp: 700, b2b: 270 },
-{ name: "FNAC", mrp: 1150, b2b: 330 },
-{ name: "PP Insuline", mrp: 770, b2b: 150 },
-{ name: "CEA", mrp: 715, b2b: 250 },
-{ name: "AFPL", mrp: 750, b2b: 295 },
-{ name: "Hb Electrophoresis", mrp: 600, b2b: 315 },
-{ name: "FT3", mrp: 275, b2b: 60 },
-{ name: "FT4", mrp: 300, b2b: 60 },
-{ name: "Urine Protein Creatinine Ratio", mrp: 900, b2b: 150 },
-{ name: "Protein with A/G Ratio", mrp: 400, b2b: 150 },
-{ name: "Lipase", mrp: 620, b2b: 120 },
-{ name: "Estradiol", mrp: 605, b2b: 165 },
-{ name: "PUS Culture (Aerobic)", mrp: 1455, b2b: 945 },
-{ name: "FT3 FT4", mrp: 575, b2b: 120 },
-{ name: "Fecal Calprotectin", mrp: 3630, b2b: 2340 },
-{ name: "Blood Culture 1 SE", mrp: 1045, b2b: 530 },
-{ name: "NT-Pro BNP", mrp: 3450, b2b: 2500 },
-{ name: "HBS Antigen", mrp: 450, b2b: 250 },
-{ name: "Mantoux Test", mrp: null, b2b: null },
-{ name: "Reticulate Count", mrp: 550, b2b: 20 },
-{ name: "Direct Coombs Test", mrp: 825, b2b: 160 },
-{ name: "Microalbuminuria", mrp: 800, b2b: 350 },
-{ name: "Total Testosteron", mrp: 605, b2b: 100 },
-{ name: "Free Testosteron", mrp: 1485, b2b: 340 },
-{ name: "Protein C", mrp: 5350, b2b: 2600 },
-{ name: "Protein S", mrp: 4950, b2b: 2600 },
-{ name: "Lupus Anticoagulant", mrp: 2650, b2b: 600 },
-{ name: "Fibrinogen Level", mrp: 1250, b2b: 900 },
-{ name: "Anti dsDNA NCX", mrp: 1650, b2b: 200 },
-{ name: "Apolipoprotein A-1 & B", mrp: null, b2b: null },
-{ name: "Folic Acid Level", mrp: 1045, b2b: 160 },
-{ name: "Allergy Comprehensive", mrp: null, b2b: null },
-{ name: "Maleria Antigen", mrp: 700, b2b: 100 },
-{ name: "Urine Glucose (Fasting)", mrp: 70, b2b: 25 },
-{ name: "Factor V", mrp: 7086, b2b: 4200 },
-{ name: "Ferritine", mrp: 800, b2b: 160 },
-{ name: "HAV", mrp: 880, b2b: 275 },
-{ name: "HEV", mrp: 1210, b2b: 375 },
-{ name: "RA Test", mrp: 495, b2b: 200 },
-{ name: "Iron Profile with Ferritine", mrp: null, b2b: null },
-{ name: "Allergy Drug Test", mrp: 5900, b2b: 1700 },
-{ name: "IGA TTG", mrp: 1210, b2b: 280 },
-{ name: "Peripheral Smear", mrp: 300, b2b: 100 },
-{ name: "PTT", mrp: 450, b2b: 105 },
-{ name: "Cortisol 8 AM", mrp: 605, b2b: 295 },
-{ name: "H. Pylori Stool", mrp: 1500, b2b: 1200 },
-{ name: "Chikungunya IgG", mrp: 825, b2b: 500 },
-{ name: "FBA", mrp: null, b2b: null },
-{ name: "Protein Electrophoresis", mrp: 660, b2b: 350 },
-{ name: "Sputum TB Culture & ABS", mrp: null, b2b: null },
-{ name: "Complement C3 & C4", mrp: null, b2b: null },
-{ name: "DHEAS", mrp: 1045, b2b: 275 },
-{ name: "DHEA", mrp: 2965, b2b: 2150 },
-{ name: "Torch Complex", mrp: 1430, b2b: 800 },
-{ name: "Zinc Level", mrp: 880, b2b: 460 },
-{ name: "Magnesium", mrp: 440, b2b: 50 },
-{ name: "Estrogen", mrp: null, b2b: null },
-{ name: "C-Peptide Random", mrp: null, b2b: null },
-{ name: "B2 Glycoprotein 1 IgG", mrp: 1100, b2b: 660 },
-{ name: "Karyotyping - Husband", mrp: 4400, b2b: 1500 },
-{ name: "Karyotyping - Wife", mrp: 4400, b2b: 1500 },
-{ name: "Influenza Screening for ABF", mrp: null, b2b: null },
-{ name: "PSA Free & Total", mrp: 1760, b2b: 465 },
-{ name: "LH", mrp: 495, b2b: 100 },
-{ name: "FSH", mrp: 495, b2b: 100 },
-{ name: "Semen Analysis", mrp: null, b2b: null },
-{ name: "Alkaline Phosphatase", mrp: 210, b2b: 22 },
-{ name: "Globulin", mrp: null, b2b: null },
-{ name: "BUN / Creatinine Ratio", mrp: null, b2b: null },
-{ name: "Urea/G Ratio", mrp: null, b2b: null },
-{ name: "T3", mrp: null, b2b: null },
-{ name: "T4", mrp: null, b2b: null },
-{ name: "Stool Routine", mrp: 220, b2b: 60 },
-{ name: "Albumin", mrp: null, b2b: null },
-{ name: "Billirubin Indirect", mrp: null, b2b: null },
-{ name: "Bicarbonate", mrp: null, b2b: null },
-{ name: "Amylase", mrp: null, b2b: null },
-{ name: "ACTH", mrp: 1950, b2b: 550 },
-{ name: "Throat Swab C/S", mrp: null, b2b: null },
-{ name: "ASO Titer", mrp: null, b2b: null },
-{ name: "AMH", mrp: 2142, b2b: 600 },
-{ name: "PTH ", mrp: 1450, b2b: null },
-{ name: "Apo B: Apo A1 ratio", mrp: null, b2b: null },
-{ name: "BT CT ", mrp: null, b2b: null },
-{ name: "HPV DNA", mrp: 2500, b2b: 1500 },
-{ name: "Anti tpo antibody", mrp: 1150, b2b: 600 },
-  { name: "Apolipoprotein A-1", mrp: 495, b2b: 180 },
-  { name: "Apolipoprotein B", mrp: 495, b2b: 180 },
-  { name: "Phadiatop", mrp: 1450, b2b: 1150 },
-  { name: "Prolactin", mrp: 605, b2b: 100 },
-  { name: "Progesteron", mrp: 605, b2b: 160 },
-  { name: "SPECIFIC CARDIAC PROFILE", mrp: 1500, b2b: 1000 },
-  { name: "LIPOPROTEIN", mrp: 1045, b2b: 225 },
-  { name: "H PYLORI ANTIGEN DETECTION FROM STOOL", mrp: 1500, b2b: 1200 },
-  { name: "TYPHII DOT IGM", mrp: 605, b2b: 200 },
-  { name: "Osmolarity Serum", mrp: 900, b2b: 250 },
-  { name: "Osmolarity Urine", mrp: 990, b2b: 350 },
-  { name: "Dual Marker", mrp: 2200, b2b: 500 },
-  { name: "THYPHI IgM", mrp: 605, b2b: 200 },
-{ name: "Extra Test", mrp: 0, b2b: 0 }],
-
-  lab4: [  ],
-
-lab5: [{ name: "CBC", mrp: 0, b2b: 0 },
-{ name: "Blood Group", mrp: 0, b2b: 0 },
-{ name: "ESR", mrp: 0, b2b: 0 },
-{ name: "FBS", mrp: 0, b2b: 0 },
-{ name: "PP", mrp: 0, b2b: 0 },
-{ name: "RBS", mrp: 0, b2b: 0 },
-{ name: "Fasting Insuline", mrp: 0, b2b: 0 },
-{ name: "HbA1C", mrp: 0, b2b: 0 },
-{ name: "LFT", mrp: 0, b2b: 0 },
-{ name: "Bilirubin-Total", mrp: 0, b2b: 0 },
-{ name: "Bilirubin-Direct", mrp: 0, b2b: 0 },
-{ name: "SGPT", mrp: 0, b2b: 0 },
-{ name: "SGOT", mrp: 0, b2b: 0 },
-{ name: "GGT", mrp: 0, b2b: 0 },
-{ name: "RFT", mrp: 0, b2b: 0 },
-{ name: "Creatinine", mrp: 0, b2b: 0 },
-{ name: "Urea", mrp: 0, b2b: 0 },
-{ name: "BUN", mrp: 0, b2b: 0 },
-{ name: "Uric Acid", mrp: 0, b2b: 0 },
-{ name: "Calcium", mrp: 0, b2b: 0 },
-{ name: "Lipid Profile", mrp: 0, b2b: 0 },
-{ name: "Total Cholestrol", mrp: 0, b2b: 0 },
-{ name: "HDL", mrp: 0, b2b: 0 },
-{ name: "LDL", mrp: 0, b2b: 0 },
-{ name: "LDH", mrp: 0, b2b: 0 },
-{ name: "Electrolytes", mrp: 0, b2b: 0 },
-{ name: "Sodium", mrp: 0, b2b: 0 },
-{ name: "Chlorides", mrp: 0, b2b: 0 },
-{ name: "Phosphorous", mrp: 0, b2b: 0 },
-{ name: "Potassium", mrp: 0, b2b: 0 },
-{ name: "Iron Study", mrp: 0, b2b: 0 },
-{ name: "Vit D3", mrp: 0, b2b: 0 },
-{ name: "Vit B12", mrp: 0, b2b: 0 },
-{ name: "Total TFT", mrp: 0, b2b: 0 },
-{ name: "TSH", mrp: 0, b2b: 0 },
-{ name: "Free TFT", mrp: 0, b2b: 0 },
-{ name: "CRP", mrp: 0, b2b: 0 },
-{ name: "HSCRP", mrp: 0, b2b: 0 },
-{ name: "CPK-MB", mrp: 0, b2b: 0 },
-{ name: "CPK-Total", mrp: 0, b2b: 0 },
-{ name: "Trop-I", mrp: 0, b2b: 0 },
-{ name: "D-Dimer", mrp: 0, b2b: 0 },
-{ name: "PT INR", mrp: 0, b2b: 0 },
-{ name: "ApTT", mrp: 0, b2b: 0 },
-{ name: "HIV", mrp: 0, b2b: 0 },
-{ name: "HCV", mrp: 0, b2b: 0 },
-{ name: "HBsAg", mrp: 0, b2b: 0 },
-{ name: "VDRL", mrp: 0, b2b: 0 },
-{ name: "Triple H", mrp: 0, b2b: 0 },
-{ name: "Urine Culture", mrp: 0, b2b: 0 },
-{ name: "Urine Routine", mrp: 0, b2b: 0 },
-{ name: "RA Factor", mrp: 0, b2b: 0 },
-{ name: "MP", mrp: 0, b2b: 0 },
-{ name: "Widal", mrp: 0, b2b: 0 },
-{ name: "Dengue NSI", mrp: 0, b2b: 0 },
-{ name: "Dengue IGG", mrp: 0, b2b: 0 },
-{ name: "Dengue IGM", mrp: 0, b2b: 0 },
-{ name: "MP-Antigen", mrp: 0, b2b: 0 },
-{ name: "Beta HCG", mrp: 0, b2b: 0 },
-{ name: "Homocysten", mrp: 0, b2b: 0 },
-{ name: "CA125 (Female)", mrp: 0, b2b: 0 },
-{ name: "PSA (Male)", mrp: 0, b2b: 0 },
-{ name: "IGE", mrp: 0, b2b: 0 },
-{ name: "Trop-T", mrp: 0, b2b: 0 },
-{ name: "Anti CCP", mrp: 0, b2b: 0 },
-{ name: "ANA", mrp: 0, b2b: 0 },
-{ name: "Total Protien", mrp: 0, b2b: 0 },
-{ name: "Covid Antibody", mrp: 0, b2b: 0 },
-{ name: "FNAC", mrp: 0, b2b: 0 },
-{ name: "PP Insuline", mrp: 0, b2b: 0 },
-{ name: "CEA", mrp: 0, b2b: 0 },
-{ name: "AFPL", mrp: 0, b2b: 0 },
-{ name: "Hb Electrophoresis", mrp: 0, b2b: 0 },
-{ name: "FT3", mrp: 0, b2b: 0 },
-{ name: "FT4", mrp: 0, b2b: 0 },
-{ name: "Urine Protein Creatinine Ratio", mrp: 0, b2b: 0 },
-{ name: "Protein with A/G Ratio", mrp: 0, b2b: 0 },
-{ name: "Lipase", mrp: 0, b2b: 0 },
-{ name: "Estradiol", mrp: 0, b2b: 0 },
-{ name: "PUS Culture (Aerobic)", mrp: 0, b2b: 0 },
-{ name: "FT3 FT4", mrp: 0, b2b: 0 },
-{ name: "Fecal Calprotectin", mrp: 0, b2b: 0 },
-{ name: "Blood Culture 1 SE", mrp: 0, b2b: 0 },
-{ name: "NT-Pro BNP", mrp: 0, b2b: 0 },
-{ name: "HBS Antigen", mrp: 0, b2b: 0 },
-{ name: "Mantoux Test", mrp: 0, b2b: 0 },
-{ name: "Reticulate Count", mrp: 0, b2b: 0 },
-{ name: "Direct Coombs Test", mrp: 0, b2b: 0 },
-{ name: "Microalbuminuria", mrp: 0, b2b: 0 },
-{ name: "Total Testosteron", mrp: 0, b2b: 0 },
-{ name: "Free Testosteron", mrp: 0, b2b: 0 },
-{ name: "Protein C", mrp: 0, b2b: 0 },
-{ name: "Protein S", mrp: 0, b2b: 0 },
-{ name: "Lupus Anticoagulant", mrp: 0, b2b: 0 },
-{ name: "Fibrinogen Level", mrp: 0, b2b: 0 },
-{ name: "Anti dsDNA NCX", mrp: 0, b2b: 0 },
-{ name: "Apolipoprotein A-1 & B", mrp: 0, b2b: 0 },
-{ name: "Folic Acid Level", mrp: 0, b2b: 0 },
-{ name: "Allergy Comprehensive", mrp: 0, b2b: 0 },
-{ name: "Maleria Antigen", mrp: 0, b2b: 0 },
-{ name: "Urine Glucose (Fasting)", mrp: 0, b2b: 0 },
-{ name: "Factor V", mrp: 0, b2b: 0 },
-{ name: "Ferritine", mrp: 0, b2b: 0 },
-{ name: "HAV", mrp: 0, b2b: 0 },
-{ name: "HEV", mrp: 0, b2b: 0 },
-{ name: "RA Test", mrp: 0, b2b: 0 },
-{ name: "Iron Profile with Ferritine", mrp: 0, b2b: 0 },
-{ name: "Allergy Drug Test", mrp: 0, b2b: 0 },
-{ name: "IGA TTG", mrp: 0, b2b: 0 },
-{ name: "Peripheral Smear", mrp: 0, b2b: 0 },
-{ name: "PTT", mrp: 0, b2b: 0 },
-{ name: "Cortisol 8 AM", mrp: 0, b2b: 0 },
-{ name: "H. Pylori Stool", mrp: 0, b2b: 0 },
-{ name: "Chikungunya IgG", mrp: 0, b2b: 0 },
-{ name: "FBA", mrp: 0, b2b: 0 },
-{ name: "Protein Electrophoresis", mrp: 0, b2b: 0 },
-{ name: "Sputum TB Culture & ABS", mrp: 0, b2b: 0 },
-{ name: "Complement C3 & C4", mrp: 0, b2b: 0 },
-{ name: "DHEAS", mrp: 0, b2b: 0 },
-{ name: "DHEA", mrp: 0, b2b: 0 },
-{ name: "Torch Complex", mrp: 0, b2b: 0 },
-{ name: "Zinc Level", mrp: 0, b2b: 0 },
-{ name: "Magnesium", mrp: 0, b2b: 0 },
-{ name: "Estrogen", mrp: 0, b2b: 0 },
-{ name: "C-Peptide Random", mrp: 0, b2b: 0 },
-{ name: "B2 Glycoprotein 1 IgG", mrp: 0, b2b: 0 },
-{ name: "Karyotyping - Husband", mrp: 0, b2b: 0 },
-{ name: "Karyotyping - Wife", mrp: 0, b2b: 0 },
-{ name: "Influenza Screening for ABF", mrp: 0, b2b: 0 },
-{ name: "PSA Free & Total", mrp: 0, b2b: 0 },
-{ name: "LH", mrp: 0, b2b: 0 },
-{ name: "FSH", mrp: 0, b2b: 0 },
-{ name: "Semen Analysis", mrp: 0, b2b: 0 },
-{ name: "Alkaline Phosphatase", mrp: 0, b2b: 0 },
-{ name: "Globulin", mrp: 0, b2b: 0 },
-{ name: "BUN / Creatinine Ratio", mrp: 0, b2b: 0 },
-{ name: "Urea/G Ratio", mrp: 0, b2b: 0 },
-{ name: "T3", mrp: 0, b2b: 0 },
-{ name: "T4", mrp: 0, b2b: 0 },
-{ name: "Stool Routine", mrp: 0, b2b: 0 },
-{ name: "Albumin", mrp: 0, b2b: 0 },
-{ name: "Billirubin Indirect", mrp: 0, b2b: 0 },
-{ name: "Bicarbonate", mrp: 0, b2b: 0 },
-{ name: "Amylase", mrp: 0, b2b: 0 },
-{ name: "ACTH", mrp: 0, b2b: 0 },
-{ name: "Throat Swab C/S", mrp: 0, b2b: 0 },
-{ name: "ASO Titer", mrp: 0, b2b: 0 },
-{ name: "AMH", mrp: 0, b2b: 0 },
-{ name: "PTH ", mrp: 0, b2b: 0 },
-{ name: "Apo B: Apo A1 ratio", mrp: 0, b2b: 0 },
-{ name: "BT CT ", mrp: 0, b2b: 0 },
-{ name: "HPV DNA", mrp: 0, b2b: 0 },
-{ name: "Extra Test", mrp: 0, b2b: 0 }]
-};
-
-// For backward compatibility
-const TESTS = TESTS_DATA.lab1.map(t => t.name);
-
-/* ========================= Packages Data per Lab ========================= */
-const PACKAGES = {
-  lab1: [
-    { name: "GOODNESS A1", tests: ["CBC", "FBS", "PP", "HbA1C", "Total TFT", "Iron Study", "Vit D3", "Vit B12", "Lipid Profile", "LFT", "RFT"], mrp: 2500, b2b: 1200 },
-{ name: "GOODNESS E", tests: ["FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Uric Acid", "CBC"], mrp: 1000, b2b: 450 },
-{ name: "GOODNESS G", tests: ["CBC", "FBS", "PP", "HbA1C", "Lipid Profile", "Creatinine", "Total TFT", "Uric Acid"], mrp: 1500, b2b: 550 },
-{ name: "GOODNESS BB FEMALE", tests: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "CA125 (Female)"], mrp: 3500, b2b: 1500 },
-{ name: "GOODNESS BA MALE", tests: ["CBC", "FBS", "HbA1C", "Lipid Profile", "HSCRP", "LFT", "RFT", "Fasting Insuline", "Vit B12", "Vit D3", "Total TFT", "Homocysten", "PSA (Male)"], mrp: 3500, b2b: 1400 },
-{ name: "GOODNESS C", tests: ["SGOT", "LDH", "CPK-MB", "Trop-I"], mrp: 2200, b2b: 1200 },
-{ name: "GOODNESS F", tests: ["CBC", "HbA1C", "LFT", "Lipid Profile", "RFT"], mrp: 2000, b2b: 600 },
-{ name: "GOODNESS 3H ", tests: ["HIV", "HCV", "HBsAg"], mrp: 1500, b2b: 650 },
-{ name: "FEVER PROFILE", tests: ["CBC", "ESR", "SGPT", "SGOT", "CRP", "Dengue NSI", "Maleria Antigen", "Urine Routine", "Widal"], mrp: 3000, b2b: 950 },
-{ name: "ANC PROFILE ", tests: ["CBC", "Blood Group", "FBS", "TSH", "Triple H", "VDRL", "Hb Electrophoresis", "Urine Routine"], mrp: 2100, b2b: 1890 }
-],
-  lab2: [
-  ],
-  lab3: [{ name: "GD Life A1", tests: ["Iron Study", "RFT", "CBC", "LFT", "Lipid Profile", "Total TFT"], mrp: 1400, b2b: 295 },
-{ name: "GD Life A3", tests: ["FBS", "LFT", "Lipid Profile", "TSH", "CBC", "RFT"], mrp: 1200, b2b: 230 },
-{ name: "GD Wellness 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "Vit D3", "Vit B12", "Total TFT"], mrp: 1800, b2b: 600 },
-{ name: "ALPHA WELLNESS 1.3", tests: ["Total Testosteron", "Iron Study", "LFT", "Lipid Profile", "HbA1C", "RFT", "Vit D3", "Vit B12", "CBC", "ESR", "CRP", "Total TFT"], mrp: 2150, b2b: 750 },
-{ name: "COMPREHENSIVE FULL BODY CHECKUP", tests: ["CBC", "Vit B12", "Vit D3", "HBsAg", "Urine Routine", "Peripheral Smear", "ESR", "Electrolytes", "Iron Study", "LFT", "Lipid Profile", "CRP"], mrp: 2000, b2b: 1050 },
-{ name: "GD WELLNESS 15.1", tests: ["Iron Study", "LFT", "Lipid Profile", "RFT", "Total TFT"], mrp: 1000, b2b: 550 },
-{ name: "GD LIFE - A6", tests: ["Homocysten", "Iron Study", "LFT", "Lipid Profile", "Total TFT", "HbA1C", "RFT", "Vit B12", "Vit D3"], mrp: 1800, b2b: 750 },
-{ name: "GD Health Heaven", tests: ["CBC", "HbA1C", "Iron Study", "Total TFT", "LFT", "RFT", "Vit B12", "Vit D3", "FBS", "Urine Routine", "Lipid Profile"], mrp: 2499, b2b: 650 },
-{ name: "Summer Health Package", tests: ["Iron Study", "Total TFT", "LFT", "HbA1C", "RFT", "Vit D3", "Vit B12", "Lipid Profile", "Electrolytes", "CBC", "Urine Routine"], mrp: 2000, b2b: 700 },
-{ name: "Tax Saver Health Package", tests: ["Vit D3", "Vit B12", "RA Factor", "ESR", "Electrolytes", "Iron Study", "LFT", "Lipid Profile", "Total TFT", "HbA1C", "RFT", "CBC", "HSCRP", "Apolipoprotein A-1 & B", "Apo B: Apo A1 ratio"], mrp: 2500, b2b: 950 }
-],
-  lab4: [
-  ]
-};
-
-/* ========================= Helper Functions ========================= */
-function getTubeTypesForTest(testName) {
-  return TEST_TUBE_MAPPING[testName] || [];
-}
-
-function getTubeInfo(tubeType) {
-  return TUBE_TYPES[tubeType] || { name: tubeType, displayName: tubeType, imageUrl: "https://via.placeholder.com/100x100/cccccc/ffffff?text=Unknown" };
-}
-
-function getSyringeInfo(syringeSize) {
-  return SYRINGE_TYPES[syringeSize] || { name: syringeSize, displayName: syringeSize, imageUrl: "https://via.placeholder.com/100x100/cccccc/ffffff?text=Syringe" };
-}
-
-// Calculate unique tube counts per lab (each tube type counted once per lab)
-// Then add +1 extra Fluoride tube if PP test exists in that lab
-function calculateUniqueTubeCountsPerLab(tests) {
-  const tubeSet = new Set();
-  
-  tests.forEach(test => {
-    const tubeTypes = getTubeTypesForTest(test);
-    tubeTypes.forEach(tubeType => tubeSet.add(tubeType));
-  });
-  
-  const tubeCounts = {};
-  tubeSet.forEach(tubeType => {
-    tubeCounts[tubeType] = 1;
-  });
-  
-  // Special handling for PP test: add exactly +1 additional Fluoride tube
-  if (tests.includes("PP")) {
-    if (tubeCounts["Fluoride"]) {
-      tubeCounts["Fluoride"] += 1;
-    } else {
-      tubeCounts["Fluoride"] = 1;
-    }
-  }
-  
-  return tubeCounts;
-}
-
-// Calculate total tube counts across all labs (sum per lab)
-function calculateTotalTubeCounts(labsData) {
-  const totalCounts = {};
-  
-  labsData.forEach(lab => {
-    const labCounts = calculateUniqueTubeCountsPerLab(lab.tests);
-    for (const [tubeType, count] of Object.entries(labCounts)) {
-      totalCounts[tubeType] = (totalCounts[tubeType] || 0) + count;
-    }
-  });
-  
-  return totalCounts;
-}
-
-// For backward compatibility
-const TUBES = {};
-Object.keys(TUBE_TYPES).forEach(key => {
-  TUBES[TUBE_TYPES[key].name] = { name: TUBE_TYPES[key].name };
-});
-
-const TEST_TUBE_REQUIREMENTS = {};
-Object.keys(TEST_TUBE_MAPPING).forEach(test => {
-  TEST_TUBE_REQUIREMENTS[test] = {};
-  TEST_TUBE_MAPPING[test].forEach(tubeType => {
-    TEST_TUBE_REQUIREMENTS[test][tubeType] = true;
-  });
-});
-
-const TUBE_IMAGES = {};
-Object.keys(TUBE_TYPES).forEach(key => {
-  TUBE_IMAGES[TUBE_TYPES[key].name] = TUBE_TYPES[key].imageUrl;
-});
