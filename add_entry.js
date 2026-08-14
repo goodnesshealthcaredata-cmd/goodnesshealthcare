@@ -1643,7 +1643,6 @@ function buildViewModalContent(entry) {
       <div class="view-section-title">💰 Payment Details</div>
       <div class="view-grid">
         <div class="view-item"><span class="label">Total MRP</span><span class="value currency">${formatCurrency(entry.totalMRP || 0)}</span></div>
-        <div class="view-item"><span class="label">Total B2B</span><span class="value currency">${formatCurrency(entry.totalB2B || 0)}</span></div>
         <div class="view-item"><span class="label">Final Price</span><span class="value currency">${formatCurrency(entry.finalPrice || 0)}</span></div>
         <div class="view-item"><span class="label">Cash Received</span><span class="value currency">${formatCurrency(entry.cashReceived || 0)}</span></div>
         <div class="view-item"><span class="label">Online Received</span><span class="value currency">${formatCurrency(entry.onlineReceived || 0)}</span></div>
