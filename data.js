@@ -417,7 +417,7 @@ const LAB_DATA = {
         "generalName": "Dengue NS1",
         "labName": "",
         "mrp": 800,
-        "b2b": 300
+        "b2b": 350
       },
       {
         "id": "dengue-igg",
