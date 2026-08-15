@@ -1,10 +1,4 @@
 // ============================================================
-//  add_entry.js - Complete Entry Form Logic
-//  With ImageKit Upload via Cloudflare Worker
-//  FIXED: Reliable Firebase cursor-based pagination
-// ============================================================
-
-// ============================================================
 //  FIREBASE CONFIGURATION
 // ============================================================
 const firebaseConfig = {
@@ -50,30 +44,27 @@ const visitListEl = document.getElementById('visitList');
 const visitCountEl = document.getElementById('visitCount');
 
 // ============================================================
-//  SIMPLIFIED STATE
+//  STATE
 // ============================================================
-let currentEntries = []; // Current page of lightweight patientIndex records
-let allPatientNames = []; // For autocomplete (kept lightweight)
+let currentEntries = [];
+let allPatientNames = [];
 let editTabs = new Map();
 let activeTab = 'added';
 let isPermissionError = false;
 let lastPatientKey = null;
+let isImageViewerOpen = false;
+let isViewModalOpen = false;
+let isRefreshing = false;
 
-// ============================================================
-//  PAGINATION STATE - FIXED
-// ============================================================
 let pagination = {
     page: 1,
     perPage: 25,
-    currentCursor: null,      // The cursor for the current page
-    cursorStack: [],          // Stack of cursors for Previous navigation
+    currentCursor: null,
+    cursorStack: [],
     hasNext: false,
     totalLoaded: 0
 };
 
-// ============================================================
-//  FILTER STATE (global - applies to all entries view)
-// ============================================================
 let filterState = {
   sort: 'desc',
   status: 'all',
@@ -88,9 +79,7 @@ let filterState = {
   search: ''
 };
 
-// ============================================================
-//  PER-FORM STATE MANAGEMENT (UNCHANGED)
-// ============================================================
+const formStates = new Map();
 
 function createEmptyFormState() {
   return {
@@ -109,25 +98,6 @@ function createEmptyFormState() {
   };
 }
 
-function deepCloneState(state) {
-  return {
-    selectedLabData: {
-      1: { tests: state.selectedLabData[1].tests.map(t => ({ ...t })), packages: state.selectedLabData[1].packages.map(p => ({ ...p, tests: p.tests ? p.tests.map(t => ({ ...t })) : [] })) },
-      2: { tests: state.selectedLabData[2].tests.map(t => ({ ...t })), packages: state.selectedLabData[2].packages.map(p => ({ ...p, tests: p.tests ? p.tests.map(t => ({ ...t })) : [] })) },
-      3: { tests: state.selectedLabData[3].tests.map(t => ({ ...t })), packages: state.selectedLabData[3].packages.map(p => ({ ...p, tests: p.tests ? p.tests.map(t => ({ ...t })) : [] })) },
-      4: { tests: state.selectedLabData[4].tests.map(t => ({ ...t })), packages: state.selectedLabData[4].packages.map(p => ({ ...p, tests: p.tests ? p.tests.map(t => ({ ...t })) : [] })) }
-    },
-    globalSelectedTestIds: new Set(state.globalSelectedTestIds),
-    reportsReceived: { ...state.reportsReceived },
-    activeLabId: state.activeLabId,
-    b2bVisible: state.b2bVisible,
-    images: state.images ? [...state.images] : [],
-    imageFiles: []
-  };
-}
-
-const formStates = new Map();
-
 function getFormState(formId) {
   if (!formStates.has(formId)) {
     formStates.set(formId, createEmptyFormState());
@@ -143,12 +113,18 @@ function deleteFormState(formId) {
   formStates.delete(formId);
 }
 
-function getStateForForm(formId) {
-  return getFormState(formId);
+// ============================================================
+//  HTML ESCAPE
+// ============================================================
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 // ============================================================
-//  TOAST HELPER (UNCHANGED)
+//  HELPERS
 // ============================================================
 function toast(msg, type = 'success') {
   toastEl.textContent = msg;
@@ -157,9 +133,6 @@ function toast(msg, type = 'success') {
   toastEl._timeout = setTimeout(() => toastEl.classList.remove('show'), 3000);
 }
 
-// ============================================================
-//  LOADING STATE (UNCHANGED)
-// ============================================================
 function setLoading(btn, loading = true) {
   if (loading) {
     btn.disabled = true;
@@ -170,9 +143,6 @@ function setLoading(btn, loading = true) {
   }
 }
 
-// ============================================================
-//  TEXT FORMATTING HELPERS (UNCHANGED)
-// ============================================================
 function formatName(text) {
   if (!text) return '';
   return text.split(' ').map(part => {
@@ -215,10 +185,21 @@ function parseCurrency(value) {
   return parseFloat(cleaned) || 0;
 }
 
-// ============================================================
-//  IMAGE UPLOAD FUNCTIONS (UNCHANGED)
-// ============================================================
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
+// ============================================================
+//  IMAGE UPLOAD - SINGLE EVENT HANDLER
+// ============================================================
 function compressImage(file, maxWidth = 1200, quality = 0.8) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -271,7 +252,6 @@ async function getImageKitAuth() {
 async function uploadToImageKit(file, patientId, index) {
   try {
     const auth = await getImageKitAuth();
-    
     const filename = `${patientId}_${Date.now()}_${index}.jpg`;
     
     const formData = new FormData();
@@ -295,11 +275,9 @@ async function uploadToImageKit(file, patientId, index) {
     }
     
     const result = await uploadResponse.json();
-    
     if (!result.url) {
       throw new Error('ImageKit did not return a URL');
     }
-    
     return result.url;
   } catch (err) {
     console.error('ImageKit upload error:', err);
@@ -316,7 +294,6 @@ async function uploadImagesForPatient(patientId, imageFiles, onProgress) {
       const compressedBlob = await compressImage(imageFiles[i]);
       const url = await uploadToImageKit(compressedBlob, patientId, i);
       urls.push(url);
-      
       if (onProgress) {
         const progress = Math.round(((i + 1) / total) * 100);
         onProgress(progress);
@@ -329,37 +306,60 @@ async function uploadImagesForPatient(patientId, imageFiles, onProgress) {
   return urls;
 }
 
-// ============================================================
-//  IMAGE UPLOAD UI FUNCTIONS (UNCHANGED)
-// ============================================================
+// Single image upload handler function
+function handleImageUpload(formId, event) {
+  const files = Array.from(event.target.files);
+  if (files.length === 0) return;
+
+  const state = getFormState(formId);
+  if (!state.imageFiles) state.imageFiles = [];
+  if (!state.images) state.images = [];
+
+  files.forEach(file => {
+    state.imageFiles.push(file);
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      state.images.push(evt.target.result);
+      renderImages(formId);
+      event.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 function setupImageUpload(formId) {
   const container = document.getElementById(`imageUploadContainer-${formId}`);
   if (!container) return;
 
-  const fileInput = document.getElementById(`imageFileInput-${formId}`);
+  // Find existing file input or create one
+  let fileInput = container.querySelector('input[type="file"]');
+  if (!fileInput) {
+    const uploadBox = container.querySelector('.upload-box');
+    if (!uploadBox) {
+      const box = document.createElement('div');
+      box.className = 'upload-box';
+      box.innerHTML = `
+        <span class="upload-icon">📷</span>
+        <span>Add Images</span>
+        <input type="file" accept="image/*" multiple />
+      `;
+      container.appendChild(box);
+      fileInput = box.querySelector('input[type="file"]');
+    } else {
+      fileInput = uploadBox.querySelector('input[type="file"]');
+    }
+  }
+
   if (!fileInput) return;
 
-  fileInput.addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    const state = getFormState(formId);
-    if (!state.imageFiles) state.imageFiles = [];
-    if (!state.images) state.images = [];
-
-    files.forEach(file => {
-      state.imageFiles.push(file);
-      
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        state.images.push(event.target.result);
-        renderImages(formId);
-        fileInput.value = '';
-      };
-      reader.readAsDataURL(file);
-    });
-  });
+  // Remove any existing handler and attach single handler
+  fileInput.removeEventListener('change', fileInput._uploadHandler);
+  
+  fileInput._uploadHandler = function(e) {
+    handleImageUpload(formId, e);
+  };
+  
+  fileInput.addEventListener('change', fileInput._uploadHandler);
 
   renderImages(formId);
 }
@@ -371,6 +371,7 @@ function renderImages(formId) {
   const state = getFormState(formId);
   const images = state.images || [];
 
+  // Find the upload box
   let uploadBox = container.querySelector('.upload-box');
   if (!uploadBox) {
     uploadBox = document.createElement('div');
@@ -378,34 +379,21 @@ function renderImages(formId) {
     uploadBox.innerHTML = `
       <span class="upload-icon">📷</span>
       <span>Add Images</span>
-      <input type="file" id="imageFileInput-${formId}" accept="image/*" multiple />
+      <input type="file" accept="image/*" multiple />
     `;
     container.appendChild(uploadBox);
     
     const fileInput = uploadBox.querySelector('input[type="file"]');
     if (fileInput) {
-      fileInput.addEventListener('change', function(e) {
-        const files = Array.from(e.target.files);
-        if (files.length === 0) return;
-
-        const state = getFormState(formId);
-        if (!state.imageFiles) state.imageFiles = [];
-        if (!state.images) state.images = [];
-
-        files.forEach(file => {
-          state.imageFiles.push(file);
-          const reader = new FileReader();
-          reader.onload = function(event) {
-            state.images.push(event.target.result);
-            renderImages(formId);
-            fileInput.value = '';
-          };
-          reader.readAsDataURL(file);
-        });
-      });
+      fileInput.removeEventListener('change', fileInput._uploadHandler);
+      fileInput._uploadHandler = function(e) {
+        handleImageUpload(formId, e);
+      };
+      fileInput.addEventListener('change', fileInput._uploadHandler);
     }
   }
 
+  // Remove existing thumbs (keep upload box)
   const thumbs = container.querySelectorAll('.image-thumb');
   thumbs.forEach(el => el.remove());
 
@@ -413,8 +401,8 @@ function renderImages(formId) {
     const thumb = document.createElement('div');
     thumb.className = 'image-thumb';
     thumb.innerHTML = `
-      <img src="${imgData}" alt="Uploaded image" onclick="openFullImage('${imgData}')" />
-      <button class="remove-image" data-form="${formId}" data-index="${index}">✕</button>
+      <img src="${escapeHtml(imgData)}" alt="Uploaded image" onclick="openFullImage('${escapeHtml(imgData)}')" />
+      <button class="remove-image" data-form="${escapeHtml(formId)}" data-index="${index}">✕</button>
     `;
     container.insertBefore(thumb, uploadBox);
 
@@ -429,7 +417,6 @@ function renderImages(formId) {
         if (state.imageFiles && state.imageFiles.length > index) {
           state.imageFiles.splice(index, 1);
         }
-        
         if (state.images) {
           state.images.splice(index, 1);
           renderImages(formId);
@@ -440,24 +427,16 @@ function renderImages(formId) {
 }
 
 // ============================================================
-//  FIREBASE DATA LOADING - FIXED CURSOR PAGINATION
+//  FIREBASE DATA LOADING
 // ============================================================
-
-/**
- * Load a page of patientIndex records using visitTimestamp ordering
- * This replaces the old orderByKey() approach
- */
 async function loadPatientIndexPage(pageSize = 25, startCursor = null) {
   try {
-    console.log('📄 Loading patientIndex page:', { pageSize, startCursor });
-    
     let query = db.ref('patientIndex')
       .orderByChild('visitTimestamp')
-      .limitToLast(pageSize + 1); // Get one extra to check for next page
+      .limitToLast(pageSize + 1);
     
-    // If we have a cursor, start after it
-    if (startCursor) {
-      query = query.endAt(startCursor);
+    if (startCursor && startCursor.timestamp !== undefined) {
+      query = query.endAt(startCursor.timestamp, startCursor.key);
     }
     
     const snap = await query.once('value');
@@ -467,60 +446,36 @@ async function loadPatientIndexPage(pageSize = 25, startCursor = null) {
     
     if (data) {
       const keys = Object.keys(data);
-      console.log(`📊 Found ${keys.length} records in patientIndex`);
       
-      // Sort keys by visitTimestamp (newest first)
       keys.sort((a, b) => {
         const valA = data[a].visitTimestamp || 0;
         const valB = data[b].visitTimestamp || 0;
+        if (valA === valB) {
+          return b.localeCompare(a);
+        }
         return valB - valA;
       });
       
-      // Check if we have more records
       if (keys.length > pageSize) {
         hasNext = true;
-        keys.pop(); // Remove the extra record
+        keys.pop();
       }
       
-      // Build entries with their Firebase keys
       for (const key of keys) {
         entries.push({
           ...data[key],
           _firebaseKey: key
         });
       }
-      
-      console.log(`✅ Loaded ${entries.length} entries, hasNext: ${hasNext}`);
     }
     
     return { entries, hasNext };
-    
   } catch (err) {
     handleFirebaseError(err);
     return { entries: [], hasNext: false };
   }
 }
 
-/**
- * Load a specific patientIndex record
- */
-async function loadPatientIndexRecord(patientId) {
-  try {
-    const snap = await db.ref(`patientIndex/${patientId}`).once('value');
-    const data = snap.val();
-    if (data) {
-      return { ...data, _firebaseKey: patientId };
-    }
-    return null;
-  } catch (err) {
-    handleFirebaseError(err);
-    return null;
-  }
-}
-
-/**
- * Load a full patient record (only for View/Edit)
- */
 async function loadPatientRecord(patientId) {
   try {
     const snap = await db.ref(`patients/${patientId}`).once('value');
@@ -535,98 +490,8 @@ async function loadPatientRecord(patientId) {
   }
 }
 
-// ============================================================
-//  LOAD ENTRIES - FIXED
-// ============================================================
-
-async function loadEntries() {
-  await loadEntriesPage(1);
-  await loadPatientNamesForAutocomplete();
-  
-  // Build filters UI if needed
-  if (!entriesFilters.innerHTML) {
-    buildFiltersUI();
-  }
-  populateDynamicFilters();
-  populateVisitPhlebotomistFilter();
-  renderVisitScheduleFromIndex(currentEntries);
-}
-
-/**
- * Load a specific page of entries
- */
-async function loadEntriesPage(page, perPage = pagination.perPage) {
-  try {
-    console.log(`📄 Loading page ${page} with ${perPage} entries per page`);
-    
-    // Determine cursor for this page
-    let cursor = null;
-    if (page === 1) {
-      cursor = null;
-      pagination.cursorStack = [];
-    } else if (page > 1 && page <= pagination.cursorStack.length + 1) {
-      // Use cursor from stack
-      cursor = pagination.cursorStack[page - 2] || null;
-    } else {
-      console.warn('Invalid page requested:', page);
-      return;
-    }
-    
-    // Load the page
-    const result = await loadPatientIndexPage(perPage, cursor);
-    
-    // Update state
-    currentEntries = result.entries;
-    pagination.page = page;
-    pagination.hasNext = result.hasNext;
-    pagination.perPage = perPage;
-    
-    // Store the cursor for this page if we have entries
-    if (currentEntries.length > 0) {
-      const lastEntry = currentEntries[currentEntries.length - 1];
-      pagination.currentCursor = lastEntry.visitTimestamp || 0;
-      
-      // Ensure cursorStack has entries for all pages we've loaded
-      while (pagination.cursorStack.length < page - 1) {
-        // This should not happen, but fill with zeros if needed
-        pagination.cursorStack.push(0);
-      }
-      
-      // Update cursor at the current page position
-      if (page === 1) {
-        // Page 1 doesn't need a cursor stored (we start from null)
-        pagination.cursorStack = [];
-      } else if (page - 2 >= 0) {
-        pagination.cursorStack[page - 2] = pagination.currentCursor;
-      }
-    }
-    
-    console.log(`✅ Loaded ${currentEntries.length} entries for page ${page}`);
-    if (currentEntries.length > 0) {
-      console.log('📌 First entry:', currentEntries[0].patientName, currentEntries[0].visitTimestamp);
-      console.log('📌 Last entry:', currentEntries[currentEntries.length - 1].patientName, 
-                  currentEntries[currentEntries.length - 1].visitTimestamp);
-    }
-    
-    // Render the entries
-    renderEntries(currentEntries);
-    renderVisitScheduleFromIndex(currentEntries);
-    
-    // Update filter dropdowns
-    populateDynamicFilters();
-    populateVisitPhlebotomistFilter();
-    
-  } catch (err) {
-    handleFirebaseError(err);
-  }
-}
-
-/**
- * Load patient names for autocomplete (kept lightweight)
- */
 async function loadPatientNamesForAutocomplete() {
   try {
-    // Load only the last 100 entries for autocomplete
     const query = db.ref('patientIndex')
       .orderByChild('visitTimestamp')
       .limitToLast(100);
@@ -654,25 +519,52 @@ async function loadPatientNamesForAutocomplete() {
       });
     }
     
-    console.log(`👤 Loaded ${allPatientNames.length} patient names for autocomplete`);
-    
+    allPatientNames.push({
+      name: 'Abc Xyz',
+      key: 'sample',
+      data: { patientName: 'Abc Xyz' },
+      isSample: true
+    });
   } catch (err) {
     console.warn('Could not load patient names:', err);
   }
 }
 
-// ============================================================
-//  ENTRY PROGRESS CALCULATION (UNCHANGED)
-// ============================================================
+async function searchAllPatients(searchTerm) {
+  if (!searchTerm || searchTerm.trim().length < 2) {
+    return [];
+  }
+  
+  try {
+    const searchLower = searchTerm.toLowerCase().trim();
+    const snap = await db.ref('patientIndex')
+      .orderByChild('patientNameLower')
+      .startAt(searchLower)
+      .endAt(searchLower + '\uf8ff')
+      .once('value');
+    
+    const data = snap.val();
+    const results = [];
+    if (data) {
+      for (const key of Object.keys(data)) {
+        results.push({
+          ...data[key],
+          _firebaseKey: key
+        });
+      }
+    }
+    return results;
+  } catch (err) {
+    console.warn('Search error:', err);
+    return [];
+  }
+}
 
+// ============================================================
+//  ENTRY PROGRESS
+// ============================================================
 function getEntryProgress(entry) {
-  const progress = {
-    patient: 0,
-    test: 0,
-    visit: 0,
-    report: 0,
-    payment: 0
-  };
+  const progress = { patient: 0, test: 0, visit: 0, report: 0, payment: 0 };
 
   const patientFields = ['patientName', 'age', 'gender', 'address', 'doctorName', 'careOfPerson'];
   let patientFilled = 0;
@@ -756,17 +648,20 @@ function getEntryProgress(entry) {
 }
 
 // ============================================================
-//  GET LABS FOR ENTRY (UNCHANGED)
+//  LABS
 // ============================================================
-
 function getLabsForEntry(entry) {
+  if (Array.isArray(entry.labs)) {
+    return entry.labs.map(Number).filter(n => n >= 1 && n <= 4);
+  }
+  
   const labs = [];
   if (entry.labSelections) {
     for (let labId = 1; labId <= 4; labId++) {
       const labData = entry.labSelections[labId];
       if (labData) {
-        const hasTests = (labData.tests && labData.tests.length > 0);
-        const hasPackages = (labData.packages && labData.packages.length > 0);
+        const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+        const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
         if (hasTests || hasPackages) {
           labs.push(labId);
         }
@@ -795,10 +690,57 @@ function getEntryGradientClass(entry) {
   return '';
 }
 
-// ============================================================
-//  FILTER ENTRIES - FIXED (client-side only on current page)
-// ============================================================
+function isPPSelectedForEntry(entry) {
+  if (!entry.labSelections) return false;
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = entry.labSelections[labId];
+    if (!labData) continue;
+    if (labData.tests) {
+      for (const test of labData.tests) {
+        if (test.id === 'pp' || test.generalName === 'PP') return true;
+      }
+    }
+    if (labData.packages) {
+      for (const pkg of labData.packages) {
+        if (pkg.tests) {
+          for (const test of pkg.tests) {
+            if ((test.generalName === 'PP' || test.id === 'pp') && test.selected !== false) return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
 
+function isExtraCollectionSelectedForEntry(entry) {
+  if (!entry.labSelections) return false;
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = entry.labSelections[labId];
+    if (!labData) continue;
+    if (labData.tests) {
+      for (const test of labData.tests) {
+        if (test.id === 'extra-collection' || test.generalName === 'Extra Collection') return true;
+      }
+    }
+    if (labData.packages) {
+      for (const pkg of labData.packages) {
+        if (pkg.tests) {
+          for (const test of pkg.tests) {
+            if (test.selected !== false) {
+              if (test.generalName === 'Extra Collection' || test.id === 'extra-collection') return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+// ============================================================
+//  FILTER ENTRIES
+// ============================================================
 function filterEntries(entries) {
   const status = filterState.status;
   const fromDate = filterState.fromDate;
@@ -882,19 +824,15 @@ function filterEntries(entries) {
   if (center !== 'all') {
     filtered = filtered.filter(entry => entry.center === center);
   }
-
   if (visitType !== 'all') {
     filtered = filtered.filter(entry => entry.visitType === visitType);
   }
-
   if (phlebotomist !== 'all') {
     filtered = filtered.filter(entry => entry.phlebotomist === phlebotomist);
   }
-
   if (careOfPerson !== 'all') {
     filtered = filtered.filter(entry => entry.careOfPerson === careOfPerson);
   }
-
   if (doctor !== 'all') {
     filtered = filtered.filter(entry => entry.doctorName === doctor);
   }
@@ -903,28 +841,96 @@ function filterEntries(entries) {
 }
 
 // ============================================================
-//  RENDER ENTRIES - FIXED (no double pagination)
+//  LOAD ENTRIES
 // ============================================================
+async function loadEntries() {
+  await loadEntriesPage(1);
+  await loadPatientNamesForAutocomplete();
+  
+  if (!entriesFilters.innerHTML) {
+    buildFiltersUI();
+  }
+  populateDynamicFilters();
+  populateVisitPhlebotomistFilter();
+  renderVisitScheduleFromIndex(currentEntries);
+}
 
+async function loadEntriesPage(page, perPage = pagination.perPage) {
+  try {
+    let cursor = null;
+    if (page === 1) {
+      cursor = null;
+      pagination.cursorStack = [];
+    } else if (page > 1 && page - 2 < pagination.cursorStack.length) {
+      cursor = pagination.cursorStack[page - 2];
+    } else {
+      return;
+    }
+    
+    const result = await loadPatientIndexPage(perPage, cursor);
+    
+    currentEntries = result.entries;
+    pagination.page = page;
+    pagination.hasNext = result.hasNext;
+    pagination.perPage = perPage;
+    
+    if (currentEntries.length > 0) {
+      const lastEntry = currentEntries[currentEntries.length - 1];
+      const cursorObj = {
+        timestamp: lastEntry.visitTimestamp || 0,
+        key: lastEntry._firebaseKey || ''
+      };
+      pagination.currentCursor = cursorObj;
+      
+      while (pagination.cursorStack.length < page - 1) {
+        pagination.cursorStack.push(null);
+      }
+      
+      if (page === 1) {
+        pagination.cursorStack = [];
+      } else if (page - 2 >= 0) {
+        pagination.cursorStack[page - 2] = cursorObj;
+      }
+    }
+    
+    renderEntries(currentEntries);
+    renderVisitScheduleFromIndex(currentEntries);
+    
+    populateDynamicFilters();
+    populateVisitPhlebotomistFilter();
+  } catch (err) {
+    handleFirebaseError(err);
+  }
+}
+
+// ============================================================
+//  RENDER ENTRIES
+// ============================================================
 function renderEntries(entries) {
   let filtered = filterEntries(entries);
   
-  // Sort is now handled by Firebase, but we keep it for consistency
-  // (Firebase already returns sorted by visitTimestamp desc)
   const sortDir = filterState.sort;
   if (sortDir === 'asc') {
     filtered.reverse();
   }
 
   const countEl = document.getElementById('entryCount');
-  if (countEl) countEl.textContent = filtered.length + ' Entries';
+  if (countEl) {
+    const totalOnPage = filtered.length;
+    const totalLoaded = entries.length;
+    if (pagination.hasNext) {
+      countEl.textContent = totalOnPage + ' entries on this page (showing ' + totalLoaded + ' loaded)';
+    } else {
+      countEl.textContent = totalOnPage + ' entries on this page';
+    }
+  }
 
   if (filtered.length === 0) {
     entryListEl.innerHTML = '<div class="empty-msg">No entries found on this page.</div>';
   } else {
     let html = '';
     filtered.forEach(rec => {
-      const name = rec.patientName || 'Unknown';
+      const name = escapeHtml(rec.patientName || 'Unknown');
       const gradientClass = getEntryGradientClass(rec);
       const progress = getEntryProgress(rec);
 
@@ -936,9 +942,9 @@ function renderEntries(entries) {
               <div class="patient-name">${name}</div>
             </div>
             <div class="entry-actions">
-              <button class="view-btn" data-key="${rec._firebaseKey}">👁 View</button>
-              <button class="edit-btn" data-key="${rec._firebaseKey}">✎ Edit</button>
-              <button class="del-btn" data-key="${rec._firebaseKey}">✕ Delete</button>
+              <button class="view-btn" data-key="${escapeHtml(rec._firebaseKey)}">👁 View</button>
+              <button class="edit-btn" data-key="${escapeHtml(rec._firebaseKey)}">✎ Edit</button>
+              <button class="del-btn" data-key="${escapeHtml(rec._firebaseKey)}">✕ Delete</button>
             </div>
           </div>
           <div class="entry-progress-row">
@@ -985,7 +991,6 @@ function renderEntries(entries) {
     entryListEl.innerHTML = html;
   }
 
-  // Attach event listeners
   entryListEl.querySelectorAll('.view-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
@@ -1020,11 +1025,9 @@ function renderEntries(entries) {
 }
 
 // ============================================================
-//  RENDER PAGINATION - FIXED (cursor-based)
+//  RENDER PAGINATION
 // ============================================================
-
 function renderPagination() {
-  const totalPages = pagination.cursorStack.length + 1; // Current page + stack
   const currentPage = pagination.page;
   
   let html = `
@@ -1047,7 +1050,6 @@ function renderPagination() {
 
   paginationContainer.innerHTML = html;
 
-  // Per page change
   const perPageSelect = document.getElementById('perPageSelect');
   if (perPageSelect) {
     perPageSelect.addEventListener('change', function() {
@@ -1059,33 +1061,28 @@ function renderPagination() {
     });
   }
 
-  // Previous button
   const prevBtn = paginationContainer.querySelector('.prev-btn');
   if (prevBtn) {
     prevBtn.addEventListener('click', function() {
       if (pagination.page > 1) {
-        const newPage = pagination.page - 1;
-        loadEntriesPage(newPage);
+        loadEntriesPage(pagination.page - 1);
       }
     });
   }
 
-  // Next button
   const nextBtn = paginationContainer.querySelector('.next-btn');
   if (nextBtn) {
     nextBtn.addEventListener('click', function() {
       if (pagination.hasNext) {
-        const newPage = pagination.page + 1;
-        loadEntriesPage(newPage);
+        loadEntriesPage(pagination.page + 1);
       }
     });
   }
 }
 
 // ============================================================
-//  VIEW/EDIT/DELETE FUNCTIONS (UNCHANGED)
+//  VIEW/EDIT/DELETE
 // ============================================================
-
 async function loadAndViewPatient(key) {
   const fullData = await loadPatientRecord(key);
   if (fullData) {
@@ -1100,22 +1097,16 @@ async function loadAndEditPatient(key) {
   }
 }
 
-// ============================================================
-//  DELETE PATIENT - FIXED
-// ============================================================
-
 async function deletePatient(key) {
   try {
     await db.ref('patients/' + key).remove();
     await db.ref('patientIndex/' + key).remove();
     
-    // Remove from current entries
     currentEntries = currentEntries.filter(e => e._firebaseKey !== key);
     allPatientNames = allPatientNames.filter(e => e.key !== key);
     
     toast('Entry deleted successfully.', 'success');
     
-    // If current page is empty and we have a previous page, go back
     if (currentEntries.length === 0 && pagination.page > 1) {
       loadEntriesPage(pagination.page - 1);
     } else {
@@ -1124,19 +1115,214 @@ async function deletePatient(key) {
       populateDynamicFilters();
       populateVisitPhlebotomistFilter();
     }
-    
   } catch (err) {
     handleFirebaseError(err);
   }
 }
 
 // ============================================================
-//  SAVE PATIENT - FIXED (reloads page 1 after save)
+//  SEARCH - Search Across All Entries
 // ============================================================
+let searchTimeout = null;
+
+async function performGlobalSearch(searchTerm) {
+  const searchInput = document.getElementById('filterSearch');
+  if (!searchInput) return;
+  
+  const value = searchInput.value.trim();
+  
+  if (!value || value.length < 2) {
+    filterState.search = '';
+    renderEntries(currentEntries);
+    return;
+  }
+  
+  filterState.search = value;
+  
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  
+  searchTimeout = setTimeout(async () => {
+    try {
+      const results = await searchAllPatients(value);
+      
+      if (results.length > 0) {
+        const filtered = filterEntries(results);
+        renderSearchResults(filtered, results.length);
+      } else {
+        entryListEl.innerHTML = '<div class="empty-msg">No patients found matching your search.</div>';
+        const countEl = document.getElementById('entryCount');
+        if (countEl) countEl.textContent = '0 entries found';
+      }
+    } catch (err) {
+      console.warn('Search error:', err);
+      toast('Search failed. Please try again.', 'error');
+    }
+  }, 400);
+}
+
+function renderSearchResults(entries, totalFound) {
+  const countEl = document.getElementById('entryCount');
+  if (countEl) {
+    countEl.textContent = entries.length + ' entries found (out of ' + totalFound + ' total)';
+  }
+
+  if (entries.length === 0) {
+    entryListEl.innerHTML = '<div class="empty-msg">No matching entries found.</div>';
+    return;
+  }
+
+  let html = '';
+  entries.forEach(rec => {
+    const name = escapeHtml(rec.patientName || 'Unknown');
+    const gradientClass = getEntryGradientClass(rec);
+    const progress = getEntryProgress(rec);
+
+    html += `
+      <div class="entry-item ${gradientClass}">
+        ${gradientClass.includes('gradient-multi') ? '<div class="entry-gradient-overlay gradient-multi"></div>' : ''}
+        <div class="entry-content">
+          <div class="entry-left">
+            <div class="patient-name">${name}</div>
+          </div>
+          <div class="entry-actions">
+            <button class="view-btn" data-key="${escapeHtml(rec._firebaseKey)}">👁 View</button>
+            <button class="edit-btn" data-key="${escapeHtml(rec._firebaseKey)}">✎ Edit</button>
+            <button class="del-btn" data-key="${escapeHtml(rec._firebaseKey)}">✕ Delete</button>
+          </div>
+        </div>
+        <div class="entry-progress-row">
+          <div class="entry-progress-item">
+            <span class="mini-label">Patient</span>
+            <div class="mini-bar">
+              <div class="mini-fg" style="width: ${progress.patient}%;"></div>
+            </div>
+            <span class="mini-pct">${progress.patient}%</span>
+          </div>
+          <div class="entry-progress-item">
+            <span class="mini-label">Tests</span>
+            <div class="mini-bar">
+              <div class="mini-fg" style="width: ${progress.test}%;"></div>
+            </div>
+            <span class="mini-pct">${progress.test}%</span>
+          </div>
+          <div class="entry-progress-item">
+            <span class="mini-label">Visit</span>
+            <div class="mini-bar">
+              <div class="mini-fg" style="width: ${progress.visit}%;"></div>
+            </div>
+            <span class="mini-pct">${progress.visit}%</span>
+          </div>
+          <div class="entry-progress-item">
+            <span class="mini-label">Report</span>
+            <div class="mini-bar">
+              <div class="mini-fg" style="width: ${progress.report}%;"></div>
+            </div>
+            <span class="mini-pct">${progress.report}%</span>
+          </div>
+          <div class="entry-progress-item">
+            <span class="mini-label">Payment</span>
+            <div class="mini-bar">
+              <div class="mini-fg" style="width: ${progress.payment}%;"></div>
+            </div>
+            <span class="mini-pct">${progress.payment}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  entryListEl.innerHTML = html;
+
+  entryListEl.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      loadAndViewPatient(key);
+    });
+  });
+
+  entryListEl.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      loadAndEditPatient(key);
+    });
+  });
+
+  entryListEl.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const key = this.dataset.key;
+      if (!confirm('Delete this entry?')) return;
+      await deletePatient(key);
+      performGlobalSearch(filterState.search);
+    });
+  });
+}
+
+// ============================================================
+//  SAVE PATIENT
+// ============================================================
+function createIndexData(data, key) {
+  let visitTimestamp = 0;
+  if (data.visitDate && data.visitTime) {
+    try {
+      visitTimestamp = new Date(`${data.visitDate}T${data.visitTime}:00`).getTime();
+      if (isNaN(visitTimestamp)) visitTimestamp = 0;
+    } catch (e) {
+      visitTimestamp = 0;
+    }
+  }
+  
+  const labs = [];
+  if (data.labSelections) {
+    for (let labId = 1; labId <= 4; labId++) {
+      const labData = data.labSelections[labId];
+      if (labData) {
+        const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+        const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+        if (hasTests || hasPackages) {
+          labs.push(labId);
+        }
+      }
+    }
+  }
+  
+  return {
+    patientName: data.patientName || '',
+    patientNameLower: (data.patientName || '').trim().toLowerCase(),
+    age: data.age || '',
+    gender: data.gender || '',
+    visitDate: data.visitDate || '',
+    visitTime: data.visitTime || '',
+    visitTimestamp: visitTimestamp,
+    labs: labs,
+    center: data.center || '',
+    visitType: data.visitType || '',
+    doctorName: data.doctorName || '',
+    phlebotomist: data.phlebotomist || '',
+    careOfPerson: data.careOfPerson || '',
+    ppTime: data.ppTime || '',
+    ppPhlebotomist: data.ppPhlebotomist || '',
+    extraCollectionTime: data.extraCollectionTime || '',
+    extraCollectionPhlebotomist: data.extraCollectionPhlebotomist || '',
+    visitDone: data.visitDone || false,
+    visitDoneTime: data.visitDoneTime || null,
+    ppVisitDone: data.ppVisitDone || false,
+    ppVisitDoneTime: data.ppVisitDoneTime || null,
+    extraVisitDone: data.extraVisitDone || false,
+    extraVisitDoneTime: data.extraVisitDoneTime || null,
+    finalPrice: data.finalPrice || 0,
+    hasTests: data.labSelections ? true : false
+  };
+}
 
 async function savePatient(formId, isEdit = false, existingKey = null) {
   const validation = validateForm(formId);
   if (!validation.isValid) {
+    const firstError = validation.firstError;
+    if (firstError) {
+      focusField(firstError, formId);
+    }
     toast('Please fill in all required fields.', 'error');
     return false;
   }
@@ -1158,14 +1344,11 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
     let patientId = existingKey;
     let imageUrls = [];
     
-    // Upload images to ImageKit if there are new files
     if (state.imageFiles && state.imageFiles.length > 0) {
       if (!patientId) {
         const newRef = db.ref('patients').push();
         patientId = newRef.key;
       }
-      
-      toast(`Uploading ${state.imageFiles.length} image(s) to ImageKit...`, 'info');
       
       try {
         imageUrls = await uploadImagesForPatient(patientId, state.imageFiles, (progress) => {
@@ -1174,7 +1357,6 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
           }
         });
       } catch (uploadErr) {
-        console.error('Image upload error:', uploadErr);
         toast(uploadErr.message || 'Image upload failed. Patient was not saved.', 'error');
         if (saveBtn) {
           saveBtn.disabled = false;
@@ -1187,8 +1369,6 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
         typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
       );
       data.images = [...existingImages, ...imageUrls];
-      
-      toast('Images uploaded successfully!', 'success');
     } else {
       data.images = state.images.filter(img => 
         typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
@@ -1197,43 +1377,25 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
     
     delete data.imageFiles;
     
-    if (saveBtn) {
-      saveBtn.innerHTML = '💾 Saving to database...';
-    }
-    
     if (isEdit && existingKey) {
-      // Update existing patient
       await db.ref('patients/' + existingKey).update(data);
-      
       const indexData = createIndexData(data, existingKey);
       await db.ref('patientIndex/' + existingKey).update(indexData);
-      
       toast('Entry updated successfully.', 'success');
-      
-      // Reload current page to reflect changes
       await loadEntriesPage(pagination.page);
-      
     } else {
-      // Create new patient
       if (!patientId) {
         const newRef = db.ref('patients').push();
         patientId = newRef.key;
       }
       
       await db.ref('patients/' + patientId).set(data);
-      
       const indexData = createIndexData(data, patientId);
       await db.ref('patientIndex/' + patientId).set(indexData);
-      
-      console.log('✅ Patient saved with ID:', patientId);
-      
       toast('Entry saved successfully.', 'success');
-      
-      // Reload page 1 to show the new entry at the top
       await loadEntriesPage(1);
     }
     
-    // Clear form if new entry
     if (!isEdit) {
       resetFormState(formId);
       const panel = document.getElementById(getPanelId(formId));
@@ -1266,7 +1428,6 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       updateReportMessage(formId);
     }
     
-    // Refresh autocomplete names
     await loadPatientNamesForAutocomplete();
     
     if (saveBtn) {
@@ -1274,9 +1435,8 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       saveBtn.innerHTML = saveBtn.dataset.originalText || '💾 Save Entry';
     }
     return true;
-    
   } catch (err) {
-    console.error('❌ Save error:', err);
+    console.error('Save error:', err);
     handleFirebaseError(err);
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -1286,1343 +1446,41 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
   }
 }
 
-function createIndexData(data, key) {
-  // Calculate visitTimestamp from visitDate and visitTime
-  let visitTimestamp = 0;
-  if (data.visitDate && data.visitTime) {
-    try {
-      visitTimestamp = new Date(`${data.visitDate}T${data.visitTime}:00`).getTime();
-      if (isNaN(visitTimestamp)) visitTimestamp = 0;
-    } catch (e) {
-      visitTimestamp = 0;
-    }
-  }
-  
-  return {
-    patientName: data.patientName || '',
-    patientNameLower: (data.patientName || '').trim().toLowerCase(),
-    age: data.age || '',
-    gender: data.gender || '',
-    visitDate: data.visitDate || '',
-    visitTime: data.visitTime || '',
-    visitTimestamp: visitTimestamp,
-    center: data.center || '',
-    visitType: data.visitType || '',
-    doctorName: data.doctorName || '',
-    phlebotomist: data.phlebotomist || '',
-    careOfPerson: data.careOfPerson || '',
-    ppTime: data.ppTime || '',
-    ppPhlebotomist: data.ppPhlebotomist || '',
-    extraCollectionTime: data.extraCollectionTime || '',
-    extraCollectionPhlebotomist: data.extraCollectionPhlebotomist || '',
-    visitDone: data.visitDone || false,
-    visitDoneTime: data.visitDoneTime || null,
-    ppVisitDone: data.ppVisitDone || false,
-    ppVisitDoneTime: data.ppVisitDoneTime || null,
-    extraVisitDone: data.extraVisitDone || false,
-    extraVisitDoneTime: data.extraVisitDoneTime || null,
-    finalPrice: data.finalPrice || 0,
-    hasTests: data.labSelections ? true : false
-  };
-}
-
 // ============================================================
-//  THE REST OF THE FUNCTIONS REMAIN UNCHANGED
-//  (All form, test, report, payment, visit schedule functions)
-//  They are preserved exactly as they were
+//  VALIDATION - With Section Navigation
 // ============================================================
-
-// ... [All the following functions remain exactly as they were in the original code]
-// This includes:
-// - getPatientProgress, getTestProgress, getVisitProgress, getReportProgress, getPaymentProgress
-// - updateSectionProgressBars, validateForm, calculateTotalMRP, calculateTotalB2B
-// - updatePaymentFields, handleB2BUnlock, verifyB2BPassword, isPPSelected, updatePPSection
-// - isExtraCollectionSelected, updateExtraCollectionVisibility, recalculateGlobalSelectedTests
-// - getActiveTestsWithDetails, updateReportReceivedList, handleSelectAllReports
-// - updateDeliveryStatusVisibility, updateReportMessage, copyReportMessage
-// - getVisitEntriesFromIndex, renderVisitScheduleFromIndex, renderVisitSchedule
-// - populateVisitPhlebotomistFilter, setupVisitScheduleListeners
-// - isPPSelectedForEntry, isExtraCollectionSelectedForEntry
-// - buildFiltersUI, populateDynamicFilters, clearAllFilters
-// - openViewModal, closeViewModal, openFullImage, closeFullImageView, buildViewModalContent
-// - copyViewMessage, openEditTab, closeEditTab, setupPatientAutocomplete, populatePatientDetails
-// - setupAutocomplete, addContactRow, removeContactRow, updateRemoveButtons, getContactsData, populateContacts
-// - renderLabContent, setupSearch, selectItem, refocusSearch, removeSelectedItem
-// - updatePackageTestSelection, removePackage, switchLab
-// - createSectionNavButtons, setupFormNavigation, createPatientDetailsHTML
-// - createVisitDetailsHTML, createTestDetailsHTML, createReportDetailsHTML, createPaymentDetailsHTML
-// - createNewEntryPanel, createEditPanel, switchTab, createTabButton, ensureBaseTabs
-// - setupPatientDetailsEvents
-
-// ============================================================
-//  NOTE: The following functions are preserved from the original
-//  but not fully duplicated here for brevity.
-//  In the actual implementation, they would be copied exactly.
-// ============================================================
-
-// ============================================================
-//  BUILD FILTERS UI (unchanged but needed)
-// ============================================================
-
-function buildFiltersUI() {
-  // ... (unchanged from original)
-  // This function is identical to the original version
-  // Keeping it here for completeness
-  const statusOptions = [
-    { value: 'all', label: 'All Entries' },
-    { value: 'pending', label: 'Pending Entries' },
-    { value: 'patient-pending', label: 'Patient Detail Pending' },
-    { value: 'visit-pending', label: 'Visit Detail Pending' },
-    { value: 'report-received-pending', label: 'Report Received Pending' },
-    { value: 'report-online-pending', label: 'Report Online Send Pending' },
-    { value: 'report-delivery-pending', label: 'Report Delivery Pending' },
-    { value: 'final-price-pending', label: 'Final Price Pending' },
-    { value: 'payment-pending', label: 'Payment Pending' }
-  ];
-
-  const html = `
-    <div class="entries-toolbar">
-      <div class="filter-row">
-        <div class="filter-group" style="flex:1;">
-          <input type="text" class="search-input" id="filterSearch" placeholder="Search by patient name..." value="${filterState.search}" />
-        </div>
-        <button class="refresh-btn" id="refreshBtn">⟳ Refresh</button>
-        <button class="action-btn clear-btn" id="clearFiltersBtn">✕ Clear Filters</button>
-      </div>
-
-      <div class="filter-row">
-        <div class="lab-filter-group">
-          <label style="font-weight:600;font-size:0.85rem;color:var(--text-medium);">Labs:</label>
-          ${[1,2,3,4].map(i => `
-            <label class="lab-check lab-${i}">
-              <input type="checkbox" class="lab-checkbox" data-lab="${i}" ${filterState.labs[i-1] ? 'checked' : ''} />
-              ${LAB_COLORS[i].name}
-            </label>
-          `).join('')}
-        </div>
-      </div>
-
-      <div class="filter-row">
-        <div class="filter-group">
-          <label>Sort:</label>
-          <select id="filterSort">
-            <option value="desc" ${filterState.sort === 'desc' ? 'selected' : ''}>Newest → Oldest</option>
-            <option value="asc" ${filterState.sort === 'asc' ? 'selected' : ''}>Oldest → Newest</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Status:</label>
-          <select id="filterStatus">
-            ${statusOptions.map(opt => `
-              <option value="${opt.value}" ${filterState.status === opt.value ? 'selected' : ''}>${opt.label}</option>
-            `).join('')}
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>From:</label>
-          <input type="date" class="date-input" id="filterFromDate" value="${filterState.fromDate}" />
-        </div>
-        <div class="filter-group">
-          <label>To:</label>
-          <input type="date" class="date-input" id="filterToDate" value="${filterState.toDate}" />
-        </div>
-        <div class="filter-group">
-          <label>Center:</label>
-          <select id="filterCenter">
-            <option value="all">All</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Visit Type:</label>
-          <select id="filterVisitType">
-            <option value="all">All</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Phlebotomist:</label>
-          <select id="filterPhlebotomist">
-            <option value="all">All</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Care of Person:</label>
-          <select id="filterCareOfPerson">
-            <option value="all">All</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Dr. Name:</label>
-          <select id="filterDoctor">
-            <option value="all">All</option>
-          </select>
-        </div>
-        <div class="right-controls">
-          <span class="entry-count" id="entryCount">0 Entries</span>
-        </div>
-      </div>
-    </div>
-  `;
-
-  entriesFilters.innerHTML = html;
-
-  populateDynamicFilters();
-
-  document.getElementById('filterSearch').addEventListener('input', debounce(function() {
-    filterState.search = this.value;
-    renderEntries(currentEntries);
-  }, 300));
-
-  document.getElementById('filterSort').addEventListener('change', function() {
-    filterState.sort = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('filterStatus').addEventListener('change', function() {
-    filterState.status = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('filterFromDate').addEventListener('change', function() {
-    filterState.fromDate = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('filterToDate').addEventListener('change', function() {
-    filterState.toDate = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.querySelectorAll('.lab-checkbox').forEach(cb => {
-    cb.addEventListener('change', function() {
-      const lab = parseInt(this.dataset.lab);
-      filterState.labs[lab - 1] = this.checked;
-      renderEntries(currentEntries);
-    });
-  });
-
-  document.getElementById('filterCenter').addEventListener('change', function() {
-    filterState.center = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('filterVisitType').addEventListener('change', function() {
-    filterState.visitType = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('filterPhlebotomist').addEventListener('change', function() {
-    filterState.phlebotomist = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('filterCareOfPerson').addEventListener('change', function() {
-    filterState.careOfPerson = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('filterDoctor').addEventListener('change', function() {
-    filterState.doctor = this.value;
-    renderEntries(currentEntries);
-  });
-
-  document.getElementById('clearFiltersBtn').addEventListener('click', function() {
-    clearAllFilters();
-  });
-
-  document.getElementById('refreshBtn').addEventListener('click', function() {
-    loadEntriesPage(pagination.page);
-    toast('Refreshed.', 'success');
-  });
-}
-
-// ============================================================
-//  POPULATE DYNAMIC FILTERS (unchanged)
-// ============================================================
-
-function populateDynamicFilters() {
-  const centers = new Set();
-  const visitTypes = new Set();
-  const phlebotomists = new Set();
-  const careOfPersons = new Set();
-  const doctors = new Set();
-
-  currentEntries.forEach(entry => {
-    if (entry.center) centers.add(entry.center);
-    if (entry.visitType) visitTypes.add(entry.visitType);
-    if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
-    if (entry.careOfPerson) careOfPersons.add(entry.careOfPerson);
-    if (entry.doctorName) doctors.add(entry.doctorName);
-  });
-
-  const sortOptions = (set) => Array.from(set).sort((a, b) => a.localeCompare(b));
-
-  const centerSelect = document.getElementById('filterCenter');
-  if (centerSelect) {
-    centerSelect.innerHTML = '<option value="all">All</option>';
-    sortOptions(centers).forEach(val => {
-      centerSelect.innerHTML += `<option value="${val}">${val}</option>`;
-    });
-    centerSelect.value = filterState.center;
-  }
-
-  const visitTypeSelect = document.getElementById('filterVisitType');
-  if (visitTypeSelect) {
-    visitTypeSelect.innerHTML = '<option value="all">All</option>';
-    sortOptions(visitTypes).forEach(val => {
-      visitTypeSelect.innerHTML += `<option value="${val}">${val}</option>`;
-    });
-    visitTypeSelect.value = filterState.visitType;
-  }
-
-  const phlebotomistSelect = document.getElementById('filterPhlebotomist');
-  if (phlebotomistSelect) {
-    phlebotomistSelect.innerHTML = '<option value="all">All</option>';
-    sortOptions(phlebotomists).forEach(val => {
-      phlebotomistSelect.innerHTML += `<option value="${val}">${val}</option>`;
-    });
-    phlebotomistSelect.value = filterState.phlebotomist;
-  }
-
-  const careOfPersonSelect = document.getElementById('filterCareOfPerson');
-  if (careOfPersonSelect) {
-    careOfPersonSelect.innerHTML = '<option value="all">All</option>';
-    sortOptions(careOfPersons).forEach(val => {
-      careOfPersonSelect.innerHTML += `<option value="${val}">${val}</option>`;
-    });
-    careOfPersonSelect.value = filterState.careOfPerson;
-  }
-
-  const doctorSelect = document.getElementById('filterDoctor');
-  if (doctorSelect) {
-    doctorSelect.innerHTML = '<option value="all">All</option>';
-    sortOptions(doctors).forEach(val => {
-      doctorSelect.innerHTML += `<option value="${val}">${val}</option>`;
-    });
-    doctorSelect.value = filterState.doctor;
-  }
-}
-
-function clearAllFilters() {
-  filterState.status = 'all';
-  filterState.fromDate = '';
-  filterState.toDate = '';
-  filterState.labs = [true, true, true, true];
-  filterState.center = 'all';
-  filterState.visitType = 'all';
-  filterState.phlebotomist = 'all';
-  filterState.careOfPerson = 'all';
-  filterState.doctor = 'all';
-  filterState.search = '';
-
-  const searchEl = document.getElementById('filterSearch');
-  if (searchEl) searchEl.value = '';
-
-  const statusEl = document.getElementById('filterStatus');
-  if (statusEl) statusEl.value = 'all';
-
-  const fromDateEl = document.getElementById('filterFromDate');
-  if (fromDateEl) fromDateEl.value = '';
-
-  const toDateEl = document.getElementById('filterToDate');
-  if (toDateEl) toDateEl.value = '';
-
-  document.querySelectorAll('.lab-checkbox').forEach(cb => {
-    cb.checked = true;
-  });
-
-  populateDynamicFilters();
-  renderEntries(currentEntries);
-  toast('All filters cleared.', 'success');
-}
-
-// ============================================================
-//  VISIT SCHEDULE FUNCTIONS (unchanged)
-// ============================================================
-
-function getVisitEntriesFromIndex(indexData) {
-  const visits = [];
+function focusField(fieldName, formId) {
+  const el = document.getElementById(fieldName + '-' + formId);
+  if (!el) return;
   
-  indexData.forEach(entry => {
-    const patientName = entry.patientName || 'Unknown';
-    const visitDate = entry.visitDate || '';
-    const visitTime = entry.visitTime || '00:00';
-    const phlebotomist = entry.phlebotomist || '';
-    const labs = getLabsForEntry(entry);
-    const gradientClass = getEntryGradientClass(entry);
-    
-    visits.push({
-      entryKey: entry._firebaseKey,
-      patientName: patientName,
-      visitDate: visitDate,
-      visitTime: visitTime,
-      phlebotomist: phlebotomist,
-      visitType: 'main',
-      visitTypeLabel: 'Main Visit',
-      isDone: entry.visitDone || false,
-      doneTime: entry.visitDoneTime || null,
-      gradientClass: gradientClass,
-      labs: labs
-    });
-    
-    if (entry.ppTime) {
-      visits.push({
-        entryKey: entry._firebaseKey,
-        patientName: patientName + ' (PP)',
-        visitDate: visitDate,
-        visitTime: entry.ppTime || '12:00',
-        phlebotomist: entry.ppPhlebotomist || '',
-        visitType: 'pp',
-        visitTypeLabel: 'PP Visit',
-        isDone: entry.ppVisitDone || false,
-        doneTime: entry.ppVisitDoneTime || null,
-        gradientClass: gradientClass,
-        labs: labs
-      });
-    }
-    
-    if (entry.extraCollectionTime) {
-      visits.push({
-        entryKey: entry._firebaseKey,
-        patientName: patientName + ' (Extra)',
-        visitDate: visitDate,
-        visitTime: entry.extraCollectionTime || '12:00',
-        phlebotomist: entry.extraCollectionPhlebotomist || '',
-        visitType: 'extra',
-        visitTypeLabel: 'Extra Collection',
-        isDone: entry.extraVisitDone || false,
-        doneTime: entry.extraVisitDoneTime || null,
-        gradientClass: gradientClass,
-        labs: labs
-      });
-    }
-  });
+  const panel = document.getElementById('panel-' + formId);
+  if (!panel) return;
   
-  return visits;
-}
-
-function renderVisitScheduleFromIndex(indexData) {
-  let visits = getVisitEntriesFromIndex(indexData);
-  
-  const searchQuery = document.getElementById('visitSearch')?.value?.toLowerCase().trim() || '';
-  const dateFilter = document.getElementById('visitDateFilter')?.value || '';
-  const phlebotomistFilter = document.getElementById('visitPhlebotomistFilter')?.value || 'all';
-  const statusFilter = document.getElementById('visitStatusFilter')?.value || 'all';
-  
-  if (searchQuery) {
-    visits = visits.filter(v => v.patientName.toLowerCase().includes(searchQuery));
+  let sectionId = 'patient';
+  if (fieldName === 'visitDate') {
+    sectionId = 'visit';
   }
   
-  if (dateFilter) {
-    visits = visits.filter(v => v.visitDate === dateFilter);
+  const navBtn = panel.querySelector('.section-nav-btn[data-section="' + sectionId + '"]');
+  if (navBtn) {
+    navBtn.click();
   }
   
-  if (phlebotomistFilter !== 'all') {
-    visits = visits.filter(v => v.phlebotomist === phlebotomistFilter);
-  }
-  
-  if (statusFilter === 'done') {
-    visits = visits.filter(v => v.isDone === true);
-  } else if (statusFilter === 'pending') {
-    visits = visits.filter(v => v.isDone !== true);
-  }
-  
-  visits.sort((a, b) => {
-    return a.visitTime.localeCompare(b.visitTime);
-  });
-  
-  if (visitCountEl) {
-    visitCountEl.textContent = visits.length + ' Visits';
-  }
-  
-  if (visits.length === 0) {
-    visitListEl.innerHTML = '<div class="empty-msg">No visits found for the selected filters.</div>';
-    return;
-  }
-  
-  let html = '';
-  visits.forEach(visit => {
-    const isDone = visit.isDone;
-    const doneClass = isDone ? 'done' : '';
-    const gradientClass = visit.gradientClass || '';
-    const visitTypeClass = visit.visitType === 'pp' ? 'pp' : visit.visitType === 'extra' ? 'extra' : 'main';
-    
-    html += `
-      <div class="visit-item ${doneClass} ${gradientClass}">
-        <div class="visit-content">
-          <div class="visit-left">
-            <div class="visit-patient-name">${visit.patientName}</div>
-            <div class="visit-details">
-              <span>📅 ${visit.visitDate || 'No date'}</span>
-              <span>🕐 ${visit.visitTime || 'No time'}</span>
-              <span class="visit-type-badge ${visitTypeClass}">${visit.visitTypeLabel}</span>
-              ${visit.phlebotomist ? `<span>👤 ${visit.phlebotomist}</span>` : ''}
-              ${isDone && visit.doneTime ? `<span class="visit-done-time">✅ Done at ${visit.doneTime}</span>` : ''}
-            </div>
-          </div>
-          <div class="visit-actions">
-            <div class="visit-done-checkbox">
-              <input type="checkbox" class="visit-done-check" data-key="${visit.entryKey}" data-type="${visit.visitType}" ${isDone ? 'checked' : ''} />
-              <span>Done</span>
-            </div>
-            <button class="view-btn" data-key="${visit.entryKey}">👁 View</button>
-            <button class="edit-btn" data-key="${visit.entryKey}">✎ Edit</button>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  
-  visitListEl.innerHTML = html;
-  
-  visitListEl.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const key = this.dataset.key;
-      const rec = currentEntries.find(e => e._firebaseKey === key);
-      if (rec) {
-        loadAndViewPatient(key);
-      }
-    });
-  });
-  
-  visitListEl.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const key = this.dataset.key;
-      const rec = currentEntries.find(e => e._firebaseKey === key);
-      if (rec) {
-        loadAndEditPatient(key);
-      }
-    });
-  });
-  
-  visitListEl.querySelectorAll('.visit-done-check').forEach(cb => {
-    cb.addEventListener('change', function() {
-      const key = this.dataset.key;
-      const visitType = this.dataset.type;
-      const entry = currentEntries.find(e => e._firebaseKey === key);
-      if (!entry) return;
-      
-      const isChecked = this.checked;
-      const action = isChecked ? 'mark as done' : 'mark as pending';
-      
-      if (confirm(`Are you sure you want to ${action} this visit?`)) {
-        updateVisitStatusFromIndex(entry, visitType, isChecked);
-      } else {
-        this.checked = !isChecked;
-      }
-    });
-  });
+  setTimeout(() => {
+    el.focus();
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('input-error');
+  }, 100);
 }
-
-async function updateVisitStatusFromIndex(entry, visitType, isDone) {
-  const now = new Date();
-  const doneTime = now.toLocaleString('en-IN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-  
-  const updates = {};
-  const indexUpdates = {};
-  
-  if (visitType === 'main') {
-    updates['visitDone'] = isDone;
-    updates['visitDoneTime'] = isDone ? doneTime : null;
-    indexUpdates['visitDone'] = isDone;
-    indexUpdates['visitDoneTime'] = isDone ? doneTime : null;
-  } else if (visitType === 'pp') {
-    updates['ppVisitDone'] = isDone;
-    updates['ppVisitDoneTime'] = isDone ? doneTime : null;
-    indexUpdates['ppVisitDone'] = isDone;
-    indexUpdates['ppVisitDoneTime'] = isDone ? doneTime : null;
-  } else if (visitType === 'extra') {
-    updates['extraVisitDone'] = isDone;
-    updates['extraVisitDoneTime'] = isDone ? doneTime : null;
-    indexUpdates['extraVisitDone'] = isDone;
-    indexUpdates['extraVisitDoneTime'] = isDone ? doneTime : null;
-  }
-  
-  try {
-    await db.ref('patients/' + entry._firebaseKey).update(updates);
-    await db.ref('patientIndex/' + entry._firebaseKey).update(indexUpdates);
-    
-    Object.keys(indexUpdates).forEach(key => {
-      entry[key] = indexUpdates[key];
-    });
-    
-    toast(`Visit ${isDone ? 'marked as done' : 'marked as pending'}`, 'success');
-    renderVisitScheduleFromIndex(currentEntries);
-  } catch (err) {
-    handleFirebaseError(err);
-  }
-}
-
-function renderVisitSchedule() {
-  renderVisitScheduleFromIndex(currentEntries);
-}
-
-function populateVisitPhlebotomistFilter() {
-  const select = document.getElementById('visitPhlebotomistFilter');
-  if (!select) return;
-  
-  const phlebotomists = new Set();
-  currentEntries.forEach(entry => {
-    if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
-    if (entry.ppPhlebotomist) phlebotomists.add(entry.ppPhlebotomist);
-    if (entry.extraCollectionPhlebotomist) phlebotomists.add(entry.extraCollectionPhlebotomist);
-  });
-  
-  const sorted = Array.from(phlebotomists).sort();
-  const currentValue = select.value;
-  
-  select.innerHTML = '<option value="all">All</option>';
-  sorted.forEach(name => {
-    select.innerHTML += `<option value="${name}">${name}</option>`;
-  });
-  
-  if (currentValue && sorted.includes(currentValue)) {
-    select.value = currentValue;
-  }
-}
-
-function setupVisitScheduleListeners() {
-  const searchInput = document.getElementById('visitSearch');
-  if (searchInput) {
-    searchInput.addEventListener('input', debounce(() => {
-      renderVisitScheduleFromIndex(currentEntries);
-    }, 300));
-  }
-  
-  const dateFilter = document.getElementById('visitDateFilter');
-  if (dateFilter) {
-    const today = new Date().toISOString().split('T')[0];
-    dateFilter.value = today;
-    dateFilter.addEventListener('change', () => {
-      renderVisitScheduleFromIndex(currentEntries);
-    });
-  }
-  
-  const phlebotomistFilter = document.getElementById('visitPhlebotomistFilter');
-  if (phlebotomistFilter) {
-    phlebotomistFilter.addEventListener('change', () => {
-      renderVisitScheduleFromIndex(currentEntries);
-    });
-  }
-  
-  const statusFilter = document.getElementById('visitStatusFilter');
-  if (statusFilter) {
-    statusFilter.addEventListener('change', () => {
-      renderVisitScheduleFromIndex(currentEntries);
-    });
-  }
-  
-  const refreshBtn = document.getElementById('refreshVisitsBtn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', function() {
-      loadEntriesPage(pagination.page);
-      toast('Visit schedule refreshed.', 'success');
-    });
-  }
-}
-
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-function isPPSelectedForEntry(entry) {
-  if (!entry.labSelections) return false;
-  for (let labId = 1; labId <= 4; labId++) {
-    const labData = entry.labSelections[labId];
-    if (!labData) continue;
-    if (labData.tests) {
-      for (const test of labData.tests) {
-        if (test.id === 'pp' || test.generalName === 'PP') return true;
-      }
-    }
-    if (labData.packages) {
-      for (const pkg of labData.packages) {
-        if (pkg.tests) {
-          for (const test of pkg.tests) {
-            if ((test.generalName === 'PP' || test.id === 'pp') && test.selected !== false) return true;
-          }
-        }
-      }
-    }
-  }
-  return false;
-}
-
-function isExtraCollectionSelectedForEntry(entry) {
-  if (!entry.labSelections) return false;
-  for (let labId = 1; labId <= 4; labId++) {
-    const labData = entry.labSelections[labId];
-    if (!labData) continue;
-    if (labData.tests) {
-      for (const test of labData.tests) {
-        if (test.id === 'extra-collection' || test.generalName === 'Extra Collection') return true;
-      }
-    }
-    if (labData.packages) {
-      for (const pkg of labData.packages) {
-        if (pkg.tests) {
-          for (const test of pkg.tests) {
-            if (test.selected !== false) {
-              if (test.generalName === 'Extra Collection' || test.id === 'extra-collection') return true;
-            }
-          }
-        }
-      }
-    }
-  }
-  return false;
-}
-
-// ============================================================
-//  FIREBASE ERROR HANDLING (unchanged)
-// ============================================================
-
-function handleFirebaseError(err) {
-  if (err.code === 'PERMISSION_DENIED' || err.message.includes('permission_denied')) {
-    isPermissionError = true;
-    rulesBanner.classList.add('show');
-    toast('Permission denied. Please update Firebase rules.', 'error');
-  } else {
-    toast('Error: ' + err.message, 'error');
-  }
-}
-
-// ============================================================
-//  VIEW MODAL FUNCTIONS (unchanged)
-// ============================================================
-
-function openViewModal(entry) {
-  viewModalBody.innerHTML = buildViewModalContent(entry);
-  viewModalOverlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeViewModal() {
-  viewModalOverlay.classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-function openFullImage(src) {
-  fullImage.src = src;
-  viewImageFull.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeFullImageView() {
-  viewImageFull.classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    if (viewImageFull.classList.contains('active')) {
-      closeFullImageView();
-    }
-    if (viewModalOverlay.classList.contains('active')) {
-      closeViewModal();
-    }
-  }
-});
-
-closeFullImage.addEventListener('click', closeFullImageView);
-viewImageFull.addEventListener('click', function(e) {
-  if (e.target === this) closeFullImageView();
-});
-
-function buildViewModalContent(entry) {
-  // This function is identical to the original version
-  // Keeping it here for completeness
-  let html = '';
-
-  html += `
-    <div class="view-section">
-      <div class="view-section-title">👤 Patient Details</div>
-      <div class="view-grid">
-        <div class="view-item"><span class="label">Patient Name</span><span class="value">${entry.patientName || '—'}</span></div>
-        <div class="view-item"><span class="label">Age</span><span class="value">${entry.age || '—'}</span></div>
-        <div class="view-item"><span class="label">Gender</span><span class="value">${entry.gender || '—'}</span></div>
-        <div class="view-item"><span class="label">Doctor</span><span class="value">${entry.doctorName || '—'}</span></div>
-        <div class="view-item"><span class="label">Care of Person</span><span class="value">${entry.careOfPerson || '—'}</span></div>
-        <div class="view-item full-width"><span class="label">Address</span><span class="value" style="white-space:pre-wrap;">${entry.address || '—'}</span></div>
-  `;
-
-  if (entry.contacts && entry.contacts.length > 0) {
-    html += `<div class="view-item full-width"><span class="label">Contacts</span><span class="value">`;
-    entry.contacts.forEach((c, i) => {
-      html += `${c.name || ''} ${c.number ? '(' + c.number + ')' : ''}`;
-      if (i < entry.contacts.length - 1) html += ', ';
-    });
-    html += `</span></div>`;
-  }
-
-  if (entry.additionalInformation) {
-    html += `<div class="view-item full-width"><span class="label">Additional Info</span><span class="value" style="white-space:pre-wrap;">${entry.additionalInformation}</span></div>`;
-  }
-
-  if (entry.images && entry.images.length > 0) {
-    html += `<div class="view-item full-width"><span class="label">Images</span><div class="view-image-gallery">`;
-    entry.images.forEach(img => {
-      html += `<img src="${img}" class="view-image-thumb" onclick="openFullImage('${img}')" />`;
-    });
-    html += `</div></div>`;
-  }
-
-  html += `</div></div>`;
-
-  html += `
-    <div class="view-section">
-      <div class="view-section-title">🧪 Test Details</div>
-  `;
-
-  let hasTests = false;
-  for (let labId = 1; labId <= 4; labId++) {
-    const labData = entry.labSelections ? entry.labSelections[labId] : null;
-    if (!labData) continue;
-    const hasTestsInLab = (labData.tests && labData.tests.length > 0) || 
-                          (labData.packages && labData.packages.length > 0);
-    if (!hasTestsInLab) continue;
-    hasTests = true;
-
-    const color = LAB_COLORS[labId];
-    html += `
-      <div class="view-subsection" style="border-left: 3px solid ${color.border};">
-        <div class="sub-title" style="color: ${color.text};">${color.name}</div>
-    `;
-
-    if (labData.tests && labData.tests.length > 0) {
-      html += `<div style="margin-bottom: 4px;"><strong>Tests:</strong> `;
-      labData.tests.forEach(test => {
-        html += `<span class="test-chip">${test.generalName} <span style="font-weight:500;">₹${test.mrp}</span></span>`;
-      });
-      html += `</div>`;
-    }
-
-    if (labData.packages && labData.packages.length > 0) {
-      labData.packages.forEach(pkg => {
-        html += `<div style="margin-top: 6px;"><strong>📦 ${pkg.packageName}</strong> <span style="font-weight:500;">₹${pkg.mrp}</span>`;
-        if (pkg.tests && pkg.tests.length > 0) {
-          html += `<div style="font-size:0.8rem;color:var(--text-light);margin-top:2px;">`;
-          pkg.tests.forEach(t => {
-            html += `<span class="test-chip" style="font-size:0.7rem;">${t.generalName} ${t.selected !== false ? '✓' : ''}</span>`;
-          });
-          html += `</div>`;
-        }
-        html += `</div>`;
-      });
-    }
-
-    html += `</div>`;
-  }
-
-  if (!hasTests) {
-    html += `<div class="empty-state">No tests or packages selected.</div>`;
-  }
-
-  html += `</div>`;
-
-  html += `
-    <div class="view-section">
-      <div class="view-section-title">📋 Visit Details</div>
-      <div class="view-grid">
-        <div class="view-item"><span class="label">Center</span><span class="value">${entry.center || '—'}</span></div>
-        <div class="view-item"><span class="label">Visit Type</span><span class="value">${entry.visitType || '—'}</span></div>
-        <div class="view-item"><span class="label">Visit Date</span><span class="value">${entry.visitDate || '—'}</span></div>
-        <div class="view-item"><span class="label">Visit Time</span><span class="value">${entry.visitTime || '—'}</span></div>
-        <div class="view-item"><span class="label">Phlebotomist</span><span class="value">${entry.phlebotomist || '—'}</span></div>
-  `;
-
-  if (isPPSelectedForEntry(entry)) {
-    html += `
-      <div class="view-item"><span class="label">PP Time</span><span class="value">${entry.ppTime || '—'}</span></div>
-      <div class="view-item"><span class="label">PP Phlebotomist</span><span class="value">${entry.ppPhlebotomist || '—'}</span></div>
-    `;
-  }
-
-  if (isExtraCollectionSelectedForEntry(entry)) {
-    html += `
-      <div class="view-item"><span class="label">Extra Collection Time</span><span class="value">${entry.extraCollectionTime || '—'}</span></div>
-      <div class="view-item"><span class="label">Extra Collection Phlebotomist</span><span class="value">${entry.extraCollectionPhlebotomist || '—'}</span></div>
-    `;
-  }
-
-  html += `</div></div>`;
-
-  html += `
-    <div class="view-section">
-      <div class="view-section-title">📄 Report Details</div>
-      <div class="view-grid">
-        <div class="view-item"><span class="label">Online Report Required</span><span class="value">${entry.onlineReportRequired ? '✅ Yes' : '❌ No'}</span></div>
-        <div class="view-item"><span class="label">Report Delivery Required</span><span class="value">${entry.reportDeliveryRequired ? '✅ Yes' : '❌ No'}</span></div>
-        <div class="view-item"><span class="label">Bill Delivery Required</span><span class="value">${entry.billDeliveryRequired ? '✅ Yes' : '❌ No'}</span></div>
-  `;
-
-  if (entry.onlineReportRequired) {
-    html += `<div class="view-item"><span class="label">Online Report Sent</span><span class="value">${entry.onlineReportSent ? '✅ Yes' : '❌ No'}</span></div>`;
-  }
-  if (entry.reportDeliveryRequired) {
-    html += `<div class="view-item"><span class="label">Report Delivered</span><span class="value">${entry.reportDelivered ? '✅ Yes' : '❌ No'}</span></div>`;
-  }
-  if (entry.billDeliveryRequired) {
-    html += `<div class="view-item"><span class="label">Bill Delivered</span><span class="value">${entry.billDelivered ? '✅ Yes' : '❌ No'}</span></div>`;
-  }
-
-  if (entry.reportsReceived) {
-    const receivedKeys = Object.keys(entry.reportsReceived);
-    if (receivedKeys.length > 0) {
-      html += `<div class="view-item full-width"><span class="label">Reports Received</span><span class="value">`;
-      receivedKeys.forEach(key => {
-        const isReceived = entry.reportsReceived[key];
-        html += `<span class="test-chip">${key} ${isReceived ? '✅' : '❌'}</span>`;
-      });
-      html += `</span></div>`;
-    }
-  }
-
-  html += `</div></div>`;
-
-  html += `
-    <div class="view-section">
-      <div class="view-section-title">💰 Payment Details</div>
-      <div class="view-grid">
-        <div class="view-item"><span class="label">Total MRP</span><span class="value currency">${formatCurrency(entry.totalMRP || 0)}</span></div>
-        <div class="view-item"><span class="label">Final Price</span><span class="value currency">${formatCurrency(entry.finalPrice || 0)}</span></div>
-        <div class="view-item"><span class="label">Cash Received</span><span class="value currency">${formatCurrency(entry.cashReceived || 0)}</span></div>
-        <div class="view-item"><span class="label">Online Received</span><span class="value currency">${formatCurrency(entry.onlineReceived || 0)}</span></div>
-        <div class="view-item"><span class="label">Pending Payment</span><span class="value currency">${formatCurrency(entry.pendingPayment || 0)}</span></div>
-  `;
-
-  if (entry.careOfPerson && entry.careOfPerson.toLowerCase() !== 'none') {
-    html += `<div class="view-item"><span class="label">Goodwill Charges</span><span class="value currency">${formatCurrency(entry.goodwillCharges || 0)}</span></div>`;
-  }
-
-  html += `</div></div>`;
-
-  if (entry.patientName) {
-    html += `
-      <div class="view-section">
-        <div class="view-section-title">📧 Report Message</div>
-        <div class="report-message-container" style="background: var(--bg-light); border-radius: var(--radius-sm); padding: 16px 20px;">
-          <div class="report-message" style="white-space:pre-wrap; font-size:0.85rem; color:var(--text-dark); line-height:1.8;">Hello,
-
-Please find attached the test report for ${entry.patientName}.
- 
-Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
- 
-Wishing you and your family good health!
- 
-Thank you.</div>
-          <button class="copy-msg-btn" style="margin-top:12px; background:var(--primary); color:white; border:none; padding:4px 16px; border-radius:30px; font-size:0.75rem; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif;" onclick="copyViewMessage('${entry.patientName}')">📋 Copy Message</button>
-        </div>
-      </div>
-    `;
-  }
-
-  return html;
-}
-
-function copyViewMessage(patientName) {
-  const message = `Hello,
-
-Please find attached the test report for ${patientName}.
- 
-Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
- 
-Wishing you and your family good health!
- 
-Thank you.`;
-
-  navigator.clipboard.writeText(message).then(() => {
-    toast('Message copied to clipboard!', 'success');
-  }).catch(() => {
-    const textarea = document.createElement('textarea');
-    textarea.value = message;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    textarea.remove();
-    toast('Message copied to clipboard!', 'success');
-  });
-}
-
-// ============================================================
-//  OPEN EDIT TAB (unchanged)
-// ============================================================
-
-function openEditTab(key, data) {
-  if (editTabs.has(key)) {
-    switchTab('edit-' + key);
-    return;
-  }
-
-  const name = data.patientName || 'Patient';
-  editTabs.set(key, { name });
-
-  createEditPanel(key, data);
-  ensureBaseTabs();
-  switchTab('edit-' + key);
-}
-
-function closeEditTab(tabId) {
-  const key = tabId.replace('edit-', '');
-  if (!editTabs.has(key)) return;
-
-  editTabs.delete(key);
-  deleteFormState(tabId);
-  
-  const panel = document.getElementById('panel-' + tabId);
-  if (panel) panel.remove();
-
-  ensureBaseTabs();
-
-  if (editTabs.size === 0) {
-    switchTab('added');
-  } else {
-    const firstKey = editTabs.keys().next().value;
-    switchTab('edit-' + firstKey);
-  }
-}
-
-// ============================================================
-//  CREATE EDIT PANEL (unchanged)
-// ============================================================
-
-function createEditPanel(key, data) {
-  // This function is identical to the original version
-  // Keeping it here for completeness
-  const formId = 'edit-' + key;
-  const panelId = getPanelId(formId);
-
-  data = JSON.parse(JSON.stringify(data));
-
-  const existingPanel = document.getElementById(panelId);
-  if (existingPanel) {
-    existingPanel.remove();
-  }
-
-  const panel = document.createElement('div');
-  panel.className = 'panel';
-  panel.id = panelId;
-  panel.dataset.panel = formId;
-
-  panel.innerHTML = `
-    <div class="form-layout">
-      <div class="section-nav">
-        ${createSectionNavButtons(formId)}
-      </div>
-      <div class="section-content">
-        <div class="form-section active-section-content" data-section="patient">
-          <h3>Patient Details</h3>
-          ${createPatientDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="test">
-          <h3>Test Details</h3>
-          ${createTestDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="visit">
-          <h3>Visit Details</h3>
-          ${createVisitDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="report">
-          <h3>Report Details</h3>
-          ${createReportDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="payment">
-          <h3>Payment Details</h3>
-          ${createPaymentDetailsHTML(formId)}
-        </div>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button class="btn-clear" id="clearBtn-${formId}">Reset</button>
-      <button class="btn-save" id="saveBtn-${formId}" data-original-text="💾 Update Entry">💾 Update Entry</button>
-    </div>
-  `;
-
-  const addedPanel = document.getElementById('panel-added');
-  addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
-
-  formStates.set(formId, createEmptyFormState());
-  
-  populateForm(formId, data);
-
-  setupFormNavigation(formId);
-  setupPatientDetailsEvents(formId);
-
-  const clearBtn = document.getElementById('clearBtn-' + formId);
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      if (confirm('Reset all fields in this edit form?')) {
-        resetFormState(formId);
-        populateForm(formId, data);
-      }
-    });
-  }
-
-  const saveBtn = document.getElementById('saveBtn-' + formId);
-  if (saveBtn) {
-    saveBtn.addEventListener('click', async function() {
-      await savePatient(formId, true, key);
-    });
-  }
-
-  return panel;
-}
-
-// ============================================================
-//  CREATE NEW ENTRY PANEL (unchanged)
-// ============================================================
-
-function createNewEntryPanel() {
-  // This function is identical to the original version
-  // Keeping it here for completeness
-  const formId = 'new';
-  const panelId = getPanelId(formId);
-
-  const existingPanel = document.getElementById(panelId);
-  if (existingPanel) {
-    existingPanel.remove();
-  }
-
-  const panel = document.createElement('div');
-  panel.className = 'panel';
-  panel.id = panelId;
-  panel.dataset.panel = formId;
-
-  panel.innerHTML = `
-    <div class="form-layout">
-      <div class="section-nav">
-        ${createSectionNavButtons(formId)}
-      </div>
-      <div class="section-content">
-        <div class="form-section active-section-content" data-section="patient">
-          <h3>Patient Details</h3>
-          ${createPatientDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="test">
-          <h3>Test Details</h3>
-          ${createTestDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="visit">
-          <h3>Visit Details</h3>
-          ${createVisitDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="report">
-          <h3>Report Details</h3>
-          ${createReportDetailsHTML(formId)}
-        </div>
-
-        <div class="form-section" data-section="payment">
-          <h3>Payment Details</h3>
-          ${createPaymentDetailsHTML(formId)}
-        </div>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button class="btn-clear" id="clearBtn-${formId}">Clear</button>
-      <button class="btn-save" id="saveBtn-${formId}" data-original-text="💾 Save Entry">💾 Save Entry</button>
-    </div>
-  `;
-
-  const addedPanel = document.getElementById('panel-added');
-  addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
-
-  formStates.set('new', createEmptyFormState());
-
-  setupFormNavigation(formId);
-  setupPatientDetailsEvents(formId);
-
-  const clearBtn = document.getElementById('clearBtn-' + formId);
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      if (confirm('Clear all entered data?')) {
-        resetFormState(formId);
-        const panel = document.getElementById(getPanelId(formId));
-        if (panel) {
-          panel.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.id && el.id.includes('-' + formId)) {
-              if (el.type === 'checkbox') {
-                el.checked = false;
-              } else if (el.type !== 'button' && el.type !== 'submit') {
-                el.value = '';
-              }
-            }
-          });
-          const container = document.getElementById('contacts-container-' + formId);
-          if (container) {
-            container.innerHTML = '';
-            addContactRow(formId);
-          }
-          const state = getFormState(formId);
-          state.images = [];
-          state.imageFiles = [];
-          renderImages(formId);
-        }
-        updatePPSection(formId);
-        updateExtraCollectionVisibility(formId);
-        updateReportReceivedList(formId);
-        updateDeliveryStatusVisibility(formId);
-        updatePaymentFields(formId);
-        updateSectionProgressBars(formId);
-        updateReportMessage(formId);
-      }
-    });
-  }
-
-  const saveBtn = document.getElementById('saveBtn-' + formId);
-  if (saveBtn) {
-    saveBtn.addEventListener('click', async function() {
-      await savePatient(formId);
-    });
-  }
-
-  return panel;
-}
-
-// ============================================================
-//  TAB MANAGEMENT (unchanged)
-// ============================================================
-
-function switchTab(tabId) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
-  const targetPanel = document.getElementById('panel-' + tabId);
-  if (targetPanel) targetPanel.classList.add('active-panel');
-
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabId);
-  });
-  activeTab = tabId;
-
-  if (tabId === 'schedule') {
-    renderVisitSchedule();
-  }
-  if (tabId !== 'added' && tabId !== 'schedule') {
-    updateSectionProgressBars(tabId);
-  }
-}
-
-function createTabButton(tabId, label, closeable = false) {
-  const btn = document.createElement('button');
-  btn.className = 'tab-btn' + (tabId === 'added' ? ' active' : '');
-  btn.dataset.tab = tabId;
-  btn.innerHTML = label;
-
-  if (closeable) {
-    const span = document.createElement('span');
-    span.className = 'close-edit';
-    span.textContent = '✕';
-    span.addEventListener('click', (e) => {
-      e.stopPropagation();
-      closeEditTab(tabId);
-    });
-    btn.appendChild(span);
-  }
-
-  btn.addEventListener('click', () => {
-    if (tabId === 'added') {
-      switchTab('added');
-    } else if (tabId === 'new') {
-      switchTab('new');
-    } else if (tabId === 'schedule') {
-      switchTab('schedule');
-    } else if (tabId.startsWith('edit-')) {
-      switchTab(tabId);
-    }
-  });
-
-  return btn;
-}
-
-function ensureBaseTabs() {
-  tabBar.innerHTML = '';
-
-  const scheduleBtn = createTabButton('schedule', '📅 Visit Schedule', false);
-  tabBar.appendChild(scheduleBtn);
-
-  const addedBtn = createTabButton('added', '📋 Added Entries', false);
-  tabBar.appendChild(addedBtn);
-
-  const newBtn = createTabButton('new', '➕ New Entry', false);
-  tabBar.appendChild(newBtn);
-
-  for (const [key, info] of editTabs) {
-    const btn = createTabButton('edit-' + key, '✎ Edit — ' + info.name, true);
-    tabBar.appendChild(btn);
-  }
-
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === activeTab);
-  });
-}
-
-// ============================================================
-//  GET FIELD HELPERS (unchanged)
-// ============================================================
-
-function getFormId(panelId) {
-  return panelId.replace('panel-', '');
-}
-
-function getPanelId(formId) {
-  return 'panel-' + formId;
-}
-
-function getFieldId(fieldName, formId) {
-  return fieldName + '-' + formId;
-}
-
-function getFieldValue(fieldName, formId) {
-  const el = document.getElementById(getFieldId(fieldName, formId));
-  return el ? el.value : '';
-}
-
-function setFieldValue(fieldName, formId, value) {
-  const el = document.getElementById(getFieldId(fieldName, formId));
-  if (el) el.value = value || '';
-}
-
-function getCheckboxValue(fieldName, formId) {
-  const el = document.getElementById(getFieldId(fieldName, formId));
-  return el ? el.checked : false;
-}
-
-function setCheckboxValue(fieldName, formId, value) {
-  const el = document.getElementById(getFieldId(fieldName, formId));
-  if (el) el.checked = value || false;
-}
-
-// ============================================================
-//  VALIDATION FUNCTIONS (unchanged)
-// ============================================================
 
 function validateForm(formId) {
   let isValid = true;
-  let errors = [];
+  let firstError = null;
 
   const patientName = document.getElementById(`patientName-${formId}`);
   if (!patientName || !patientName.value.trim()) {
     isValid = false;
-    errors.push('Patient Name is required');
+    firstError = firstError || 'patientName';
     showFieldError(patientName, 'Patient name is required');
   } else {
     clearFieldError(patientName);
@@ -2631,7 +1489,7 @@ function validateForm(formId) {
   const visitDate = document.getElementById(`visitDate-${formId}`);
   if (!visitDate || !visitDate.value) {
     isValid = false;
-    errors.push('Visit Date is required');
+    firstError = firstError || 'visitDate';
     showFieldError(visitDate, 'Visit date is required');
   } else {
     clearFieldError(visitDate);
@@ -2652,11 +1510,10 @@ function validateForm(formId) {
   
   if (!hasTest) {
     isValid = false;
-    errors.push('At least one test must be selected');
     toast('Please select at least one test before saving.', 'error');
   }
 
-  return { isValid, errors };
+  return { isValid, errors: [], firstError };
 }
 
 function showFieldError(el, message) {
@@ -2679,67 +1536,21 @@ function clearFieldError(el) {
 }
 
 // ============================================================
-//  GATHER FORM DATA (unchanged)
+//  FIREBASE ERROR HANDLING
 // ============================================================
-
-function gatherFormData(formId) {
-  const state = getFormState(formId);
-  
-  const patientData = {
-    patientName: getFieldValue('patientName', formId),
-    age: getFieldValue('patientAge', formId),
-    gender: getFieldValue('patientGender', formId),
-    contacts: getContactsData(formId),
-    address: getFieldValue('patientAddress', formId),
-    doctorName: getFieldValue('patientDoctor', formId),
-    careOfPerson: getFieldValue('patientCareOf', formId),
-    additionalInformation: getFieldValue('patientAdditionalInfo', formId),
-    images: state.images || []
-  };
-
-  const visitData = {
-    center: getFieldValue('visitCenter', formId),
-    visitType: getFieldValue('visitType', formId),
-    visitDate: getFieldValue('visitDate', formId),
-    visitTime: getFieldValue('visitTime', formId),
-    phlebotomist: getFieldValue('visitPhlebotomist', formId),
-    ppTime: getFieldValue('visitPPTime', formId),
-    ppPhlebotomist: getFieldValue('visitPPPhlebotomist', formId),
-    extraCollectionTime: getFieldValue('visitExtraTime', formId),
-    extraCollectionPhlebotomist: getFieldValue('visitExtraPhlebotomist', formId)
-  };
-
-  const reportData = {
-    onlineReportRequired: getCheckboxValue('reportOnlineRequired', formId),
-    reportDeliveryRequired: getCheckboxValue('reportDeliveryRequired', formId),
-    billDeliveryRequired: getCheckboxValue('reportBillDeliveryRequired', formId),
-    reportsReceived: { ...state.reportsReceived },
-    onlineReportSent: getCheckboxValue('reportOnlineSent', formId),
-    reportDelivered: getCheckboxValue('reportDelivered', formId),
-    billDelivered: getCheckboxValue('reportBillDelivered', formId),
-  };
-
-  const testData = {
-    labSelections: JSON.parse(JSON.stringify(state.selectedLabData))
-  };
-
-  const paymentData = {
-    totalMRP: calculateTotalMRP(formId),
-    totalB2B: calculateTotalB2B(formId),
-    finalPrice: parseCurrency(getFieldValue('paymentFinalPrice', formId)),
-    cashReceived: parseCurrency(getFieldValue('paymentCash', formId)),
-    onlineReceived: parseCurrency(getFieldValue('paymentOnline', formId)),
-    pendingPayment: parseCurrency(getFieldValue('paymentPending', formId)),
-    goodwillCharges: parseCurrency(getFieldValue('paymentGoodwill', formId)),
-  };
-
-  return { ...patientData, ...visitData, ...reportData, ...testData, ...paymentData };
+function handleFirebaseError(err) {
+  if (err.code === 'PERMISSION_DENIED' || err.message.includes('permission_denied')) {
+    isPermissionError = true;
+    rulesBanner.classList.add('show');
+    toast('Permission denied. Please update Firebase rules.', 'error');
+  } else {
+    toast('Error: ' + err.message, 'error');
+  }
 }
 
 // ============================================================
-//  PAYMENT CALCULATIONS (unchanged)
+//  PAYMENT FUNCTIONS
 // ============================================================
-
 function calculateTotalMRP(formId) {
   const state = getFormState(formId);
   let total = 0;
@@ -2837,9 +1648,8 @@ function updatePaymentFields(formId) {
 }
 
 // ============================================================
-//  B2B PASSWORD PROTECTION (unchanged)
+//  B2B
 // ============================================================
-
 function handleB2BUnlock(formId) {
   const promptDiv = document.getElementById(`b2bPrompt-${formId}`);
   const input = document.getElementById(`b2bPassword-${formId}`);
@@ -2898,9 +1708,8 @@ function verifyB2BPassword(formId) {
 }
 
 // ============================================================
-//  PP DETECTION (unchanged)
+//  PP & EXTRA
 // ============================================================
-
 function isPPSelected(formId) {
   const state = getFormState(formId);
   for (let labId = 1; labId <= 4; labId++) {
@@ -2933,10 +1742,6 @@ function updatePPSection(formId) {
   }
 }
 
-// ============================================================
-//  EXTRA COLLECTION DETECTION (unchanged)
-// ============================================================
-
 function isExtraCollectionSelected(formId) {
   const state = getFormState(formId);
   
@@ -2946,8 +1751,7 @@ function isExtraCollectionSelected(formId) {
     
     if (labData.tests && Array.isArray(labData.tests)) {
       for (const test of labData.tests) {
-        if (test.id === 'extra-collection' || 
-            test.generalName === 'Extra Collection') {
+        if (test.id === 'extra-collection' || test.generalName === 'Extra Collection') {
           return true;
         }
       }
@@ -2982,303 +1786,8 @@ function updateExtraCollectionVisibility(formId) {
 }
 
 // ============================================================
-//  REPORT RECEIVED FUNCTIONS (unchanged)
+//  PROGRESS
 // ============================================================
-
-function getActiveTestsWithDetails(formId) {
-  const state = getFormState(formId);
-  const activeTests = [];
-
-  for (let labId = 1; labId <= 4; labId++) {
-    const labData = state.selectedLabData[labId];
-    if (!labData) continue;
-
-    if (labData.tests && Array.isArray(labData.tests)) {
-      labData.tests.forEach(test => {
-        if (!activeTests.some(t => t.id === test.id)) {
-          activeTests.push({
-            id: test.id,
-            generalName: test.generalName,
-            labName: test.labName,
-            labId: labId,
-            labNameDisplay: LAB_COLORS[labId].name
-          });
-        }
-      });
-    }
-
-    if (labData.packages && Array.isArray(labData.packages)) {
-      labData.packages.forEach(pkg => {
-        if (pkg.tests && Array.isArray(pkg.tests)) {
-          pkg.tests.forEach(test => {
-            if (test.selected !== false) {
-              const labTestData = LAB_DATA[labId];
-              let testId = test.generalName;
-              let labName = test.labName;
-              if (labTestData && labTestData.tests) {
-                const matchingTest = labTestData.tests.find(t => t.generalName === test.generalName);
-                if (matchingTest) {
-                  testId = matchingTest.id;
-                  labName = matchingTest.labName;
-                }
-              }
-              if (!activeTests.some(t => t.id === testId)) {
-                activeTests.push({
-                  id: testId,
-                  generalName: test.generalName,
-                  labName: labName,
-                  labId: labId,
-                  labNameDisplay: LAB_COLORS[labId].name
-                });
-              }
-            }
-          });
-        }
-      });
-    }
-  }
-
-  return activeTests;
-}
-
-function updateReportReceivedList(formId) {
-  const state = getFormState(formId);
-  const container = document.getElementById(`reportReceivedList-${formId}`);
-  const selectAllCheckbox = document.getElementById(`selectAllReports-${formId}`);
-  if (!container) return;
-
-  const activeTests = getActiveTestsWithDetails(formId);
-
-  const activeTestIds = new Set(activeTests.map(t => t.id));
-  Object.keys(state.reportsReceived).forEach(id => {
-    if (!activeTestIds.has(id)) delete state.reportsReceived[id];
-  });
-
-  activeTests.forEach(test => {
-    if (!(test.id in state.reportsReceived)) {
-      state.reportsReceived[test.id] = false;
-    }
-  });
-
-  if (activeTests.length === 0) {
-    container.innerHTML = `<div class="empty-report-state">No tests selected yet.</div>`;
-    if (selectAllCheckbox) {
-      selectAllCheckbox.checked = false;
-      selectAllCheckbox.indeterminate = false;
-    }
-    return;
-  }
-
-  const allChecked = activeTests.every(test => state.reportsReceived[test.id] === true);
-  const someChecked = activeTests.some(test => state.reportsReceived[test.id] === true);
-
-  if (selectAllCheckbox) {
-    selectAllCheckbox.checked = allChecked;
-    selectAllCheckbox.indeterminate = !allChecked && someChecked;
-  }
-
-  let html = '';
-  activeTests.forEach(test => {
-    const checked = state.reportsReceived[test.id] === true;
-    const color = LAB_COLORS[test.labId];
-    html += `
-      <div class="report-test-item" style="border-left-color: ${color.border};">
-        <input type="checkbox" id="report-${test.id}-${formId}" 
-               data-test-id="${test.id}" data-form="${formId}" 
-               ${checked ? 'checked' : ''} />
-        <div class="test-info">
-          <div class="general-name">${test.generalName}</div>
-          <div class="lab-name">${test.labName}</div>
-        </div>
-        <span class="lab-tag" style="background: ${color.light}; color: ${color.text};">
-          ${color.name}
-        </span>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-
-  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', function() {
-      const testId = this.dataset.testId;
-      const formId = this.dataset.form;
-      const state = getFormState(formId);
-      state.reportsReceived[testId] = this.checked;
-      updateReportReceivedList(formId);
-      updateSectionProgressBars(formId);
-    });
-  });
-
-  updateSectionProgressBars(formId);
-}
-
-function handleSelectAllReports(formId) {
-  const state = getFormState(formId);
-  const selectAll = document.getElementById(`selectAllReports-${formId}`);
-  if (!selectAll) return;
-
-  const activeTests = getActiveTestsWithDetails(formId);
-  const shouldCheck = selectAll.checked;
-
-  activeTests.forEach(test => {
-    state.reportsReceived[test.id] = shouldCheck;
-  });
-
-  updateReportReceivedList(formId);
-  updateSectionProgressBars(formId);
-}
-
-// ============================================================
-//  DELIVERY STATUS CONDITIONAL VISIBILITY (unchanged)
-// ============================================================
-
-function updateDeliveryStatusVisibility(formId) {
-  const onlineRequired = document.getElementById(`reportOnlineRequired-${formId}`)?.checked || false;
-  const deliveryRequired = document.getElementById(`reportDeliveryRequired-${formId}`)?.checked || false;
-  const billRequired = document.getElementById(`reportBillDeliveryRequired-${formId}`)?.checked || false;
-
-  const onlineSent = document.getElementById(`reportOnlineSent-${formId}`);
-  const reportDelivered = document.getElementById(`reportDelivered-${formId}`);
-  const billDelivered = document.getElementById(`reportBillDelivered-${formId}`);
-
-  if (onlineSent) {
-    onlineSent.closest('.delivery-status-item').classList.toggle('visible', onlineRequired);
-  }
-  if (reportDelivered) {
-    reportDelivered.closest('.delivery-status-item').classList.toggle('visible', deliveryRequired);
-  }
-  if (billDelivered) {
-    billDelivered.closest('.delivery-status-item').classList.toggle('visible', billRequired);
-  }
-
-  updateSectionProgressBars(formId);
-}
-
-// ============================================================
-//  REPORT MESSAGE FUNCTIONS (unchanged)
-// ============================================================
-
-function updateReportMessage(formId) {
-  const messageEl = document.getElementById(`reportMessage-${formId}`);
-  if (!messageEl) return;
-  
-  const patientName = document.getElementById(`patientName-${formId}`)?.value?.trim() || 'Patient';
-  
-  const message = `Hello,
-
-Please find attached the test report for ${patientName}.
- 
-Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
- 
-Wishing you and your family good health!
- 
-Thank you.`;
-
-  messageEl.textContent = message;
-}
-
-function copyReportMessage(formId) {
-  const messageEl = document.getElementById(`reportMessage-${formId}`);
-  if (!messageEl) return;
-  
-  const text = messageEl.textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    toast('Message copied to clipboard!', 'success');
-  }).catch(() => {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    textarea.remove();
-    toast('Message copied to clipboard!', 'success');
-  });
-}
-
-// ============================================================
-//  POPULATE FORM (unchanged)
-// ============================================================
-
-function populateForm(formId, data) {
-  if (!data) return;
-
-  const state = getFormState(formId);
-
-  setFieldValue('patientName', formId, data.patientName || '');
-  setFieldValue('patientAge', formId, data.age || '');
-  setFieldValue('patientGender', formId, data.gender || '');
-  setFieldValue('patientAddress', formId, data.address || '');
-  setFieldValue('patientDoctor', formId, data.doctorName || '');
-  setFieldValue('patientCareOf', formId, data.careOfPerson || '');
-  setFieldValue('patientAdditionalInfo', formId, data.additionalInformation || '');
-
-  if (data.contacts && Array.isArray(data.contacts)) {
-    populateContacts(formId, data.contacts);
-  } else {
-    populateContacts(formId, []);
-  }
-
-  if (data.images && Array.isArray(data.images)) {
-    state.images = [...data.images];
-    state.imageFiles = [];
-    renderImages(formId);
-  }
-
-  setFieldValue('visitCenter', formId, data.center || '');
-  setFieldValue('visitType', formId, data.visitType || '');
-  setFieldValue('visitDate', formId, data.visitDate || '');
-  setFieldValue('visitTime', formId, data.visitTime || '');
-  setFieldValue('visitPhlebotomist', formId, data.phlebotomist || '');
-  setFieldValue('visitPPTime', formId, data.ppTime || '');
-  setFieldValue('visitPPPhlebotomist', formId, data.ppPhlebotomist || '');
-  setFieldValue('visitExtraTime', formId, data.extraCollectionTime || '');
-  setFieldValue('visitExtraPhlebotomist', formId, data.extraCollectionPhlebotomist || '');
-
-  setCheckboxValue('reportOnlineRequired', formId, data.onlineReportRequired || false);
-  setCheckboxValue('reportDeliveryRequired', formId, data.reportDeliveryRequired || false);
-  setCheckboxValue('reportBillDeliveryRequired', formId, data.billDeliveryRequired || false);
-  setCheckboxValue('reportOnlineSent', formId, data.onlineReportSent || false);
-  setCheckboxValue('reportDelivered', formId, data.reportDelivered || false);
-  setCheckboxValue('reportBillDelivered', formId, data.billDelivered || false);
-
-  if (data.reportsReceived) {
-    state.reportsReceived = { ...data.reportsReceived };
-  } else {
-    state.reportsReceived = {};
-  }
-
-  setFieldValue('paymentFinalPrice', formId, data.finalPrice ? data.finalPrice.toString() : '');
-  setFieldValue('paymentCash', formId, data.cashReceived ? data.cashReceived.toString() : '');
-  setFieldValue('paymentOnline', formId, data.onlineReceived ? data.onlineReceived.toString() : '');
-  setFieldValue('paymentGoodwill', formId, data.goodwillCharges ? data.goodwillCharges.toString() : '');
-
-  if (data.labSelections) {
-    const normalizedLabSelections = {};
-    for (let labId = 1; labId <= 4; labId++) {
-      const labSel = data.labSelections[labId] || {};
-      normalizedLabSelections[labId] = {
-        tests: labSel.tests || [],
-        packages: labSel.packages || []
-      };
-    }
-    state.selectedLabData = JSON.parse(JSON.stringify(normalizedLabSelections));
-    recalculateGlobalSelectedTests(formId);
-  }
-
-  updatePPSection(formId);
-  updateExtraCollectionVisibility(formId);
-  updateReportReceivedList(formId);
-  updateDeliveryStatusVisibility(formId);
-  updatePaymentFields(formId);
-  updateSectionProgressBars(formId);
-  updateReportMessage(formId);
-}
-
-// ============================================================
-//  PROGRESS FUNCTIONS (unchanged)
-// ============================================================
-
 function getPatientProgress(formId) {
   const fields = [
     { id: 'patientName', weight: 1 },
@@ -3433,9 +1942,214 @@ function updateSectionProgressBars(formId) {
 }
 
 // ============================================================
-//  GLOBAL SELECTION MANAGEMENT (unchanged)
+//  REPORTS
 // ============================================================
+function getActiveTestsWithDetails(formId) {
+  const state = getFormState(formId);
+  const activeTests = [];
 
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = state.selectedLabData[labId];
+    if (!labData) continue;
+
+    if (labData.tests && Array.isArray(labData.tests)) {
+      labData.tests.forEach(test => {
+        if (!activeTests.some(t => t.id === test.id)) {
+          activeTests.push({
+            id: test.id,
+            generalName: test.generalName,
+            labName: test.labName,
+            labId: labId,
+            labNameDisplay: LAB_COLORS[labId].name
+          });
+        }
+      });
+    }
+
+    if (labData.packages && Array.isArray(labData.packages)) {
+      labData.packages.forEach(pkg => {
+        if (pkg.tests && Array.isArray(pkg.tests)) {
+          pkg.tests.forEach(test => {
+            if (test.selected !== false) {
+              const labTestData = LAB_DATA[labId];
+              let testId = test.generalName;
+              let labName = test.labName;
+              if (labTestData && labTestData.tests) {
+                const matchingTest = labTestData.tests.find(t => t.generalName === test.generalName);
+                if (matchingTest) {
+                  testId = matchingTest.id;
+                  labName = matchingTest.labName;
+                }
+              }
+              if (!activeTests.some(t => t.id === testId)) {
+                activeTests.push({
+                  id: testId,
+                  generalName: test.generalName,
+                  labName: labName,
+                  labId: labId,
+                  labNameDisplay: LAB_COLORS[labId].name
+                });
+              }
+            }
+          });
+        }
+      });
+    }
+  }
+
+  return activeTests;
+}
+
+function updateReportReceivedList(formId) {
+  const state = getFormState(formId);
+  const container = document.getElementById(`reportReceivedList-${formId}`);
+  const selectAllCheckbox = document.getElementById(`selectAllReports-${formId}`);
+  if (!container) return;
+
+  const activeTests = getActiveTestsWithDetails(formId);
+
+  const activeTestIds = new Set(activeTests.map(t => t.id));
+  Object.keys(state.reportsReceived).forEach(id => {
+    if (!activeTestIds.has(id)) delete state.reportsReceived[id];
+  });
+
+  activeTests.forEach(test => {
+    if (!(test.id in state.reportsReceived)) {
+      state.reportsReceived[test.id] = false;
+    }
+  });
+
+  if (activeTests.length === 0) {
+    container.innerHTML = `<div class="empty-report-state">No tests selected yet.</div>`;
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = false;
+    }
+    return;
+  }
+
+  const allChecked = activeTests.every(test => state.reportsReceived[test.id] === true);
+  const someChecked = activeTests.some(test => state.reportsReceived[test.id] === true);
+
+  if (selectAllCheckbox) {
+    selectAllCheckbox.checked = allChecked;
+    selectAllCheckbox.indeterminate = !allChecked && someChecked;
+  }
+
+  let html = '';
+  activeTests.forEach(test => {
+    const checked = state.reportsReceived[test.id] === true;
+    const color = LAB_COLORS[test.labId];
+    html += `
+      <div class="report-test-item" style="border-left-color: ${color.border};">
+        <input type="checkbox" id="report-${escapeHtml(test.id)}-${escapeHtml(formId)}" 
+               data-test-id="${escapeHtml(test.id)}" data-form="${escapeHtml(formId)}" 
+               ${checked ? 'checked' : ''} />
+        <div class="test-info">
+          <div class="general-name">${escapeHtml(test.generalName)}</div>
+          <div class="lab-name">${escapeHtml(test.labName)}</div>
+        </div>
+        <span class="lab-tag" style="background: ${color.light}; color: ${color.text};">
+          ${escapeHtml(color.name)}
+        </span>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const testId = this.dataset.testId;
+      const formId = this.dataset.form;
+      const state = getFormState(formId);
+      state.reportsReceived[testId] = this.checked;
+      updateReportReceivedList(formId);
+      updateSectionProgressBars(formId);
+    });
+  });
+
+  updateSectionProgressBars(formId);
+}
+
+function handleSelectAllReports(formId) {
+  const state = getFormState(formId);
+  const selectAll = document.getElementById(`selectAllReports-${formId}`);
+  if (!selectAll) return;
+
+  const activeTests = getActiveTestsWithDetails(formId);
+  const shouldCheck = selectAll.checked;
+
+  activeTests.forEach(test => {
+    state.reportsReceived[test.id] = shouldCheck;
+  });
+
+  updateReportReceivedList(formId);
+  updateSectionProgressBars(formId);
+}
+
+function updateDeliveryStatusVisibility(formId) {
+  const onlineRequired = document.getElementById(`reportOnlineRequired-${formId}`)?.checked || false;
+  const deliveryRequired = document.getElementById(`reportDeliveryRequired-${formId}`)?.checked || false;
+  const billRequired = document.getElementById(`reportBillDeliveryRequired-${formId}`)?.checked || false;
+
+  const onlineSent = document.getElementById(`reportOnlineSent-${formId}`);
+  const reportDelivered = document.getElementById(`reportDelivered-${formId}`);
+  const billDelivered = document.getElementById(`reportBillDelivered-${formId}`);
+
+  if (onlineSent) {
+    onlineSent.closest('.delivery-status-item').classList.toggle('visible', onlineRequired);
+  }
+  if (reportDelivered) {
+    reportDelivered.closest('.delivery-status-item').classList.toggle('visible', deliveryRequired);
+  }
+  if (billDelivered) {
+    billDelivered.closest('.delivery-status-item').classList.toggle('visible', billRequired);
+  }
+
+  updateSectionProgressBars(formId);
+}
+
+function updateReportMessage(formId) {
+  const messageEl = document.getElementById(`reportMessage-${formId}`);
+  if (!messageEl) return;
+  
+  const patientName = document.getElementById(`patientName-${formId}`)?.value?.trim() || 'Patient';
+  
+  const message = `Hello,
+
+Please find attached the test report for ${patientName}.
+ 
+Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+ 
+Wishing you and your family good health!
+ 
+Thank you.`;
+
+  messageEl.textContent = message;
+}
+
+function copyReportMessage(formId) {
+  const messageEl = document.getElementById(`reportMessage-${formId}`);
+  if (!messageEl) return;
+  
+  const text = messageEl.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Message copied to clipboard!', 'success');
+  }).catch(() => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+    toast('Message copied to clipboard!', 'success');
+  });
+}
+
+// ============================================================
+//  TESTS - Remember Active Lab
+// ============================================================
 function recalculateGlobalSelectedTests(formId) {
   const state = getFormState(formId);
   state.globalSelectedTestIds = new Set();
@@ -3476,26 +2190,9 @@ function recalculateGlobalSelectedTests(formId) {
   updateSectionProgressBars(formId);
 }
 
-function getCurrentFormId() {
-  const activePanel = document.querySelector('.panel.active-panel');
-  if (activePanel) return activePanel.dataset.panel;
-  return 'new';
-}
-
-function isTestGloballySelected(formId, testId) {
-  const state = getFormState(formId);
-  return state.globalSelectedTestIds.has(testId);
-}
-
-// ============================================================
-//  TEST DETAILS FUNCTIONS (unchanged)
-// ============================================================
-
 function renderLabContent(labId, formId) {
   const container = document.getElementById(`lab-content-${labId}-${formId}`);
-  if (!container) {
-    return;
-  }
+  if (!container) return;
 
   const labData = LAB_DATA[labId];
   if (!labData) {
@@ -3509,7 +2206,6 @@ function renderLabContent(labId, formId) {
   }
 
   const selection = state.selectedLabData[labId];
-
   if (!selection.tests) selection.tests = [];
   if (!selection.packages) selection.packages = [];
 
@@ -3550,13 +2246,13 @@ function renderLabContent(labId, formId) {
   if (selection.tests && selection.tests.length > 0) {
     selection.tests.forEach(test => {
       html += `
-        <div class="selected-test-item" data-test-id="${test.id}">
+        <div class="selected-test-item" data-test-id="${escapeHtml(test.id)}">
           <div class="test-info">
-            <div class="test-name">${test.generalName}</div>
-            <div class="test-lab-name">${test.labName}</div>
+            <div class="test-name">${escapeHtml(test.generalName)}</div>
+            <div class="test-lab-name">${escapeHtml(test.labName)}</div>
           </div>
           <div class="test-price">₹${test.mrp}</div>
-          <button class="remove-item-btn" data-lab="${labId}" data-type="test" data-id="${test.id}" data-form="${formId}">✕</button>
+          <button class="remove-item-btn" data-lab="${labId}" data-type="test" data-id="${escapeHtml(test.id)}" data-form="${escapeHtml(formId)}">✕</button>
         </div>
       `;
     });
@@ -3575,9 +2271,9 @@ function renderLabContent(labId, formId) {
   if (selection.packages && selection.packages.length > 0) {
     selection.packages.forEach(pkg => {
       html += `
-        <div class="selected-package-card" data-package-id="${pkg.id}">
+        <div class="selected-package-card" data-package-id="${escapeHtml(pkg.id)}">
           <div class="package-header">
-            <span class="package-name">${pkg.packageName}</span>
+            <span class="package-name">${escapeHtml(pkg.packageName)}</span>
             <span class="package-price">₹${pkg.mrp}</span>
           </div>
           <div class="package-tests">
@@ -3589,11 +2285,11 @@ function renderLabContent(labId, formId) {
           html += `
             <div class="package-test-item">
               <input type="checkbox" id="pkg-${labId}-${pkg.id}-${index}-${formId}" 
-                     data-lab="${labId}" data-package-id="${pkg.id}" data-test-index="${index}" 
-                     data-form="${formId}" ${isChecked ? 'checked' : ''} />
+                     data-lab="${labId}" data-package-id="${escapeHtml(pkg.id)}" data-test-index="${index}" 
+                     data-form="${escapeHtml(formId)}" ${isChecked ? 'checked' : ''} />
               <label for="pkg-${labId}-${pkg.id}-${index}-${formId}" class="test-label">
-                <span class="general-name">${test.generalName}</span>
-                <span class="lab-name">${test.labName}</span>
+                <span class="general-name">${escapeHtml(test.generalName)}</span>
+                <span class="lab-name">${escapeHtml(test.labName)}</span>
               </label>
             </div>
           `;
@@ -3603,7 +2299,7 @@ function renderLabContent(labId, formId) {
       html += `
           </div>
           <div class="package-actions">
-            <button class="package-remove-btn" data-lab="${labId}" data-package-id="${pkg.id}" data-form="${formId}">Remove Package</button>
+            <button class="package-remove-btn" data-lab="${labId}" data-package-id="${escapeHtml(pkg.id)}" data-form="${escapeHtml(formId)}">Remove Package</button>
           </div>
         </div>
       `;
@@ -3654,9 +2350,7 @@ function renderLabContent(labId, formId) {
 function setupSearch(labId, formId, allItems) {
   const searchInput = document.getElementById(`searchInput-${labId}-${formId}`);
   const suggestionsDiv = document.getElementById(`suggestions-${labId}-${formId}`);
-  if (!searchInput || !suggestionsDiv) {
-    return;
-  }
+  if (!searchInput || !suggestionsDiv) return;
 
   let activeIndex = -1;
   let filteredItems = [];
@@ -3702,12 +2396,12 @@ function setupSearch(labId, formId, allItems) {
 
       html += `
         <div class="suggestion-item" data-index="${index}">
-          <div class="suggestion-type">${typeLabel}</div>
+          <div class="suggestion-type">${escapeHtml(typeLabel)}</div>
           <div>
             <span class="suggestion-name">${displayName}</span>
             <span class="suggestion-price">₹${price}</span>
           </div>
-          <div class="suggestion-detail">${detail}</div>
+          <div class="suggestion-detail">${escapeHtml(detail)}</div>
         </div>
       `;
     });
@@ -3807,8 +2501,6 @@ function setupSearch(labId, formId, allItems) {
       updateSuggestions(this.value);
     }
   });
-
-  searchInput._updateSuggestions = updateSuggestions;
 }
 
 function selectItem(labId, item, formId) {
@@ -4003,8 +2695,997 @@ function switchLab(labId, formId) {
 }
 
 // ============================================================
-//  CONTACT PERSON MANAGEMENT (unchanged)
+//  VISIT SCHEDULE - WITH CLEAR DATE FILTER INDICATOR
 // ============================================================
+function getVisitEntriesFromIndex(indexData) {
+  const visits = [];
+  
+  indexData.forEach(entry => {
+    const patientName = entry.patientName || 'Unknown';
+    const visitDate = entry.visitDate || '';
+    const visitTime = entry.visitTime || '00:00';
+    const phlebotomist = entry.phlebotomist || '';
+    const labs = getLabsForEntry(entry);
+    const gradientClass = getEntryGradientClass(entry);
+    
+    visits.push({
+      entryKey: entry._firebaseKey,
+      patientName: patientName,
+      visitDate: visitDate,
+      visitTime: visitTime,
+      phlebotomist: phlebotomist,
+      visitType: 'main',
+      visitTypeLabel: 'Main Visit',
+      isDone: entry.visitDone || false,
+      doneTime: entry.visitDoneTime || null,
+      gradientClass: gradientClass,
+      labs: labs
+    });
+    
+    if (entry.ppTime) {
+      visits.push({
+        entryKey: entry._firebaseKey,
+        patientName: patientName + ' (PP)',
+        visitDate: visitDate,
+        visitTime: entry.ppTime || '12:00',
+        phlebotomist: entry.ppPhlebotomist || '',
+        visitType: 'pp',
+        visitTypeLabel: 'PP Visit',
+        isDone: entry.ppVisitDone || false,
+        doneTime: entry.ppVisitDoneTime || null,
+        gradientClass: gradientClass,
+        labs: labs
+      });
+    }
+    
+    if (entry.extraCollectionTime) {
+      visits.push({
+        entryKey: entry._firebaseKey,
+        patientName: patientName + ' (Extra)',
+        visitDate: visitDate,
+        visitTime: entry.extraCollectionTime || '12:00',
+        phlebotomist: entry.extraCollectionPhlebotomist || '',
+        visitType: 'extra',
+        visitTypeLabel: 'Extra Collection',
+        isDone: entry.extraVisitDone || false,
+        doneTime: entry.extraVisitDoneTime || null,
+        gradientClass: gradientClass,
+        labs: labs
+      });
+    }
+  });
+  
+  return visits;
+}
+
+function renderVisitScheduleFromIndex(indexData) {
+  let visits = getVisitEntriesFromIndex(indexData);
+  
+  const searchQuery = document.getElementById('visitSearch')?.value?.toLowerCase().trim() || '';
+  const dateFilter = document.getElementById('visitDateFilter')?.value || '';
+  const phlebotomistFilter = document.getElementById('visitPhlebotomistFilter')?.value || 'all';
+  const statusFilter = document.getElementById('visitStatusFilter')?.value || 'all';
+  
+  if (searchQuery) {
+    visits = visits.filter(v => v.patientName.toLowerCase().includes(searchQuery));
+  }
+  if (dateFilter) {
+    visits = visits.filter(v => v.visitDate === dateFilter);
+  }
+  if (phlebotomistFilter !== 'all') {
+    visits = visits.filter(v => v.phlebotomist === phlebotomistFilter);
+  }
+  if (statusFilter === 'done') {
+    visits = visits.filter(v => v.isDone === true);
+  } else if (statusFilter === 'pending') {
+    visits = visits.filter(v => v.isDone !== true);
+  }
+  
+  visits.sort((a, b) => a.visitTime.localeCompare(b.visitTime));
+  
+  // Update visit count with date context
+  if (visitCountEl) {
+    let dateContext = '';
+    if (dateFilter) {
+      const today = new Date().toISOString().split('T')[0];
+      if (dateFilter === today) {
+        dateContext = 'for Today';
+      } else {
+        dateContext = 'for ' + dateFilter;
+      }
+    } else {
+      dateContext = 'for All Dates';
+    }
+    visitCountEl.textContent = visits.length + ' Visits ' + dateContext;
+  }
+  
+  if (visits.length === 0) {
+    let emptyMsg = 'No visits found';
+    if (dateFilter) {
+      const today = new Date().toISOString().split('T')[0];
+      if (dateFilter === today) {
+        emptyMsg += ' for Today';
+      } else {
+        emptyMsg += ' for ' + dateFilter;
+      }
+    } else {
+      emptyMsg += ' for All Dates';
+    }
+    visitListEl.innerHTML = `<div class="empty-msg">${emptyMsg}.</div>`;
+    return;
+  }
+  
+  let html = '';
+  visits.forEach(visit => {
+    const isDone = visit.isDone;
+    const doneClass = isDone ? 'done' : '';
+    const gradientClass = visit.gradientClass || '';
+    const visitTypeClass = visit.visitType === 'pp' ? 'pp' : visit.visitType === 'extra' ? 'extra' : 'main';
+    
+    html += `
+      <div class="visit-item ${doneClass} ${gradientClass}">
+        <div class="visit-content">
+          <div class="visit-left">
+            <div class="visit-patient-name">${escapeHtml(visit.patientName)}</div>
+            <div class="visit-details">
+              <span>📅 ${escapeHtml(visit.visitDate || 'No date')}</span>
+              <span>🕐 ${escapeHtml(visit.visitTime || 'No time')}</span>
+              <span class="visit-type-badge ${visitTypeClass}">${escapeHtml(visit.visitTypeLabel)}</span>
+              ${visit.phlebotomist ? `<span>👤 ${escapeHtml(visit.phlebotomist)}</span>` : ''}
+              ${isDone && visit.doneTime ? `<span class="visit-done-time">✅ Done at ${escapeHtml(visit.doneTime)}</span>` : ''}
+            </div>
+          </div>
+          <div class="visit-actions">
+            <div class="visit-done-checkbox">
+              <input type="checkbox" class="visit-done-check" data-key="${escapeHtml(visit.entryKey)}" data-type="${escapeHtml(visit.visitType)}" ${isDone ? 'checked' : ''} />
+              <span>Done</span>
+            </div>
+            <button class="view-btn" data-key="${escapeHtml(visit.entryKey)}">👁 View</button>
+            <button class="edit-btn" data-key="${escapeHtml(visit.entryKey)}">✎ Edit</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  visitListEl.innerHTML = html;
+  
+  visitListEl.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      const rec = currentEntries.find(e => e._firebaseKey === key);
+      if (rec) {
+        loadAndViewPatient(key);
+      }
+    });
+  });
+  
+  visitListEl.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      const rec = currentEntries.find(e => e._firebaseKey === key);
+      if (rec) {
+        loadAndEditPatient(key);
+      }
+    });
+  });
+  
+  visitListEl.querySelectorAll('.visit-done-check').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const key = this.dataset.key;
+      const visitType = this.dataset.type;
+      const entry = currentEntries.find(e => e._firebaseKey === key);
+      if (!entry) return;
+      
+      const isChecked = this.checked;
+      const action = isChecked ? 'mark as done' : 'mark as pending';
+      
+      if (confirm(`Are you sure you want to ${action} this visit?`)) {
+        updateVisitStatusFromIndex(entry, visitType, isChecked);
+      } else {
+        this.checked = !isChecked;
+      }
+    });
+  });
+}
+
+async function updateVisitStatusFromIndex(entry, visitType, isDone) {
+  const now = new Date();
+  const doneTime = now.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+  
+  const updates = {};
+  const indexUpdates = {};
+  
+  if (visitType === 'main') {
+    updates['visitDone'] = isDone;
+    updates['visitDoneTime'] = isDone ? doneTime : null;
+    indexUpdates['visitDone'] = isDone;
+    indexUpdates['visitDoneTime'] = isDone ? doneTime : null;
+  } else if (visitType === 'pp') {
+    updates['ppVisitDone'] = isDone;
+    updates['ppVisitDoneTime'] = isDone ? doneTime : null;
+    indexUpdates['ppVisitDone'] = isDone;
+    indexUpdates['ppVisitDoneTime'] = isDone ? doneTime : null;
+  } else if (visitType === 'extra') {
+    updates['extraVisitDone'] = isDone;
+    updates['extraVisitDoneTime'] = isDone ? doneTime : null;
+    indexUpdates['extraVisitDone'] = isDone;
+    indexUpdates['extraVisitDoneTime'] = isDone ? doneTime : null;
+  }
+  
+  try {
+    await db.ref('patients/' + entry._firebaseKey).update(updates);
+    await db.ref('patientIndex/' + entry._firebaseKey).update(indexUpdates);
+    
+    Object.keys(indexUpdates).forEach(key => {
+      entry[key] = indexUpdates[key];
+    });
+    
+    toast(`Visit ${isDone ? 'marked as done' : 'marked as pending'}`, 'success');
+    renderVisitScheduleFromIndex(currentEntries);
+  } catch (err) {
+    handleFirebaseError(err);
+  }
+}
+
+function renderVisitSchedule() {
+  renderVisitScheduleFromIndex(currentEntries);
+}
+
+function populateVisitPhlebotomistFilter() {
+  const select = document.getElementById('visitPhlebotomistFilter');
+  if (!select) return;
+  
+  const phlebotomists = new Set();
+  currentEntries.forEach(entry => {
+    if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
+    if (entry.ppPhlebotomist) phlebotomists.add(entry.ppPhlebotomist);
+    if (entry.extraCollectionPhlebotomist) phlebotomists.add(entry.extraCollectionPhlebotomist);
+  });
+  
+  const sorted = Array.from(phlebotomists).sort();
+  const currentValue = select.value;
+  
+  select.innerHTML = '<option value="all">All</option>';
+  sorted.forEach(name => {
+    select.innerHTML += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+  });
+  
+  if (currentValue && sorted.includes(currentValue)) {
+    select.value = currentValue;
+  }
+}
+
+function setupVisitScheduleListeners() {
+  const searchInput = document.getElementById('visitSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(() => {
+      renderVisitScheduleFromIndex(currentEntries);
+    }, 300));
+  }
+  
+  const dateFilter = document.getElementById('visitDateFilter');
+  if (dateFilter) {
+    const today = new Date().toISOString().split('T')[0];
+    dateFilter.value = today;
+    
+    const wrapper = dateFilter.parentElement;
+    const label = wrapper.querySelector('label');
+    if (label) {
+      label.textContent = '📅 Today:';
+    }
+    
+    const clearDateBtn = document.createElement('button');
+    clearDateBtn.className = 'action-btn';
+    clearDateBtn.textContent = '📅 Show All';
+    clearDateBtn.style.fontSize = '0.7rem';
+    clearDateBtn.style.padding = '4px 10px';
+    clearDateBtn.style.marginLeft = '6px';
+    clearDateBtn.addEventListener('click', function() {
+      dateFilter.value = '';
+      const label = wrapper.querySelector('label');
+      if (label) {
+        label.textContent = '📅 All Dates:';
+      }
+      renderVisitScheduleFromIndex(currentEntries);
+    });
+    wrapper.appendChild(clearDateBtn);
+    
+    dateFilter.addEventListener('change', function() {
+      const label = wrapper.querySelector('label');
+      if (label) {
+        if (this.value) {
+          const today = new Date().toISOString().split('T')[0];
+          if (this.value === today) {
+            label.textContent = '📅 Today:';
+          } else {
+            label.textContent = '📅 Date:';
+          }
+        } else {
+          label.textContent = '📅 All Dates:';
+        }
+      }
+      renderVisitScheduleFromIndex(currentEntries);
+    });
+  }
+  
+  const phlebotomistFilter = document.getElementById('visitPhlebotomistFilter');
+  if (phlebotomistFilter) {
+    phlebotomistFilter.addEventListener('change', () => {
+      renderVisitScheduleFromIndex(currentEntries);
+    });
+  }
+  
+  const statusFilter = document.getElementById('visitStatusFilter');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', () => {
+      renderVisitScheduleFromIndex(currentEntries);
+    });
+  }
+  
+  const refreshBtn = document.getElementById('refreshVisitsBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async function() {
+      if (isRefreshing) return;
+      
+      isRefreshing = true;
+      const originalText = this.innerHTML;
+      this.innerHTML = '⏳ Refreshing...';
+      this.disabled = true;
+      
+      try {
+        await loadEntriesPage(pagination.page);
+        toast('Visit schedule refreshed successfully.', 'success');
+      } catch (err) {
+        toast('Refresh failed: ' + err.message, 'error');
+        console.error('Refresh error:', err);
+      } finally {
+        isRefreshing = false;
+        this.innerHTML = originalText;
+        this.disabled = false;
+      }
+    });
+  }
+}
+
+// ============================================================
+//  BUILD FILTERS UI
+// ============================================================
+function buildFiltersUI() {
+  const statusOptions = [
+    { value: 'all', label: 'All Entries' },
+    { value: 'pending', label: 'Pending Entries' },
+    { value: 'patient-pending', label: 'Patient Detail Pending' },
+    { value: 'visit-pending', label: 'Visit Detail Pending' },
+    { value: 'report-received-pending', label: 'Report Received Pending' },
+    { value: 'report-online-pending', label: 'Report Online Send Pending' },
+    { value: 'report-delivery-pending', label: 'Report Delivery Pending' },
+    { value: 'final-price-pending', label: 'Final Price Pending' },
+    { value: 'payment-pending', label: 'Payment Pending' }
+  ];
+
+  const html = `
+    <div class="entries-toolbar">
+      <div class="filter-row">
+        <div class="filter-group" style="flex:1;">
+          <input type="text" class="search-input" id="filterSearch" placeholder="Search by patient name..." value="${escapeHtml(filterState.search)}" />
+        </div>
+        <button class="refresh-btn" id="refreshBtn">⟳ Refresh</button>
+        <button class="action-btn clear-btn" id="clearFiltersBtn">✕ Clear Filters</button>
+      </div>
+
+      <div class="filter-row">
+        <div class="lab-filter-group">
+          <label style="font-weight:600;font-size:0.85rem;color:var(--text-medium);">Labs:</label>
+          ${[1,2,3,4].map(i => `
+            <label class="lab-check lab-${i}">
+              <input type="checkbox" class="lab-checkbox" data-lab="${i}" ${filterState.labs[i-1] ? 'checked' : ''} />
+              ${escapeHtml(LAB_COLORS[i].name)}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Sort:</label>
+          <select id="filterSort">
+            <option value="desc" ${filterState.sort === 'desc' ? 'selected' : ''}>Newest → Oldest</option>
+            <option value="asc" ${filterState.sort === 'asc' ? 'selected' : ''}>Oldest → Newest</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Status:</label>
+          <select id="filterStatus">
+            ${statusOptions.map(opt => `
+              <option value="${opt.value}" ${filterState.status === opt.value ? 'selected' : ''}>${escapeHtml(opt.label)}</option>
+            `).join('')}
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>From:</label>
+          <input type="date" class="date-input" id="filterFromDate" value="${escapeHtml(filterState.fromDate)}" />
+        </div>
+        <div class="filter-group">
+          <label>To:</label>
+          <input type="date" class="date-input" id="filterToDate" value="${escapeHtml(filterState.toDate)}" />
+        </div>
+        <div class="filter-group">
+          <label>Center:</label>
+          <select id="filterCenter">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Visit Type:</label>
+          <select id="filterVisitType">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Phlebotomist:</label>
+          <select id="filterPhlebotomist">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Care of Person:</label>
+          <select id="filterCareOfPerson">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Dr. Name:</label>
+          <select id="filterDoctor">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="right-controls">
+          <span class="entry-count" id="entryCount">0 Entries</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  entriesFilters.innerHTML = html;
+
+  populateDynamicFilters();
+
+  const searchInput = document.getElementById('filterSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(function() {
+      performGlobalSearch(this.value);
+    }, 400));
+  }
+
+  document.getElementById('filterSort').addEventListener('change', function() {
+    filterState.sort = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('filterStatus').addEventListener('change', function() {
+    filterState.status = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('filterFromDate').addEventListener('change', function() {
+    filterState.fromDate = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('filterToDate').addEventListener('change', function() {
+    filterState.toDate = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.querySelectorAll('.lab-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const lab = parseInt(this.dataset.lab);
+      filterState.labs[lab - 1] = this.checked;
+      renderEntries(currentEntries);
+    });
+  });
+
+  document.getElementById('filterCenter').addEventListener('change', function() {
+    filterState.center = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('filterVisitType').addEventListener('change', function() {
+    filterState.visitType = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('filterPhlebotomist').addEventListener('change', function() {
+    filterState.phlebotomist = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('filterCareOfPerson').addEventListener('change', function() {
+    filterState.careOfPerson = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('filterDoctor').addEventListener('change', function() {
+    filterState.doctor = this.value;
+    renderEntries(currentEntries);
+  });
+
+  document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+    clearAllFilters();
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', async function() {
+    if (isRefreshing) return;
+    
+    isRefreshing = true;
+    const originalText = this.innerHTML;
+    this.innerHTML = '⏳ Refreshing...';
+    this.disabled = true;
+    
+    try {
+      await loadEntriesPage(pagination.page);
+      toast('Entries refreshed successfully.', 'success');
+    } catch (err) {
+      toast('Refresh failed: ' + err.message, 'error');
+      console.error('Refresh error:', err);
+    } finally {
+      isRefreshing = false;
+      this.innerHTML = originalText;
+      this.disabled = false;
+    }
+  });
+}
+
+function populateDynamicFilters() {
+  const centers = new Set();
+  const visitTypes = new Set();
+  const phlebotomists = new Set();
+  const careOfPersons = new Set();
+  const doctors = new Set();
+
+  currentEntries.forEach(entry => {
+    if (entry.center) centers.add(entry.center);
+    if (entry.visitType) visitTypes.add(entry.visitType);
+    if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
+    if (entry.careOfPerson) careOfPersons.add(entry.careOfPerson);
+    if (entry.doctorName) doctors.add(entry.doctorName);
+  });
+
+  const sortOptions = (set) => Array.from(set).sort((a, b) => a.localeCompare(b));
+
+  const centerSelect = document.getElementById('filterCenter');
+  if (centerSelect) {
+    centerSelect.innerHTML = '<option value="all">All</option>';
+    sortOptions(centers).forEach(val => {
+      centerSelect.innerHTML += `<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`;
+    });
+    if (filterState.center !== 'all' && !centers.has(filterState.center)) {
+      centerSelect.value = 'all';
+    } else {
+      centerSelect.value = filterState.center;
+    }
+  }
+
+  const visitTypeSelect = document.getElementById('filterVisitType');
+  if (visitTypeSelect) {
+    visitTypeSelect.innerHTML = '<option value="all">All</option>';
+    sortOptions(visitTypes).forEach(val => {
+      visitTypeSelect.innerHTML += `<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`;
+    });
+    if (filterState.visitType !== 'all' && !visitTypes.has(filterState.visitType)) {
+      visitTypeSelect.value = 'all';
+    } else {
+      visitTypeSelect.value = filterState.visitType;
+    }
+  }
+
+  const phlebotomistSelect = document.getElementById('filterPhlebotomist');
+  if (phlebotomistSelect) {
+    phlebotomistSelect.innerHTML = '<option value="all">All</option>';
+    sortOptions(phlebotomists).forEach(val => {
+      phlebotomistSelect.innerHTML += `<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`;
+    });
+    if (filterState.phlebotomist !== 'all' && !phlebotomists.has(filterState.phlebotomist)) {
+      phlebotomistSelect.value = 'all';
+    } else {
+      phlebotomistSelect.value = filterState.phlebotomist;
+    }
+  }
+
+  const careOfPersonSelect = document.getElementById('filterCareOfPerson');
+  if (careOfPersonSelect) {
+    careOfPersonSelect.innerHTML = '<option value="all">All</option>';
+    sortOptions(careOfPersons).forEach(val => {
+      careOfPersonSelect.innerHTML += `<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`;
+    });
+    if (filterState.careOfPerson !== 'all' && !careOfPersons.has(filterState.careOfPerson)) {
+      careOfPersonSelect.value = 'all';
+    } else {
+      careOfPersonSelect.value = filterState.careOfPerson;
+    }
+  }
+
+  const doctorSelect = document.getElementById('filterDoctor');
+  if (doctorSelect) {
+    doctorSelect.innerHTML = '<option value="all">All</option>';
+    sortOptions(doctors).forEach(val => {
+      doctorSelect.innerHTML += `<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`;
+    });
+    if (filterState.doctor !== 'all' && !doctors.has(filterState.doctor)) {
+      doctorSelect.value = 'all';
+    } else {
+      doctorSelect.value = filterState.doctor;
+    }
+  }
+}
+
+function clearAllFilters() {
+  filterState.status = 'all';
+  filterState.fromDate = '';
+  filterState.toDate = '';
+  filterState.labs = [true, true, true, true];
+  filterState.center = 'all';
+  filterState.visitType = 'all';
+  filterState.phlebotomist = 'all';
+  filterState.careOfPerson = 'all';
+  filterState.doctor = 'all';
+  filterState.search = '';
+
+  const searchEl = document.getElementById('filterSearch');
+  if (searchEl) searchEl.value = '';
+
+  const statusEl = document.getElementById('filterStatus');
+  if (statusEl) statusEl.value = 'all';
+
+  const fromDateEl = document.getElementById('filterFromDate');
+  if (fromDateEl) fromDateEl.value = '';
+
+  const toDateEl = document.getElementById('filterToDate');
+  if (toDateEl) toDateEl.value = '';
+
+  document.querySelectorAll('.lab-checkbox').forEach(cb => {
+    cb.checked = true;
+  });
+
+  populateDynamicFilters();
+  renderEntries(currentEntries);
+  toast('All filters cleared. Showing all entries.', 'success');
+}
+
+// ============================================================
+//  VIEW MODAL - FIXED
+// ============================================================
+function openViewModal(entry) {
+  viewModalBody.innerHTML = buildViewModalContent(entry);
+  viewModalOverlay.classList.add('active');
+  isViewModalOpen = true;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeViewModal() {
+  viewModalOverlay.classList.remove('active');
+  isViewModalOpen = false;
+  if (!isImageViewerOpen) {
+    document.body.style.overflow = '';
+  }
+}
+
+function openFullImage(src) {
+  fullImage.src = src;
+  viewImageFull.classList.add('active');
+  isImageViewerOpen = true;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFullImageView() {
+  viewImageFull.classList.remove('active');
+  isImageViewerOpen = false;
+  if (!isViewModalOpen) {
+    document.body.style.overflow = '';
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (isImageViewerOpen) {
+      e.preventDefault();
+      closeFullImageView();
+      return;
+    }
+    if (isViewModalOpen) {
+      e.preventDefault();
+      closeViewModal();
+      return;
+    }
+  }
+});
+
+if (viewModalClose) {
+  viewModalClose.addEventListener('click', closeViewModal);
+}
+
+if (viewModalOverlay) {
+  viewModalOverlay.addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeViewModal();
+    }
+  });
+}
+
+if (closeFullImage) {
+  closeFullImage.addEventListener('click', closeFullImageView);
+}
+
+if (viewImageFull) {
+  viewImageFull.addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeFullImageView();
+    }
+  });
+}
+
+function buildViewModalContent(entry) {
+  let html = '';
+
+  html += `
+    <div class="view-section">
+      <div class="view-section-title">👤 Patient Details</div>
+      <div class="view-grid">
+        <div class="view-item"><span class="label">Patient Name</span><span class="value">${escapeHtml(entry.patientName || '—')}</span></div>
+        <div class="view-item"><span class="label">Age</span><span class="value">${escapeHtml(entry.age || '—')}</span></div>
+        <div class="view-item"><span class="label">Gender</span><span class="value">${escapeHtml(entry.gender || '—')}</span></div>
+        <div class="view-item"><span class="label">Doctor</span><span class="value">${escapeHtml(entry.doctorName || '—')}</span></div>
+        <div class="view-item"><span class="label">Care of Person</span><span class="value">${escapeHtml(entry.careOfPerson || '—')}</span></div>
+        <div class="view-item full-width"><span class="label">Address</span><span class="value" style="white-space:pre-wrap;">${escapeHtml(entry.address || '—')}</span></div>
+  `;
+
+  if (entry.contacts && entry.contacts.length > 0) {
+    html += `<div class="view-item full-width"><span class="label">Contacts</span><span class="value">`;
+    entry.contacts.forEach((c, i) => {
+      html += `${escapeHtml(c.name || '')} ${c.number ? '(' + escapeHtml(c.number) + ')' : ''}`;
+      if (i < entry.contacts.length - 1) html += ', ';
+    });
+    html += `</span></div>`;
+  }
+
+  if (entry.additionalInformation) {
+    html += `<div class="view-item full-width"><span class="label">Additional Info</span><span class="value" style="white-space:pre-wrap;">${escapeHtml(entry.additionalInformation)}</span></div>`;
+  }
+
+  if (entry.images && entry.images.length > 0) {
+    html += `<div class="view-item full-width"><span class="label">Images</span><div class="view-image-gallery">`;
+    entry.images.forEach(img => {
+      html += `<img src="${escapeHtml(img)}" class="view-image-thumb" onclick="openFullImage('${escapeHtml(img)}')" />`;
+    });
+    html += `</div></div>`;
+  }
+
+  html += `</div></div>`;
+
+  html += `
+    <div class="view-section">
+      <div class="view-section-title">🧪 Test Details</div>
+  `;
+
+  let hasTests = false;
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = entry.labSelections ? entry.labSelections[labId] : null;
+    if (!labData) continue;
+    const hasTestsInLab = (labData.tests && labData.tests.length > 0) || 
+                          (labData.packages && labData.packages.length > 0);
+    if (!hasTestsInLab) continue;
+    hasTests = true;
+
+    const color = LAB_COLORS[labId];
+    html += `
+      <div class="view-subsection" style="border-left: 3px solid ${color.border};">
+        <div class="sub-title" style="color: ${color.text};">${escapeHtml(color.name)}</div>
+    `;
+
+    if (labData.tests && labData.tests.length > 0) {
+      html += `<div style="margin-bottom: 4px;"><strong>Tests:</strong> `;
+      labData.tests.forEach(test => {
+        html += `<span class="test-chip">${escapeHtml(test.generalName)} <span style="font-weight:500;">₹${test.mrp}</span></span>`;
+      });
+      html += `</div>`;
+    }
+
+    if (labData.packages && labData.packages.length > 0) {
+      labData.packages.forEach(pkg => {
+        html += `<div style="margin-top: 6px;"><strong>📦 ${escapeHtml(pkg.packageName)}</strong> <span style="font-weight:500;">₹${pkg.mrp}</span>`;
+        if (pkg.tests && pkg.tests.length > 0) {
+          html += `<div style="font-size:0.8rem;color:var(--text-light);margin-top:2px;">`;
+          pkg.tests.forEach(t => {
+            html += `<span class="test-chip" style="font-size:0.7rem;">${escapeHtml(t.generalName)} ${t.selected !== false ? '✓' : ''}</span>`;
+          });
+          html += `</div>`;
+        }
+        html += `</div>`;
+      });
+    }
+
+    html += `</div>`;
+  }
+
+  if (!hasTests) {
+    html += `<div class="empty-state">No tests or packages selected.</div>`;
+  }
+
+  html += `</div>`;
+
+  html += `
+    <div class="view-section">
+      <div class="view-section-title">📋 Visit Details</div>
+      <div class="view-grid">
+        <div class="view-item"><span class="label">Center</span><span class="value">${escapeHtml(entry.center || '—')}</span></div>
+        <div class="view-item"><span class="label">Visit Type</span><span class="value">${escapeHtml(entry.visitType || '—')}</span></div>
+        <div class="view-item"><span class="label">Visit Date</span><span class="value">${escapeHtml(entry.visitDate || '—')}</span></div>
+        <div class="view-item"><span class="label">Visit Time</span><span class="value">${escapeHtml(entry.visitTime || '—')}</span></div>
+        <div class="view-item"><span class="label">Phlebotomist</span><span class="value">${escapeHtml(entry.phlebotomist || '—')}</span></div>
+  `;
+
+  if (isPPSelectedForEntry(entry)) {
+    html += `
+      <div class="view-item"><span class="label">PP Time</span><span class="value">${escapeHtml(entry.ppTime || '—')}</span></div>
+      <div class="view-item"><span class="label">PP Phlebotomist</span><span class="value">${escapeHtml(entry.ppPhlebotomist || '—')}</span></div>
+    `;
+  }
+
+  if (isExtraCollectionSelectedForEntry(entry)) {
+    html += `
+      <div class="view-item"><span class="label">Extra Collection Time</span><span class="value">${escapeHtml(entry.extraCollectionTime || '—')}</span></div>
+      <div class="view-item"><span class="label">Extra Collection Phlebotomist</span><span class="value">${escapeHtml(entry.extraCollectionPhlebotomist || '—')}</span></div>
+    `;
+  }
+
+  html += `</div></div>`;
+
+  html += `
+    <div class="view-section">
+      <div class="view-section-title">📄 Report Details</div>
+      <div class="view-grid">
+        <div class="view-item"><span class="label">Online Report Required</span><span class="value">${entry.onlineReportRequired ? '✅ Yes' : '❌ No'}</span></div>
+        <div class="view-item"><span class="label">Report Delivery Required</span><span class="value">${entry.reportDeliveryRequired ? '✅ Yes' : '❌ No'}</span></div>
+        <div class="view-item"><span class="label">Bill Delivery Required</span><span class="value">${entry.billDeliveryRequired ? '✅ Yes' : '❌ No'}</span></div>
+  `;
+
+  if (entry.onlineReportRequired) {
+    html += `<div class="view-item"><span class="label">Online Report Sent</span><span class="value">${entry.onlineReportSent ? '✅ Yes' : '❌ No'}</span></div>`;
+  }
+  if (entry.reportDeliveryRequired) {
+    html += `<div class="view-item"><span class="label">Report Delivered</span><span class="value">${entry.reportDelivered ? '✅ Yes' : '❌ No'}</span></div>`;
+  }
+  if (entry.billDeliveryRequired) {
+    html += `<div class="view-item"><span class="label">Bill Delivered</span><span class="value">${entry.billDelivered ? '✅ Yes' : '❌ No'}</span></div>`;
+  }
+
+  if (entry.reportsReceived) {
+    const receivedKeys = Object.keys(entry.reportsReceived);
+    if (receivedKeys.length > 0) {
+      html += `<div class="view-item full-width"><span class="label">Reports Received</span><span class="value">`;
+      receivedKeys.forEach(key => {
+        const isReceived = entry.reportsReceived[key];
+        html += `<span class="test-chip">${escapeHtml(key)} ${isReceived ? '✅' : '❌'}</span>`;
+      });
+      html += `</span></div>`;
+    }
+  }
+
+  html += `</div></div>`;
+
+  html += `
+    <div class="view-section">
+      <div class="view-section-title">💰 Payment Details</div>
+      <div class="view-grid">
+        <div class="view-item"><span class="label">Total MRP</span><span class="value currency">${formatCurrency(entry.totalMRP || 0)}</span></div>
+        <div class="view-item"><span class="label">Final Price</span><span class="value currency">${formatCurrency(entry.finalPrice || 0)}</span></div>
+        <div class="view-item"><span class="label">Cash Received</span><span class="value currency">${formatCurrency(entry.cashReceived || 0)}</span></div>
+        <div class="view-item"><span class="label">Online Received</span><span class="value currency">${formatCurrency(entry.onlineReceived || 0)}</span></div>
+        <div class="view-item"><span class="label">Pending Payment</span><span class="value currency">${formatCurrency(entry.pendingPayment || 0)}</span></div>
+  `;
+
+  if (entry.careOfPerson && entry.careOfPerson.toLowerCase() !== 'none') {
+    html += `<div class="view-item"><span class="label">Goodwill Charges</span><span class="value currency">${formatCurrency(entry.goodwillCharges || 0)}</span></div>`;
+  }
+
+  html += `</div></div>`;
+
+  if (entry.patientName) {
+    html += `
+      <div class="view-section">
+        <div class="view-section-title">📧 Report Message</div>
+        <div class="report-message-container" style="background: var(--bg-light); border-radius: var(--radius-sm); padding: 16px 20px;">
+          <div class="report-message" style="white-space:pre-wrap; font-size:0.85rem; color:var(--text-dark); line-height:1.8;">Hello,
+
+Please find attached the test report for ${escapeHtml(entry.patientName)}.
+ 
+Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+ 
+Wishing you and your family good health!
+ 
+Thank you.</div>
+          <button class="copy-msg-btn" style="margin-top:12px; background:var(--primary); color:white; border:none; padding:4px 16px; border-radius:30px; font-size:0.75rem; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif;" onclick="copyViewMessage('${escapeHtml(entry.patientName)}')">📋 Copy Message</button>
+        </div>
+      </div>
+    `;
+  }
+
+  return html;
+}
+
+function copyViewMessage(patientName) {
+  const message = `Hello,
+
+Please find attached the test report for ${patientName}.
+ 
+Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+ 
+Wishing you and your family good health!
+ 
+Thank you.`;
+
+  navigator.clipboard.writeText(message).then(() => {
+    toast('Message copied to clipboard!', 'success');
+  }).catch(() => {
+    const textarea = document.createElement('textarea');
+    textarea.value = message;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+    toast('Message copied to clipboard!', 'success');
+  });
+}
+
+// ============================================================
+//  CONTACT FUNCTIONS
+// ============================================================
+function getContactsData(formId) {
+  const container = document.getElementById('contacts-container-' + formId);
+  if (!container) return [];
+
+  const rows = container.querySelectorAll('.contact-row');
+  const contacts = [];
+
+  rows.forEach(row => {
+    const nameInput = row.querySelector('input[id^="contactName-"]');
+    const numberInput = row.querySelector('input[id^="contactNumber-"]');
+
+    if (nameInput && numberInput) {
+      const name = nameInput.value.trim();
+      const number = numberInput.value.trim();
+      if (name || number) {
+        contacts.push({ name, number });
+      }
+    }
+  });
+
+  return contacts;
+}
+
+function populateContacts(formId, contacts) {
+  const container = document.getElementById('contacts-container-' + formId);
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  if (!contacts || contacts.length === 0) {
+    addContactRow(formId);
+    return;
+  }
+
+  contacts.forEach(contact => {
+    addContactRow(formId, contact);
+  });
+}
 
 function addContactRow(formId, data = null) {
   const container = document.getElementById('contacts-container-' + formId);
@@ -4020,13 +3701,13 @@ function addContactRow(formId, data = null) {
   row.innerHTML = `
     <div class="field-group">
       <label>Contact Person Name</label>
-      <input type="text" id="contactName-${formId}-${rowCount}" placeholder="Enter name" value="${nameValue}" />
+      <input type="text" id="contactName-${formId}-${rowCount}" placeholder="Enter name" value="${escapeHtml(nameValue)}" />
     </div>
     <div class="field-group">
       <label>Contact Number</label>
-      <input type="tel" id="contactNumber-${formId}-${rowCount}" placeholder="Enter 10-digit number" value="${numberValue}" />
+      <input type="tel" id="contactNumber-${formId}-${rowCount}" placeholder="Enter 10-digit number" value="${escapeHtml(numberValue)}" />
     </div>
-    <button class="remove-contact-btn" data-form="${formId}" data-index="${rowCount}">✕ Remove</button>
+    <button class="remove-contact-btn" data-form="${escapeHtml(formId)}" data-index="${rowCount}">✕ Remove</button>
   `;
 
   container.appendChild(row);
@@ -4145,49 +3826,469 @@ function validateContactNumber(input) {
   }
 }
 
-function getContactsData(formId) {
-  const container = document.getElementById('contacts-container-' + formId);
-  if (!container) return [];
+// ============================================================
+//  FORM HELPERS
+// ============================================================
+function getFieldValue(fieldName, formId) {
+  const el = document.getElementById(fieldName + '-' + formId);
+  return el ? el.value : '';
+}
 
-  const rows = container.querySelectorAll('.contact-row');
-  const contacts = [];
+function setFieldValue(fieldName, formId, value) {
+  const el = document.getElementById(fieldName + '-' + formId);
+  if (el) el.value = value || '';
+}
 
-  rows.forEach(row => {
-    const nameInput = row.querySelector('input[id^="contactName-"]');
-    const numberInput = row.querySelector('input[id^="contactNumber-"]');
+function getCheckboxValue(fieldName, formId) {
+  const el = document.getElementById(fieldName + '-' + formId);
+  return el ? el.checked : false;
+}
 
-    if (nameInput && numberInput) {
-      const name = nameInput.value.trim();
-      const number = numberInput.value.trim();
-      if (name || number) {
-        contacts.push({ name, number });
-      }
+function setCheckboxValue(fieldName, formId, value) {
+  const el = document.getElementById(fieldName + '-' + formId);
+  if (el) el.checked = value || false;
+}
+
+function gatherFormData(formId) {
+  const state = getFormState(formId);
+  
+  const patientData = {
+    patientName: getFieldValue('patientName', formId),
+    age: getFieldValue('patientAge', formId),
+    gender: getFieldValue('patientGender', formId),
+    contacts: getContactsData(formId),
+    address: getFieldValue('patientAddress', formId),
+    doctorName: getFieldValue('patientDoctor', formId),
+    careOfPerson: getFieldValue('patientCareOf', formId),
+    additionalInformation: getFieldValue('patientAdditionalInfo', formId),
+    images: state.images || []
+  };
+
+  const visitData = {
+    center: getFieldValue('visitCenter', formId),
+    visitType: getFieldValue('visitType', formId),
+    visitDate: getFieldValue('visitDate', formId),
+    visitTime: getFieldValue('visitTime', formId),
+    phlebotomist: getFieldValue('visitPhlebotomist', formId),
+    ppTime: getFieldValue('visitPPTime', formId),
+    ppPhlebotomist: getFieldValue('visitPPPhlebotomist', formId),
+    extraCollectionTime: getFieldValue('visitExtraTime', formId),
+    extraCollectionPhlebotomist: getFieldValue('visitExtraPhlebotomist', formId)
+  };
+
+  const reportData = {
+    onlineReportRequired: getCheckboxValue('reportOnlineRequired', formId),
+    reportDeliveryRequired: getCheckboxValue('reportDeliveryRequired', formId),
+    billDeliveryRequired: getCheckboxValue('reportBillDeliveryRequired', formId),
+    reportsReceived: { ...state.reportsReceived },
+    onlineReportSent: getCheckboxValue('reportOnlineSent', formId),
+    reportDelivered: getCheckboxValue('reportDelivered', formId),
+    billDelivered: getCheckboxValue('reportBillDelivered', formId),
+  };
+
+  const testData = {
+    labSelections: JSON.parse(JSON.stringify(state.selectedLabData))
+  };
+
+  const paymentData = {
+    totalMRP: calculateTotalMRP(formId),
+    totalB2B: calculateTotalB2B(formId),
+    finalPrice: parseCurrency(getFieldValue('paymentFinalPrice', formId)),
+    cashReceived: parseCurrency(getFieldValue('paymentCash', formId)),
+    onlineReceived: parseCurrency(getFieldValue('paymentOnline', formId)),
+    pendingPayment: parseCurrency(getFieldValue('paymentPending', formId)),
+    goodwillCharges: parseCurrency(getFieldValue('paymentGoodwill', formId)),
+  };
+
+  return { ...patientData, ...visitData, ...reportData, ...testData, ...paymentData };
+}
+
+function populateForm(formId, data) {
+  if (!data) return;
+
+  const state = getFormState(formId);
+
+  setFieldValue('patientName', formId, data.patientName || '');
+  setFieldValue('patientAge', formId, data.age || '');
+  setFieldValue('patientGender', formId, data.gender || '');
+  setFieldValue('patientAddress', formId, data.address || '');
+  setFieldValue('patientDoctor', formId, data.doctorName || '');
+  setFieldValue('patientCareOf', formId, data.careOfPerson || '');
+  setFieldValue('patientAdditionalInfo', formId, data.additionalInformation || '');
+
+  if (data.contacts && Array.isArray(data.contacts)) {
+    populateContacts(formId, data.contacts);
+  } else {
+    populateContacts(formId, []);
+  }
+
+  if (data.images && Array.isArray(data.images)) {
+    state.images = [...data.images];
+    state.imageFiles = [];
+    renderImages(formId);
+  }
+
+  setFieldValue('visitCenter', formId, data.center || '');
+  setFieldValue('visitType', formId, data.visitType || '');
+  setFieldValue('visitDate', formId, data.visitDate || '');
+  setFieldValue('visitTime', formId, data.visitTime || '');
+  setFieldValue('visitPhlebotomist', formId, data.phlebotomist || '');
+  setFieldValue('visitPPTime', formId, data.ppTime || '');
+  setFieldValue('visitPPPhlebotomist', formId, data.ppPhlebotomist || '');
+  setFieldValue('visitExtraTime', formId, data.extraCollectionTime || '');
+  setFieldValue('visitExtraPhlebotomist', formId, data.extraCollectionPhlebotomist || '');
+
+  setCheckboxValue('reportOnlineRequired', formId, data.onlineReportRequired || false);
+  setCheckboxValue('reportDeliveryRequired', formId, data.reportDeliveryRequired || false);
+  setCheckboxValue('reportBillDeliveryRequired', formId, data.billDeliveryRequired || false);
+  setCheckboxValue('reportOnlineSent', formId, data.onlineReportSent || false);
+  setCheckboxValue('reportDelivered', formId, data.reportDelivered || false);
+  setCheckboxValue('reportBillDelivered', formId, data.billDelivered || false);
+
+  if (data.reportsReceived) {
+    state.reportsReceived = { ...data.reportsReceived };
+  } else {
+    state.reportsReceived = {};
+  }
+
+  setFieldValue('paymentFinalPrice', formId, data.finalPrice ? data.finalPrice.toString() : '');
+  setFieldValue('paymentCash', formId, data.cashReceived ? data.cashReceived.toString() : '');
+  setFieldValue('paymentOnline', formId, data.onlineReceived ? data.onlineReceived.toString() : '');
+  setFieldValue('paymentGoodwill', formId, data.goodwillCharges ? data.goodwillCharges.toString() : '');
+
+  if (data.labSelections) {
+    const normalizedLabSelections = {};
+    for (let labId = 1; labId <= 4; labId++) {
+      const labSel = data.labSelections[labId] || {};
+      normalizedLabSelections[labId] = {
+        tests: labSel.tests || [],
+        packages: labSel.packages || []
+      };
+    }
+    state.selectedLabData = JSON.parse(JSON.stringify(normalizedLabSelections));
+    recalculateGlobalSelectedTests(formId);
+  }
+
+  updatePPSection(formId);
+  updateExtraCollectionVisibility(formId);
+  updateReportReceivedList(formId);
+  updateDeliveryStatusVisibility(formId);
+  updatePaymentFields(formId);
+  updateSectionProgressBars(formId);
+  updateReportMessage(formId);
+}
+
+// ============================================================
+//  TAB MANAGEMENT
+// ============================================================
+function switchTab(tabId) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+  const targetPanel = document.getElementById('panel-' + tabId);
+  if (targetPanel) targetPanel.classList.add('active-panel');
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabId);
+  });
+  activeTab = tabId;
+
+  if (tabId === 'schedule') {
+    renderVisitSchedule();
+  }
+  if (tabId !== 'added' && tabId !== 'schedule') {
+    updateSectionProgressBars(tabId);
+  }
+}
+
+function createTabButton(tabId, label, closeable = false) {
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn' + (tabId === 'added' ? ' active' : '');
+  btn.dataset.tab = tabId;
+  btn.innerHTML = label;
+
+  if (closeable) {
+    const span = document.createElement('span');
+    span.className = 'close-edit';
+    span.textContent = '✕';
+    span.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeEditTab(tabId);
+    });
+    btn.appendChild(span);
+  }
+
+  btn.addEventListener('click', () => {
+    if (tabId === 'added') {
+      switchTab('added');
+    } else if (tabId === 'new') {
+      switchTab('new');
+    } else if (tabId === 'schedule') {
+      switchTab('schedule');
+    } else if (tabId.startsWith('edit-')) {
+      switchTab(tabId);
     }
   });
 
-  return contacts;
+  return btn;
 }
 
-function populateContacts(formId, contacts) {
-  const container = document.getElementById('contacts-container-' + formId);
-  if (!container) return;
+function ensureBaseTabs() {
+  tabBar.innerHTML = '';
 
-  container.innerHTML = '';
+  const scheduleBtn = createTabButton('schedule', '📅 Visit Schedule', false);
+  tabBar.appendChild(scheduleBtn);
 
-  if (!contacts || contacts.length === 0) {
-    addContactRow(formId);
-    return;
+  const addedBtn = createTabButton('added', '📋 Added Entries', false);
+  tabBar.appendChild(addedBtn);
+
+  const newBtn = createTabButton('new', '➕ New Entry', false);
+  tabBar.appendChild(newBtn);
+
+  for (const [key, info] of editTabs) {
+    const btn = createTabButton('edit-' + key, '✎ Edit — ' + escapeHtml(info.name), true);
+    tabBar.appendChild(btn);
   }
 
-  contacts.forEach(contact => {
-    addContactRow(formId, contact);
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === activeTab);
   });
 }
 
-// ============================================================
-//  SECTION NAV HTML (unchanged)
-// ============================================================
+function closeEditTab(tabId) {
+  const key = tabId.replace('edit-', '');
+  if (!editTabs.has(key)) return;
 
+  editTabs.delete(key);
+  deleteFormState(tabId);
+  
+  const panel = document.getElementById('panel-' + tabId);
+  if (panel) panel.remove();
+
+  ensureBaseTabs();
+
+  if (editTabs.size === 0) {
+    switchTab('added');
+  } else {
+    const firstKey = editTabs.keys().next().value;
+    switchTab('edit-' + firstKey);
+  }
+}
+
+function openEditTab(key, data) {
+  if (editTabs.has(key)) {
+    switchTab('edit-' + key);
+    return;
+  }
+
+  const name = data.patientName || 'Patient';
+  editTabs.set(key, { name });
+
+  createEditPanel(key, data);
+  ensureBaseTabs();
+  switchTab('edit-' + key);
+}
+
+// ============================================================
+//  CREATE PANELS
+// ============================================================
+function getPanelId(formId) {
+  return 'panel-' + formId;
+}
+
+function createNewEntryPanel() {
+  const formId = 'new';
+  const panelId = getPanelId(formId);
+
+  const existingPanel = document.getElementById(panelId);
+  if (existingPanel) {
+    existingPanel.remove();
+  }
+
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  panel.id = panelId;
+  panel.dataset.panel = formId;
+
+  panel.innerHTML = `
+    <div class="form-layout">
+      <div class="section-nav">
+        ${createSectionNavButtons(formId)}
+      </div>
+      <div class="section-content">
+        <div class="form-section active-section-content" data-section="patient">
+          <h3>Patient Details</h3>
+          ${createPatientDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="test">
+          <h3>Test Details</h3>
+          ${createTestDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="visit">
+          <h3>Visit Details</h3>
+          ${createVisitDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="report">
+          <h3>Report Details</h3>
+          ${createReportDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="payment">
+          <h3>Payment Details</h3>
+          ${createPaymentDetailsHTML(formId)}
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-clear" id="clearBtn-${formId}">Clear</button>
+      <button class="btn-save" id="saveBtn-${formId}" data-original-text="💾 Save Entry">💾 Save Entry</button>
+    </div>
+  `;
+
+  const addedPanel = document.getElementById('panel-added');
+  addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
+
+  formStates.set('new', createEmptyFormState());
+
+  setupFormNavigation(formId);
+  setupPatientDetailsEvents(formId);
+
+  const clearBtn = document.getElementById('clearBtn-' + formId);
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Clear all entered data?')) {
+        resetFormState(formId);
+        const panel = document.getElementById(getPanelId(formId));
+        if (panel) {
+          panel.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.id && el.id.includes('-' + formId)) {
+              if (el.type === 'checkbox') {
+                el.checked = false;
+              } else if (el.type !== 'button' && el.type !== 'submit') {
+                el.value = '';
+              }
+            }
+          });
+          const container = document.getElementById('contacts-container-' + formId);
+          if (container) {
+            container.innerHTML = '';
+            addContactRow(formId);
+          }
+          const state = getFormState(formId);
+          state.images = [];
+          state.imageFiles = [];
+          renderImages(formId);
+        }
+        updatePPSection(formId);
+        updateExtraCollectionVisibility(formId);
+        updateReportReceivedList(formId);
+        updateDeliveryStatusVisibility(formId);
+        updatePaymentFields(formId);
+        updateSectionProgressBars(formId);
+        updateReportMessage(formId);
+      }
+    });
+  }
+
+  const saveBtn = document.getElementById('saveBtn-' + formId);
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async function() {
+      await savePatient(formId);
+    });
+  }
+
+  return panel;
+}
+
+function createEditPanel(key, data) {
+  const formId = 'edit-' + key;
+  const panelId = getPanelId(formId);
+
+  data = JSON.parse(JSON.stringify(data));
+
+  const existingPanel = document.getElementById(panelId);
+  if (existingPanel) {
+    existingPanel.remove();
+  }
+
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  panel.id = panelId;
+  panel.dataset.panel = formId;
+
+  panel.innerHTML = `
+    <div class="form-layout">
+      <div class="section-nav">
+        ${createSectionNavButtons(formId)}
+      </div>
+      <div class="section-content">
+        <div class="form-section active-section-content" data-section="patient">
+          <h3>Patient Details</h3>
+          ${createPatientDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="test">
+          <h3>Test Details</h3>
+          ${createTestDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="visit">
+          <h3>Visit Details</h3>
+          ${createVisitDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="report">
+          <h3>Report Details</h3>
+          ${createReportDetailsHTML(formId)}
+        </div>
+
+        <div class="form-section" data-section="payment">
+          <h3>Payment Details</h3>
+          ${createPaymentDetailsHTML(formId)}
+        </div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-clear" id="clearBtn-${formId}">Undo Changes</button>
+      <button class="btn-save" id="saveBtn-${formId}" data-original-text="💾 Update Entry">💾 Update Entry</button>
+    </div>
+  `;
+
+  const addedPanel = document.getElementById('panel-added');
+  addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
+
+  formStates.set(formId, createEmptyFormState());
+  
+  populateForm(formId, data);
+
+  setupFormNavigation(formId);
+  setupPatientDetailsEvents(formId);
+
+  const clearBtn = document.getElementById('clearBtn-' + formId);
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Undo all changes and restore the original saved patient data?')) {
+        resetFormState(formId);
+        populateForm(formId, data);
+        toast('Changes undone. Original data restored.', 'success');
+      }
+    });
+  }
+
+  const saveBtn = document.getElementById('saveBtn-' + formId);
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async function() {
+      await savePatient(formId, true, key);
+    });
+  }
+
+  return panel;
+}
+
+// ============================================================
+//  SECTION NAV
+// ============================================================
 function createSectionNavButtons(formId) {
   const sections = [
     { id: 'patient', label: 'Patient Details' },
@@ -4261,9 +4362,8 @@ function setupFormNavigation(formId) {
 }
 
 // ============================================================
-//  FORM HTML GENERATORS (unchanged)
+//  FORM HTML GENERATORS
 // ============================================================
-
 function createPatientDetailsHTML(formId) {
   return `
     <div class="patient-details-grid">
@@ -4328,7 +4428,7 @@ function createPatientDetailsHTML(formId) {
           <div class="upload-box">
             <span class="upload-icon">📷</span>
             <span>Add Images</span>
-            <input type="file" id="imageFileInput-${formId}" accept="image/*" multiple />
+            <input type="file" accept="image/*" multiple />
           </div>
         </div>
       </div>
@@ -4416,9 +4516,12 @@ function createTestDetailsHTML(formId) {
       <div id="labTabs-${formId}" class="lab-tabs-wrapper">
   `;
 
+  const state = getFormState(formId);
+  const activeLabId = state.activeLabId || 1;
+
   for (let labId = 1; labId <= 4; labId++) {
     const color = LAB_COLORS[labId];
-    const isActive = labId === 1;
+    const isActive = labId === activeLabId;
     html += `
       <button class="lab-tab ${isActive ? 'active' : ''}" 
               data-lab="${labId}" 
@@ -4435,7 +4538,7 @@ function createTestDetailsHTML(formId) {
   `;
 
   for (let labId = 1; labId <= 4; labId++) {
-    const isActive = labId === 1;
+    const isActive = labId === activeLabId;
     const color = LAB_COLORS[labId];
     html += `
       <div class="lab-content-wrapper ${isActive ? 'active' : ''}" 
@@ -4605,9 +4708,8 @@ function createPaymentDetailsHTML(formId) {
 }
 
 // ============================================================
-//  SETUP PATIENT DETAILS EVENTS (unchanged)
+//  SETUP PATIENT DETAILS EVENTS
 // ============================================================
-
 function setupPatientDetailsEvents(formId) {
   const nameInput = document.getElementById('patientName-' + formId);
   if (nameInput) {
@@ -4803,9 +4905,8 @@ function setupPatientDetailsEvents(formId) {
 }
 
 // ============================================================
-//  SETUP PATIENT AUTOCOMPLETE (unchanged)
+//  AUTOCOMPLETE - Patient Details Only + Abc Xyz Support
 // ============================================================
-
 function setupPatientAutocomplete(formId) {
   const input = document.getElementById(`patientName-${formId}`);
   if (!input) return;
@@ -4850,7 +4951,6 @@ function setupPatientAutocomplete(formId) {
     }
 
     const matches = getPatientSuggestions(query);
-
     currentSuggestions = matches;
 
     if (currentSuggestions.length === 0) {
@@ -4869,15 +4969,18 @@ function setupPatientAutocomplete(formId) {
         const before = name.substring(0, startIndex);
         const match = name.substring(startIndex, startIndex + query.length);
         const after = name.substring(startIndex + query.length);
-        displayName = `${before}<span class="highlight">${match}</span>${after}`;
+        // Escape the before and after parts, but keep the match as HTML
+        displayName = `${escapeHtml(before)}<span class="highlight">${escapeHtml(match)}</span>${escapeHtml(after)}`;
+      } else {
+        displayName = escapeHtml(name);
       }
 
       const isSample = item.isSample ? ' (Sample)' : '';
       const visitDate = item.data?.visitDate ? formatDateDisplay(item.data.visitDate) : 'No previous visit';
       return `
         <div class="patient-suggestion-item" data-index="${index}">
-          <div class="patient-name">${displayName}${isSample}</div>
-          <div class="patient-visit">${isSample ? 'Sample patient - no details will be loaded' : 'Previous visit: ' + visitDate}</div>
+          <div class="patient-name">${displayName}${escapeHtml(isSample)}</div>
+          <div class="patient-visit">${isSample ? 'Sample patient - no details will be loaded' : 'Previous visit: ' + escapeHtml(visitDate)}</div>
         </div>
       `;
     }).join('');
@@ -4944,18 +5047,20 @@ function setupPatientAutocomplete(formId) {
   });
 
   async function selectPatientFromHistory(item, formId) {
-    if (item.isSample) {
+    // Abc Xyz - placeholder only, no data loading
+    if (item.isSample || item.name === 'Abc Xyz') {
       const nameInput = document.getElementById(`patientName-${formId}`);
       if (nameInput) nameInput.value = item.name;
       suggestionsDiv.classList.remove('show');
-      toast('Sample patient selected. No details loaded.', 'success');
+      toast('Abc Xyz selected as placeholder name. No details loaded.', 'success');
       updateSectionProgressBars(formId);
       return;
     }
 
+    // Load only patient details, NOT images
     const fullData = await loadPatientRecord(item.key);
     if (fullData) {
-      populatePatientDetails(formId, fullData);
+      populatePatientDetailsOnly(formId, fullData);
       suggestionsDiv.classList.remove('show');
       toast('Patient details loaded from previous visit.', 'success');
       updateSectionProgressBars(formId);
@@ -4963,7 +5068,8 @@ function setupPatientAutocomplete(formId) {
   }
 }
 
-function populatePatientDetails(formId, data) {
+function populatePatientDetailsOnly(formId, data) {
+  // Load ONLY patient details fields
   const nameInput = document.getElementById(`patientName-${formId}`);
   if (nameInput) nameInput.value = data.patientName || '';
 
@@ -4985,72 +5091,23 @@ function populatePatientDetails(formId, data) {
   const additionalInput = document.getElementById(`patientAdditionalInfo-${formId}`);
   if (additionalInput) additionalInput.value = data.additionalInformation || '';
 
+  // Load contacts
   if (data.contacts && Array.isArray(data.contacts)) {
     populateContacts(formId, data.contacts);
   } else {
     populateContacts(formId, []);
   }
 
-  if (data.images && Array.isArray(data.images)) {
-    const state = getFormState(formId);
-    state.images = [...data.images];
-    state.imageFiles = [];
-    renderImages(formId);
-  }
+  // DO NOT load images
+  // DO NOT load test details
+  // DO NOT load visit details
+  // DO NOT load report details
+  // DO NOT load payment details
 
-  setFieldValue('visitCenter', formId, data.center || '');
-  setFieldValue('visitType', formId, data.visitType || '');
-  setFieldValue('visitDate', formId, data.visitDate || '');
-  setFieldValue('visitTime', formId, data.visitTime || '');
-  setFieldValue('visitPhlebotomist', formId, data.phlebotomist || '');
-  setFieldValue('visitPPTime', formId, data.ppTime || '');
-  setFieldValue('visitPPPhlebotomist', formId, data.ppPhlebotomist || '');
-  setFieldValue('visitExtraTime', formId, data.extraCollectionTime || '');
-  setFieldValue('visitExtraPhlebotomist', formId, data.extraCollectionPhlebotomist || '');
-
-  setCheckboxValue('reportOnlineRequired', formId, data.onlineReportRequired || false);
-  setCheckboxValue('reportDeliveryRequired', formId, data.reportDeliveryRequired || false);
-  setCheckboxValue('reportBillDeliveryRequired', formId, data.billDeliveryRequired || false);
-  setCheckboxValue('reportOnlineSent', formId, data.onlineReportSent || false);
-  setCheckboxValue('reportDelivered', formId, data.reportDelivered || false);
-  setCheckboxValue('reportBillDelivered', formId, data.billDelivered || false);
-
-  if (data.reportsReceived) {
-    const state = getFormState(formId);
-    state.reportsReceived = { ...data.reportsReceived };
-  }
-
-  setFieldValue('paymentFinalPrice', formId, data.finalPrice ? data.finalPrice.toString() : '');
-  setFieldValue('paymentCash', formId, data.cashReceived ? data.cashReceived.toString() : '');
-  setFieldValue('paymentOnline', formId, data.onlineReceived ? data.onlineReceived.toString() : '');
-  setFieldValue('paymentGoodwill', formId, data.goodwillCharges ? data.goodwillCharges.toString() : '');
-
-  if (data.labSelections) {
-    const state = getFormState(formId);
-    const normalizedLabSelections = {};
-    for (let labId = 1; labId <= 4; labId++) {
-      const labSel = data.labSelections[labId] || {};
-      normalizedLabSelections[labId] = {
-        tests: labSel.tests || [],
-        packages: labSel.packages || []
-      };
-    }
-    state.selectedLabData = JSON.parse(JSON.stringify(normalizedLabSelections));
-    recalculateGlobalSelectedTests(formId);
-  }
-
-  updatePPSection(formId);
-  updateExtraCollectionVisibility(formId);
-  updateReportReceivedList(formId);
-  updateDeliveryStatusVisibility(formId);
   updatePaymentFields(formId);
   updateSectionProgressBars(formId);
   updateReportMessage(formId);
 }
-
-// ============================================================
-//  SETUP AUTOCOMPLETE (unchanged)
-// ============================================================
 
 function setupAutocomplete(inputId, suggestions, formId) {
   const input = document.getElementById(inputId + '-' + formId);
@@ -5086,7 +5143,7 @@ function setupAutocomplete(inputId, suggestions, formId) {
     }
 
     suggestionsDiv.innerHTML = filteredSuggestions.map((s, index) =>
-      `<div class="suggestion-item" data-index="${index}">${s}</div>`
+      `<div class="suggestion-item" data-index="${index}">${escapeHtml(s)}</div>`
     ).join('');
     suggestionsDiv.classList.add('show');
     activeIndex = -1;
@@ -5143,14 +5200,31 @@ function setupAutocomplete(inputId, suggestions, formId) {
   input.addEventListener('focus', function() {
     if (this.value) updateSuggestions(this.value);
   });
-
-  return wrapper;
 }
 
 // ============================================================
-//  COPY RULES TO CLIPBOARD (unchanged)
+//  INIT
 // ============================================================
+function init() {
+  createNewEntryPanel();
+  ensureBaseTabs();
+  switchTab('added');
+  setupVisitScheduleListeners();
+  loadEntries();
+}
 
+// ============================================================
+//  GLOBAL FUNCTIONS
+// ============================================================
+window.handleB2BUnlock = handleB2BUnlock;
+window.verifyB2BPassword = verifyB2BPassword;
+window.copyReportMessage = copyReportMessage;
+window.openFullImage = openFullImage;
+window.openCalculator = window.openCalculator || function() {};
+
+// ============================================================
+//  COPY RULES
+// ============================================================
 if (copyRulesBtn) {
   copyRulesBtn.addEventListener('click', () => {
     const rules = `{
@@ -5183,9 +5257,8 @@ if (copyRulesBtn) {
 }
 
 // ============================================================
-//  CALCULATOR - Global button click handlers (unchanged)
+//  CALCULATOR EVENTS
 // ============================================================
-
 document.addEventListener('click', function(e) {
   if (e.target.id === 'calculatorClose' || e.target.closest('#calculatorClose')) {
     if (typeof window.closeCalculator === 'function') {
@@ -5220,30 +5293,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ============================================================
-//  B2B Functions - Make global (unchanged)
-// ============================================================
-
-window.handleB2BUnlock = handleB2BUnlock;
-window.verifyB2BPassword = verifyB2BPassword;
-window.copyReportMessage = copyReportMessage;
-window.openFullImage = openFullImage;
-
-// ============================================================
-//  INIT
-// ============================================================
-
-function init() {
-  // Create UI
-  createNewEntryPanel();
-  ensureBaseTabs();
-  switchTab('added');
-  setupVisitScheduleListeners();
-  
-  // Load data
-  loadEntries();
-}
-
+// Start the app
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
