@@ -7,10 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
-  </script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js">
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
   <script src="data.js"></script>
   <script src="calculator.js"></script>
   <style>
@@ -465,7 +464,247 @@
       box-shadow: var(--shadow-sm);
     }
 
-    /* ===== ENTRY ITEM ===== */
+    /* ============================================================
+       VISIT SCHEDULE STYLES
+       ============================================================ */
+    .visit-schedule-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .visit-schedule-toolbar .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .visit-schedule-toolbar .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .visit-schedule-toolbar .filter-group label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-medium);
+      white-space: nowrap;
+    }
+
+    .visit-schedule-toolbar select,
+    .visit-schedule-toolbar input[type="date"],
+    .visit-schedule-toolbar input[type="text"] {
+      border: 1px solid #dce5ea;
+      border-radius: 30px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      transition: var(--transition);
+      min-width: 120px;
+    }
+
+    .visit-schedule-toolbar select:focus,
+    .visit-schedule-toolbar input[type="date"]:focus,
+    .visit-schedule-toolbar input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.1);
+    }
+
+    .visit-schedule-toolbar select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6a73' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .visit-schedule-toolbar .search-input {
+      min-width: 220px;
+      flex: 1;
+    }
+
+    .visit-schedule-toolbar .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .visit-schedule-toolbar .visit-count {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      white-space: nowrap;
+    }
+
+    .visit-item {
+      border-radius: var(--radius-md);
+      padding: 16px 22px;
+      border: 1px solid #e5e7eb;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      background: white;
+      margin-bottom: 12px;
+    }
+
+    .visit-item.done {
+      opacity: 0.7;
+      border-left-color: var(--success) !important;
+    }
+
+    .visit-item.done .visit-done-checkbox {
+      opacity: 1;
+    }
+
+    .visit-item .visit-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .visit-item .visit-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .visit-item .visit-patient-name {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--text-dark);
+    }
+
+    .visit-item .visit-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-medium);
+    }
+
+    .visit-item .visit-details .visit-type-badge {
+      font-weight: 600;
+      padding: 2px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      background: var(--bg-light);
+      color: var(--text-medium);
+    }
+
+    .visit-item .visit-details .visit-type-badge.pp {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .visit-item .visit-details .visit-type-badge.extra {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .visit-item .visit-details .visit-type-badge.main {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .visit-item .visit-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .visit-item .visit-actions button {
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-weight: 500;
+      font-size: 0.8rem;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+
+    .visit-item .visit-actions .view-btn {
+      background: rgba(9, 99, 126, 0.08);
+      color: var(--primary);
+    }
+
+    .visit-item .visit-actions .view-btn:hover {
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .visit-item .visit-actions .edit-btn {
+      background: rgba(9, 99, 126, 0.08);
+      color: var(--primary);
+    }
+
+    .visit-item .visit-actions .edit-btn:hover {
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .visit-item .visit-done-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-medium);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .visit-item .visit-done-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--success);
+    }
+
+    .visit-item .visit-done-time {
+      font-size: 0.75rem;
+      color: var(--success);
+      font-weight: 500;
+    }
+
+    .visit-item .gradient-single-1 { border-left: 4px solid #c084fc; }
+    .visit-item .gradient-single-2 { border-left: 4px solid #60a5fa; }
+    .visit-item .gradient-single-3 { border-left: 4px solid #4ade80; }
+    .visit-item .gradient-single-4 { border-left: 4px solid #f87171; }
+
+    .visit-item .gradient-multi-1-2 { border-left: 4px solid #c084fc; }
+    .visit-item .gradient-multi-1-3 { border-left: 4px solid #c084fc; }
+    .visit-item .gradient-multi-1-4 { border-left: 4px solid #c084fc; }
+    .visit-item .gradient-multi-2-3 { border-left: 4px solid #60a5fa; }
+    .visit-item .gradient-multi-2-4 { border-left: 4px solid #60a5fa; }
+    .visit-item .gradient-multi-3-4 { border-left: 4px solid #4ade80; }
+    .visit-item .gradient-multi-1-2-3 { border-left: 4px solid #c084fc; }
+    .visit-item .gradient-multi-1-2-4 { border-left: 4px solid #c084fc; }
+    .visit-item .gradient-multi-1-3-4 { border-left: 4px solid #c084fc; }
+    .visit-item .gradient-multi-2-3-4 { border-left: 4px solid #60a5fa; }
+    .visit-item .gradient-multi-1-2-3-4 { border-left: 4px solid #c084fc; }
+
+    /* ============================================================
+       ENTRY ITEM
+       ============================================================ */
     .entry-list {
       display: flex;
       flex-direction: column;
@@ -907,6 +1146,72 @@
       border: 1px solid #e5e7eb;
     }
 
+    /* View Modal - Image Gallery */
+    .view-image-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .view-image-gallery .view-image-thumb {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: 2px solid #e5e7eb;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .view-image-gallery .view-image-thumb:hover {
+      transform: scale(1.05);
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+    }
+
+    .view-image-full {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 10001;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    .view-image-full.active {
+      display: flex;
+    }
+
+    .view-image-full img {
+      max-width: 95%;
+      max-height: 95%;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+    }
+
+    .view-image-full .close-full-image {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 2.5rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      transition: var(--transition);
+    }
+
+    .view-image-full .close-full-image:hover {
+      transform: scale(1.2);
+    }
+
     /* ============================================================
        ENTRY FORM - PATIENT DETAILS
        ============================================================ */
@@ -927,6 +1232,11 @@
       margin-bottom: 4px;
       display: block;
       letter-spacing: 0.01em;
+    }
+
+    .patient-details-grid .field-label.required::after {
+      content: " *";
+      color: var(--error);
     }
 
     .patient-details-grid input,
@@ -956,6 +1266,110 @@
       min-height: 80px;
     }
 
+    .patient-details-grid .field-error {
+      display: none;
+      font-size: 0.75rem;
+      color: var(--error);
+      margin-top: 2px;
+    }
+
+    .patient-details-grid .field-error.show {
+      display: block;
+    }
+
+    .patient-details-grid input.input-error,
+    .patient-details-grid select.input-error {
+      border-color: var(--error);
+    }
+
+    /* Image Upload */
+    .image-upload-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .image-upload-container .upload-box {
+      width: 120px;
+      height: 120px;
+      border: 2px dashed #dce5ea;
+      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg-light);
+      color: var(--text-light);
+      font-size: 0.75rem;
+      gap: 4px;
+      position: relative;
+    }
+
+    .image-upload-container .upload-box:hover {
+      border-color: var(--primary);
+      background: rgba(9, 99, 126, 0.05);
+    }
+
+    .image-upload-container .upload-box .upload-icon {
+      font-size: 2rem;
+    }
+
+    .image-upload-container .upload-box input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .image-upload-container .image-thumb {
+      width: 120px;
+      height: 120px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 2px solid #e5e7eb;
+      position: relative;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .image-upload-container .image-thumb:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .image-upload-container .image-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .image-upload-container .image-thumb .remove-image {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .image-upload-container .image-thumb .remove-image:hover {
+      background: var(--error);
+      transform: scale(1.1);
+    }
+
     /* ============================================================
        ENTRY FORM - VISIT DETAILS
        ============================================================ */
@@ -972,6 +1386,11 @@
       margin-bottom: 4px;
       display: block;
       letter-spacing: 0.01em;
+    }
+
+    .visit-details-grid .field-label.required::after {
+      content: " *";
+      color: var(--error);
     }
 
     .visit-details-grid .full-width {
@@ -1001,6 +1420,22 @@
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 4px rgba(9, 99, 126, 0.08);
+    }
+
+    .visit-details-grid .field-error {
+      display: none;
+      font-size: 0.75rem;
+      color: var(--error);
+      margin-top: 2px;
+    }
+
+    .visit-details-grid .field-error.show {
+      display: block;
+    }
+
+    .visit-details-grid input.input-error,
+    .visit-details-grid select.input-error {
+      border-color: var(--error);
     }
 
     .pp-section {
@@ -1054,6 +1489,63 @@
     }
 
     .pp-grid input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(9, 99, 126, 0.08);
+    }
+
+    /* Extra Collection Section */
+    .extra-collection-section {
+      display: none;
+      margin-top: 4px;
+      padding-top: 12px;
+      border-top: 2px dashed var(--accent-light);
+      animation: fadeIn 0.3s ease;
+      grid-column: 1 / -1;
+    }
+
+    .extra-collection-section.visible {
+      display: block;
+    }
+
+    .extra-collection-section .extra-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+
+    .extra-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 16px 20px;
+    }
+
+    .extra-grid .field-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-medium);
+      margin-bottom: 4px;
+      display: block;
+      letter-spacing: 0.01em;
+    }
+
+    .extra-grid input {
+      padding: 10px 14px;
+      border: 1px solid #dce5ea;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      background: white;
+      transition: var(--transition);
+      width: 100%;
+      color: var(--text-dark);
+      height: 42px;
+    }
+
+    .extra-grid input:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 4px rgba(9, 99, 126, 0.08);
@@ -1206,6 +1698,55 @@
 
     .delivery-status-item.visible {
       display: flex;
+    }
+
+    /* Report Message */
+    .report-message-container {
+      margin-top: 8px;
+      padding: 16px 20px;
+      background: var(--bg-light);
+      border-radius: var(--radius-sm);
+      border: 1px solid #e5e7eb;
+      position: relative;
+    }
+
+    .report-message-container .message-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .report-message-container .message-header h5 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .report-message-container .copy-msg-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 4px 16px;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .report-message-container .copy-msg-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.02);
+    }
+
+    .report-message-container .report-message {
+      white-space: pre-wrap;
+      font-size: 0.85rem;
+      color: var(--text-dark);
+      line-height: 1.8;
+      font-family: 'Inter', sans-serif;
     }
 
     /* ============================================================
@@ -2397,6 +2938,9 @@
       .pp-grid {
         grid-template-columns: 1fr;
       }
+      .extra-grid {
+        grid-template-columns: 1fr;
+      }
       .contact-row {
         grid-template-columns: 1fr;
         gap: 8px;
@@ -2431,6 +2975,32 @@
       .pagination-container {
         flex-direction: column;
         align-items: stretch;
+      }
+      .visit-schedule-toolbar .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .visit-schedule-toolbar .filter-group {
+        flex: 1;
+      }
+      .visit-schedule-toolbar .filter-group select,
+      .visit-schedule-toolbar .filter-group input {
+        width: 100%;
+        min-width: unset;
+      }
+      .visit-schedule-toolbar .right-controls {
+        margin-left: 0;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .visit-item .visit-content {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .visit-item .visit-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
       }
     }
 
@@ -2479,6 +3049,9 @@
       .pp-grid {
         grid-template-columns: 1fr;
       }
+      .extra-grid {
+        grid-template-columns: 1fr;
+      }
       .payment-details-grid {
         grid-template-columns: 1fr;
       }
@@ -2518,6 +3091,18 @@
       .filter-row .search-input {
         min-width: unset;
       }
+      .image-upload-container .upload-box,
+      .image-upload-container .image-thumb {
+        width: 90px;
+        height: 90px;
+      }
+      .visit-item {
+        padding: 12px 16px;
+      }
+      .visit-item .visit-details {
+        flex-direction: column;
+        gap: 6px;
+      }
     }
   </style>
 </head>
@@ -2528,6 +3113,44 @@
 
     <!-- PANELS -->
     <div class="panel-container" id="panelContainer">
+      <!-- Visit Schedule Panel -->
+      <div class="panel" id="panel-schedule">
+        <div id="visitScheduleContent">
+          <div class="visit-schedule-toolbar">
+            <div class="filter-row">
+              <div class="filter-group" style="flex:1;">
+                <input type="text" class="search-input" id="visitSearch" placeholder="Search by patient name..." />
+              </div>
+              <button class="refresh-btn" id="refreshVisitsBtn">⟳ Refresh</button>
+            </div>
+            <div class="filter-row">
+              <div class="filter-group">
+                <label>Date:</label>
+                <input type="date" class="date-input" id="visitDateFilter" />
+              </div>
+              <div class="filter-group">
+                <label>Phlebotomist:</label>
+                <select id="visitPhlebotomistFilter">
+                  <option value="all">All</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Status:</label>
+                <select id="visitStatusFilter">
+                  <option value="all">All Visits</option>
+                  <option value="done">Done Visits</option>
+                  <option value="pending">Pending Visits</option>
+                </select>
+              </div>
+              <div class="right-controls">
+                <span class="visit-count" id="visitCount">0 Visits</span>
+              </div>
+            </div>
+          </div>
+          <div id="visitList" class="entry-list"></div>
+        </div>
+      </div>
+
       <!-- Added Entries Panel -->
       <div class="panel active-panel" id="panel-added">
         <div id="entriesFilters"></div>
@@ -2542,6 +3165,10 @@
     ".read": true,
     ".write": true,
     "patients": {
+      ".read": true,
+      ".write": true
+    },
+    "patientIndex": {
       ".read": true,
       ".write": true
     }
@@ -2603,6 +3230,12 @@
         </div>
         <div id="viewModalBody"></div>
       </div>
+    </div>
+
+    <!-- FULL IMAGE VIEW -->
+    <div class="view-image-full" id="viewImageFull">
+      <button class="close-full-image" id="closeFullImage">✕</button>
+      <img id="fullImage" src="" alt="Full view" />
     </div>
   </div>
 
