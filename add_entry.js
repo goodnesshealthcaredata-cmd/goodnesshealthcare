@@ -1,6 +1,6 @@
 // ============================================================
 //  add_entry.js - Complete Entry Form Logic
-//  With Firebase Optimization - No Authentication Required
+//  With ImageKit Upload via Cloudflare Worker
 // ============================================================
 
 // ============================================================
@@ -19,7 +19,13 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const storage = firebase.storage();
+
+// ============================================================
+//  IMAGEKIT CONFIGURATION
+// ============================================================
+const IMAGEKIT_PUBLIC_KEY = "public_UXa89n/jLVB3Tef6QHxjTABI3U8=";
+const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/xjmper25s";
+const CLOUDFLARE_WORKER_URL = "https://wandering-hall-ed75.goodnesshealthcare1.workers.dev";
 
 // ============================================================
 //  DOM REFS
@@ -58,8 +64,8 @@ function createEmptyFormState() {
     reportsReceived: {},
     activeLabId: 1,
     b2bVisible: false,
-    images: [],
-    imageFiles: []
+    images: [], // Now stores ImageKit URLs only
+    imageFiles: [] // Temporary storage for files before upload
   };
 }
 
@@ -189,7 +195,7 @@ function parseCurrency(value) {
 }
 
 // ============================================================
-//  IMAGE UPLOAD FUNCTIONS - Firebase Storage
+//  IMAGE UPLOAD FUNCTIONS - ImageKit via Cloudflare Worker
 // ============================================================
 
 function compressImage(file, maxWidth = 1200, quality = 0.8) {
@@ -224,51 +230,90 @@ function compressImage(file, maxWidth = 1200, quality = 0.8) {
   });
 }
 
-async function uploadImageToStorage(patientId, file, index) {
-  const compressedBlob = await compressImage(file);
-  const filename = `${Date.now()}_${index}.jpg`;
-  const storageRef = storage.ref(`patientImages/${patientId}/${filename}`);
-  await storageRef.put(compressedBlob);
-  const downloadUrl = await storageRef.getDownloadURL();
-  return downloadUrl;
+async function getImageKitAuth() {
+  try {
+    const response = await fetch(CLOUDFLARE_WORKER_URL);
+    if (!response.ok) {
+      throw new Error(`Worker returned ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+    if (!data.token || !data.expire || !data.signature) {
+      throw new Error('Invalid response from auth server');
+    }
+    return data;
+  } catch (err) {
+    console.error('ImageKit auth error:', err);
+    throw new Error('Image upload authentication failed: ' + err.message);
+  }
 }
 
-async function uploadImagesForPatient(patientId, imageFiles) {
+async function uploadToImageKit(file, patientId, index) {
+  try {
+    // Get authentication from Cloudflare Worker
+    const auth = await getImageKitAuth();
+    
+    // Create unique filename
+    const filename = `${patientId}_${Date.now()}_${index}.jpg`;
+    
+    // Prepare form data for ImageKit upload
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileName', filename);
+    formData.append('folder', `patientImages/${patientId}`);
+    formData.append('token', auth.token);
+    formData.append('expire', auth.expire);
+    formData.append('signature', auth.signature);
+    formData.append('publicKey', IMAGEKIT_PUBLIC_KEY);
+    formData.append('useUniqueFileName', 'true');
+    
+    // Upload to ImageKit
+    const uploadResponse = await fetch(`${IMAGEKIT_URL_ENDPOINT}/api/v1/files/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      throw new Error(`ImageKit upload failed: ${uploadResponse.status} - ${errorText}`);
+    }
+    
+    const result = await uploadResponse.json();
+    
+    if (!result.url) {
+      throw new Error('ImageKit did not return a URL');
+    }
+    
+    return result.url;
+  } catch (err) {
+    console.error('ImageKit upload error:', err);
+    throw new Error('Image upload failed. Patient was not saved. ' + err.message);
+  }
+}
+
+async function uploadImagesForPatient(patientId, imageFiles, onProgress) {
   const urls = [];
-  for (let i = 0; i < imageFiles.length; i++) {
+  const total = imageFiles.length;
+  
+  for (let i = 0; i < total; i++) {
     try {
-      const url = await uploadImageToStorage(patientId, imageFiles[i], i);
+      // Compress image first
+      const compressedBlob = await compressImage(imageFiles[i]);
+      
+      // Upload to ImageKit
+      const url = await uploadToImageKit(compressedBlob, patientId, i);
       urls.push(url);
+      
+      // Update progress
+      if (onProgress) {
+        const progress = Math.round(((i + 1) / total) * 100);
+        onProgress(progress);
+      }
     } catch (err) {
       console.error('Error uploading image:', err);
-      toast('Error uploading image: ' + err.message, 'error');
+      throw err;
     }
   }
   return urls;
-}
-
-function deleteImageFromStorage(imageUrl) {
-  if (!imageUrl) return Promise.resolve();
-  try {
-    const ref = storage.refFromURL(imageUrl);
-    return ref.delete().catch(err => {
-      console.warn('Could not delete image:', err);
-    });
-  } catch (err) {
-    console.warn('Could not parse image URL:', err);
-    return Promise.resolve();
-  }
-}
-
-async function deleteAllImagesForPatient(patientId) {
-  try {
-    const listRef = storage.ref(`patientImages/${patientId}`);
-    const listResult = await listRef.listAll();
-    const deletePromises = listResult.items.map(item => item.delete());
-    await Promise.all(deletePromises);
-  } catch (err) {
-    console.warn('Could not delete images for patient:', err);
-  }
 }
 
 // ============================================================
@@ -382,10 +427,9 @@ function renderImages(formId) {
 }
 
 // ============================================================
-//  FIREBASE DATA LOADING - OPTIMIZED (No Duplicate Reads)
+//  FIREBASE DATA LOADING - OPTIMIZED
 // ============================================================
 
-// Load ONLY the first page of patient index for the list
 async function loadPatientRecords(pageSize = 10, startKey = null) {
   try {
     let query = db.ref('patientIndex').orderByKey();
@@ -417,7 +461,6 @@ async function loadPatientRecords(pageSize = 10, startKey = null) {
   }
 }
 
-// Load a single patient record (full data) - LAZY LOADED
 async function loadPatientRecord(patientId) {
   try {
     const snap = await db.ref(`patients/${patientId}`).once('value');
@@ -432,38 +475,23 @@ async function loadPatientRecord(patientId) {
   }
 }
 
-// Get total count of patients for pagination
-async function getPatientCount() {
-  try {
-    const snap = await db.ref('patientIndex').once('value');
-    const data = snap.val();
-    return data ? Object.keys(data).length : 0;
-  } catch (err) {
-    handleFirebaseError(err);
-    return 0;
-  }
-}
-
 // ============================================================
-//  LOAD ENTRIES - OPTIMIZED (Single Page Load Only)
+//  LOAD ENTRIES - OPTIMIZED
 // ============================================================
 
 async function loadEntries() {
   try {
-    // Load only the first page - NOT the entire index
     await loadEntriesPage(1);
-    
-    // Also load patient names for autocomplete (from first page + we'll need more)
-    // For autocomplete, we need a wider set of names. We'll load a larger set.
     await loadPatientNamesForAutocomplete();
+    
+    // Sync allEntries with allPatientIndex
+    allEntries = allPatientIndex.map(entry => ({ ...entry }));
     
     if (!entriesFilters.innerHTML) {
       buildFiltersUI();
     }
     populateDynamicFilters();
     populateVisitPhlebotomistFilter();
-    
-    // Render visit schedule from the loaded entries
     renderVisitScheduleFromIndex(allPatientIndex);
 
   } catch (err) {
@@ -471,10 +499,8 @@ async function loadEntries() {
   }
 }
 
-// Load patient names for autocomplete - limited to 50 most recent
 async function loadPatientNamesForAutocomplete() {
   try {
-    // Load a reasonable number of names for autocomplete (50 most recent)
     let query = db.ref('patientIndex').orderByKey().limitToLast(50);
     const snap = await query.once('value');
     const data = snap.val();
@@ -482,7 +508,6 @@ async function loadPatientNamesForAutocomplete() {
     allPatientNames = [];
     if (data) {
       const entries = Object.entries(data);
-      // Sort by visit date descending (most recent first)
       entries.sort((a, b) => {
         const dateA = a[1].visitDate || '1970-01-01';
         const timeA = a[1].visitTime || '00:00';
@@ -504,7 +529,6 @@ async function loadPatientNamesForAutocomplete() {
       });
     }
     
-    // Add sample patient
     allPatientNames.push({
       name: SAMPLE_PATIENT.name,
       key: 'sample',
@@ -517,19 +541,11 @@ async function loadPatientNamesForAutocomplete() {
   }
 }
 
-// Paginated loading for entries - SINGLE PAGE ONLY
 async function loadEntriesPage(page, pageSize = 10) {
   try {
     if (page === 1) {
       currentStartKey = null;
       allLoadedEntries = [];
-    } else {
-      // Use the last key from the previous page
-      if (allLoadedEntries.length === 0) {
-        // If we somehow don't have the last key, we need to handle this
-        // This shouldn't happen in normal operation
-        currentStartKey = null;
-      }
     }
     
     const result = await loadPatientRecords(pageSize, currentStartKey);
@@ -537,17 +553,14 @@ async function loadEntriesPage(page, pageSize = 10) {
     currentHasMore = result.hasMore;
     currentStartKey = result.lastKey;
     
-    // Store in allPatientIndex for compatibility
     allPatientIndex = allLoadedEntries;
     
-    // Set total count (approximate based on hasMore and page)
     if (page === 1 && !currentHasMore) {
       totalEntryCount = allLoadedEntries.length;
     } else if (!currentHasMore) {
       totalEntryCount = (page - 1) * pageSize + allLoadedEntries.length;
     }
     
-    // Render entries with the loaded data
     renderEntries(allLoadedEntries);
     renderVisitScheduleFromIndex(allPatientIndex);
     
@@ -1052,7 +1065,7 @@ function updatePaymentFields(formId) {
 }
 
 // ============================================================
-//  B2B PASSWORD PROTECTION (per-form) - PRESERVED
+//  B2B PASSWORD PROTECTION (per-form)
 // ============================================================
 function handleB2BUnlock(formId) {
   const promptDiv = document.getElementById(`b2bPrompt-${formId}`);
@@ -2741,7 +2754,9 @@ function handleFirebaseError(err) {
 // ============================================================
 async function deletePatient(key) {
   try {
-    await deleteAllImagesForPatient(key);
+    // Note: ImageKit images are hosted on ImageKit's CDN, not in Firebase Storage
+    // So we don't need to delete them from Firebase Storage
+    // The image URLs will just be removed from the database when the patient is deleted
     
     await db.ref('patients/' + key).remove();
     await db.ref('patientIndex/' + key).remove();
@@ -2749,6 +2764,7 @@ async function deletePatient(key) {
     // Update local data
     allPatientIndex = allPatientIndex.filter(e => e._firebaseKey !== key);
     allPatientNames = allPatientNames.filter(e => e.key !== key);
+    allEntries = allEntries.filter(e => e._firebaseKey !== key);
     
     toast('Entry deleted successfully.', 'success');
     
@@ -2762,7 +2778,7 @@ async function deletePatient(key) {
 }
 
 // ============================================================
-//  SAVE PATIENT - OPTIMIZED
+//  SAVE PATIENT - OPTIMIZED with ImageKit
 // ============================================================
 async function savePatient(formId, isEdit = false, existingKey = null) {
   const validation = validateForm(formId);
@@ -2775,56 +2791,104 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
   const data = gatherFormData(formId);
   const saveBtn = document.getElementById(`saveBtn-${formId}`);
   
-  if (saveBtn) setLoading(saveBtn, true);
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    if (state.imageFiles && state.imageFiles.length > 0) {
+      saveBtn.innerHTML = `📤 Uploading ${state.imageFiles.length} image(s)...`;
+    } else {
+      saveBtn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+    }
+  }
 
   try {
     let patientId = existingKey;
     let imageUrls = [];
     
+    // Upload images to ImageKit if there are new files
     if (state.imageFiles && state.imageFiles.length > 0) {
       if (!patientId) {
         const newRef = db.ref('patients').push();
         patientId = newRef.key;
       }
       
-      imageUrls = await uploadImagesForPatient(patientId, state.imageFiles);
+      toast(`Uploading ${state.imageFiles.length} image(s) to ImageKit...`, 'info');
       
+      try {
+        imageUrls = await uploadImagesForPatient(patientId, state.imageFiles, (progress) => {
+          if (saveBtn) {
+            saveBtn.innerHTML = `📤 Uploading ${progress}%...`;
+          }
+        });
+      } catch (uploadErr) {
+        // Image upload failed - stop the save
+        console.error('Image upload error:', uploadErr);
+        toast(uploadErr.message || 'Image upload failed. Patient was not saved.', 'error');
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = saveBtn.dataset.originalText || '💾 Save Entry';
+        }
+        return false;
+      }
+      
+      // Combine existing image URLs with new ones
       const existingImages = state.images.filter(img => 
-        typeof img === 'string' && img.startsWith('http')
+        typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
       );
       data.images = [...existingImages, ...imageUrls];
+      
+      toast('Images uploaded successfully!', 'success');
     } else {
+      // Keep existing image URLs (from ImageKit)
       data.images = state.images.filter(img => 
-        typeof img === 'string' && img.startsWith('http')
+        typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
       );
     }
     
     delete data.imageFiles;
     
+    if (saveBtn) {
+      saveBtn.innerHTML = '💾 Saving to database...';
+    }
+    
     if (isEdit && existingKey) {
+      // Update existing patient
       await db.ref('patients/' + existingKey).update(data);
       
       const indexData = createIndexData(data, existingKey);
       await db.ref('patientIndex/' + existingKey).update(indexData);
       
+      // Update local arrays
       const localIndex = allPatientIndex.find(e => e._firebaseKey === existingKey);
       if (localIndex) {
         Object.assign(localIndex, indexData);
       }
       
+      const localEntry = allEntries.find(e => e._firebaseKey === existingKey);
+      if (localEntry) {
+        Object.assign(localEntry, data);
+      }
+      
       toast('Entry updated successfully.', 'success');
     } else {
+      // Create new patient
       if (!patientId) {
         const newRef = db.ref('patients').push();
         patientId = newRef.key;
       }
       
+      // Save full patient data
       await db.ref('patients/' + patientId).set(data);
       
+      // Create index entry
       const indexData = createIndexData(data, patientId);
       await db.ref('patientIndex/' + patientId).set(indexData);
       
-      allPatientIndex.push({ ...indexData, _firebaseKey: patientId });
+      // Add to local arrays
+      const newIndexEntry = { ...indexData, _firebaseKey: patientId };
+      allPatientIndex.push(newIndexEntry);
+      
+      const newFullEntry = { ...data, _firebaseKey: patientId };
+      allEntries.push(newFullEntry);
       
       if (data.patientName) {
         allPatientNames.push({
@@ -2834,9 +2898,13 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
         });
       }
       
+      console.log('✅ Patient saved with ID:', patientId);
+      console.log('📊 Current allPatientIndex count:', allPatientIndex.length);
+      
       toast('Entry saved successfully.', 'success');
     }
     
+    // Clear form if new entry
     if (!isEdit) {
       resetFormState(formId);
       const panel = document.getElementById(getPanelId(formId));
@@ -2869,18 +2937,25 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       updateReportMessage(formId);
     }
     
-    // Update UI without reloading entire database
+    // Force re-render
     renderEntries(allPatientIndex);
     renderVisitScheduleFromIndex(allPatientIndex);
     populateDynamicFilters();
     populateVisitPhlebotomistFilter();
     
-    if (saveBtn) setLoading(saveBtn, false);
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = saveBtn.dataset.originalText || '💾 Save Entry';
+    }
     return true;
     
   } catch (err) {
+    console.error('❌ Save error:', err);
     handleFirebaseError(err);
-    if (saveBtn) setLoading(saveBtn, false);
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = saveBtn.dataset.originalText || '💾 Save Entry';
+    }
     return false;
   }
 }
@@ -5135,7 +5210,7 @@ function init() {
   switchTab('added');
   setupVisitScheduleListeners();
   
-  // Load data directly (no authentication required)
+  // Load data directly
   loadEntries();
 }
 
