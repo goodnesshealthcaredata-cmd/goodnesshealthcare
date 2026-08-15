@@ -1,6 +1,6 @@
 // ============================================================
 //  add_entry.js - Complete Entry Form Logic
-//  With Per-Form State Isolation
+//  With Firebase Optimization - No Authentication Required
 // ============================================================
 
 // ============================================================
@@ -19,6 +19,7 @@ const firebaseConfig = {
 
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const storage = firebase.storage();
 
 // ============================================================
 //  DOM REFS
@@ -35,6 +36,11 @@ const viewModalOverlay = document.getElementById('viewModalOverlay');
 const viewModalContent = document.getElementById('viewModalContent');
 const viewModalBody = document.getElementById('viewModalBody');
 const viewModalClose = document.getElementById('viewModalClose');
+const viewImageFull = document.getElementById('viewImageFull');
+const fullImage = document.getElementById('fullImage');
+const closeFullImage = document.getElementById('closeFullImage');
+const visitListEl = document.getElementById('visitList');
+const visitCountEl = document.getElementById('visitCount');
 
 // ============================================================
 //  PER-FORM STATE MANAGEMENT
@@ -51,11 +57,12 @@ function createEmptyFormState() {
     globalSelectedTestIds: new Set(),
     reportsReceived: {},
     activeLabId: 1,
-    b2bVisible: false
+    b2bVisible: false,
+    images: [],
+    imageFiles: []
   };
 }
 
-// Deep clone function for safe state copying
 function deepCloneState(state) {
   return {
     selectedLabData: {
@@ -67,11 +74,12 @@ function deepCloneState(state) {
     globalSelectedTestIds: new Set(state.globalSelectedTestIds),
     reportsReceived: { ...state.reportsReceived },
     activeLabId: state.activeLabId,
-    b2bVisible: state.b2bVisible
+    b2bVisible: state.b2bVisible,
+    images: state.images ? [...state.images] : [],
+    imageFiles: []
   };
 }
 
-// Form states storage
 const formStates = new Map();
 
 function getFormState(formId) {
@@ -82,7 +90,6 @@ function getFormState(formId) {
 }
 
 function resetFormState(formId) {
-  // Only reset this specific form's state
   formStates.set(formId, createEmptyFormState());
 }
 
@@ -95,45 +102,23 @@ function getStateForForm(formId) {
 }
 
 // ============================================================
-//  STATE HELPER FUNCTIONS
-// ============================================================
-
-function getSelectedLabData(formId) {
-  return getFormState(formId).selectedLabData;
-}
-
-function getGlobalSelectedTestIds(formId) {
-  return getFormState(formId).globalSelectedTestIds;
-}
-
-function getReportsReceived(formId) {
-  return getFormState(formId).reportsReceived;
-}
-
-function getActiveLabId(formId) {
-  return getFormState(formId).activeLabId;
-}
-
-function setActiveLabId(formId, value) {
-  getFormState(formId).activeLabId = value;
-}
-
-function getB2BVisible(formId) {
-  return getFormState(formId).b2bVisible;
-}
-
-function setB2BVisible(formId, value) {
-  getFormState(formId).b2bVisible = value;
-}
-
-// ============================================================
 //  STATE - GLOBAL (non-form specific)
 // ============================================================
 let allEntries = [];
+let allPatientIndex = [];
 let editTabs = new Map();
 let activeTab = 'added';
 let isPermissionError = false;
 let allPatientNames = [];
+let lastPatientKey = null;
+let currentPageSize = 10;
+let currentStartKey = null;
+let currentHasMore = false;
+let allLoadedEntries = [];
+let totalEntryCount = 0;
+
+// Sample patient for autocomplete
+const SAMPLE_PATIENT = { name: 'Abc Xyz' };
 
 // ============================================================
 //  TOAST HELPER
@@ -171,11 +156,13 @@ function formatName(text) {
 
 function formatAddress(text) {
   if (!text) return '';
-  return text.replace(/\b\w+\b/g, function(word) {
-    if (/^[A-Z]+$/.test(word)) return word;
-    if (/\d/.test(word)) return word;
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-  });
+  return text.split('\n').map(line => {
+    return line.replace(/\b\w+\b/g, function(word) {
+      if (/^[A-Z]+$/.test(word)) return word;
+      if (/\d/.test(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    });
+  }).join('\n');
 }
 
 function formatDateDisplay(dateStr) {
@@ -199,6 +186,458 @@ function parseCurrency(value) {
   if (!value) return 0;
   const cleaned = value.toString().replace(/[₹,]/g, '').trim();
   return parseFloat(cleaned) || 0;
+}
+
+// ============================================================
+//  IMAGE UPLOAD FUNCTIONS - Firebase Storage
+// ============================================================
+
+function compressImage(file, maxWidth = 1200, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(function(blob) {
+          resolve(blob);
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadImageToStorage(patientId, file, index) {
+  const compressedBlob = await compressImage(file);
+  const filename = `${Date.now()}_${index}.jpg`;
+  const storageRef = storage.ref(`patientImages/${patientId}/${filename}`);
+  await storageRef.put(compressedBlob);
+  const downloadUrl = await storageRef.getDownloadURL();
+  return downloadUrl;
+}
+
+async function uploadImagesForPatient(patientId, imageFiles) {
+  const urls = [];
+  for (let i = 0; i < imageFiles.length; i++) {
+    try {
+      const url = await uploadImageToStorage(patientId, imageFiles[i], i);
+      urls.push(url);
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      toast('Error uploading image: ' + err.message, 'error');
+    }
+  }
+  return urls;
+}
+
+function deleteImageFromStorage(imageUrl) {
+  if (!imageUrl) return Promise.resolve();
+  try {
+    const ref = storage.refFromURL(imageUrl);
+    return ref.delete().catch(err => {
+      console.warn('Could not delete image:', err);
+    });
+  } catch (err) {
+    console.warn('Could not parse image URL:', err);
+    return Promise.resolve();
+  }
+}
+
+async function deleteAllImagesForPatient(patientId) {
+  try {
+    const listRef = storage.ref(`patientImages/${patientId}`);
+    const listResult = await listRef.listAll();
+    const deletePromises = listResult.items.map(item => item.delete());
+    await Promise.all(deletePromises);
+  } catch (err) {
+    console.warn('Could not delete images for patient:', err);
+  }
+}
+
+// ============================================================
+//  IMAGE UPLOAD UI FUNCTIONS
+// ============================================================
+
+function setupImageUpload(formId) {
+  const container = document.getElementById(`imageUploadContainer-${formId}`);
+  if (!container) return;
+
+  const fileInput = document.getElementById(`imageFileInput-${formId}`);
+  if (!fileInput) return;
+
+  fileInput.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const state = getFormState(formId);
+    if (!state.imageFiles) state.imageFiles = [];
+    if (!state.images) state.images = [];
+
+    files.forEach(file => {
+      state.imageFiles.push(file);
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        state.images.push(event.target.result);
+        renderImages(formId);
+        fileInput.value = '';
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  renderImages(formId);
+}
+
+function renderImages(formId) {
+  const container = document.getElementById(`imageUploadContainer-${formId}`);
+  if (!container) return;
+
+  const state = getFormState(formId);
+  const images = state.images || [];
+
+  let uploadBox = container.querySelector('.upload-box');
+  if (!uploadBox) {
+    uploadBox = document.createElement('div');
+    uploadBox.className = 'upload-box';
+    uploadBox.innerHTML = `
+      <span class="upload-icon">📷</span>
+      <span>Add Images</span>
+      <input type="file" id="imageFileInput-${formId}" accept="image/*" multiple />
+    `;
+    container.appendChild(uploadBox);
+    
+    const fileInput = uploadBox.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        const state = getFormState(formId);
+        if (!state.imageFiles) state.imageFiles = [];
+        if (!state.images) state.images = [];
+
+        files.forEach(file => {
+          state.imageFiles.push(file);
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            state.images.push(event.target.result);
+            renderImages(formId);
+            fileInput.value = '';
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+  }
+
+  const thumbs = container.querySelectorAll('.image-thumb');
+  thumbs.forEach(el => el.remove());
+
+  images.forEach((imgData, index) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'image-thumb';
+    thumb.innerHTML = `
+      <img src="${imgData}" alt="Uploaded image" onclick="openFullImage('${imgData}')" />
+      <button class="remove-image" data-form="${formId}" data-index="${index}">✕</button>
+    `;
+    container.insertBefore(thumb, uploadBox);
+
+    const removeBtn = thumb.querySelector('.remove-image');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const formId = this.dataset.form;
+        const index = parseInt(this.dataset.index);
+        const state = getFormState(formId);
+        
+        if (state.imageFiles && state.imageFiles.length > index) {
+          state.imageFiles.splice(index, 1);
+        }
+        
+        if (state.images) {
+          state.images.splice(index, 1);
+          renderImages(formId);
+        }
+      });
+    }
+  });
+}
+
+// ============================================================
+//  FIREBASE DATA LOADING - OPTIMIZED (No Duplicate Reads)
+// ============================================================
+
+// Load ONLY the first page of patient index for the list
+async function loadPatientRecords(pageSize = 10, startKey = null) {
+  try {
+    let query = db.ref('patientIndex').orderByKey();
+    if (startKey) {
+      query = query.startAfter(startKey);
+    }
+    query = query.limitToFirst(pageSize + 1);
+    
+    const snap = await query.once('value');
+    const data = snap.val();
+    const entries = [];
+    let hasMore = false;
+    
+    if (data) {
+      const keys = Object.keys(data);
+      if (keys.length > pageSize) {
+        hasMore = true;
+        keys.pop();
+      }
+      for (const key of keys) {
+        entries.push({ ...data[key], _firebaseKey: key });
+      }
+    }
+    
+    return { entries, hasMore, lastKey: entries.length > 0 ? entries[entries.length - 1]._firebaseKey : null };
+  } catch (err) {
+    handleFirebaseError(err);
+    return { entries: [], hasMore: false, lastKey: null };
+  }
+}
+
+// Load a single patient record (full data) - LAZY LOADED
+async function loadPatientRecord(patientId) {
+  try {
+    const snap = await db.ref(`patients/${patientId}`).once('value');
+    const data = snap.val();
+    if (data) {
+      return { ...data, _firebaseKey: patientId };
+    }
+    return null;
+  } catch (err) {
+    handleFirebaseError(err);
+    return null;
+  }
+}
+
+// Get total count of patients for pagination
+async function getPatientCount() {
+  try {
+    const snap = await db.ref('patientIndex').once('value');
+    const data = snap.val();
+    return data ? Object.keys(data).length : 0;
+  } catch (err) {
+    handleFirebaseError(err);
+    return 0;
+  }
+}
+
+// ============================================================
+//  LOAD ENTRIES - OPTIMIZED (Single Page Load Only)
+// ============================================================
+
+async function loadEntries() {
+  try {
+    // Load only the first page - NOT the entire index
+    await loadEntriesPage(1);
+    
+    // Also load patient names for autocomplete (from first page + we'll need more)
+    // For autocomplete, we need a wider set of names. We'll load a larger set.
+    await loadPatientNamesForAutocomplete();
+    
+    if (!entriesFilters.innerHTML) {
+      buildFiltersUI();
+    }
+    populateDynamicFilters();
+    populateVisitPhlebotomistFilter();
+    
+    // Render visit schedule from the loaded entries
+    renderVisitScheduleFromIndex(allPatientIndex);
+
+  } catch (err) {
+    handleFirebaseError(err);
+  }
+}
+
+// Load patient names for autocomplete - limited to 50 most recent
+async function loadPatientNamesForAutocomplete() {
+  try {
+    // Load a reasonable number of names for autocomplete (50 most recent)
+    let query = db.ref('patientIndex').orderByKey().limitToLast(50);
+    const snap = await query.once('value');
+    const data = snap.val();
+    
+    allPatientNames = [];
+    if (data) {
+      const entries = Object.entries(data);
+      // Sort by visit date descending (most recent first)
+      entries.sort((a, b) => {
+        const dateA = a[1].visitDate || '1970-01-01';
+        const timeA = a[1].visitTime || '00:00';
+        const dateB = b[1].visitDate || '1970-01-01';
+        const timeB = b[1].visitTime || '00:00';
+        const dtA = new Date(dateA + 'T' + timeA + ':00');
+        const dtB = new Date(dateB + 'T' + timeB + ':00');
+        return dtB - dtA;
+      });
+      
+      entries.forEach(([key, val]) => {
+        if (val.patientName) {
+          allPatientNames.push({
+            name: val.patientName,
+            key: key,
+            data: val
+          });
+        }
+      });
+    }
+    
+    // Add sample patient
+    allPatientNames.push({
+      name: SAMPLE_PATIENT.name,
+      key: 'sample',
+      data: { patientName: SAMPLE_PATIENT.name },
+      isSample: true
+    });
+    
+  } catch (err) {
+    console.warn('Could not load patient names:', err);
+  }
+}
+
+// Paginated loading for entries - SINGLE PAGE ONLY
+async function loadEntriesPage(page, pageSize = 10) {
+  try {
+    if (page === 1) {
+      currentStartKey = null;
+      allLoadedEntries = [];
+    } else {
+      // Use the last key from the previous page
+      if (allLoadedEntries.length === 0) {
+        // If we somehow don't have the last key, we need to handle this
+        // This shouldn't happen in normal operation
+        currentStartKey = null;
+      }
+    }
+    
+    const result = await loadPatientRecords(pageSize, currentStartKey);
+    allLoadedEntries = result.entries;
+    currentHasMore = result.hasMore;
+    currentStartKey = result.lastKey;
+    
+    // Store in allPatientIndex for compatibility
+    allPatientIndex = allLoadedEntries;
+    
+    // Set total count (approximate based on hasMore and page)
+    if (page === 1 && !currentHasMore) {
+      totalEntryCount = allLoadedEntries.length;
+    } else if (!currentHasMore) {
+      totalEntryCount = (page - 1) * pageSize + allLoadedEntries.length;
+    }
+    
+    // Render entries with the loaded data
+    renderEntries(allLoadedEntries);
+    renderVisitScheduleFromIndex(allPatientIndex);
+    
+  } catch (err) {
+    handleFirebaseError(err);
+  }
+}
+
+// ============================================================
+//  RENDER ENTRY PROGRESS FROM INDEX DATA
+// ============================================================
+
+function getEntryProgressFromIndex(entry) {
+  const progress = {
+    patient: 0,
+    test: 0,
+    visit: 0,
+    report: 0,
+    payment: 0
+  };
+  
+  let patientCount = 0;
+  if (entry.patientName) patientCount++;
+  if (entry.age) patientCount++;
+  if (entry.gender) patientCount++;
+  if (entry.address) patientCount++;
+  if (entry.doctorName) patientCount++;
+  if (entry.careOfPerson) patientCount++;
+  progress.patient = Math.round((patientCount / 6) * 100);
+  
+  let visitCount = 0;
+  if (entry.center) visitCount++;
+  if (entry.visitType) visitCount++;
+  if (entry.visitDate) visitCount++;
+  if (entry.visitTime) visitCount++;
+  if (entry.phlebotomist) visitCount++;
+  progress.visit = Math.round((visitCount / 5) * 100);
+  
+  progress.test = entry.hasTests ? 100 : 0;
+  progress.report = 0;
+  progress.payment = entry.finalPrice ? 100 : 0;
+  
+  return progress;
+}
+
+// ============================================================
+//  EXTRA COLLECTION DETECTION
+// ============================================================
+function isExtraCollectionSelected(formId) {
+  const state = getFormState(formId);
+  
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = state.selectedLabData[labId];
+    if (!labData) continue;
+    
+    if (labData.tests && Array.isArray(labData.tests)) {
+      for (const test of labData.tests) {
+        if (test.id === 'extra-collection' || 
+            test.generalName === 'Extra Collection') {
+          return true;
+        }
+      }
+    }
+    
+    if (labData.packages && Array.isArray(labData.packages)) {
+      for (const pkg of labData.packages) {
+        if (pkg.tests && Array.isArray(pkg.tests)) {
+          for (const test of pkg.tests) {
+            if (test.selected !== false) {
+              if (test.generalName === 'Extra Collection' || test.id === 'extra-collection') {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function updateExtraCollectionVisibility(formId) {
+  const extraSection = document.getElementById(`extraSection-${formId}`);
+  if (!extraSection) return;
+  
+  if (isExtraCollectionSelected(formId)) {
+    extraSection.classList.add('visible');
+  } else {
+    extraSection.classList.remove('visible');
+  }
 }
 
 // ============================================================
@@ -448,6 +887,72 @@ function updateSectionProgressBars(formId) {
 }
 
 // ============================================================
+//  VALIDATION FUNCTIONS
+// ============================================================
+function validateForm(formId) {
+  let isValid = true;
+  let errors = [];
+
+  const patientName = document.getElementById(`patientName-${formId}`);
+  if (!patientName || !patientName.value.trim()) {
+    isValid = false;
+    errors.push('Patient Name is required');
+    showFieldError(patientName, 'Patient name is required');
+  } else {
+    clearFieldError(patientName);
+  }
+
+  const visitDate = document.getElementById(`visitDate-${formId}`);
+  if (!visitDate || !visitDate.value) {
+    isValid = false;
+    errors.push('Visit Date is required');
+    showFieldError(visitDate, 'Visit date is required');
+  } else {
+    clearFieldError(visitDate);
+  }
+
+  const state = getFormState(formId);
+  let hasTest = false;
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = state.selectedLabData[labId];
+    if (labData) {
+      if ((labData.tests && labData.tests.length > 0) || 
+          (labData.packages && labData.packages.length > 0)) {
+        hasTest = true;
+        break;
+      }
+    }
+  }
+  
+  if (!hasTest) {
+    isValid = false;
+    errors.push('At least one test must be selected');
+    toast('Please select at least one test before saving.', 'error');
+  }
+
+  return { isValid, errors };
+}
+
+function showFieldError(el, message) {
+  if (!el) return;
+  el.classList.add('input-error');
+  const errorEl = el.parentElement?.querySelector('.field-error');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.classList.add('show');
+  }
+}
+
+function clearFieldError(el) {
+  if (!el) return;
+  el.classList.remove('input-error');
+  const errorEl = el.parentElement?.querySelector('.field-error');
+  if (errorEl) {
+    errorEl.classList.remove('show');
+  }
+}
+
+// ============================================================
 //  PAYMENT CALCULATIONS (per-form)
 // ============================================================
 function calculateTotalMRP(formId) {
@@ -547,7 +1052,7 @@ function updatePaymentFields(formId) {
 }
 
 // ============================================================
-//  B2B PASSWORD PROTECTION (per-form)
+//  B2B PASSWORD PROTECTION (per-form) - PRESERVED
 // ============================================================
 function handleB2BUnlock(formId) {
   const promptDiv = document.getElementById(`b2bPrompt-${formId}`);
@@ -678,6 +1183,7 @@ function recalculateGlobalSelectedTests(formId) {
     renderLabContent(labId, formId);
   }
   updatePPSection(formId);
+  updateExtraCollectionVisibility(formId);
   updateReportReceivedList(formId);
   updatePaymentFields(formId);
   updateSectionProgressBars(formId);
@@ -867,6 +1373,411 @@ function updateDeliveryStatusVisibility(formId) {
 }
 
 // ============================================================
+//  REPORT MESSAGE FUNCTIONS
+// ============================================================
+function updateReportMessage(formId) {
+  const messageEl = document.getElementById(`reportMessage-${formId}`);
+  if (!messageEl) return;
+  
+  const patientName = document.getElementById(`patientName-${formId}`)?.value?.trim() || 'Patient';
+  
+  const message = `Hello,
+
+Please find attached the test report for ${patientName}.
+ 
+Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+ 
+Wishing you and your family good health!
+ 
+Thank you.`;
+
+  messageEl.textContent = message;
+}
+
+function copyReportMessage(formId) {
+  const messageEl = document.getElementById(`reportMessage-${formId}`);
+  if (!messageEl) return;
+  
+  const text = messageEl.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Message copied to clipboard!', 'success');
+  }).catch(() => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+    toast('Message copied to clipboard!', 'success');
+  });
+}
+
+// ============================================================
+//  VISIT SCHEDULE FUNCTIONS
+// ============================================================
+function getVisitEntriesFromIndex(indexData) {
+  const visits = [];
+  
+  indexData.forEach(entry => {
+    const patientName = entry.patientName || 'Unknown';
+    const visitDate = entry.visitDate || '';
+    const visitTime = entry.visitTime || '00:00';
+    const phlebotomist = entry.phlebotomist || '';
+    const labs = getLabsForEntry(entry);
+    const gradientClass = getEntryGradientClass(entry);
+    
+    visits.push({
+      entryKey: entry._firebaseKey,
+      patientName: patientName,
+      visitDate: visitDate,
+      visitTime: visitTime,
+      phlebotomist: phlebotomist,
+      visitType: 'main',
+      visitTypeLabel: 'Main Visit',
+      isDone: entry.visitDone || false,
+      doneTime: entry.visitDoneTime || null,
+      gradientClass: gradientClass,
+      labs: labs
+    });
+    
+    if (entry.ppTime) {
+      visits.push({
+        entryKey: entry._firebaseKey,
+        patientName: patientName + ' (PP)',
+        visitDate: visitDate,
+        visitTime: entry.ppTime || '12:00',
+        phlebotomist: entry.ppPhlebotomist || '',
+        visitType: 'pp',
+        visitTypeLabel: 'PP Visit',
+        isDone: entry.ppVisitDone || false,
+        doneTime: entry.ppVisitDoneTime || null,
+        gradientClass: gradientClass,
+        labs: labs
+      });
+    }
+    
+    if (entry.extraCollectionTime) {
+      visits.push({
+        entryKey: entry._firebaseKey,
+        patientName: patientName + ' (Extra)',
+        visitDate: visitDate,
+        visitTime: entry.extraCollectionTime || '12:00',
+        phlebotomist: entry.extraCollectionPhlebotomist || '',
+        visitType: 'extra',
+        visitTypeLabel: 'Extra Collection',
+        isDone: entry.extraVisitDone || false,
+        doneTime: entry.extraVisitDoneTime || null,
+        gradientClass: gradientClass,
+        labs: labs
+      });
+    }
+  });
+  
+  return visits;
+}
+
+function renderVisitScheduleFromIndex(indexData) {
+  let visits = getVisitEntriesFromIndex(indexData);
+  
+  const searchQuery = document.getElementById('visitSearch')?.value?.toLowerCase().trim() || '';
+  const dateFilter = document.getElementById('visitDateFilter')?.value || '';
+  const phlebotomistFilter = document.getElementById('visitPhlebotomistFilter')?.value || 'all';
+  const statusFilter = document.getElementById('visitStatusFilter')?.value || 'all';
+  
+  if (searchQuery) {
+    visits = visits.filter(v => v.patientName.toLowerCase().includes(searchQuery));
+  }
+  
+  if (dateFilter) {
+    visits = visits.filter(v => v.visitDate === dateFilter);
+  }
+  
+  if (phlebotomistFilter !== 'all') {
+    visits = visits.filter(v => v.phlebotomist === phlebotomistFilter);
+  }
+  
+  if (statusFilter === 'done') {
+    visits = visits.filter(v => v.isDone === true);
+  } else if (statusFilter === 'pending') {
+    visits = visits.filter(v => v.isDone !== true);
+  }
+  
+  visits.sort((a, b) => {
+    return a.visitTime.localeCompare(b.visitTime);
+  });
+  
+  if (visitCountEl) {
+    visitCountEl.textContent = visits.length + ' Visits';
+  }
+  
+  if (visits.length === 0) {
+    visitListEl.innerHTML = '<div class="empty-msg">No visits found for the selected filters.</div>';
+    return;
+  }
+  
+  let html = '';
+  visits.forEach(visit => {
+    const isDone = visit.isDone;
+    const doneClass = isDone ? 'done' : '';
+    const gradientClass = visit.gradientClass || '';
+    const visitTypeClass = visit.visitType === 'pp' ? 'pp' : visit.visitType === 'extra' ? 'extra' : 'main';
+    
+    html += `
+      <div class="visit-item ${doneClass} ${gradientClass}">
+        <div class="visit-content">
+          <div class="visit-left">
+            <div class="visit-patient-name">${visit.patientName}</div>
+            <div class="visit-details">
+              <span>📅 ${visit.visitDate || 'No date'}</span>
+              <span>🕐 ${visit.visitTime || 'No time'}</span>
+              <span class="visit-type-badge ${visitTypeClass}">${visit.visitTypeLabel}</span>
+              ${visit.phlebotomist ? `<span>👤 ${visit.phlebotomist}</span>` : ''}
+              ${isDone && visit.doneTime ? `<span class="visit-done-time">✅ Done at ${visit.doneTime}</span>` : ''}
+            </div>
+          </div>
+          <div class="visit-actions">
+            <div class="visit-done-checkbox">
+              <input type="checkbox" class="visit-done-check" data-key="${visit.entryKey}" data-type="${visit.visitType}" ${isDone ? 'checked' : ''} />
+              <span>Done</span>
+            </div>
+            <button class="view-btn" data-key="${visit.entryKey}">👁 View</button>
+            <button class="edit-btn" data-key="${visit.entryKey}">✎ Edit</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  visitListEl.innerHTML = html;
+  
+  visitListEl.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      const rec = allPatientIndex.find(e => e._firebaseKey === key);
+      if (rec) {
+        loadAndViewPatient(key);
+      }
+    });
+  });
+  
+  visitListEl.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      const rec = allPatientIndex.find(e => e._firebaseKey === key);
+      if (rec) {
+        loadAndEditPatient(key);
+      }
+    });
+  });
+  
+  visitListEl.querySelectorAll('.visit-done-check').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const key = this.dataset.key;
+      const visitType = this.dataset.type;
+      const entry = allPatientIndex.find(e => e._firebaseKey === key);
+      if (!entry) return;
+      
+      const isChecked = this.checked;
+      const action = isChecked ? 'mark as done' : 'mark as pending';
+      
+      if (confirm(`Are you sure you want to ${action} this visit?`)) {
+        updateVisitStatusFromIndex(entry, visitType, isChecked);
+      } else {
+        this.checked = !isChecked;
+      }
+    });
+  });
+}
+
+async function loadAndViewPatient(key) {
+  const fullData = await loadPatientRecord(key);
+  if (fullData) {
+    openViewModal(fullData);
+  }
+}
+
+async function loadAndEditPatient(key) {
+  const fullData = await loadPatientRecord(key);
+  if (fullData) {
+    openEditTab(key, fullData);
+  }
+}
+
+async function updateVisitStatusFromIndex(entry, visitType, isDone) {
+  const now = new Date();
+  const doneTime = now.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+  
+  const updates = {};
+  const indexUpdates = {};
+  
+  if (visitType === 'main') {
+    updates['visitDone'] = isDone;
+    updates['visitDoneTime'] = isDone ? doneTime : null;
+    indexUpdates['visitDone'] = isDone;
+    indexUpdates['visitDoneTime'] = isDone ? doneTime : null;
+  } else if (visitType === 'pp') {
+    updates['ppVisitDone'] = isDone;
+    updates['ppVisitDoneTime'] = isDone ? doneTime : null;
+    indexUpdates['ppVisitDone'] = isDone;
+    indexUpdates['ppVisitDoneTime'] = isDone ? doneTime : null;
+  } else if (visitType === 'extra') {
+    updates['extraVisitDone'] = isDone;
+    updates['extraVisitDoneTime'] = isDone ? doneTime : null;
+    indexUpdates['extraVisitDone'] = isDone;
+    indexUpdates['extraVisitDoneTime'] = isDone ? doneTime : null;
+  }
+  
+  try {
+    await db.ref('patients/' + entry._firebaseKey).update(updates);
+    await db.ref('patientIndex/' + entry._firebaseKey).update(indexUpdates);
+    
+    Object.keys(indexUpdates).forEach(key => {
+      entry[key] = indexUpdates[key];
+    });
+    
+    toast(`Visit ${isDone ? 'marked as done' : 'marked as pending'}`, 'success');
+    renderVisitScheduleFromIndex(allPatientIndex);
+  } catch (err) {
+    handleFirebaseError(err);
+  }
+}
+
+function renderVisitSchedule() {
+  renderVisitScheduleFromIndex(allPatientIndex);
+}
+
+function populateVisitPhlebotomistFilter() {
+  const select = document.getElementById('visitPhlebotomistFilter');
+  if (!select) return;
+  
+  const phlebotomists = new Set();
+  allPatientIndex.forEach(entry => {
+    if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
+    if (entry.ppPhlebotomist) phlebotomists.add(entry.ppPhlebotomist);
+    if (entry.extraCollectionPhlebotomist) phlebotomists.add(entry.extraCollectionPhlebotomist);
+  });
+  
+  const sorted = Array.from(phlebotomists).sort();
+  const currentValue = select.value;
+  
+  select.innerHTML = '<option value="all">All</option>';
+  sorted.forEach(name => {
+    select.innerHTML += `<option value="${name}">${name}</option>`;
+  });
+  
+  if (currentValue && sorted.includes(currentValue)) {
+    select.value = currentValue;
+  }
+}
+
+function setupVisitScheduleListeners() {
+  const searchInput = document.getElementById('visitSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(() => {
+      renderVisitScheduleFromIndex(allPatientIndex);
+    }, 300));
+  }
+  
+  const dateFilter = document.getElementById('visitDateFilter');
+  if (dateFilter) {
+    const today = new Date().toISOString().split('T')[0];
+    dateFilter.value = today;
+    dateFilter.addEventListener('change', () => {
+      renderVisitScheduleFromIndex(allPatientIndex);
+    });
+  }
+  
+  const phlebotomistFilter = document.getElementById('visitPhlebotomistFilter');
+  if (phlebotomistFilter) {
+    phlebotomistFilter.addEventListener('change', () => {
+      renderVisitScheduleFromIndex(allPatientIndex);
+    });
+  }
+  
+  const statusFilter = document.getElementById('visitStatusFilter');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', () => {
+      renderVisitScheduleFromIndex(allPatientIndex);
+    });
+  }
+  
+  const refreshBtn = document.getElementById('refreshVisitsBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function() {
+      loadEntriesPage(paginationState.currentPage);
+      toast('Visit schedule refreshed.', 'success');
+    });
+  }
+}
+
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+function isPPSelectedForEntry(entry) {
+  if (!entry.labSelections) return false;
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = entry.labSelections[labId];
+    if (!labData) continue;
+    if (labData.tests) {
+      for (const test of labData.tests) {
+        if (test.id === 'pp' || test.generalName === 'PP') return true;
+      }
+    }
+    if (labData.packages) {
+      for (const pkg of labData.packages) {
+        if (pkg.tests) {
+          for (const test of pkg.tests) {
+            if ((test.generalName === 'PP' || test.id === 'pp') && test.selected !== false) return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function isExtraCollectionSelectedForEntry(entry) {
+  if (!entry.labSelections) return false;
+  for (let labId = 1; labId <= 4; labId++) {
+    const labData = entry.labSelections[labId];
+    if (!labData) continue;
+    if (labData.tests) {
+      for (const test of labData.tests) {
+        if (test.id === 'extra-collection' || test.generalName === 'Extra Collection') return true;
+      }
+    }
+    if (labData.packages) {
+      for (const pkg of labData.packages) {
+        if (pkg.tests) {
+          for (const test of pkg.tests) {
+            if (test.selected !== false) {
+              if (test.generalName === 'Extra Collection' || test.id === 'extra-collection') return true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+// ============================================================
 //  RENDER ENTRIES WITH FILTERS & PAGINATION
 // ============================================================
 function getLabsForEntry(entry) {
@@ -918,6 +1829,7 @@ let filterState = {
   visitType: 'all',
   phlebotomist: 'all',
   careOfPerson: 'all',
+  doctor: 'all',
   search: ''
 };
 
@@ -935,6 +1847,7 @@ function filterEntries(entries) {
   const visitType = filterState.visitType;
   const phlebotomist = filterState.phlebotomist;
   const careOfPerson = filterState.careOfPerson;
+  const doctor = filterState.doctor;
   const search = filterState.search.toLowerCase().trim();
 
   let filtered = entries;
@@ -946,21 +1859,36 @@ function filterEntries(entries) {
     });
   }
 
-  if (status === 'pending') {
+  if (status !== 'all') {
     filtered = filtered.filter(entry => {
       const progress = getEntryProgress(entry);
-      return progress.patient < 100 || progress.test < 100 || 
-             progress.visit < 100 || progress.report < 100 || progress.payment < 100;
-    });
-  } else if (status === 'report-pending') {
-    filtered = filtered.filter(entry => {
-      const progress = getEntryProgress(entry);
-      return progress.report < 100;
-    });
-  } else if (status === 'payment-pending') {
-    filtered = filtered.filter(entry => {
-      const progress = getEntryProgress(entry);
-      return progress.payment < 100;
+      
+      switch(status) {
+        case 'patient-pending':
+          return progress.patient < 100;
+        case 'visit-pending':
+          return progress.visit < 100;
+        case 'report-received-pending': {
+          if (entry.reportsReceived) {
+            const values = Object.values(entry.reportsReceived);
+            return values.some(v => v === false);
+          }
+          return false;
+        }
+        case 'report-online-pending':
+          return entry.onlineReportRequired === true && entry.onlineReportSent !== true;
+        case 'report-delivery-pending':
+          return entry.reportDeliveryRequired === true && entry.reportDelivered !== true;
+        case 'final-price-pending':
+          return !entry.finalPrice || entry.finalPrice <= 0;
+        case 'payment-pending':
+          return entry.pendingPayment && entry.pendingPayment > 0;
+        case 'pending':
+          return progress.patient < 100 || progress.test < 100 || 
+                 progress.visit < 100 || progress.report < 100 || progress.payment < 100;
+        default:
+          return true;
+      }
     });
   }
 
@@ -1004,6 +1932,10 @@ function filterEntries(entries) {
 
   if (careOfPerson !== 'all') {
     filtered = filtered.filter(entry => entry.careOfPerson === careOfPerson);
+  }
+
+  if (doctor !== 'all') {
+    filtered = filtered.filter(entry => entry.doctorName === doctor);
   }
 
   return filtered;
@@ -1102,34 +2034,32 @@ function renderEntries(entries) {
   }
 
   entryListEl.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.key;
-      const rec = allEntries.find(e => e._firebaseKey === key);
-      if (rec) openViewModal(rec);
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      const rec = allPatientIndex.find(e => e._firebaseKey === key);
+      if (rec) {
+        loadAndViewPatient(key);
+      }
     });
   });
 
   entryListEl.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.key;
-      const rec = allEntries.find(e => e._firebaseKey === key);
-      if (rec) openEditTab(key, rec);
+    btn.addEventListener('click', function() {
+      const key = this.dataset.key;
+      const rec = allPatientIndex.find(e => e._firebaseKey === key);
+      if (rec) {
+        loadAndEditPatient(key);
+      }
     });
   });
 
   entryListEl.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const key = btn.dataset.key;
-      const rec = allEntries.find(e => e._firebaseKey === key);
+    btn.addEventListener('click', async function() {
+      const key = this.dataset.key;
+      const rec = allPatientIndex.find(e => e._firebaseKey === key);
       if (!rec) return;
       if (!confirm(`Delete entry for "${rec.patientName || 'Unknown'}"?`)) return;
-      try {
-        await db.ref('patients/' + key).remove();
-        toast('Entry deleted successfully.', 'success');
-        await loadEntries();
-      } catch (err) {
-        handleFirebaseError(err);
-      }
+      await deletePatient(key);
     });
   });
 
@@ -1190,7 +2120,7 @@ function renderPagination(totalPages, totalItems) {
     perPageSelect.addEventListener('change', function() {
       paginationState.perPage = parseInt(this.value);
       paginationState.currentPage = 1;
-      renderEntries(allEntries);
+      loadEntriesPage(1, paginationState.perPage);
     });
   }
 
@@ -1199,7 +2129,7 @@ function renderPagination(totalPages, totalItems) {
       const page = parseInt(this.dataset.page);
       if (page !== paginationState.currentPage) {
         paginationState.currentPage = page;
-        renderEntries(allEntries);
+        loadEntriesPage(page, paginationState.perPage);
       }
     });
   });
@@ -1209,7 +2139,7 @@ function renderPagination(totalPages, totalItems) {
     prevBtn.addEventListener('click', function() {
       if (paginationState.currentPage > 1) {
         paginationState.currentPage--;
-        renderEntries(allEntries);
+        loadEntriesPage(paginationState.currentPage, paginationState.perPage);
       }
     });
   }
@@ -1219,7 +2149,7 @@ function renderPagination(totalPages, totalItems) {
     nextBtn.addEventListener('click', function() {
       if (paginationState.currentPage < totalPages) {
         paginationState.currentPage++;
-        renderEntries(allEntries);
+        loadEntriesPage(paginationState.currentPage, paginationState.perPage);
       }
     });
   }
@@ -1229,6 +2159,18 @@ function renderPagination(totalPages, totalItems) {
 //  BUILD FILTERS UI
 // ============================================================
 function buildFiltersUI() {
+  const statusOptions = [
+    { value: 'all', label: 'All Entries' },
+    { value: 'pending', label: 'Pending Entries' },
+    { value: 'patient-pending', label: 'Patient Detail Pending' },
+    { value: 'visit-pending', label: 'Visit Detail Pending' },
+    { value: 'report-received-pending', label: 'Report Received Pending' },
+    { value: 'report-online-pending', label: 'Report Online Send Pending' },
+    { value: 'report-delivery-pending', label: 'Report Delivery Pending' },
+    { value: 'final-price-pending', label: 'Final Price Pending' },
+    { value: 'payment-pending', label: 'Payment Pending' }
+  ];
+
   const html = `
     <div class="entries-toolbar">
       <div class="filter-row">
@@ -1262,10 +2204,9 @@ function buildFiltersUI() {
         <div class="filter-group">
           <label>Status:</label>
           <select id="filterStatus">
-            <option value="all" ${filterState.status === 'all' ? 'selected' : ''}>All Entries</option>
-            <option value="pending" ${filterState.status === 'pending' ? 'selected' : ''}>Pending Entries</option>
-            <option value="report-pending" ${filterState.status === 'report-pending' ? 'selected' : ''}>Report Detail Pending</option>
-            <option value="payment-pending" ${filterState.status === 'payment-pending' ? 'selected' : ''}>Payment Detail Pending</option>
+            ${statusOptions.map(opt => `
+              <option value="${opt.value}" ${filterState.status === opt.value ? 'selected' : ''}>${opt.label}</option>
+            `).join('')}
           </select>
         </div>
         <div class="filter-group">
@@ -1300,6 +2241,12 @@ function buildFiltersUI() {
             <option value="all">All</option>
           </select>
         </div>
+        <div class="filter-group">
+          <label>Dr. Name:</label>
+          <select id="filterDoctor">
+            <option value="all">All</option>
+          </select>
+        </div>
         <div class="right-controls">
           <span class="entry-count" id="entryCount">0 Entries</span>
         </div>
@@ -1311,34 +2258,34 @@ function buildFiltersUI() {
 
   populateDynamicFilters();
 
-  document.getElementById('filterSearch').addEventListener('input', function() {
+  document.getElementById('filterSearch').addEventListener('input', debounce(function() {
     filterState.search = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
-  });
+    renderEntries(allPatientIndex);
+  }, 300));
 
   document.getElementById('filterSort').addEventListener('change', function() {
     filterState.sort = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
   });
 
   document.getElementById('filterStatus').addEventListener('change', function() {
     filterState.status = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
   });
 
   document.getElementById('filterFromDate').addEventListener('change', function() {
     filterState.fromDate = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
   });
 
   document.getElementById('filterToDate').addEventListener('change', function() {
     filterState.toDate = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
   });
 
   document.querySelectorAll('.lab-checkbox').forEach(cb => {
@@ -1346,32 +2293,38 @@ function buildFiltersUI() {
       const lab = parseInt(this.dataset.lab);
       filterState.labs[lab - 1] = this.checked;
       paginationState.currentPage = 1;
-      renderEntries(allEntries);
+      renderEntries(allPatientIndex);
     });
   });
 
   document.getElementById('filterCenter').addEventListener('change', function() {
     filterState.center = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
   });
 
   document.getElementById('filterVisitType').addEventListener('change', function() {
     filterState.visitType = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
   });
 
   document.getElementById('filterPhlebotomist').addEventListener('change', function() {
     filterState.phlebotomist = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
   });
 
   document.getElementById('filterCareOfPerson').addEventListener('change', function() {
     filterState.careOfPerson = this.value;
     paginationState.currentPage = 1;
-    renderEntries(allEntries);
+    renderEntries(allPatientIndex);
+  });
+
+  document.getElementById('filterDoctor').addEventListener('change', function() {
+    filterState.doctor = this.value;
+    paginationState.currentPage = 1;
+    renderEntries(allPatientIndex);
   });
 
   document.getElementById('clearFiltersBtn').addEventListener('click', function() {
@@ -1379,7 +2332,8 @@ function buildFiltersUI() {
   });
 
   document.getElementById('refreshBtn').addEventListener('click', function() {
-    loadEntries();
+    loadEntriesPage(paginationState.currentPage, paginationState.perPage);
+    toast('Refreshed.', 'success');
   });
 }
 
@@ -1388,12 +2342,14 @@ function populateDynamicFilters() {
   const visitTypes = new Set();
   const phlebotomists = new Set();
   const careOfPersons = new Set();
+  const doctors = new Set();
 
-  allEntries.forEach(entry => {
+  allPatientIndex.forEach(entry => {
     if (entry.center) centers.add(entry.center);
     if (entry.visitType) visitTypes.add(entry.visitType);
     if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
     if (entry.careOfPerson) careOfPersons.add(entry.careOfPerson);
+    if (entry.doctorName) doctors.add(entry.doctorName);
   });
 
   const sortOptions = (set) => Array.from(set).sort((a, b) => a.localeCompare(b));
@@ -1450,10 +2406,24 @@ function populateDynamicFilters() {
     }
   }
 
+  const doctorSelect = document.getElementById('filterDoctor');
+  if (doctorSelect) {
+    doctorSelect.innerHTML = '<option value="all">All</option>';
+    sortOptions(doctors).forEach(val => {
+      doctorSelect.innerHTML += `<option value="${val}">${val}</option>`;
+    });
+    if (filterState.doctor !== 'all' && !doctors.has(filterState.doctor)) {
+      doctorSelect.value = 'all';
+    } else {
+      doctorSelect.value = filterState.doctor;
+    }
+  }
+
   filterState.center = centerSelect ? centerSelect.value : 'all';
   filterState.visitType = visitTypeSelect ? visitTypeSelect.value : 'all';
   filterState.phlebotomist = phlebotomistSelect ? phlebotomistSelect.value : 'all';
   filterState.careOfPerson = careOfPersonSelect ? careOfPersonSelect.value : 'all';
+  filterState.doctor = doctorSelect ? doctorSelect.value : 'all';
 }
 
 function clearAllFilters() {
@@ -1465,6 +2435,7 @@ function clearAllFilters() {
   filterState.visitType = 'all';
   filterState.phlebotomist = 'all';
   filterState.careOfPerson = 'all';
+  filterState.doctor = 'all';
   filterState.search = '';
   paginationState.currentPage = 1;
 
@@ -1486,7 +2457,7 @@ function clearAllFilters() {
 
   populateDynamicFilters();
 
-  renderEntries(allEntries);
+  loadEntriesPage(1, paginationState.perPage);
   toast('All filters cleared.', 'success');
 }
 
@@ -1504,6 +2475,33 @@ function closeViewModal() {
   document.body.style.overflow = '';
 }
 
+function openFullImage(src) {
+  fullImage.src = src;
+  viewImageFull.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFullImageView() {
+  viewImageFull.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (viewImageFull.classList.contains('active')) {
+      closeFullImageView();
+    }
+    if (viewModalOverlay.classList.contains('active')) {
+      closeViewModal();
+    }
+  }
+});
+
+closeFullImage.addEventListener('click', closeFullImageView);
+viewImageFull.addEventListener('click', function(e) {
+  if (e.target === this) closeFullImageView();
+});
+
 function buildViewModalContent(entry) {
   let html = '';
 
@@ -1516,7 +2514,7 @@ function buildViewModalContent(entry) {
         <div class="view-item"><span class="label">Gender</span><span class="value">${entry.gender || '—'}</span></div>
         <div class="view-item"><span class="label">Doctor</span><span class="value">${entry.doctorName || '—'}</span></div>
         <div class="view-item"><span class="label">Care of Person</span><span class="value">${entry.careOfPerson || '—'}</span></div>
-        <div class="view-item full-width"><span class="label">Address</span><span class="value">${entry.address || '—'}</span></div>
+        <div class="view-item full-width"><span class="label">Address</span><span class="value" style="white-space:pre-wrap;">${entry.address || '—'}</span></div>
   `;
 
   if (entry.contacts && entry.contacts.length > 0) {
@@ -1529,7 +2527,15 @@ function buildViewModalContent(entry) {
   }
 
   if (entry.additionalInformation) {
-    html += `<div class="view-item full-width"><span class="label">Additional Info</span><span class="value">${entry.additionalInformation}</span></div>`;
+    html += `<div class="view-item full-width"><span class="label">Additional Info</span><span class="value" style="white-space:pre-wrap;">${entry.additionalInformation}</span></div>`;
+  }
+
+  if (entry.images && entry.images.length > 0) {
+    html += `<div class="view-item full-width"><span class="label">Images</span><div class="view-image-gallery">`;
+    entry.images.forEach(img => {
+      html += `<img src="${img}" class="view-image-thumb" onclick="openFullImage('${img}')" />`;
+    });
+    html += `</div></div>`;
   }
 
   html += `</div></div>`;
@@ -1603,6 +2609,13 @@ function buildViewModalContent(entry) {
     `;
   }
 
+  if (isExtraCollectionSelectedForEntry(entry)) {
+    html += `
+      <div class="view-item"><span class="label">Extra Collection Time</span><span class="value">${entry.extraCollectionTime || '—'}</span></div>
+      <div class="view-item"><span class="label">Extra Collection Phlebotomist</span><span class="value">${entry.extraCollectionPhlebotomist || '—'}</span></div>
+    `;
+  }
+
   html += `</div></div>`;
 
   html += `
@@ -1655,40 +2668,59 @@ function buildViewModalContent(entry) {
 
   html += `</div></div>`;
 
+  if (entry.patientName) {
+    html += `
+      <div class="view-section">
+        <div class="view-section-title">📧 Report Message</div>
+        <div class="report-message-container" style="background: var(--bg-light); border-radius: var(--radius-sm); padding: 16px 20px;">
+          <div class="report-message" style="white-space:pre-wrap; font-size:0.85rem; color:var(--text-dark); line-height:1.8;">Hello,
+
+Please find attached the test report for ${entry.patientName}.
+ 
+Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+ 
+Wishing you and your family good health!
+ 
+Thank you.</div>
+          <button class="copy-msg-btn" style="margin-top:12px; background:var(--primary); color:white; border:none; padding:4px 16px; border-radius:30px; font-size:0.75rem; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif;" onclick="copyViewMessage('${entry.patientName}')">📋 Copy Message</button>
+        </div>
+      </div>
+    `;
+  }
+
   return html;
 }
 
-function isPPSelectedForEntry(entry) {
-  if (!entry.labSelections) return false;
-  for (let labId = 1; labId <= 4; labId++) {
-    const labData = entry.labSelections[labId];
-    if (!labData) continue;
-    if (labData.tests) {
-      for (const test of labData.tests) {
-        if (test.id === 'pp' || test.generalName === 'PP') return true;
-      }
-    }
-    if (labData.packages) {
-      for (const pkg of labData.packages) {
-        if (pkg.tests) {
-          for (const test of pkg.tests) {
-            if ((test.generalName === 'PP' || test.id === 'pp') && test.selected !== false) return true;
-          }
-        }
-      }
-    }
-  }
-  return false;
+function copyViewMessage(patientName) {
+  const message = `Hello,
+
+Please find attached the test report for ${patientName}.
+ 
+Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+ 
+Wishing you and your family good health!
+ 
+Thank you.`;
+
+  navigator.clipboard.writeText(message).then(() => {
+    toast('Message copied to clipboard!', 'success');
+  }).catch(() => {
+    const textarea = document.createElement('textarea');
+    textarea.value = message;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+    toast('Message copied to clipboard!', 'success');
+  });
 }
+
+window.openFullImage = openFullImage;
+window.copyViewMessage = copyViewMessage;
 
 viewModalClose.addEventListener('click', closeViewModal);
 viewModalOverlay.addEventListener('click', function(e) {
   if (e.target === this) closeViewModal();
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && viewModalOverlay.classList.contains('active')) {
-    closeViewModal();
-  }
 });
 
 // ============================================================
@@ -1705,53 +2737,179 @@ function handleFirebaseError(err) {
 }
 
 // ============================================================
-//  LOAD ENTRIES FROM FIREBASE
+//  DELETE PATIENT - OPTIMIZED
 // ============================================================
-async function loadEntries() {
+async function deletePatient(key) {
   try {
-    const snap = await db.ref('patients').once('value');
-    const data = snap.val();
-    const entries = [];
-    if (data) {
-      for (const [key, val] of Object.entries(data)) {
-        entries.push({ ...val, _firebaseKey: key });
-      }
-    }
-    allEntries = entries;
-    isPermissionError = false;
-    rulesBanner.classList.remove('show');
-
-    allPatientNames = [];
-    entries.forEach(entry => {
-      if (entry.patientName) {
-        allPatientNames.push({
-          name: entry.patientName,
-          key: entry._firebaseKey,
-          data: entry
-        });
-      }
-    });
-    allPatientNames.sort((a, b) => {
-      const dateA = a.data.visitDate || '1970-01-01';
-      const timeA = a.data.visitTime || '00:00';
-      const dateB = b.data.visitDate || '1970-01-01';
-      const timeB = b.data.visitTime || '00:00';
-      const dtA = new Date(dateA + 'T' + timeA + ':00');
-      const dtB = new Date(dateB + 'T' + timeB + ':00');
-      return dtB - dtA;
-    });
-
-    if (!entriesFilters.innerHTML) {
-      buildFiltersUI();
-    }
+    await deleteAllImagesForPatient(key);
+    
+    await db.ref('patients/' + key).remove();
+    await db.ref('patientIndex/' + key).remove();
+    
+    // Update local data
+    allPatientIndex = allPatientIndex.filter(e => e._firebaseKey !== key);
+    allPatientNames = allPatientNames.filter(e => e.key !== key);
+    
+    toast('Entry deleted successfully.', 'success');
+    
+    renderEntries(allPatientIndex);
+    renderVisitScheduleFromIndex(allPatientIndex);
     populateDynamicFilters();
-    renderEntries(allEntries);
-
+    populateVisitPhlebotomistFilter();
   } catch (err) {
     handleFirebaseError(err);
-    allEntries = [];
-    renderEntries([]);
   }
+}
+
+// ============================================================
+//  SAVE PATIENT - OPTIMIZED
+// ============================================================
+async function savePatient(formId, isEdit = false, existingKey = null) {
+  const validation = validateForm(formId);
+  if (!validation.isValid) {
+    toast('Please fill in all required fields.', 'error');
+    return false;
+  }
+
+  const state = getFormState(formId);
+  const data = gatherFormData(formId);
+  const saveBtn = document.getElementById(`saveBtn-${formId}`);
+  
+  if (saveBtn) setLoading(saveBtn, true);
+
+  try {
+    let patientId = existingKey;
+    let imageUrls = [];
+    
+    if (state.imageFiles && state.imageFiles.length > 0) {
+      if (!patientId) {
+        const newRef = db.ref('patients').push();
+        patientId = newRef.key;
+      }
+      
+      imageUrls = await uploadImagesForPatient(patientId, state.imageFiles);
+      
+      const existingImages = state.images.filter(img => 
+        typeof img === 'string' && img.startsWith('http')
+      );
+      data.images = [...existingImages, ...imageUrls];
+    } else {
+      data.images = state.images.filter(img => 
+        typeof img === 'string' && img.startsWith('http')
+      );
+    }
+    
+    delete data.imageFiles;
+    
+    if (isEdit && existingKey) {
+      await db.ref('patients/' + existingKey).update(data);
+      
+      const indexData = createIndexData(data, existingKey);
+      await db.ref('patientIndex/' + existingKey).update(indexData);
+      
+      const localIndex = allPatientIndex.find(e => e._firebaseKey === existingKey);
+      if (localIndex) {
+        Object.assign(localIndex, indexData);
+      }
+      
+      toast('Entry updated successfully.', 'success');
+    } else {
+      if (!patientId) {
+        const newRef = db.ref('patients').push();
+        patientId = newRef.key;
+      }
+      
+      await db.ref('patients/' + patientId).set(data);
+      
+      const indexData = createIndexData(data, patientId);
+      await db.ref('patientIndex/' + patientId).set(indexData);
+      
+      allPatientIndex.push({ ...indexData, _firebaseKey: patientId });
+      
+      if (data.patientName) {
+        allPatientNames.push({
+          name: data.patientName,
+          key: patientId,
+          data: indexData
+        });
+      }
+      
+      toast('Entry saved successfully.', 'success');
+    }
+    
+    if (!isEdit) {
+      resetFormState(formId);
+      const panel = document.getElementById(getPanelId(formId));
+      if (panel) {
+        panel.querySelectorAll('input, select, textarea').forEach(el => {
+          if (el.id && el.id.includes('-' + formId)) {
+            if (el.type === 'checkbox') {
+              el.checked = false;
+            } else if (el.type !== 'button' && el.type !== 'submit') {
+              el.value = '';
+            }
+          }
+        });
+        const container = document.getElementById('contacts-container-' + formId);
+        if (container) {
+          container.innerHTML = '';
+          addContactRow(formId);
+        }
+        const state = getFormState(formId);
+        state.images = [];
+        state.imageFiles = [];
+        renderImages(formId);
+      }
+      updatePPSection(formId);
+      updateExtraCollectionVisibility(formId);
+      updateReportReceivedList(formId);
+      updateDeliveryStatusVisibility(formId);
+      updatePaymentFields(formId);
+      updateSectionProgressBars(formId);
+      updateReportMessage(formId);
+    }
+    
+    // Update UI without reloading entire database
+    renderEntries(allPatientIndex);
+    renderVisitScheduleFromIndex(allPatientIndex);
+    populateDynamicFilters();
+    populateVisitPhlebotomistFilter();
+    
+    if (saveBtn) setLoading(saveBtn, false);
+    return true;
+    
+  } catch (err) {
+    handleFirebaseError(err);
+    if (saveBtn) setLoading(saveBtn, false);
+    return false;
+  }
+}
+
+function createIndexData(data, key) {
+  return {
+    patientName: data.patientName || '',
+    age: data.age || '',
+    gender: data.gender || '',
+    visitDate: data.visitDate || '',
+    visitTime: data.visitTime || '',
+    center: data.center || '',
+    visitType: data.visitType || '',
+    doctorName: data.doctorName || '',
+    phlebotomist: data.phlebotomist || '',
+    careOfPerson: data.careOfPerson || '',
+    ppTime: data.ppTime || '',
+    ppPhlebotomist: data.ppPhlebotomist || '',
+    extraCollectionTime: data.extraCollectionTime || '',
+    extraCollectionPhlebotomist: data.extraCollectionPhlebotomist || '',
+    visitDone: data.visitDone || false,
+    visitDoneTime: data.visitDoneTime || null,
+    ppVisitDone: data.ppVisitDone || false,
+    ppVisitDoneTime: data.ppVisitDoneTime || null,
+    extraVisitDone: data.extraVisitDone || false,
+    extraVisitDoneTime: data.extraVisitDoneTime || null,
+    finalPrice: data.finalPrice || 0,
+    hasTests: data.labSelections ? true : false
+  };
 }
 
 // ============================================================
@@ -1773,12 +2931,24 @@ function setupPatientAutocomplete(formId) {
 
   let activeIndex = -1;
   let currentSuggestions = [];
-  // ARCHITECTURE FIX: this debounce timer must be scoped to this specific
-  // form's autocomplete instance. It was previously a single module-level
-  // variable shared by every open tab, so typing in one form's patient
-  // name field could cancel/steal the pending suggestion lookup for
-  // another form's field if both were typed into in quick succession.
   let autocompleteTimer = null;
+
+  function getPatientSuggestions(query) {
+    const matches = allPatientNames.filter(item =>
+      item.name && item.name.toLowerCase().includes(query)
+    );
+    
+    const unique = [];
+    const seen = new Set();
+    matches.forEach(item => {
+      if (!seen.has(item.name)) {
+        seen.add(item.name);
+        unique.push(item);
+      }
+    });
+    
+    return unique;
+  }
 
   function updateSuggestions(value) {
     const query = value.toLowerCase().trim();
@@ -1788,22 +2958,9 @@ function setupPatientAutocomplete(formId) {
       return;
     }
 
-    const matches = allPatientNames.filter(item =>
-      item.name.toLowerCase().includes(query)
-    );
+    const matches = getPatientSuggestions(query);
 
-    const uniqueMatches = [];
-    const seenNames = new Set();
-    matches.forEach(item => {
-      if (!seenNames.has(item.name)) {
-        seenNames.add(item.name);
-        uniqueMatches.push(item);
-      }
-    });
-
-    uniqueMatches.sort((a, b) => a.name.localeCompare(b.name));
-
-    currentSuggestions = uniqueMatches;
+    currentSuggestions = matches;
 
     if (currentSuggestions.length === 0) {
       suggestionsDiv.classList.remove('show');
@@ -1811,7 +2968,7 @@ function setupPatientAutocomplete(formId) {
     }
 
     suggestionsDiv.innerHTML = currentSuggestions.map((item, index) => {
-      const name = item.name;
+      const name = item.name || '';
       const lowerName = name.toLowerCase();
       const queryLower = query.toLowerCase();
       const startIndex = lowerName.indexOf(queryLower);
@@ -1824,11 +2981,12 @@ function setupPatientAutocomplete(formId) {
         displayName = `${before}<span class="highlight">${match}</span>${after}`;
       }
 
-      const visitDate = item.data.visitDate ? formatDateDisplay(item.data.visitDate) : 'No previous visit';
+      const isSample = item.isSample ? ' (Sample)' : '';
+      const visitDate = item.data?.visitDate ? formatDateDisplay(item.data.visitDate) : 'No previous visit';
       return `
         <div class="patient-suggestion-item" data-index="${index}">
-          <div class="patient-name">${displayName}</div>
-          <div class="patient-visit">Previous visit: ${visitDate}</div>
+          <div class="patient-name">${displayName}${isSample}</div>
+          <div class="patient-visit">${isSample ? 'Sample patient - no details will be loaded' : 'Previous visit: ' + visitDate}</div>
         </div>
       `;
     }).join('');
@@ -1894,28 +3052,23 @@ function setupPatientAutocomplete(formId) {
     }
   });
 
-  function selectPatientFromHistory(item, formId) {
-    const patientEntries = allEntries.filter(entry =>
-      entry.patientName === item.name
-    );
+  async function selectPatientFromHistory(item, formId) {
+    if (item.isSample) {
+      const nameInput = document.getElementById(`patientName-${formId}`);
+      if (nameInput) nameInput.value = item.name;
+      suggestionsDiv.classList.remove('show');
+      toast('Sample patient selected. No details loaded.', 'success');
+      updateSectionProgressBars(formId);
+      return;
+    }
 
-    if (patientEntries.length === 0) return;
-
-    patientEntries.sort((a, b) => {
-      const dateA = a.visitDate || '1970-01-01';
-      const timeA = a.visitTime || '00:00';
-      const dateB = b.visitDate || '1970-01-01';
-      const timeB = b.visitTime || '00:00';
-      const dtA = new Date(dateA + 'T' + timeA + ':00');
-      const dtB = new Date(dateB + 'T' + timeB + ':00');
-      return dtB - dtA;
-    });
-
-    const mostRecent = patientEntries[0];
-    populatePatientDetails(formId, mostRecent);
-    suggestionsDiv.classList.remove('show');
-    toast('Patient details loaded from previous visit.', 'success');
-    updateSectionProgressBars(formId);
+    const fullData = await loadPatientRecord(item.key);
+    if (fullData) {
+      populatePatientDetails(formId, fullData);
+      suggestionsDiv.classList.remove('show');
+      toast('Patient details loaded from previous visit.', 'success');
+      updateSectionProgressBars(formId);
+    }
   }
 }
 
@@ -1947,8 +3100,61 @@ function populatePatientDetails(formId, data) {
     populateContacts(formId, []);
   }
 
+  if (data.images && Array.isArray(data.images)) {
+    const state = getFormState(formId);
+    state.images = [...data.images];
+    state.imageFiles = [];
+    renderImages(formId);
+  }
+
+  setFieldValue('visitCenter', formId, data.center || '');
+  setFieldValue('visitType', formId, data.visitType || '');
+  setFieldValue('visitDate', formId, data.visitDate || '');
+  setFieldValue('visitTime', formId, data.visitTime || '');
+  setFieldValue('visitPhlebotomist', formId, data.phlebotomist || '');
+  setFieldValue('visitPPTime', formId, data.ppTime || '');
+  setFieldValue('visitPPPhlebotomist', formId, data.ppPhlebotomist || '');
+  setFieldValue('visitExtraTime', formId, data.extraCollectionTime || '');
+  setFieldValue('visitExtraPhlebotomist', formId, data.extraCollectionPhlebotomist || '');
+
+  setCheckboxValue('reportOnlineRequired', formId, data.onlineReportRequired || false);
+  setCheckboxValue('reportDeliveryRequired', formId, data.reportDeliveryRequired || false);
+  setCheckboxValue('reportBillDeliveryRequired', formId, data.billDeliveryRequired || false);
+  setCheckboxValue('reportOnlineSent', formId, data.onlineReportSent || false);
+  setCheckboxValue('reportDelivered', formId, data.reportDelivered || false);
+  setCheckboxValue('reportBillDelivered', formId, data.billDelivered || false);
+
+  if (data.reportsReceived) {
+    const state = getFormState(formId);
+    state.reportsReceived = { ...data.reportsReceived };
+  }
+
+  setFieldValue('paymentFinalPrice', formId, data.finalPrice ? data.finalPrice.toString() : '');
+  setFieldValue('paymentCash', formId, data.cashReceived ? data.cashReceived.toString() : '');
+  setFieldValue('paymentOnline', formId, data.onlineReceived ? data.onlineReceived.toString() : '');
+  setFieldValue('paymentGoodwill', formId, data.goodwillCharges ? data.goodwillCharges.toString() : '');
+
+  if (data.labSelections) {
+    const state = getFormState(formId);
+    const normalizedLabSelections = {};
+    for (let labId = 1; labId <= 4; labId++) {
+      const labSel = data.labSelections[labId] || {};
+      normalizedLabSelections[labId] = {
+        tests: labSel.tests || [],
+        packages: labSel.packages || []
+      };
+    }
+    state.selectedLabData = JSON.parse(JSON.stringify(normalizedLabSelections));
+    recalculateGlobalSelectedTests(formId);
+  }
+
+  updatePPSection(formId);
+  updateExtraCollectionVisibility(formId);
+  updateReportReceivedList(formId);
+  updateDeliveryStatusVisibility(formId);
   updatePaymentFields(formId);
   updateSectionProgressBars(formId);
+  updateReportMessage(formId);
 }
 
 // ============================================================
@@ -2791,6 +3997,7 @@ function gatherFormData(formId) {
     doctorName: getFieldValue('patientDoctor', formId),
     careOfPerson: getFieldValue('patientCareOf', formId),
     additionalInformation: getFieldValue('patientAdditionalInfo', formId),
+    images: state.images || []
   };
 
   const visitData = {
@@ -2801,6 +4008,8 @@ function gatherFormData(formId) {
     phlebotomist: getFieldValue('visitPhlebotomist', formId),
     ppTime: getFieldValue('visitPPTime', formId),
     ppPhlebotomist: getFieldValue('visitPPPhlebotomist', formId),
+    extraCollectionTime: getFieldValue('visitExtraTime', formId),
+    extraCollectionPhlebotomist: getFieldValue('visitExtraPhlebotomist', formId)
   };
 
   const reportData = {
@@ -2849,6 +4058,12 @@ function populateForm(formId, data) {
     populateContacts(formId, []);
   }
 
+  if (data.images && Array.isArray(data.images)) {
+    state.images = [...data.images];
+    state.imageFiles = [];
+    renderImages(formId);
+  }
+
   setFieldValue('visitCenter', formId, data.center || '');
   setFieldValue('visitType', formId, data.visitType || '');
   setFieldValue('visitDate', formId, data.visitDate || '');
@@ -2856,16 +4071,16 @@ function populateForm(formId, data) {
   setFieldValue('visitPhlebotomist', formId, data.phlebotomist || '');
   setFieldValue('visitPPTime', formId, data.ppTime || '');
   setFieldValue('visitPPPhlebotomist', formId, data.ppPhlebotomist || '');
+  setFieldValue('visitExtraTime', formId, data.extraCollectionTime || '');
+  setFieldValue('visitExtraPhlebotomist', formId, data.extraCollectionPhlebotomist || '');
 
   setCheckboxValue('reportOnlineRequired', formId, data.onlineReportRequired || false);
   setCheckboxValue('reportDeliveryRequired', formId, data.reportDeliveryRequired || false);
   setCheckboxValue('reportBillDeliveryRequired', formId, data.billDeliveryRequired || false);
-
   setCheckboxValue('reportOnlineSent', formId, data.onlineReportSent || false);
   setCheckboxValue('reportDelivered', formId, data.reportDelivered || false);
   setCheckboxValue('reportBillDelivered', formId, data.billDelivered || false);
 
-  // Restore reportsReceived from saved data
   if (data.reportsReceived) {
     state.reportsReceived = { ...data.reportsReceived };
   } else {
@@ -2877,12 +4092,6 @@ function populateForm(formId, data) {
   setFieldValue('paymentOnline', formId, data.onlineReceived ? data.onlineReceived.toString() : '');
   setFieldValue('paymentGoodwill', formId, data.goodwillCharges ? data.goodwillCharges.toString() : '');
 
-  // Restore lab selections
-  // ARCHITECTURE FIX: build a normalized copy instead of writing defaults
-  // directly onto `data.labSelections`. `data` may still be a reference
-  // shared with other callers (e.g. patient-history autocomplete uses the
-  // same cached entry objects), so this function must never mutate its
-  // input — only `state` (this form's own isolated state) should change.
   if (data.labSelections) {
     const normalizedLabSelections = {};
     for (let labId = 1; labId <= 4; labId++) {
@@ -2897,10 +4106,12 @@ function populateForm(formId, data) {
   }
 
   updatePPSection(formId);
+  updateExtraCollectionVisibility(formId);
   updateReportReceivedList(formId);
   updateDeliveryStatusVisibility(formId);
   updatePaymentFields(formId);
   updateSectionProgressBars(formId);
+  updateReportMessage(formId);
 }
 
 // ============================================================
@@ -2960,11 +4171,13 @@ function setupFormNavigation(formId) {
 
       if (this.dataset.section === 'visit') {
         updatePPSection(formId);
+        updateExtraCollectionVisibility(formId);
       }
 
       if (this.dataset.section === 'report') {
         updateReportReceivedList(formId);
         updateDeliveryStatusVisibility(formId);
+        updateReportMessage(formId);
       }
 
       if (this.dataset.section === 'payment') {
@@ -2983,9 +4196,10 @@ function createPatientDetailsHTML(formId) {
   return `
     <div class="patient-details-grid">
       <div>
-        <label class="field-label">Patient Name *</label>
+        <label class="field-label required">Patient Name *</label>
         <input type="text" id="patientName-${formId}" placeholder="Enter patient name" autocomplete="off" />
         <div id="patientSuggestions-${formId}" class="patient-autocomplete-suggestions"></div>
+        <div class="field-error" id="patientNameError-${formId}">Patient name is required</div>
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
@@ -3035,6 +4249,17 @@ function createPatientDetailsHTML(formId) {
         <label class="field-label">Additional Information</label>
         <textarea id="patientAdditionalInfo-${formId}" rows="4" placeholder="Any additional information..."></textarea>
       </div>
+
+      <div class="full-width">
+        <label class="field-label">Images</label>
+        <div class="image-upload-container" id="imageUploadContainer-${formId}">
+          <div class="upload-box">
+            <span class="upload-icon">📷</span>
+            <span>Add Images</span>
+            <input type="file" id="imageFileInput-${formId}" accept="image/*" multiple />
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -3062,8 +4287,9 @@ function createVisitDetailsHTML(formId) {
         </select>
       </div>
       <div>
-        <label class="field-label">Visit Date</label>
+        <label class="field-label required">Visit Date *</label>
         <input type="date" id="visitDate-${formId}" />
+        <div class="field-error" id="visitDateError-${formId}">Visit date is required</div>
       </div>
 
       <div>
@@ -3090,6 +4316,23 @@ function createVisitDetailsHTML(formId) {
             <div class="autocomplete-wrapper">
               <input type="text" id="visitPPPhlebotomist-${formId}" placeholder="Type phlebotomist name..." />
               <div class="autocomplete-suggestions" id="suggestions-visitPPPhlebotomist-${formId}"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="extra-collection-section" id="extraSection-${formId}">
+        <div class="extra-label">— Extra Collection Schedule —</div>
+        <div class="extra-grid">
+          <div>
+            <label class="field-label">Extra Collection Time</label>
+            <input type="time" id="visitExtraTime-${formId}" step="60" />
+          </div>
+          <div>
+            <label class="field-label">Extra Collection Phlebotomist</label>
+            <div class="autocomplete-wrapper">
+              <input type="text" id="visitExtraPhlebotomist-${formId}" placeholder="Type phlebotomist name..." />
+              <div class="autocomplete-suggestions" id="suggestions-visitExtraPhlebotomist-${formId}"></div>
             </div>
           </div>
         </div>
@@ -3196,6 +4439,25 @@ function createReportDetailsHTML(formId) {
             <input type="checkbox" id="reportBillDelivered-${formId}" />
             <label for="reportBillDelivered-${formId}">Bill Delivered</label>
           </div>
+        </div>
+      </div>
+
+      <div class="report-section">
+        <div class="report-section-title">Report Message</div>
+        <div class="report-message-container">
+          <div class="message-header">
+            <h5>📧 Copy this message</h5>
+            <button class="copy-msg-btn" onclick="copyReportMessage('${formId}')">📋 Copy</button>
+          </div>
+          <div class="report-message" id="reportMessage-${formId}">Hello,
+
+Please find attached the test report for Patient.
+ 
+Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+ 
+Wishing you and your family good health!
+ 
+Thank you.</div>
         </div>
       </div>
     </div>
@@ -3340,7 +4602,6 @@ function createNewEntryPanel() {
   const addedPanel = document.getElementById('panel-added');
   addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
 
-  // CRITICAL: Create fresh state for new entry
   formStates.set('new', createEmptyFormState());
 
   setupFormNavigation(formId);
@@ -3350,9 +4611,7 @@ function createNewEntryPanel() {
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
       if (confirm('Clear all entered data?')) {
-        // Reset only this form's state
         resetFormState(formId);
-        // Clear UI fields
         const panel = document.getElementById(getPanelId(formId));
         if (panel) {
           panel.querySelectorAll('input, select, textarea').forEach(el => {
@@ -3369,59 +4628,26 @@ function createNewEntryPanel() {
             container.innerHTML = '';
             addContactRow(formId);
           }
+          const state = getFormState(formId);
+          state.images = [];
+          state.imageFiles = [];
+          renderImages(formId);
         }
         updatePPSection(formId);
+        updateExtraCollectionVisibility(formId);
         updateReportReceivedList(formId);
         updateDeliveryStatusVisibility(formId);
         updatePaymentFields(formId);
         updateSectionProgressBars(formId);
+        updateReportMessage(formId);
       }
     });
   }
 
   const saveBtn = document.getElementById('saveBtn-' + formId);
   if (saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      const data = gatherFormData(formId);
-      if (!data.patientName) {
-        toast('Patient name is required.', 'error');
-        return;
-      }
-      setLoading(saveBtn, true);
-      try {
-        const ref = db.ref('patients').push();
-        await ref.set(data);
-        toast('Entry saved successfully.', 'success');
-        // Reset form state after saving
-        resetFormState(formId);
-        // Clear UI fields
-        const panel = document.getElementById(getPanelId(formId));
-        if (panel) {
-          panel.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.id && el.id.includes('-' + formId)) {
-              if (el.type === 'checkbox') {
-                el.checked = false;
-              } else if (el.type !== 'button' && el.type !== 'submit') {
-                el.value = '';
-              }
-            }
-          });
-          const container = document.getElementById('contacts-container-' + formId);
-          if (container) {
-            container.innerHTML = '';
-            addContactRow(formId);
-          }
-        }
-        updatePPSection(formId);
-        updateReportReceivedList(formId);
-        updateDeliveryStatusVisibility(formId);
-        updatePaymentFields(formId);
-        updateSectionProgressBars(formId);
-        await loadEntries();
-      } catch (err) {
-        handleFirebaseError(err);
-      }
-      setLoading(saveBtn, false);
+    saveBtn.addEventListener('click', async function() {
+      await savePatient(formId);
     });
   }
 
@@ -3435,12 +4661,6 @@ function createEditPanel(key, data) {
   const formId = 'edit-' + key;
   const panelId = getPanelId(formId);
 
-  // ARCHITECTURE FIX: `data` here is a live reference into `allEntries`
-  // (and therefore into `allPatientNames`, which shares the same objects).
-  // Deep-clone it before it ever touches form/state code so this edit
-  // panel's state is fully isolated and can never mutate the shared
-  // entries cache — even indirectly via defaulting/normalizing logic
-  // inside populateForm().
   data = JSON.parse(JSON.stringify(data));
 
   const existingPanel = document.getElementById(panelId);
@@ -3494,10 +4714,8 @@ function createEditPanel(key, data) {
   const addedPanel = document.getElementById('panel-added');
   addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
 
-  // Create fresh state for this edit form
   formStates.set(formId, createEmptyFormState());
   
-  // Populate with existing data
   populateForm(formId, data);
 
   setupFormNavigation(formId);
@@ -3515,22 +4733,8 @@ function createEditPanel(key, data) {
 
   const saveBtn = document.getElementById('saveBtn-' + formId);
   if (saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      const updatedData = gatherFormData(formId);
-      if (!updatedData.patientName) {
-        toast('Patient name is required.', 'error');
-        return;
-      }
-      setLoading(saveBtn, true);
-      try {
-        await db.ref('patients/' + key).update(updatedData);
-        toast('Entry updated successfully.', 'success');
-        closeEditTab('edit-' + key);
-        await loadEntries();
-      } catch (err) {
-        handleFirebaseError(err);
-        setLoading(saveBtn, false);
-      }
+    saveBtn.addEventListener('click', async function() {
+      await savePatient(formId, true, key);
     });
   }
 
@@ -3550,7 +4754,10 @@ function switchTab(tabId) {
   });
   activeTab = tabId;
 
-  if (tabId !== 'added') {
+  if (tabId === 'schedule') {
+    renderVisitSchedule();
+  }
+  if (tabId !== 'added' && tabId !== 'schedule') {
     updateSectionProgressBars(tabId);
   }
 }
@@ -3577,6 +4784,8 @@ function createTabButton(tabId, label, closeable = false) {
       switchTab('added');
     } else if (tabId === 'new') {
       switchTab('new');
+    } else if (tabId === 'schedule') {
+      switchTab('schedule');
     } else if (tabId.startsWith('edit-')) {
       switchTab(tabId);
     }
@@ -3587,6 +4796,9 @@ function createTabButton(tabId, label, closeable = false) {
 
 function ensureBaseTabs() {
   tabBar.innerHTML = '';
+
+  const scheduleBtn = createTabButton('schedule', '📅 Visit Schedule', false);
+  tabBar.appendChild(scheduleBtn);
 
   const addedBtn = createTabButton('added', '📋 Added Entries', false);
   tabBar.appendChild(addedBtn);
@@ -3623,7 +4835,6 @@ function closeEditTab(tabId) {
   if (!editTabs.has(key)) return;
 
   editTabs.delete(key);
-  // Remove the form state for this edit tab
   deleteFormState(tabId);
   
   const panel = document.getElementById('panel-' + tabId);
@@ -3649,10 +4860,12 @@ function setupPatientDetailsEvents(formId) {
       this.value = formatName(this.value);
       updatePaymentFields(formId);
       updateSectionProgressBars(formId);
+      updateReportMessage(formId);
     });
     nameInput.addEventListener('input', function() {
       updatePaymentFields(formId);
       updateSectionProgressBars(formId);
+      updateReportMessage(formId);
     });
   }
 
@@ -3709,6 +4922,9 @@ function setupPatientDetailsEvents(formId) {
   setupAutocomplete('patientCareOf', CARE_OF_PERSON_SUGGESTIONS, formId);
   setupAutocomplete('visitPhlebotomist', PHLEBOTOMIST_SUGGESTIONS, formId);
   setupAutocomplete('visitPPPhlebotomist', PHLEBOTOMIST_SUGGESTIONS, formId);
+  setupAutocomplete('visitExtraPhlebotomist', PHLEBOTOMIST_SUGGESTIONS, formId);
+
+  setupImageUpload(formId);
 
   const addContactBtn = document.getElementById('addContact-' + formId);
   if (addContactBtn) {
@@ -3823,10 +5039,12 @@ function setupPatientDetailsEvents(formId) {
   }
 
   updatePPSection(formId);
+  updateExtraCollectionVisibility(formId);
   updateReportReceivedList(formId);
   updateDeliveryStatusVisibility(formId);
   updatePaymentFields(formId);
   updateSectionProgressBars(formId);
+  updateReportMessage(formId);
 }
 
 // ============================================================
@@ -3839,6 +5057,10 @@ if (copyRulesBtn) {
     ".read": true,
     ".write": true,
     "patients": {
+      ".read": true,
+      ".write": true
+    },
+    "patientIndex": {
       ".read": true,
       ".write": true
     }
@@ -3900,14 +5122,20 @@ document.addEventListener('click', function(e) {
 // ============================================================
 window.handleB2BUnlock = handleB2BUnlock;
 window.verifyB2BPassword = verifyB2BPassword;
+window.copyReportMessage = copyReportMessage;
+window.openFullImage = openFullImage;
 
 // ============================================================
 //  INIT
 // ============================================================
 function init() {
+  // Create UI
   createNewEntryPanel();
   ensureBaseTabs();
   switchTab('added');
+  setupVisitScheduleListeners();
+  
+  // Load data directly (no authentication required)
   loadEntries();
 }
 
