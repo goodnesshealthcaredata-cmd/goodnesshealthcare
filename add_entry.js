@@ -267,7 +267,7 @@ async function uploadToImageKit(file, patientId, index) {
     formData.append('useUniqueFileName', 'true');
     
     // Upload to ImageKit
-    const uploadResponse = await fetch(`${IMAGEKIT_URL_ENDPOINT}/api/v1/files/upload`, {
+const uploadResponse = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
       method: 'POST',
       body: formData
     });
