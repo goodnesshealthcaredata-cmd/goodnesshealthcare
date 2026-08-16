@@ -2366,9 +2366,9 @@ function updateReportMessage(formId) {
   
   const message = `Hello,
 
-Please find attached the test report for ${patientName}.
+Please find attached the test report for *${patientName}*.
  
-Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+Thank you for choosing *Goodness Healthcare*. We sincerely appreciate your trust in our services.
  
 Wishing you and your family good health!
  
@@ -3874,25 +3874,7 @@ function buildViewModalContent(entry) {
 
   html += `</div></div>`;
 
-  if (entry.patientName) {
-    html += `
-      <div class="view-section">
-        <div class="view-section-title">📧 Report Message</div>
-        <div class="report-message-container" style="background: var(--bg-light); border-radius: var(--radius-sm); padding: 16px 20px;">
-          <div class="report-message" style="white-space:pre-wrap; font-size:0.85rem; color:var(--text-dark); line-height:1.8;">Hello,
-
-Please find attached the test report for ${escapeHtml(entry.patientName)}.
- 
-Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
- 
-Wishing you and your family good health!
- 
-Thank you.</div>
-          <button class="copy-msg-btn" style="margin-top:12px; background:var(--primary); color:white; border:none; padding:4px 16px; border-radius:30px; font-size:0.75rem; font-weight:500; cursor:pointer; transition:var(--transition); font-family:'Inter',sans-serif;" onclick="copyViewMessage('${escapeHtml(entry.patientName)}')">📋 Copy Message</button>
-        </div>
-      </div>
-    `;
-  }
+  
 
   return html;
 }
@@ -3900,9 +3882,9 @@ Thank you.</div>
 function copyViewMessage(patientName) {
   const message = `Hello,
 
-Please find attached the test report for ${patientName}.
+Please find attached the test report for *${patientName}*.
  
-Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
+Thank you for choosing *Goodness Healthcare*. We sincerely appreciate your trust in our services.
  
 Wishing you and your family good health!
  
