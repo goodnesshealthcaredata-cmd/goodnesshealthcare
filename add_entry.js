@@ -1589,17 +1589,14 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
           }
         });
       } catch (uploadErr) {
-        // If upload fails, we still want to save the patient without images
         console.warn('Image upload failed, but patient will still be saved without images:', uploadErr);
         toast('Warning: Images could not be uploaded. Patient saved without images.', 'error');
         imageUrls = [];
-        // We'll keep existing images if any
         data.images = state.images.filter(img => 
           typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
         );
       }
       
-      // If we have new image URLs, add them to data.images
       if (imageUrls.length > 0) {
         const existingImages = state.images.filter(img => 
           typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
@@ -1644,7 +1641,7 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
     populateVisitPhlebotomistFilter();
     
     if (!isEdit) {
-      // Reset form
+      // Reset new entry form
       resetFormState(formId);
       const panel = document.getElementById(getPanelId(formId));
       if (panel) {
@@ -1674,6 +1671,11 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       updatePaymentFields(formId);
       updateSectionProgressBars(formId);
       updateReportMessage(formId);
+    } else {
+      // EDIT: reload current page, close the edit tab, and switch to Added Entries
+      await loadEntriesPage(pagination.page);
+      closeEditTab(formId);      // <-- FIX: close the edit tab
+      switchTab('added');        // <-- FIX: show the entries list
     }
     
     if (saveBtn) {
