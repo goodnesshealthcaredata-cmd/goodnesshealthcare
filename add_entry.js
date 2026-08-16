@@ -47,6 +47,8 @@ const visitCountEl = document.getElementById('visitCount');
 //  STATE
 // ============================================================
 let currentEntries = [];
+let allEntries = [];
+let filteredEntries = [];
 let allPatientNames = [];
 let editTabs = new Map();
 let activeTab = 'added';
@@ -55,14 +57,16 @@ let lastPatientKey = null;
 let isImageViewerOpen = false;
 let isViewModalOpen = false;
 let isRefreshing = false;
+let isLoading = true;
 
+// Pagination state
 let pagination = {
     page: 1,
     perPage: 25,
-    currentCursor: null,
-    cursorStack: [],
+    pageCursors: [null],
     hasNext: false,
-    totalLoaded: 0
+    totalLoaded: 0,
+    totalFiltered: 0
 };
 
 let filterState = {
@@ -198,7 +202,7 @@ function debounce(func, wait) {
 }
 
 // ============================================================
-//  IMAGE UPLOAD - SINGLE EVENT HANDLER
+//  IMAGE UPLOAD - FIXED with retry and graceful fallback
 // ============================================================
 function compressImage(file, maxWidth = 1200, quality = 0.8) {
   return new Promise((resolve, reject) => {
@@ -232,12 +236,27 @@ function compressImage(file, maxWidth = 1200, quality = 0.8) {
   });
 }
 
+// Retry helper
+async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response;
+    } catch (err) {
+      attempt++;
+      if (attempt >= retries) throw err;
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
+    }
+  }
+}
+
 async function getImageKitAuth() {
   try {
-    const response = await fetch(CLOUDFLARE_WORKER_URL);
-    if (!response.ok) {
-      throw new Error(`Worker returned ${response.status}: ${response.statusText}`);
-    }
+    const response = await fetchWithRetry(CLOUDFLARE_WORKER_URL, {}, 3, 1000);
     const data = await response.json();
     if (!data.token || !data.expire || !data.signature) {
       throw new Error('Invalid response from auth server');
@@ -281,7 +300,7 @@ async function uploadToImageKit(file, patientId, index) {
     return result.url;
   } catch (err) {
     console.error('ImageKit upload error:', err);
-    throw new Error('Image upload failed. Patient was not saved. ' + err.message);
+    throw new Error('Image upload failed. ' + err.message);
   }
 }
 
@@ -300,13 +319,15 @@ async function uploadImagesForPatient(patientId, imageFiles, onProgress) {
       }
     } catch (err) {
       console.error('Error uploading image:', err);
-      throw err;
+      // Continue with other images, but we'll throw at the end if none succeeded
+      if (urls.length === 0) throw err;
+      // Otherwise, we'll just skip this image and log the error
+      toast('Warning: One image failed to upload. Others may have succeeded.', 'error');
     }
   }
   return urls;
 }
 
-// Single image upload handler function
 function handleImageUpload(formId, event) {
   const files = Array.from(event.target.files);
   if (files.length === 0) return;
@@ -331,7 +352,6 @@ function setupImageUpload(formId) {
   const container = document.getElementById(`imageUploadContainer-${formId}`);
   if (!container) return;
 
-  // Find existing file input or create one
   let fileInput = container.querySelector('input[type="file"]');
   if (!fileInput) {
     const uploadBox = container.querySelector('.upload-box');
@@ -352,7 +372,6 @@ function setupImageUpload(formId) {
 
   if (!fileInput) return;
 
-  // Remove any existing handler and attach single handler
   fileInput.removeEventListener('change', fileInput._uploadHandler);
   
   fileInput._uploadHandler = function(e) {
@@ -371,7 +390,6 @@ function renderImages(formId) {
   const state = getFormState(formId);
   const images = state.images || [];
 
-  // Find the upload box
   let uploadBox = container.querySelector('.upload-box');
   if (!uploadBox) {
     uploadBox = document.createElement('div');
@@ -393,7 +411,6 @@ function renderImages(formId) {
     }
   }
 
-  // Remove existing thumbs (keep upload box)
   const thumbs = container.querySelectorAll('.image-thumb');
   thumbs.forEach(el => el.remove());
 
@@ -429,20 +446,21 @@ function renderImages(formId) {
 // ============================================================
 //  FIREBASE DATA LOADING
 // ============================================================
-async function loadPatientIndexPage(pageSize = 25, startCursor = null) {
+async function loadPatientIndexPage(pageSize = 25, startAfterKey = null, startAfterTimestamp = null) {
   try {
     let query = db.ref('patientIndex')
       .orderByChild('visitTimestamp')
-      .limitToLast(pageSize + 1);
+      .limitToFirst(pageSize + 1);
     
-    if (startCursor && startCursor.timestamp !== undefined) {
-      query = query.endAt(startCursor.timestamp, startCursor.key);
+    if (startAfterKey && startAfterTimestamp !== null) {
+      query = query.startAt(startAfterTimestamp, startAfterKey);
     }
     
     const snap = await query.once('value');
     const data = snap.val();
     const entries = [];
     let hasNext = false;
+    let nextCursor = null;
     
     if (data) {
       const keys = Object.keys(data);
@@ -456,10 +474,62 @@ async function loadPatientIndexPage(pageSize = 25, startCursor = null) {
         return valB - valA;
       });
       
-      if (keys.length > pageSize) {
-        hasNext = true;
-        keys.pop();
+      let startIndex = 0;
+      if (startAfterKey) {
+        const cursorIndex = keys.findIndex(key => key === startAfterKey);
+        if (cursorIndex !== -1) {
+          startIndex = cursorIndex + 1;
+        }
       }
+      
+      let resultKeys = keys.slice(startIndex);
+      
+      if (resultKeys.length > pageSize) {
+        hasNext = true;
+        resultKeys = resultKeys.slice(0, pageSize);
+      }
+      
+      for (const key of resultKeys) {
+        entries.push({
+          ...data[key],
+          _firebaseKey: key
+        });
+      }
+      
+      if (entries.length > 0) {
+        const lastEntry = entries[entries.length - 1];
+        nextCursor = {
+          key: lastEntry._firebaseKey,
+          timestamp: lastEntry.visitTimestamp || 0
+        };
+      }
+    }
+    
+    console.log('[Added Entries] Loaded:', entries.length, 'entries from Firebase');
+    return { entries, hasNext, nextCursor };
+  } catch (err) {
+    handleFirebaseError(err);
+    return { entries: [], hasNext: false, nextCursor: null };
+  }
+}
+
+// Load ALL entries from patientIndex
+async function loadAllPatientIndex() {
+  try {
+    const snap = await db.ref('patientIndex').once('value');
+    const data = snap.val();
+    const entries = [];
+    
+    if (data) {
+      const keys = Object.keys(data);
+      keys.sort((a, b) => {
+        const valA = data[a].visitTimestamp || 0;
+        const valB = data[b].visitTimestamp || 0;
+        if (valA === valB) {
+          return b.localeCompare(a);
+        }
+        return valB - valA;
+      });
       
       for (const key of keys) {
         entries.push({
@@ -469,10 +539,11 @@ async function loadPatientIndexPage(pageSize = 25, startCursor = null) {
       }
     }
     
-    return { entries, hasNext };
+    console.log('[All Entries] Loaded all:', entries.length, 'entries');
+    return entries;
   } catch (err) {
     handleFirebaseError(err);
-    return { entries: [], hasNext: false };
+    return [];
   }
 }
 
@@ -492,11 +563,7 @@ async function loadPatientRecord(patientId) {
 
 async function loadPatientNamesForAutocomplete() {
   try {
-    const query = db.ref('patientIndex')
-      .orderByChild('visitTimestamp')
-      .limitToLast(100);
-    
-    const snap = await query.once('value');
+    const snap = await db.ref('patientIndex').once('value');
     const data = snap.val();
     
     allPatientNames = [];
@@ -525,6 +592,8 @@ async function loadPatientNamesForAutocomplete() {
       data: { patientName: 'Abc Xyz' },
       isSample: true
     });
+    
+    console.log('[Autocomplete] Loaded', allPatientNames.length, 'patient names');
   } catch (err) {
     console.warn('Could not load patient names:', err);
   }
@@ -537,14 +606,16 @@ async function searchAllPatients(searchTerm) {
   
   try {
     const searchLower = searchTerm.toLowerCase().trim();
-    const snap = await db.ref('patientIndex')
+    
+    let snap = await db.ref('patientIndex')
       .orderByChild('patientNameLower')
       .startAt(searchLower)
       .endAt(searchLower + '\uf8ff')
       .once('value');
     
-    const data = snap.val();
-    const results = [];
+    let data = snap.val();
+    let results = [];
+    
     if (data) {
       for (const key of Object.keys(data)) {
         results.push({
@@ -553,6 +624,25 @@ async function searchAllPatients(searchTerm) {
         });
       }
     }
+    
+    if (results.length === 0) {
+      console.log('[Search] No prefix results, trying contains search...');
+      const allSnap = await db.ref('patientIndex').once('value');
+      const allData = allSnap.val();
+      if (allData) {
+        for (const key of Object.keys(allData)) {
+          const patientName = allData[key].patientName || '';
+          if (patientName.toLowerCase().includes(searchLower)) {
+            results.push({
+              ...allData[key],
+              _firebaseKey: key
+            });
+          }
+        }
+      }
+    }
+    
+    console.log('[Search] Found', results.length, 'results for:', searchTerm);
     return results;
   } catch (err) {
     console.warn('Search error:', err);
@@ -566,14 +656,18 @@ async function searchAllPatients(searchTerm) {
 function getEntryProgress(entry) {
   const progress = { patient: 0, test: 0, visit: 0, report: 0, payment: 0 };
 
-  const patientFields = ['patientName', 'age', 'gender', 'address', 'doctorName', 'careOfPerson'];
+  const patientFields = ['patientName', 'address'];
   let patientFilled = 0;
   patientFields.forEach(field => {
     if (entry[field] && entry[field].toString().trim().length > 0) patientFilled++;
   });
   const hasContactNumber = entry.contacts && entry.contacts.some(c => c.number && c.number.trim().length > 0);
   if (hasContactNumber) patientFilled++;
-  progress.patient = Math.round((patientFilled / (patientFields.length + 1)) * 100);
+  if (entry.age && entry.age.toString().trim().length > 0) patientFilled++;
+  if (entry.gender && entry.gender.toString().trim().length > 0) patientFilled++;
+  
+  const totalPatientFields = 5;
+  progress.patient = Math.min(100, Math.round((patientFilled / totalPatientFields) * 100));
 
   let hasTest = false;
   if (entry.labSelections) {
@@ -590,12 +684,18 @@ function getEntryProgress(entry) {
   }
   progress.test = hasTest ? 100 : 0;
 
-  const visitFields = ['center', 'visitType', 'visitDate', 'visitTime', 'phlebotomist'];
+  const visitFields = ['visitDate'];
   let visitFilled = 0;
   visitFields.forEach(field => {
     if (entry[field] && entry[field].toString().trim().length > 0) visitFilled++;
   });
-  progress.visit = Math.round((visitFilled / visitFields.length) * 100);
+  if (entry.center && entry.center.toString().trim().length > 0) visitFilled++;
+  if (entry.visitType && entry.visitType.toString().trim().length > 0) visitFilled++;
+  if (entry.visitTime && entry.visitTime.toString().trim().length > 0) visitFilled++;
+  if (entry.phlebotomist && entry.phlebotomist.toString().trim().length > 0) visitFilled++;
+  
+  const totalVisitFields = 5;
+  progress.visit = Math.min(100, Math.round((visitFilled / totalVisitFields) * 100));
 
   let reportChecked = 0;
   let reportTotal = 0;
@@ -648,18 +748,27 @@ function getEntryProgress(entry) {
 }
 
 // ============================================================
-//  LABS
+//  LABS - ROBUST getLabsForEntry()
 // ============================================================
 function getLabsForEntry(entry) {
-  if (Array.isArray(entry.labs)) {
-    return entry.labs.map(Number).filter(n => n >= 1 && n <= 4);
-  }
+  if (!entry) return [];
   
   const labs = [];
-  if (entry.labSelections) {
+  
+  if (entry.labs && Array.isArray(entry.labs)) {
+    entry.labs.forEach(lab => {
+      const numLab = Number(lab);
+      if (!isNaN(numLab) && numLab >= 1 && numLab <= 4 && !labs.includes(numLab)) {
+        labs.push(numLab);
+      }
+    });
+    if (labs.length > 0) return labs;
+  }
+  
+  if (entry.labSelections && typeof entry.labSelections === 'object') {
     for (let labId = 1; labId <= 4; labId++) {
       const labData = entry.labSelections[labId];
-      if (labData) {
+      if (labData && typeof labData === 'object') {
         const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
         const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
         if (hasTests || hasPackages) {
@@ -667,8 +776,52 @@ function getLabsForEntry(entry) {
         }
       }
     }
+    if (labs.length > 0) return labs;
   }
-  return labs;
+  
+  for (let labId = 1; labId <= 4; labId++) {
+    const key = labId.toString();
+    if (entry[key] && typeof entry[key] === 'object') {
+      const labData = entry[key];
+      const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+      const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+      if (hasTests || hasPackages) {
+        labs.push(labId);
+      }
+    }
+  }
+  
+  return [...new Set(labs)];
+}
+
+// ============================================================
+//  LAB COLOR CODING - FIXED
+// ============================================================
+function getEntryStyle(labs) {
+  if (!labs || labs.length === 0) return '';
+  
+  const sortedLabs = [...labs].sort((a, b) => a - b);
+  
+  if (sortedLabs.length === 1) {
+    const labId = sortedLabs[0];
+    const color = LAB_COLORS[labId];
+    if (!color) return '';
+    return `background: ${color.bg} !important; background-color: ${color.bg} !important; background-image: none !important; border-left: 5px solid ${color.border} !important;`;
+  }
+  
+  const colors = sortedLabs.map(labId => {
+    const color = LAB_COLORS[labId];
+    return color ? color.bg : '#ffffff';
+  });
+  
+  const total = colors.length;
+  const stops = colors.map((color, index) => {
+    const startPct = (index / total) * 100;
+    const endPct = ((index + 1) / total) * 100;
+    return `${color} ${startPct}%, ${color} ${endPct}%`;
+  });
+  
+  return `background: linear-gradient(to right, ${stops.join(', ')}) !important; background-color: transparent !important; background-image: linear-gradient(to right, ${stops.join(', ')}) !important; border-left: 5px solid transparent !important;`;
 }
 
 function getEntryGradientClass(entry) {
@@ -677,7 +830,7 @@ function getEntryGradientClass(entry) {
   if (labs.length === 1) {
     return 'gradient-single-' + labs[0];
   }
-  const sorted = labs.sort();
+  const sorted = labs.sort((a, b) => a - b);
   const key = sorted.join('-');
   const validKeys = [
     '1-2', '1-3', '1-4', '2-3', '2-4', '3-4',
@@ -755,6 +908,8 @@ function filterEntries(entries) {
 
   let filtered = entries;
 
+  console.log('[Filter] Before filters:', filtered.length);
+
   if (search) {
     filtered = filtered.filter(entry => {
       const name = (entry.patientName || '').toLowerCase();
@@ -812,131 +967,187 @@ function filterEntries(entries) {
   for (let i = 0; i < selectedLabs.length; i++) {
     if (selectedLabs[i]) activeLabs.push(i + 1);
   }
+  
   if (activeLabs.length > 0) {
     filtered = filtered.filter(entry => {
       const entryLabs = getLabsForEntry(entry);
+      
+      if (!entryLabs || entryLabs.length === 0) {
+        return true;
+      }
+      
       return entryLabs.some(lab => activeLabs.includes(lab));
     });
-  } else {
-    filtered = [];
   }
 
   if (center !== 'all') {
-    filtered = filtered.filter(entry => entry.center === center);
+    filtered = filtered.filter(entry => {
+      const entryCenter = entry.center || '';
+      return entryCenter === center;
+    });
   }
   if (visitType !== 'all') {
-    filtered = filtered.filter(entry => entry.visitType === visitType);
+    filtered = filtered.filter(entry => {
+      const entryVisitType = entry.visitType || '';
+      return entryVisitType === visitType;
+    });
   }
   if (phlebotomist !== 'all') {
-    filtered = filtered.filter(entry => entry.phlebotomist === phlebotomist);
+    filtered = filtered.filter(entry => {
+      const entryPhlebotomist = entry.phlebotomist || '';
+      return entryPhlebotomist === phlebotomist;
+    });
   }
   if (careOfPerson !== 'all') {
-    filtered = filtered.filter(entry => entry.careOfPerson === careOfPerson);
+    filtered = filtered.filter(entry => {
+      const entryCareOf = entry.careOfPerson || '';
+      return entryCareOf === careOfPerson;
+    });
   }
   if (doctor !== 'all') {
-    filtered = filtered.filter(entry => entry.doctorName === doctor);
+    filtered = filtered.filter(entry => {
+      const entryDoctor = entry.doctorName || '';
+      return entryDoctor === doctor;
+    });
   }
 
+  console.log('[Filter] After filters:', filtered.length);
   return filtered;
+}
+
+// ============================================================
+//  APPLY FILTERS AND PAGINATE
+// ============================================================
+function applyFiltersAndPaginate() {
+  filteredEntries = filterEntries(allEntries);
+  
+  if (filterState.sort === 'asc') {
+    filteredEntries = [...filteredEntries].reverse();
+  }
+  
+  pagination.totalFiltered = filteredEntries.length;
+  
+  const totalPages = Math.ceil(pagination.totalFiltered / pagination.perPage) || 1;
+  if (pagination.page > totalPages) {
+    pagination.page = 1;
+  }
+  
+  const startIndex = (pagination.page - 1) * pagination.perPage;
+  const endIndex = startIndex + pagination.perPage;
+  const pageEntries = filteredEntries.slice(startIndex, endIndex);
+  
+  pagination.hasNext = endIndex < filteredEntries.length;
+  pagination.totalLoaded = pageEntries.length;
+  
+  currentEntries = pageEntries;
+  
+  updateEntryCount();
+  
+  renderEntries(currentEntries);
+  renderPagination();
+  
+  renderVisitScheduleFromIndex(currentEntries);
+  populateDynamicFilters();
+  populateVisitPhlebotomistFilter();
+}
+
+// ============================================================
+//  UPDATE ENTRY COUNT
+// ============================================================
+function updateEntryCount() {
+  const countEl = document.getElementById('entryCount');
+  if (!countEl) return;
+  
+  const total = pagination.totalFiltered;
+  const totalAll = allEntries.length;
+  
+  if (isLoading) {
+    countEl.textContent = 'Loading entries...';
+    return;
+  }
+  
+  if (total === 0) {
+    countEl.textContent = '0 Entries';
+    return;
+  }
+  
+  const hasActiveFilters = filterState.status !== 'all' || 
+                          filterState.fromDate || 
+                          filterState.toDate || 
+                          filterState.center !== 'all' ||
+                          filterState.visitType !== 'all' ||
+                          filterState.phlebotomist !== 'all' ||
+                          filterState.careOfPerson !== 'all' ||
+                          filterState.doctor !== 'all' ||
+                          filterState.search ||
+                          !filterState.labs.every(v => v === true);
+  
+  if (hasActiveFilters && total < totalAll) {
+    countEl.textContent = total + ' Entries (filtered from ' + totalAll + ' total)';
+  } else {
+    countEl.textContent = total + ' Entries';
+  }
 }
 
 // ============================================================
 //  LOAD ENTRIES
 // ============================================================
 async function loadEntries() {
-  await loadEntriesPage(1);
+  isLoading = true;
+  updateEntryCount();
+  
+  await loadAllEntries();
   await loadPatientNamesForAutocomplete();
   
   if (!entriesFilters.innerHTML) {
     buildFiltersUI();
   }
+  
+  applyFiltersAndPaginate();
+  
   populateDynamicFilters();
   populateVisitPhlebotomistFilter();
-  renderVisitScheduleFromIndex(currentEntries);
+  
+  isLoading = false;
+  updateEntryCount();
+}
+
+async function loadAllEntries() {
+  allEntries = await loadAllPatientIndex();
+  console.log('[Load] Total entries loaded:', allEntries.length);
 }
 
 async function loadEntriesPage(page, perPage = pagination.perPage) {
-  try {
-    let cursor = null;
-    if (page === 1) {
-      cursor = null;
-      pagination.cursorStack = [];
-    } else if (page > 1 && page - 2 < pagination.cursorStack.length) {
-      cursor = pagination.cursorStack[page - 2];
-    } else {
-      return;
-    }
-    
-    const result = await loadPatientIndexPage(perPage, cursor);
-    
-    currentEntries = result.entries;
-    pagination.page = page;
-    pagination.hasNext = result.hasNext;
-    pagination.perPage = perPage;
-    
-    if (currentEntries.length > 0) {
-      const lastEntry = currentEntries[currentEntries.length - 1];
-      const cursorObj = {
-        timestamp: lastEntry.visitTimestamp || 0,
-        key: lastEntry._firebaseKey || ''
-      };
-      pagination.currentCursor = cursorObj;
-      
-      while (pagination.cursorStack.length < page - 1) {
-        pagination.cursorStack.push(null);
-      }
-      
-      if (page === 1) {
-        pagination.cursorStack = [];
-      } else if (page - 2 >= 0) {
-        pagination.cursorStack[page - 2] = cursorObj;
-      }
-    }
-    
-    renderEntries(currentEntries);
-    renderVisitScheduleFromIndex(currentEntries);
-    
-    populateDynamicFilters();
-    populateVisitPhlebotomistFilter();
-  } catch (err) {
-    handleFirebaseError(err);
-  }
+  pagination.page = page || 1;
+  pagination.perPage = perPage || 25;
+  applyFiltersAndPaginate();
 }
 
 // ============================================================
 //  RENDER ENTRIES
 // ============================================================
 function renderEntries(entries) {
-  let filtered = filterEntries(entries);
-  
-  const sortDir = filterState.sort;
-  if (sortDir === 'asc') {
-    filtered.reverse();
+  if (isLoading) {
+    entryListEl.innerHTML = '<div class="empty-msg">Loading entries...</div>';
+    return;
   }
 
-  const countEl = document.getElementById('entryCount');
-  if (countEl) {
-    const totalOnPage = filtered.length;
-    const totalLoaded = entries.length;
-    if (pagination.hasNext) {
-      countEl.textContent = totalOnPage + ' entries on this page (showing ' + totalLoaded + ' loaded)';
-    } else {
-      countEl.textContent = totalOnPage + ' entries on this page';
-    }
+  if (!entries || entries.length === 0) {
+    entryListEl.innerHTML = '<div class="empty-msg">No entries found matching your filters.</div>';
+    return;
   }
 
-  if (filtered.length === 0) {
-    entryListEl.innerHTML = '<div class="empty-msg">No entries found on this page.</div>';
-  } else {
-    let html = '';
-    filtered.forEach(rec => {
-      const name = escapeHtml(rec.patientName || 'Unknown');
-      const gradientClass = getEntryGradientClass(rec);
-      const progress = getEntryProgress(rec);
+  let html = '';
+  entries.forEach(rec => {
+    const name = escapeHtml(rec.patientName || 'Unknown');
+    const labs = getLabsForEntry(rec);
+    const styleStr = getEntryStyle(labs);
+    const gradientClass = getEntryGradientClass(rec);
+    const progress = getEntryProgress(rec);
 
-      html += `
-        <div class="entry-item ${gradientClass}">
-          ${gradientClass.includes('gradient-multi') ? '<div class="entry-gradient-overlay gradient-multi"></div>' : ''}
+    html += `
+      <div class="entry-item ${gradientClass}">
+        <div class="entry-lab-bg" style="${styleStr}">
           <div class="entry-content">
             <div class="entry-left">
               <div class="patient-name">${name}</div>
@@ -985,16 +1196,16 @@ function renderEntries(entries) {
             </div>
           </div>
         </div>
-      `;
-    });
+      </div>
+    `;
+  });
 
-    entryListEl.innerHTML = html;
-  }
+  entryListEl.innerHTML = html;
 
   entryListEl.querySelectorAll('.view-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
-      const rec = currentEntries.find(e => e._firebaseKey === key);
+      const rec = allEntries.find(e => e._firebaseKey === key);
       if (rec) {
         loadAndViewPatient(key);
       }
@@ -1004,7 +1215,7 @@ function renderEntries(entries) {
   entryListEl.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
-      const rec = currentEntries.find(e => e._firebaseKey === key);
+      const rec = allEntries.find(e => e._firebaseKey === key);
       if (rec) {
         loadAndEditPatient(key);
       }
@@ -1014,7 +1225,7 @@ function renderEntries(entries) {
   entryListEl.querySelectorAll('.del-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
       const key = this.dataset.key;
-      const rec = currentEntries.find(e => e._firebaseKey === key);
+      const rec = allEntries.find(e => e._firebaseKey === key);
       if (!rec) return;
       if (!confirm(`Delete entry for "${rec.patientName || 'Unknown'}"?`)) return;
       await deletePatient(key);
@@ -1029,6 +1240,7 @@ function renderEntries(entries) {
 // ============================================================
 function renderPagination() {
   const currentPage = pagination.page;
+  const totalPages = Math.ceil(pagination.totalFiltered / pagination.perPage) || 1;
   
   let html = `
     <div class="pagination-container">
@@ -1042,8 +1254,8 @@ function renderPagination() {
       </div>
       <div class="pagination-controls">
         <button class="prev-btn" ${currentPage <= 1 ? 'disabled' : ''}>← Previous</button>
-        <span class="page-info">Page ${currentPage}</span>
-        <button class="next-btn" ${!pagination.hasNext ? 'disabled' : ''}>Next →</button>
+        <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+        <button class="next-btn" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
       </div>
     </div>
   `;
@@ -1056,8 +1268,7 @@ function renderPagination() {
       const newPerPage = parseInt(this.value);
       pagination.perPage = newPerPage;
       pagination.page = 1;
-      pagination.cursorStack = [];
-      loadEntriesPage(1, newPerPage);
+      applyFiltersAndPaginate();
     });
   }
 
@@ -1065,7 +1276,8 @@ function renderPagination() {
   if (prevBtn) {
     prevBtn.addEventListener('click', function() {
       if (pagination.page > 1) {
-        loadEntriesPage(pagination.page - 1);
+        pagination.page--;
+        applyFiltersAndPaginate();
       }
     });
   }
@@ -1073,8 +1285,10 @@ function renderPagination() {
   const nextBtn = paginationContainer.querySelector('.next-btn');
   if (nextBtn) {
     nextBtn.addEventListener('click', function() {
-      if (pagination.hasNext) {
-        loadEntriesPage(pagination.page + 1);
+      const totalPages = Math.ceil(pagination.totalFiltered / pagination.perPage) || 1;
+      if (pagination.page < totalPages) {
+        pagination.page++;
+        applyFiltersAndPaginate();
       }
     });
   }
@@ -1099,29 +1313,26 @@ async function loadAndEditPatient(key) {
 
 async function deletePatient(key) {
   try {
-    await db.ref('patients/' + key).remove();
-    await db.ref('patientIndex/' + key).remove();
+    const updates = {};
+    updates[`patients/${key}`] = null;
+    updates[`patientIndex/${key}`] = null;
+    await db.ref().update(updates);
     
-    currentEntries = currentEntries.filter(e => e._firebaseKey !== key);
+    allEntries = allEntries.filter(e => e._firebaseKey !== key);
     allPatientNames = allPatientNames.filter(e => e.key !== key);
     
     toast('Entry deleted successfully.', 'success');
     
-    if (currentEntries.length === 0 && pagination.page > 1) {
-      loadEntriesPage(pagination.page - 1);
-    } else {
-      renderEntries(currentEntries);
-      renderVisitScheduleFromIndex(currentEntries);
-      populateDynamicFilters();
-      populateVisitPhlebotomistFilter();
-    }
+    applyFiltersAndPaginate();
+    populateDynamicFilters();
+    populateVisitPhlebotomistFilter();
   } catch (err) {
     handleFirebaseError(err);
   }
 }
 
 // ============================================================
-//  SEARCH - Search Across All Entries
+//  SEARCH
 // ============================================================
 let searchTimeout = null;
 
@@ -1133,7 +1344,7 @@ async function performGlobalSearch(searchTerm) {
   
   if (!value || value.length < 2) {
     filterState.search = '';
-    renderEntries(currentEntries);
+    applyFiltersAndPaginate();
     return;
   }
   
@@ -1145,16 +1356,7 @@ async function performGlobalSearch(searchTerm) {
   
   searchTimeout = setTimeout(async () => {
     try {
-      const results = await searchAllPatients(value);
-      
-      if (results.length > 0) {
-        const filtered = filterEntries(results);
-        renderSearchResults(filtered, results.length);
-      } else {
-        entryListEl.innerHTML = '<div class="empty-msg">No patients found matching your search.</div>';
-        const countEl = document.getElementById('entryCount');
-        if (countEl) countEl.textContent = '0 entries found';
-      }
+      applyFiltersAndPaginate();
     } catch (err) {
       console.warn('Search error:', err);
       toast('Search failed. Please try again.', 'error');
@@ -1163,70 +1365,80 @@ async function performGlobalSearch(searchTerm) {
 }
 
 function renderSearchResults(entries, totalFound) {
+  if (isLoading) {
+    entryListEl.innerHTML = '<div class="empty-msg">Loading entries...</div>';
+    return;
+  }
+
+  if (!entries || entries.length === 0) {
+    entryListEl.innerHTML = '<div class="empty-msg">No patients found matching your search.</div>';
+    const countEl = document.getElementById('entryCount');
+    if (countEl) countEl.textContent = '0 Entries';
+    return;
+  }
+
   const countEl = document.getElementById('entryCount');
   if (countEl) {
     countEl.textContent = entries.length + ' entries found (out of ' + totalFound + ' total)';
   }
 
-  if (entries.length === 0) {
-    entryListEl.innerHTML = '<div class="empty-msg">No matching entries found.</div>';
-    return;
-  }
-
-  let html = '';
+   let html = '';
   entries.forEach(rec => {
     const name = escapeHtml(rec.patientName || 'Unknown');
+    const labs = getLabsForEntry(rec);
+    const styleStr = getEntryStyle(labs);
     const gradientClass = getEntryGradientClass(rec);
     const progress = getEntryProgress(rec);
 
     html += `
       <div class="entry-item ${gradientClass}">
-        ${gradientClass.includes('gradient-multi') ? '<div class="entry-gradient-overlay gradient-multi"></div>' : ''}
-        <div class="entry-content">
-          <div class="entry-left">
-            <div class="patient-name">${name}</div>
-          </div>
-          <div class="entry-actions">
-            <button class="view-btn" data-key="${escapeHtml(rec._firebaseKey)}">👁 View</button>
-            <button class="edit-btn" data-key="${escapeHtml(rec._firebaseKey)}">✎ Edit</button>
-            <button class="del-btn" data-key="${escapeHtml(rec._firebaseKey)}">✕ Delete</button>
-          </div>
-        </div>
-        <div class="entry-progress-row">
-          <div class="entry-progress-item">
-            <span class="mini-label">Patient</span>
-            <div class="mini-bar">
-              <div class="mini-fg" style="width: ${progress.patient}%;"></div>
+        <div class="entry-lab-bg" style="${styleStr}">
+          <div class="entry-content">
+            <div class="entry-left">
+              <div class="patient-name">${name}</div>
             </div>
-            <span class="mini-pct">${progress.patient}%</span>
-          </div>
-          <div class="entry-progress-item">
-            <span class="mini-label">Tests</span>
-            <div class="mini-bar">
-              <div class="mini-fg" style="width: ${progress.test}%;"></div>
+            <div class="entry-actions">
+              <button class="view-btn" data-key="${escapeHtml(rec._firebaseKey)}">👁 View</button>
+              <button class="edit-btn" data-key="${escapeHtml(rec._firebaseKey)}">✎ Edit</button>
+              <button class="del-btn" data-key="${escapeHtml(rec._firebaseKey)}">✕ Delete</button>
             </div>
-            <span class="mini-pct">${progress.test}%</span>
           </div>
-          <div class="entry-progress-item">
-            <span class="mini-label">Visit</span>
-            <div class="mini-bar">
-              <div class="mini-fg" style="width: ${progress.visit}%;"></div>
+          <div class="entry-progress-row">
+            <div class="entry-progress-item">
+              <span class="mini-label">Patient</span>
+              <div class="mini-bar">
+                <div class="mini-fg" style="width: ${progress.patient}%;"></div>
+              </div>
+              <span class="mini-pct">${progress.patient}%</span>
             </div>
-            <span class="mini-pct">${progress.visit}%</span>
-          </div>
-          <div class="entry-progress-item">
-            <span class="mini-label">Report</span>
-            <div class="mini-bar">
-              <div class="mini-fg" style="width: ${progress.report}%;"></div>
+            <div class="entry-progress-item">
+              <span class="mini-label">Tests</span>
+              <div class="mini-bar">
+                <div class="mini-fg" style="width: ${progress.test}%;"></div>
+              </div>
+              <span class="mini-pct">${progress.test}%</span>
             </div>
-            <span class="mini-pct">${progress.report}%</span>
-          </div>
-          <div class="entry-progress-item">
-            <span class="mini-label">Payment</span>
-            <div class="mini-bar">
-              <div class="mini-fg" style="width: ${progress.payment}%;"></div>
+            <div class="entry-progress-item">
+              <span class="mini-label">Visit</span>
+              <div class="mini-bar">
+                <div class="mini-fg" style="width: ${progress.visit}%;"></div>
+              </div>
+              <span class="mini-pct">${progress.visit}%</span>
             </div>
-            <span class="mini-pct">${progress.payment}%</span>
+            <div class="entry-progress-item">
+              <span class="mini-label">Report</span>
+              <div class="mini-bar">
+                <div class="mini-fg" style="width: ${progress.report}%;"></div>
+              </div>
+              <span class="mini-pct">${progress.report}%</span>
+            </div>
+            <div class="entry-progress-item">
+              <span class="mini-label">Payment</span>
+              <div class="mini-bar">
+                <div class="mini-fg" style="width: ${progress.payment}%;"></div>
+              </div>
+              <span class="mini-pct">${progress.payment}%</span>
+            </div>
           </div>
         </div>
       </div>
@@ -1267,21 +1479,41 @@ function createIndexData(data, key) {
   if (data.visitDate && data.visitTime) {
     try {
       visitTimestamp = new Date(`${data.visitDate}T${data.visitTime}:00`).getTime();
-      if (isNaN(visitTimestamp)) visitTimestamp = 0;
+      if (isNaN(visitTimestamp) || !Number.isFinite(visitTimestamp)) {
+        visitTimestamp = 0;
+      }
     } catch (e) {
       visitTimestamp = 0;
     }
   }
   
   const labs = [];
-  if (data.labSelections) {
+  let hasTests = false;
+  
+  if (data.labSelections && typeof data.labSelections === 'object') {
     for (let labId = 1; labId <= 4; labId++) {
       const labData = data.labSelections[labId];
-      if (labData) {
-        const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
-        const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
-        if (hasTests || hasPackages) {
+      if (labData && typeof labData === 'object') {
+        const hasLabTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+        const hasLabPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+        if (hasLabTests || hasLabPackages) {
           labs.push(labId);
+          hasTests = true;
+        }
+      }
+    }
+  }
+  
+  if (labs.length === 0 && data.labSelections === undefined) {
+    for (let labId = 1; labId <= 4; labId++) {
+      const key = labId.toString();
+      if (data[key] && typeof data[key] === 'object') {
+        const labData = data[key];
+        const hasLabTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+        const hasLabPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+        if (hasLabTests || hasLabPackages) {
+          labs.push(labId);
+          hasTests = true;
         }
       }
     }
@@ -1312,7 +1544,7 @@ function createIndexData(data, key) {
     extraVisitDone: data.extraVisitDone || false,
     extraVisitDoneTime: data.extraVisitDoneTime || null,
     finalPrice: data.finalPrice || 0,
-    hasTests: data.labSelections ? true : false
+    hasTests: hasTests
   };
 }
 
@@ -1357,18 +1589,23 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
           }
         });
       } catch (uploadErr) {
-        toast(uploadErr.message || 'Image upload failed. Patient was not saved.', 'error');
-        if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = saveBtn.dataset.originalText || '💾 Save Entry';
-        }
-        return false;
+        // If upload fails, we still want to save the patient without images
+        console.warn('Image upload failed, but patient will still be saved without images:', uploadErr);
+        toast('Warning: Images could not be uploaded. Patient saved without images.', 'error');
+        imageUrls = [];
+        // We'll keep existing images if any
+        data.images = state.images.filter(img => 
+          typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
+        );
       }
       
-      const existingImages = state.images.filter(img => 
-        typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
-      );
-      data.images = [...existingImages, ...imageUrls];
+      // If we have new image URLs, add them to data.images
+      if (imageUrls.length > 0) {
+        const existingImages = state.images.filter(img => 
+          typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
+        );
+        data.images = [...existingImages, ...imageUrls];
+      }
     } else {
       data.images = state.images.filter(img => 
         typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
@@ -1377,26 +1614,37 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
     
     delete data.imageFiles;
     
+    const indexData = createIndexData(data, patientId);
+    
+    const updates = {};
+    const patientPath = `patients/${patientId}`;
+    const indexPath = `patientIndex/${patientId}`;
+    
     if (isEdit && existingKey) {
-      await db.ref('patients/' + existingKey).update(data);
-      const indexData = createIndexData(data, existingKey);
-      await db.ref('patientIndex/' + existingKey).update(indexData);
-      toast('Entry updated successfully.', 'success');
-      await loadEntriesPage(pagination.page);
+      updates[patientPath] = data;
+      updates[indexPath] = indexData;
     } else {
       if (!patientId) {
         const newRef = db.ref('patients').push();
         patientId = newRef.key;
       }
-      
-      await db.ref('patients/' + patientId).set(data);
-      const indexData = createIndexData(data, patientId);
-      await db.ref('patientIndex/' + patientId).set(indexData);
-      toast('Entry saved successfully.', 'success');
-      await loadEntriesPage(1);
+      updates[patientPath] = data;
+      updates[indexPath] = indexData;
     }
     
+    await db.ref().update(updates);
+    
+    toast(isEdit ? 'Entry updated successfully.' : 'Entry saved successfully.', 'success');
+    
+    // Reload all entries and re-apply filters
+    await loadAllEntries();
+    applyFiltersAndPaginate();
+    await loadPatientNamesForAutocomplete();
+    populateDynamicFilters();
+    populateVisitPhlebotomistFilter();
+    
     if (!isEdit) {
+      // Reset form
       resetFormState(formId);
       const panel = document.getElementById(getPanelId(formId));
       if (panel) {
@@ -1428,8 +1676,6 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       updateReportMessage(formId);
     }
     
-    await loadPatientNamesForAutocomplete();
-    
     if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.innerHTML = saveBtn.dataset.originalText || '💾 Save Entry';
@@ -1447,7 +1693,7 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
 }
 
 // ============================================================
-//  VALIDATION - With Section Navigation
+//  VALIDATION
 // ============================================================
 function focusField(fieldName, formId) {
   const el = document.getElementById(fieldName + '-' + formId);
@@ -2148,7 +2394,7 @@ function copyReportMessage(formId) {
 }
 
 // ============================================================
-//  TESTS - Remember Active Lab
+//  TESTS
 // ============================================================
 function recalculateGlobalSelectedTests(formId) {
   const state = getFormState(formId);
@@ -2695,7 +2941,7 @@ function switchLab(labId, formId) {
 }
 
 // ============================================================
-//  VISIT SCHEDULE - WITH CLEAR DATE FILTER INDICATOR
+//  VISIT SCHEDULE
 // ============================================================
 function getVisitEntriesFromIndex(indexData) {
   const visits = [];
@@ -2783,7 +3029,6 @@ function renderVisitScheduleFromIndex(indexData) {
   
   visits.sort((a, b) => a.visitTime.localeCompare(b.visitTime));
   
-  // Update visit count with date context
   if (visitCountEl) {
     let dateContext = '';
     if (dateFilter) {
@@ -2821,27 +3066,31 @@ function renderVisitScheduleFromIndex(indexData) {
     const doneClass = isDone ? 'done' : '';
     const gradientClass = visit.gradientClass || '';
     const visitTypeClass = visit.visitType === 'pp' ? 'pp' : visit.visitType === 'extra' ? 'extra' : 'main';
+    const labs = visit.labs || [];
+    const styleStr = getEntryStyle(labs);
     
     html += `
       <div class="visit-item ${doneClass} ${gradientClass}">
-        <div class="visit-content">
-          <div class="visit-left">
-            <div class="visit-patient-name">${escapeHtml(visit.patientName)}</div>
-            <div class="visit-details">
-              <span>📅 ${escapeHtml(visit.visitDate || 'No date')}</span>
-              <span>🕐 ${escapeHtml(visit.visitTime || 'No time')}</span>
-              <span class="visit-type-badge ${visitTypeClass}">${escapeHtml(visit.visitTypeLabel)}</span>
-              ${visit.phlebotomist ? `<span>👤 ${escapeHtml(visit.phlebotomist)}</span>` : ''}
-              ${isDone && visit.doneTime ? `<span class="visit-done-time">✅ Done at ${escapeHtml(visit.doneTime)}</span>` : ''}
+        <div class="entry-lab-bg" style="${styleStr}">
+          <div class="visit-content">
+            <div class="visit-left">
+              <div class="visit-patient-name">${escapeHtml(visit.patientName)}</div>
+              <div class="visit-details">
+                <span>📅 ${escapeHtml(visit.visitDate || 'No date')}</span>
+                <span>🕐 ${escapeHtml(visit.visitTime || 'No time')}</span>
+                <span class="visit-type-badge ${visitTypeClass}">${escapeHtml(visit.visitTypeLabel)}</span>
+                ${visit.phlebotomist ? `<span>👤 ${escapeHtml(visit.phlebotomist)}</span>` : ''}
+                ${isDone && visit.doneTime ? `<span class="visit-done-time">✅ Done at ${escapeHtml(visit.doneTime)}</span>` : ''}
+              </div>
             </div>
-          </div>
-          <div class="visit-actions">
-            <div class="visit-done-checkbox">
-              <input type="checkbox" class="visit-done-check" data-key="${escapeHtml(visit.entryKey)}" data-type="${escapeHtml(visit.visitType)}" ${isDone ? 'checked' : ''} />
-              <span>Done</span>
+            <div class="visit-actions">
+              <div class="visit-done-checkbox">
+                <input type="checkbox" class="visit-done-check" data-key="${escapeHtml(visit.entryKey)}" data-type="${escapeHtml(visit.visitType)}" ${isDone ? 'checked' : ''} />
+                <span>Done</span>
+              </div>
+              <button class="view-btn" data-key="${escapeHtml(visit.entryKey)}">👁 View</button>
+              <button class="edit-btn" data-key="${escapeHtml(visit.entryKey)}">✎ Edit</button>
             </div>
-            <button class="view-btn" data-key="${escapeHtml(visit.entryKey)}">👁 View</button>
-            <button class="edit-btn" data-key="${escapeHtml(visit.entryKey)}">✎ Edit</button>
           </div>
         </div>
       </div>
@@ -2853,7 +3102,7 @@ function renderVisitScheduleFromIndex(indexData) {
   visitListEl.querySelectorAll('.view-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
-      const rec = currentEntries.find(e => e._firebaseKey === key);
+      const rec = allEntries.find(e => e._firebaseKey === key);
       if (rec) {
         loadAndViewPatient(key);
       }
@@ -2863,7 +3112,7 @@ function renderVisitScheduleFromIndex(indexData) {
   visitListEl.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
-      const rec = currentEntries.find(e => e._firebaseKey === key);
+      const rec = allEntries.find(e => e._firebaseKey === key);
       if (rec) {
         loadAndEditPatient(key);
       }
@@ -2874,7 +3123,7 @@ function renderVisitScheduleFromIndex(indexData) {
     cb.addEventListener('change', function() {
       const key = this.dataset.key;
       const visitType = this.dataset.type;
-      const entry = currentEntries.find(e => e._firebaseKey === key);
+      const entry = allEntries.find(e => e._firebaseKey === key);
       if (!entry) return;
       
       const isChecked = this.checked;
@@ -2921,8 +3170,18 @@ async function updateVisitStatusFromIndex(entry, visitType, isDone) {
   }
   
   try {
-    await db.ref('patients/' + entry._firebaseKey).update(updates);
-    await db.ref('patientIndex/' + entry._firebaseKey).update(indexUpdates);
+    const allUpdates = {};
+    const patientPath = `patients/${entry._firebaseKey}`;
+    const indexPath = `patientIndex/${entry._firebaseKey}`;
+    
+    Object.keys(updates).forEach(key => {
+      allUpdates[`${patientPath}/${key}`] = updates[key];
+    });
+    Object.keys(indexUpdates).forEach(key => {
+      allUpdates[`${indexPath}/${key}`] = indexUpdates[key];
+    });
+    
+    await db.ref().update(allUpdates);
     
     Object.keys(indexUpdates).forEach(key => {
       entry[key] = indexUpdates[key];
@@ -2944,7 +3203,7 @@ function populateVisitPhlebotomistFilter() {
   if (!select) return;
   
   const phlebotomists = new Set();
-  currentEntries.forEach(entry => {
+  allEntries.forEach(entry => {
     if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
     if (entry.ppPhlebotomist) phlebotomists.add(entry.ppPhlebotomist);
     if (entry.extraCollectionPhlebotomist) phlebotomists.add(entry.extraCollectionPhlebotomist);
@@ -3041,7 +3300,8 @@ function setupVisitScheduleListeners() {
       this.disabled = true;
       
       try {
-        await loadEntriesPage(pagination.page);
+        await loadAllEntries();
+        applyFiltersAndPaginate();
         toast('Visit schedule refreshed successfully.', 'success');
       } catch (err) {
         toast('Refresh failed: ' + err.message, 'error');
@@ -3148,7 +3408,7 @@ function buildFiltersUI() {
           </select>
         </div>
         <div class="right-controls">
-          <span class="entry-count" id="entryCount">0 Entries</span>
+          <span class="entry-count" id="entryCount">Loading entries...</span>
         </div>
       </div>
     </div>
@@ -3167,55 +3427,65 @@ function buildFiltersUI() {
 
   document.getElementById('filterSort').addEventListener('change', function() {
     filterState.sort = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('filterStatus').addEventListener('change', function() {
     filterState.status = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('filterFromDate').addEventListener('change', function() {
     filterState.fromDate = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('filterToDate').addEventListener('change', function() {
     filterState.toDate = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.querySelectorAll('.lab-checkbox').forEach(cb => {
     cb.addEventListener('change', function() {
       const lab = parseInt(this.dataset.lab);
       filterState.labs[lab - 1] = this.checked;
-      renderEntries(currentEntries);
+      pagination.page = 1;
+      applyFiltersAndPaginate();
     });
   });
 
   document.getElementById('filterCenter').addEventListener('change', function() {
     filterState.center = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('filterVisitType').addEventListener('change', function() {
     filterState.visitType = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('filterPhlebotomist').addEventListener('change', function() {
     filterState.phlebotomist = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('filterCareOfPerson').addEventListener('change', function() {
     filterState.careOfPerson = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('filterDoctor').addEventListener('change', function() {
     filterState.doctor = this.value;
-    renderEntries(currentEntries);
+    pagination.page = 1;
+    applyFiltersAndPaginate();
   });
 
   document.getElementById('clearFiltersBtn').addEventListener('click', function() {
@@ -3231,7 +3501,8 @@ function buildFiltersUI() {
     this.disabled = true;
     
     try {
-      await loadEntriesPage(pagination.page);
+      await loadAllEntries();
+      applyFiltersAndPaginate();
       toast('Entries refreshed successfully.', 'success');
     } catch (err) {
       toast('Refresh failed: ' + err.message, 'error');
@@ -3251,7 +3522,9 @@ function populateDynamicFilters() {
   const careOfPersons = new Set();
   const doctors = new Set();
 
-  currentEntries.forEach(entry => {
+  const entriesToUse = allEntries.length > 0 ? allEntries : [];
+  
+  entriesToUse.forEach(entry => {
     if (entry.center) centers.add(entry.center);
     if (entry.visitType) visitTypes.add(entry.visitType);
     if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
@@ -3338,6 +3611,7 @@ function clearAllFilters() {
   filterState.careOfPerson = 'all';
   filterState.doctor = 'all';
   filterState.search = '';
+  pagination.page = 1;
 
   const searchEl = document.getElementById('filterSearch');
   if (searchEl) searchEl.value = '';
@@ -3356,12 +3630,12 @@ function clearAllFilters() {
   });
 
   populateDynamicFilters();
-  renderEntries(currentEntries);
+  applyFiltersAndPaginate();
   toast('All filters cleared. Showing all entries.', 'success');
 }
 
 // ============================================================
-//  VIEW MODAL - FIXED
+//  VIEW MODAL
 // ============================================================
 function openViewModal(entry) {
   viewModalBody.innerHTML = buildViewModalContent(entry);
@@ -4905,7 +5179,7 @@ function setupPatientDetailsEvents(formId) {
 }
 
 // ============================================================
-//  AUTOCOMPLETE - Patient Details Only + Abc Xyz Support
+//  AUTOCOMPLETE
 // ============================================================
 function setupPatientAutocomplete(formId) {
   const input = document.getElementById(`patientName-${formId}`);
@@ -4969,7 +5243,6 @@ function setupPatientAutocomplete(formId) {
         const before = name.substring(0, startIndex);
         const match = name.substring(startIndex, startIndex + query.length);
         const after = name.substring(startIndex + query.length);
-        // Escape the before and after parts, but keep the match as HTML
         displayName = `${escapeHtml(before)}<span class="highlight">${escapeHtml(match)}</span>${escapeHtml(after)}`;
       } else {
         displayName = escapeHtml(name);
@@ -5047,7 +5320,6 @@ function setupPatientAutocomplete(formId) {
   });
 
   async function selectPatientFromHistory(item, formId) {
-    // Abc Xyz - placeholder only, no data loading
     if (item.isSample || item.name === 'Abc Xyz') {
       const nameInput = document.getElementById(`patientName-${formId}`);
       if (nameInput) nameInput.value = item.name;
@@ -5057,7 +5329,6 @@ function setupPatientAutocomplete(formId) {
       return;
     }
 
-    // Load only patient details, NOT images
     const fullData = await loadPatientRecord(item.key);
     if (fullData) {
       populatePatientDetailsOnly(formId, fullData);
@@ -5069,7 +5340,6 @@ function setupPatientAutocomplete(formId) {
 }
 
 function populatePatientDetailsOnly(formId, data) {
-  // Load ONLY patient details fields
   const nameInput = document.getElementById(`patientName-${formId}`);
   if (nameInput) nameInput.value = data.patientName || '';
 
@@ -5091,18 +5361,11 @@ function populatePatientDetailsOnly(formId, data) {
   const additionalInput = document.getElementById(`patientAdditionalInfo-${formId}`);
   if (additionalInput) additionalInput.value = data.additionalInformation || '';
 
-  // Load contacts
   if (data.contacts && Array.isArray(data.contacts)) {
     populateContacts(formId, data.contacts);
   } else {
     populateContacts(formId, []);
   }
-
-  // DO NOT load images
-  // DO NOT load test details
-  // DO NOT load visit details
-  // DO NOT load report details
-  // DO NOT load payment details
 
   updatePaymentFields(formId);
   updateSectionProgressBars(formId);
@@ -5210,7 +5473,10 @@ function init() {
   ensureBaseTabs();
   switchTab('added');
   setupVisitScheduleListeners();
-  loadEntries();
+  loadEntries().then(() => {
+    renderVisitScheduleFromIndex(currentEntries);
+    applyFiltersAndPaginate();
+  });
 }
 
 // ============================================================
