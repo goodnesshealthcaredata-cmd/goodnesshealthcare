@@ -1967,7 +1967,7 @@
       padding: 16px;
       border-radius: 0 0 var(--radius-sm) var(--radius-sm);
       transition: var(--transition);
-      min-height: 300px;
+      min-height: 10px;
       display: none;
       border: 1px solid #e5e7eb;
       border-top: none;
@@ -2228,9 +2228,9 @@
        ============================================================ */
     .form-layout {
       display: flex;
-      gap: 32px;
+      gap: 20px;
       margin-bottom: 20px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
 
     .section-content {
@@ -2891,7 +2891,7 @@
     /* ============================================================
        RESPONSIVE
        ============================================================ */
-    @media (max-width: 900px) {
+    @media (max-width: 800px) {
       .form-layout {
         flex-direction: column;
       }
