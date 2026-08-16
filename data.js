@@ -72,7 +72,7 @@ const LAB_DATA = {
       {
         "id": "hbsag",
         "generalName": "HBsAg",
-        "labName": "",
+        "labName": "HBs antigen",
         "mrp": 550,
         "b2b": 385
       },
@@ -89,20 +89,6 @@ const LAB_DATA = {
         "labName": "Bilirubin level Total",
         "mrp": 190,
         "b2b": 114
-      },
-      {
-        "id": "bilirubin-direct",
-        "generalName": "Bilirubin-Direct",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
-        "id": "bilirubin-indirect",
-        "generalName": "Bilirubin-Indirect",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
       },
       {
         "id": "sgpt",
@@ -201,13 +187,6 @@ const LAB_DATA = {
         "labName": "LDH, Body Fluids",
         "mrp": 500,
         "b2b": 350
-      },
-      {
-        "id": "ldh-ascitic-fluid",
-        "generalName": "LDH Ascitic Fluid",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
       },
       {
         "id": "sodium",
@@ -324,9 +303,9 @@ const LAB_DATA = {
       {
         "id": "trop-i",
         "generalName": "Trop-I",
-        "labName": "",
+        "labName": "High Sensitivity Troponin I",
         "mrp": 1200,
-        "b2b": 750
+        "b2b": 500
       },
       {
         "id": "trop-t",
@@ -373,776 +352,622 @@ const LAB_DATA = {
       {
         "id": "vdrl",
         "generalName": "VDRL",
-        "labName": "",
+        "labName": "Rapid Plasma Reagin (VDRL)",
         "mrp": 370,
-        "b2b": 180
+        "b2b": 222
       },
       {
         "id": "urine-culture",
         "generalName": "Urine Culture",
-        "labName": "",
+        "labName": "Culture,Aerobic, Urine",
         "mrp": 950,
         "b2b": 400
       },
       {
         "id": "urine-routine",
         "generalName": "Urine Routine",
-        "labName": "",
+        "labName": "Urine Examination",
         "mrp": 160,
         "b2b": 60
       },
       {
         "id": "ra-factor",
         "generalName": "RA Factor",
-        "labName": "",
+        "labName": "Rheumatoid Factor",
         "mrp": 500,
-        "b2b": 270
+        "b2b": 300
       },
       {
         "id": "mp",
         "generalName": "MP",
-        "labName": "",
+        "labName": "Malarial parasite ( smear )",
         "mrp": 120,
         "b2b": 72
       },
       {
         "id": "widal",
         "generalName": "Widal",
-        "labName": "",
+        "labName": "WIDAL by tube method",
         "mrp": 250,
         "b2b": 150
       },
       {
         "id": "dengue-ns1",
         "generalName": "Dengue NS1",
-        "labName": "",
+        "labName": "Dengue Antigen (NS1)- Rapid",
         "mrp": 800,
         "b2b": 350
       },
       {
         "id": "dengue-igg",
         "generalName": "Dengue IgG",
-        "labName": "",
+        "labName": "Dengue antibody IgG-Rapid",
         "mrp": 800,
-        "b2b": 300
+        "b2b": 550
       },
       {
         "id": "dengue-igm",
         "generalName": "Dengue IgM",
-        "labName": "",
+        "labName": "Dengue antibody IgM-FIA",
         "mrp": 800,
         "b2b": 350
       },
       {
         "id": "mp-antigen",
         "generalName": "MP-Antigen",
-        "labName": "",
+        "labName": "Rapid Malarial Antigen ( Card )",
         "mrp": 450,
         "b2b": 315
       },
       {
         "id": "beta-hcg",
         "generalName": "Beta HCG",
-        "labName": "",
+        "labName": "Beta HCG level",
         "mrp": 850,
         "b2b": 200
       },
       {
         "id": "homocysten",
-        "generalName": "Homocysten",
-        "labName": "",
+        "generalName": "Homocysteine",
+        "labName": "Homocysteine level",
         "mrp": 1450,
         "b2b": 500
       },
       {
         "id": "ca125-female",
         "generalName": "CA125 (Female)",
-        "labName": "",
+        "labName": "CA-125 level",
         "mrp": 1200,
         "b2b": 500
       },
       {
         "id": "psa-male",
         "generalName": "PSA (Male)",
-        "labName": "",
+        "labName": "Prostate Specific Antigen level",
         "mrp": 900,
         "b2b": 350
       },
       {
         "id": "ige",
-        "generalName": "IgE",
-        "labName": "",
+        "generalName": "IgE Level",
+        "labName": "IgE level",
         "mrp": 950,
         "b2b": 400
       },
       {
         "id": "anti-ccp",
         "generalName": "Anti CCP",
-        "labName": "",
+        "labName": "Anti CCP Level",
         "mrp": 1550,
         "b2b": 650
       },
       {
         "id": "ana",
         "generalName": "ANA",
-        "labName": "",
+        "labName": "Anti Nuclear Antibody ( IIF )",
         "mrp": 950,
         "b2b": 500
       },
       {
         "id": "total-protien",
-        "generalName": "Total Protien",
-        "labName": "",
+        "generalName": "Protein With A/G Ratio",
+        "labName": "Protein With A/G Ratio",
         "mrp": 250,
         "b2b": 80
       },
       {
-        "id": "covid-antibody",
-        "generalName": "Covid Antibody",
-        "labName": "",
-        "mrp": 1000,
-        "b2b": 500
-      },
-      {
         "id": "fnac",
         "generalName": "FNAC",
-        "labName": "",
+        "labName": "FNAC procedure",
         "mrp": 1500,
         "b2b": 1050
       },
       {
         "id": "cea",
         "generalName": "CEA",
-        "labName": "",
+        "labName": "Carcino Embryonic Antigen level(CEA)",
         "mrp": 800,
         "b2b": 400
       },
       {
         "id": "afpl",
-        "generalName": "AFPL",
-        "labName": "",
+        "generalName": "AFP Level",
+        "labName": "Alpha Feto Protein level",
         "mrp": 900,
         "b2b": 450
       },
       {
         "id": "hb-electrophoresis",
         "generalName": "Hb Electrophoresis",
-        "labName": "",
+        "labName": "HB Electrophoresis (HPLC)",
         "mrp": 950,
         "b2b": 450
       },
       {
         "id": "urine-protein-creatinine-ratio",
-        "generalName": "Urine Protein Creatinine Ratio",
-        "labName": "",
+        "generalName": "Urinary Protein Creatinine Ratio",
+        "labName": "Urinary Protein Creatinine Ratio",
         "mrp": 420,
         "b2b": 240
       },
       {
-        "id": "protein-with-a-g-ratio",
-        "generalName": "Protein with A/G Ratio",
-        "labName": "",
-        "mrp": 250,
-        "b2b": 80
-      },
-      {
         "id": "lipase",
         "generalName": "Lipase",
-        "labName": "",
+        "labName": "Lipase",
         "mrp": 750,
         "b2b": 300
       },
       {
         "id": "estradiol",
-        "generalName": "Estradiol",
-        "labName": "",
+        "generalName": "Estradiol Level",
+        "labName": "Estradiol level",
         "mrp": 780,
         "b2b": 300
       },
       {
         "id": "pus-culture-aerobic",
         "generalName": "PUS Culture (Aerobic)",
-        "labName": "",
+        "labName": "Culture,Aerobic, PUS",
         "mrp": 950,
         "b2b": 400
       },
       {
         "id": "fecal-calprotectin",
-        "generalName": "Fecal Calprotectin",
-        "labName": "",
+        "generalName": "Stool Calprotectin",
+        "labName": "Fecal Calprotectin Level",
         "mrp": 2800,
         "b2b": 2240
       },
       {
         "id": "blood-culture-1-se",
-        "generalName": "Blood Culture 1 SE",
-        "labName": "",
+        "generalName": "Blood Culture 1 Set",
+        "labName": "Blood Culture 1 set",
         "mrp": 1500,
         "b2b": 800
       },
       {
         "id": "nt-pro-bnp",
         "generalName": "NT-Pro BNP",
-        "labName": "",
+        "labName": "NT- pro B - Type Natriuretic Peptide level (NT-PRO-BNP)",
         "mrp": 2500,
         "b2b": 1100
       },
       {
-        "id": "hbs-antigen",
-        "generalName": "HBS Antigen",
-        "labName": "",
-        "mrp": 550,
-        "b2b": 350
-      },
-      {
         "id": "mantoux-test",
         "generalName": "Mantoux Test",
-        "labName": "",
+        "labName": "Mantoux Test",
         "mrp": 150,
         "b2b": 135
       },
       {
         "id": "reticulate-count",
-        "generalName": "Reticulate Count",
-        "labName": "",
+        "generalName": "Reticulocyte Count",
+        "labName": "Reticulocyte Count ( Automated )",
         "mrp": 400,
-        "b2b": 210
+        "b2b": 240
       },
       {
         "id": "direct-coombs-test",
-        "generalName": "Direct Coombs Test",
-        "labName": "",
+        "generalName": "Coombs Test Direct",
+        "labName": "Coombs Test Direct (By Gel Technology)",
         "mrp": 550,
         "b2b": 150
       },
       {
         "id": "microalbuminuria",
-        "generalName": "Microalbuminuria",
-        "labName": "",
+        "generalName": "Microalbumin",
+        "labName": "Microalbumin Level from urine",
         "mrp": 620,
         "b2b": 250
       },
       {
         "id": "total-testosterone",
-        "generalName": "Total Testosterone",
-        "labName": "",
+        "generalName": "Testosterone Level",
+        "labName": "Testosterone level",
         "mrp": 780,
         "b2b": 350
       },
       {
-        "id": "free-testosterone",
-        "generalName": "Free Testosterone",
-        "labName": "",
-        "mrp": 1550,
-        "b2b": 750
-      },
-      {
         "id": "protein-c",
         "generalName": "Protein C",
-        "labName": "",
+        "labName": "Protein C Activity (Chromogenic)",
         "mrp": 4500,
         "b2b": 4050
       },
       {
         "id": "protein-s",
         "generalName": "Protein S",
-        "labName": "",
+        "labName": "Free Protein S Antigen",
         "mrp": 4500,
         "b2b": 4050
       },
       {
         "id": "lupus-anticoagulant",
         "generalName": "Lupus Anticoagulant",
-        "labName": "",
+        "labName": "LUPUS ANTICOAGULANT (AS PER ISTH-2009)",
         "mrp": 1800,
         "b2b": 800
       },
       {
         "id": "fibrinogen-level",
         "generalName": "Fibrinogen Level",
-        "labName": "",
+        "labName": "Fibrinogen Level ( Clauss Method )",
         "mrp": 850,
         "b2b": 400
       },
       {
         "id": "anti-dsdna-ncx",
-        "generalName": "Anti dsDNA NCX",
-        "labName": "",
+        "generalName": "ANTI ds DNA NcX",
+        "labName": "ANTI ds DNA NcX",
         "mrp": 1750,
         "b2b": 1000
       },
       {
         "id": "apolipoprotein-a-1-b",
         "generalName": "Apolipoprotein A1 & B",
-        "labName": "",
+        "labName": "Apolipoprotein A-1+B",
         "mrp": 1100,
         "b2b": 770
       },
       {
         "id": "folic-acid-level",
         "generalName": "Folic Acid Level",
-        "labName": "",
+        "labName": "Folic Acid level",
         "mrp": 1100,
         "b2b": 500
       },
       {
         "id": "allergy-comprehensive",
-        "generalName": "Allergy Comprehensive",
-        "labName": "",
+        "generalName": "Allergy Comprehensive (ELISA)",
+        "labName": "Allergy Comprehensive-ELISA",
         "mrp": 5500,
         "b2b": 3850
       },
       {
         "id": "maleria-antigen",
-        "generalName": "Maleria Antigen",
-        "labName": "",
+        "generalName": "Malaria Antigen",
+        "labName": "Malaria ( PF/PV) antigen test",
         "mrp": 450,
         "b2b": 315
       },
       {
         "id": "fasting-urine-glucose",
-        "generalName": "Fasting Urine Glucose",
-        "labName": "",
+        "generalName": "Urine Glucose (Fasting)",
+        "labName": "Urine Glucose (Fasting)",
         "mrp": 50,
         "b2b": 30
       },
       {
         "id": "factor-v",
         "generalName": "Factor V",
-        "labName": "",
+        "labName": "FACTOR V (Leiden) G1691A by Real-time PCR",
         "mrp": 5500,
         "b2b": 4400
       },
       {
         "id": "ferritin",
         "generalName": "Ferritin",
-        "labName": "",
+        "labName": "Ferritin",
         "mrp": 950,
         "b2b": 400
       },
       {
         "id": "hav",
-        "generalName": "HAV",
-        "labName": "",
+        "generalName": "HAV IgM",
+        "labName": "HAV antibody IgM",
         "mrp": 1200,
         "b2b": 550
       },
       {
         "id": "hev",
-        "generalName": "HEV",
-        "labName": "",
+        "generalName": "HEV IgM",
+        "labName": "HEV IGM",
         "mrp": 1500,
-        "b2b": 600
-      },
-      {
-        "id": "ra-test",
-        "generalName": "RA Test",
-        "labName": "",
-        "mrp": 500,
-        "b2b": 270
+        "b2b": 1050
       },
       {
         "id": "egfr",
         "generalName": "eGFR",
-        "labName": "",
+        "labName": "Estimated Glomerular Filtration Rate (eGFR) with Creatinine",
         "mrp": 300,
         "b2b": 150
       },
       {
-        "id": "iron-profile-with-ferritine",
-        "generalName": "Iron Profile with Ferritine",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
         "id": "allergy-drug-test",
         "generalName": "Allergy Drug Test",
-        "labName": "",
+        "labName": "Allergy Drug-ELISA",
         "mrp": 7500,
         "b2b": 5250
       },
       {
         "id": "iga-ttg",
         "generalName": "IgA tTG",
-        "labName": "",
+        "labName": "IgA level",
         "mrp": 800,
         "b2b": 500
       },
       {
         "id": "peripheral-smear",
         "generalName": "Peripheral Smear",
-        "labName": "",
+        "labName": "Peripheral Smear",
         "mrp": 150,
-        "b2b": 60
+        "b2b": 90
       },
       {
         "id": "cortisol-8-am",
         "generalName": "Cortisol 8 AM",
-        "labName": "",
+        "labName": "Cortisol 8 AM",
         "mrp": 850,
         "b2b": 350
       },
       {
         "id": "h-pylori-stool",
         "generalName": "H. Pylori Stool",
-        "labName": "",
+        "labName": "H.Pylori Antigen Detection from stool",
         "mrp": 1250,
-        "b2b": 960
+        "b2b": 1000
       },
       {
         "id": "chikungunya-igg",
         "generalName": "Chikungunya IgG",
-        "labName": "",
+        "labName": "Chikungunya IgG-Rapid",
         "mrp": 900,
         "b2b": 810
       },
       {
-        "id": "fba",
-        "generalName": "FBA",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
         "id": "protein-electrophoresis",
         "generalName": "Protein Electrophoresis",
-        "labName": "",
+        "labName": "Protein Electrophoresis (Capillary)",
         "mrp": 1200,
         "b2b": 500
       },
       {
-        "id": "sputum-tb-culture-abs",
-        "generalName": "Sputum TB Culture & ABS",
-        "labName": "",
-        "mrp": 150,
-        "b2b": 90
-      },
-      {
-        "id": "complement-c3-c4",
-        "generalName": "Complement C3 & C4",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
         "id": "dheas",
-        "generalName": "DHEAS",
-        "labName": "",
+        "generalName": "DHEA-S",
+        "labName": "DHEA-S",
         "mrp": 1150,
         "b2b": 600
       },
       {
         "id": "dhea",
         "generalName": "DHEA",
-        "labName": "",
+        "labName": "Dehydroepiandrosterone (DHEA)",
         "mrp": 3000,
         "b2b": 2100
       },
       {
         "id": "torch-complex",
         "generalName": "Torch Complex",
-        "labName": "",
+        "labName": "Torch Complex (10 Parameters)",
         "mrp": 2800,
         "b2b": 1200
       },
       {
         "id": "zinc-level",
         "generalName": "Zinc Level",
-        "labName": "",
+        "labName": "Zinc Level",
         "mrp": 2200,
         "b2b": 1980
       },
       {
         "id": "magnesium",
-        "generalName": "Magnesium",
-        "labName": "",
+        "generalName": "Magnesium Level",
+        "labName": "Magnesium Level",
         "mrp": 400,
         "b2b": 280
       },
       {
-        "id": "estrogen",
-        "generalName": "Estrogen",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
         "id": "c-peptide-random",
         "generalName": "C-Peptide Random",
-        "labName": "",
+        "labName": "C-Peptide Random level - AS",
         "mrp": 1150,
         "b2b": 550
       },
       {
         "id": "b2-glycoprotein-1-igg",
         "generalName": "B2 Glycoprotein 1 IgG",
-        "labName": "",
+        "labName": "Beta 2 Glycoprotein 1 antibody IgG",
         "mrp": 1200,
         "b2b": 500
       },
       {
         "id": "karyotyping-husband",
-        "generalName": "Karyotyping - Husband",
-        "labName": "",
+        "generalName": "Karyotyping",
+        "labName": "Karyotyping From Blood",
         "mrp": 4000,
         "b2b": 2800
-      },
-      {
-        "id": "karyotyping-wife",
-        "generalName": "Karyotyping - Wife",
-        "labName": "",
-        "mrp": 4000,
-        "b2b": 2800
-      },
-      {
-        "id": "influenza-screening-for-abf",
-        "generalName": "Influenza Screening for ABF",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
-        "id": "psa-free-total",
-        "generalName": "PSA Free & Total",
-        "labName": "",
-        "mrp": 850,
-        "b2b": 350
       },
       {
         "id": "lh",
         "generalName": "LH",
-        "labName": "",
+        "labName": "Leutinizing Hormone level",
         "mrp": 550,
         "b2b": 180
       },
       {
         "id": "fsh",
         "generalName": "FSH",
-        "labName": "",
+        "labName": "Follicle Stimulating Hormone level",
         "mrp": 550,
         "b2b": 180
       },
       {
         "id": "semen-analysis",
         "generalName": "Semen Analysis",
-        "labName": "",
-        "mrp": 1100,
-        "b2b": 770
+        "labName": "Semen Analysis",
+        "mrp": 1150,
+        "b2b": 805
       },
       {
         "id": "alkaline-phosphatase",
         "generalName": "Alkaline Phosphatase",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
-        "id": "globulin",
-        "generalName": "Globulin",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
+        "labName": "Alkaline Phosphatase level",
+        "mrp": 190,
+        "b2b": 114
       },
       {
         "id": "bun-creatinine-ratio",
         "generalName": "BUN / Creatinine Ratio",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
-        "id": "urea-g-ratio",
-        "generalName": "Urea/G Ratio",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
+        "labName": "BUN/Creatinine Ratio",
+        "mrp": 270,
+        "b2b": 162
       },
       {
         "id": "stool-routine",
         "generalName": "Stool Routine",
-        "labName": "",
+        "labName": "Stool Examination",
         "mrp": 170,
-        "b2b": 90
-      },
-      {
-        "id": "albumin",
-        "generalName": "Albumin",
-        "labName": "",
-        "mrp": 400,
-        "b2b": 320
+        "b2b": 102
       },
       {
         "id": "bicarbonate",
         "generalName": "Bicarbonate",
-        "labName": "",
+        "labName": "Bicarbonate",
         "mrp": 600,
         "b2b": 360
       },
       {
         "id": "amylase",
         "generalName": "Amylase",
-        "labName": "",
+        "labName": "Amylase-Serum",
         "mrp": 700,
         "b2b": 275
       },
       {
         "id": "acth",
-        "generalName": "ACTH",
-        "labName": "",
+        "generalName": "ACTH Level",
+        "labName": "ACTH Level [Adrenocorticotropic hormone]",
         "mrp": 1800,
         "b2b": 1620
       },
       {
-        "id": "throat-swab-c-s",
-        "generalName": "Throat Swab C/S",
-        "labName": "",
-        "mrp": 950,
-        "b2b": 400
-      },
-      {
         "id": "aso-titer",
         "generalName": "ASO Titer",
-        "labName": "",
+        "labName": "Antistreptolysin - O (ASO)",
         "mrp": 650,
         "b2b": 390
       },
       {
         "id": "amh",
         "generalName": "AMH",
-        "labName": "",
+        "labName": "Anti Mullerian Hormone -(AMH)",
         "mrp": 2000,
         "b2b": 1000
       },
       {
         "id": "pth",
         "generalName": "PTH",
-        "labName": "",
+        "labName": "Para Thyroid Hormone Intact level",
         "mrp": 1600,
         "b2b": 1120
       },
       {
-        "id": "apo-b-apo-a1-ratio",
-        "generalName": "Apo B: Apo A1 ratio",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
         "id": "bt-ct",
         "generalName": "BT CT",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
+        "labName": "BT CT",
+        "mrp": 250,
+        "b2b": 175
       },
       {
         "id": "hpv-dna",
         "generalName": "HPV DNA",
-        "labName": "",
+        "labName": "Human Papilloma Virus (HPV16 and 18) DNA by Real Time PCR",
         "mrp": 2800,
         "b2b": 2520
       },
       {
         "id": "anti-tpo-antibody",
         "generalName": "Anti-TPO Antibody",
-        "labName": "",
+        "labName": "Thyroperoxidase Antibody (Anti-TPO)/Microsomal antibody",
         "mrp": 1100,
         "b2b": 600
       },
       {
         "id": "apolipoprotein-a-1",
         "generalName": "Apolipoprotein A1",
-        "labName": "",
+        "labName": "Apolipoprotein A - 1",
         "mrp": 550,
         "b2b": 385
       },
       {
         "id": "apolipoprotein-b",
         "generalName": "Apolipoprotein B",
-        "labName": "",
+        "labName": "Apolipoprotein B",
         "mrp": 550,
         "b2b": 385
       },
       {
-        "id": "stool-calprotectin",
-        "generalName": "Stool Calprotectin",
-        "labName": "",
-        "mrp": 2800,
-        "b2b": 2240
-      },
-      {
-        "id": "phadiatop",
-        "generalName": "Phadiatop",
-        "labName": "",
-        "mrp": 2300,
-        "b2b": 2070
-      },
-      {
         "id": "prolactin",
         "generalName": "Prolactin",
-        "labName": "",
+        "labName": "Prolactin level",
         "mrp": 600,
         "b2b": 200
       },
       {
         "id": "progesterone",
         "generalName": "Progesterone",
-        "labName": "",
+        "labName": "Progesterone level",
         "mrp": 800,
         "b2b": 300
       },
       {
-        "id": "specific-cardiac-profile",
-        "generalName": "Specific Cardiac Profile",
-        "labName": "",
-        "mrp": "",
-        "b2b": ""
-      },
-      {
         "id": "lipoprotein",
         "generalName": "Lipoprotein",
-        "labName": "",
+        "labName": "Lipoprotein (a)",
         "mrp": 1200,
         "b2b": 840
       },
       {
-        "id": "h-pylori-stool-antigen-test",
-        "generalName": "H. Pylori Stool Antigen Test",
-        "labName": "",
-        "mrp": 1250,
-        "b2b": 1000
-      },
-      {
         "id": "typhidot-igm",
         "generalName": "Typhidot IgM",
-        "labName": "",
+        "labName": "S.Typhi antibody IgM",
         "mrp": 600,
         "b2b": 480
       },
       {
         "id": "osmolarity-serum",
-        "generalName": "Osmolarity Serum",
-        "labName": "",
+        "generalName": "Osmolality Serum",
+        "labName": "Osmolality Serum",
         "mrp": 1500,
         "b2b": 1350
       },
       {
         "id": "osmolarity-urine",
-        "generalName": "Osmolarity Urine",
-        "labName": "",
+        "generalName": "Osmolality Urine",
+        "labName": "Osmolality Urine",
         "mrp": 1500,
         "b2b": 1350
       },
       {
         "id": "dual-marker",
-        "generalName": "Dual Marker",
-        "labName": "",
+        "generalName": "Double Marker",
+        "labName": "Double Marker",
         "mrp": 2500,
         "b2b": 2250
       },
       {
         "id": "extra-test",
-        "generalName": "Extra Test",
+        "generalName": "New Tests",
         "labName": "",
         "mrp": "",
         "b2b": ""
@@ -1188,6 +1013,76 @@ const LAB_DATA = {
         "labName": "Goodness 3H",
         "mrp": 1500,
         "b2b": 650
+      },
+      {
+        "id": "extra-collection",
+        "generalName": "Extra Collection",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "coombs-test-indirect",
+        "generalName": "Coombs Test Indirect",
+        "labName": "Coombs Test Indirect (By Gel Technology)",
+        "mrp": 600,
+        "b2b": 250
+      },
+      {
+        "id": "urine-glucose-post-prandial",
+        "generalName": "Urine Glucose (Post Prandial)",
+        "labName": "Urine Glucose (Post Prandial)",
+        "mrp": 50,
+        "b2b": 30
+      },
+      {
+        "id": "urine-glucose-random",
+        "generalName": "Urine Glucose (Random)",
+        "labName": "Urine Glucose (Random)",
+        "mrp": 50,
+        "b2b": 30
+      },
+      {
+        "id": "chikungunya-igm",
+        "generalName": "Chikungunya IgM",
+        "labName": "Chikungunya IgM-Rapid",
+        "mrp": 900,
+        "b2b": 810
+      },
+      {
+        "id": "complement-3-level",
+        "generalName": "Complement 3 Level",
+        "labName": "Complement 3 Level",
+        "mrp": 850,
+        "b2b": 450
+      },
+      {
+        "id": "complement-4-level",
+        "generalName": "Complement 4 Level",
+        "labName": "Complement 4 Level",
+        "mrp": 850,
+        "b2b": 450
+      },
+      {
+        "id": "b2-glycoprotein-igm",
+        "generalName": "B2 Glycoprotein 1 IgM",
+        "labName": "Beta 2 Glycoprotein 1 antibody IgM",
+        "mrp": 1200,
+        "b2b": 500
+      },
+      {
+        "id": "phadiatop-adult",
+        "generalName": "Phadiatop (Adult)",
+        "labName": "Allergy-Phadiatop, Adult",
+        "mrp": 2000,
+        "b2b": 1800
+      },
+      {
+        "id": "phadiatop-infant",
+        "generalName": "Phadiatop (Infant)",
+        "labName": "Allergy-Phadiatop, Inf",
+        "mrp": 1350,
+        "b2b": 1080
       }
     ],
     "packages": [
@@ -1368,12 +1263,12 @@ const LAB_DATA = {
             "labName": "Thyroid Function Test"
           },
           {
-            "generalName": "Homocysten",
-            "labName": ""
+            "generalName": "Homocysteine",
+            "labName": "Homocysteine level"
           },
           {
             "generalName": "CA125 (Female)",
-            "labName": ""
+            "labName": "CA-125 level"
           }
         ],
         "mrp": 3500,
@@ -1428,12 +1323,12 @@ const LAB_DATA = {
             "labName": "Thyroid Function Test"
           },
           {
-            "generalName": "Homocysten",
-            "labName": ""
+            "generalName": "Homocysteine",
+            "labName": "Homocysteine level"
           },
           {
             "generalName": "PSA (Male)",
-            "labName": ""
+            "labName": "Prostate Specific Antigen level"
           }
         ],
         "mrp": 3500,
@@ -1457,7 +1352,7 @@ const LAB_DATA = {
           },
           {
             "generalName": "Trop-I",
-            "labName": ""
+            "labName": "High Sensitivity Troponin I"
           }
         ],
         "mrp": 2200,
@@ -1505,7 +1400,7 @@ const LAB_DATA = {
           },
           {
             "generalName": "HBsAg",
-            "labName": ""
+            "labName": "HBs antigen"
           }
         ],
         "mrp": 1500,
@@ -1537,19 +1432,19 @@ const LAB_DATA = {
           },
           {
             "generalName": "Dengue NS1",
-            "labName": ""
-          },
-          {
-            "generalName": "Maleria Antigen",
-            "labName": ""
+            "labName": "Dengue Antigen (NS1)- Rapid"
           },
           {
             "generalName": "Urine Routine",
-            "labName": ""
+            "labName": "Urine Examination"
           },
           {
             "generalName": "Widal",
-            "labName": ""
+            "labName": "WIDAL by tube method"
+          },
+          {
+            "generalName": "Malaria Antigen",
+            "labName": "Malaria ( PF/PV) antigen test"
           }
         ],
         "mrp": 3000,
@@ -1581,15 +1476,15 @@ const LAB_DATA = {
           },
           {
             "generalName": "VDRL",
-            "labName": ""
+            "labName": "Rapid Plasma Reagin (VDRL)"
           },
           {
             "generalName": "Hb Electrophoresis",
-            "labName": ""
+            "labName": "HB Electrophoresis (HPLC)"
           },
           {
             "generalName": "Urine Routine",
-            "labName": ""
+            "labName": "Urine Examination"
           }
         ],
         "mrp": 2100,
