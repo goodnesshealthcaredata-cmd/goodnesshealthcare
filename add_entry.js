@@ -656,97 +656,145 @@ async function searchAllPatients(searchTerm) {
 function getEntryProgress(entry) {
   const progress = { patient: 0, test: 0, visit: 0, report: 0, payment: 0 };
 
-  const patientFields = ['patientName', 'address'];
+  // ---- PATIENT PROGRESS - MATCHES getPatientProgress() ----
   let patientFilled = 0;
-  patientFields.forEach(field => {
-    if (entry[field] && entry[field].toString().trim().length > 0) patientFilled++;
-  });
-  const hasContactNumber = entry.contacts && entry.contacts.some(c => c.number && c.number.trim().length > 0);
-  if (hasContactNumber) patientFilled++;
-  if (entry.age && entry.age.toString().trim().length > 0) patientFilled++;
-  if (entry.gender && entry.gender.toString().trim().length > 0) patientFilled++;
+  const patientFields = ['patientName', 'age', 'gender', 'address', 'doctorName', 'careOfPerson'];
   
-  const totalPatientFields = 5;
+  patientFields.forEach(field => {
+    if (entry[field] && entry[field].toString().trim().length > 0) {
+      patientFilled++;
+    }
+  });
+  
+  // Use hasContactNumber from index
+  if (entry.hasContactNumber === true) {
+    patientFilled++;
+  }
+  
+  const totalPatientFields = 7; // 6 fields + contacts
   progress.patient = Math.min(100, Math.round((patientFilled / totalPatientFields) * 100));
 
+  // ---- TEST PROGRESS - MATCHES getTestProgress() ----
   let hasTest = false;
-  if (entry.labSelections) {
+  let totalSelected = 0;
+  
+  if (entry.labSelections && typeof entry.labSelections === 'object') {
     for (let labId = 1; labId <= 4; labId++) {
       const labData = entry.labSelections[labId];
       if (labData) {
-        if ((labData.tests && labData.tests.length > 0) || 
-            (labData.packages && labData.packages.length > 0)) {
+        const tests = (labData.tests || []).length;
+        const packages = (labData.packages || []).length;
+        if (tests > 0 || packages > 0) {
           hasTest = true;
-          break;
+          totalSelected += tests + packages;
         }
       }
     }
   }
+  
+  // Fallback: check labs array
+  if (!hasTest && entry.labs && Array.isArray(entry.labs) && entry.labs.length > 0) {
+    hasTest = true;
+    totalSelected = entry.labs.length;
+  }
+  
+  // Fallback: check hasTests flag
+  if (!hasTest && entry.hasTests === true) {
+    hasTest = true;
+    totalSelected = 1;
+  }
+  
   progress.test = hasTest ? 100 : 0;
 
-  const visitFields = ['visitDate'];
   let visitFilled = 0;
-  visitFields.forEach(field => {
-    if (entry[field] && entry[field].toString().trim().length > 0) visitFilled++;
-  });
-  if (entry.center && entry.center.toString().trim().length > 0) visitFilled++;
-  if (entry.visitType && entry.visitType.toString().trim().length > 0) visitFilled++;
-  if (entry.visitTime && entry.visitTime.toString().trim().length > 0) visitFilled++;
-  if (entry.phlebotomist && entry.phlebotomist.toString().trim().length > 0) visitFilled++;
+  const visitFields = ['center', 'visitType', 'visitDate', 'visitTime', 'phlebotomist'];
   
-  const totalVisitFields = 5;
+  visitFields.forEach(field => {
+    if (entry[field] && entry[field].toString().trim().length > 0) {
+      visitFilled++;
+    }
+  });
+  
+  // Determine if PP is selected (based on either labSelections or filled PP fields)
+  const ppSelected = isPPSelectedForEntry(entry);
+  const extraSelected = isExtraCollectionSelectedForEntry(entry);
+  
+  // Count PP fields if selected
+  if (ppSelected) {
+    if (entry.ppTime && entry.ppTime.toString().trim().length > 0) visitFilled++;
+    if (entry.ppPhlebotomist && entry.ppPhlebotomist.toString().trim().length > 0) visitFilled++;
+  }
+  
+  // Count Extra fields if selected
+  if (extraSelected) {
+    if (entry.extraCollectionTime && entry.extraCollectionTime.toString().trim().length > 0) visitFilled++;
+    if (entry.extraCollectionPhlebotomist && entry.extraCollectionPhlebotomist.toString().trim().length > 0) visitFilled++;
+  }
+  
+  // Total expected fields = 5 + (2 if PP selected) + (2 if Extra selected)
+  let totalVisitFields = 5;
+  if (ppSelected) totalVisitFields += 2;
+  if (extraSelected) totalVisitFields += 2;
+  
   progress.visit = Math.min(100, Math.round((visitFilled / totalVisitFields) * 100));
 
+  // ---- REPORT PROGRESS - MATCHES getReportProgress() ----
   let reportChecked = 0;
   let reportTotal = 0;
 
-  if (entry.reportsReceived) {
-    const receivedValues = Object.values(entry.reportsReceived);
-    receivedValues.forEach(val => {
-      reportTotal++;
-      if (val === true) reportChecked++;
-    });
+  // Reports received
+  if (entry.totalReports !== undefined && entry.totalReports > 0) {
+    reportTotal += entry.totalReports;
+    reportChecked += entry.receivedReports || 0;
   }
 
-  const onlineRequired = entry.onlineReportRequired || false;
-  const deliveryRequired = entry.reportDeliveryRequired || false;
-  const billRequired = entry.billDeliveryRequired || false;
+  // Online Report
+  if (entry.onlineReportRequired) {
+    reportTotal++;
+    if (entry.onlineReportSent) reportChecked++;
+  }
 
-  if (onlineRequired) {
+  // Report Delivery
+  if (entry.reportDeliveryRequired) {
     reportTotal++;
-    if (entry.onlineReportSent === true) reportChecked++;
+    if (entry.reportDelivered) reportChecked++;
   }
-  if (deliveryRequired) {
+
+  // Bill Delivery
+  if (entry.billDeliveryRequired) {
     reportTotal++;
-    if (entry.reportDelivered === true) reportChecked++;
-  }
-  if (billRequired) {
-    reportTotal++;
-    if (entry.billDelivered === true) reportChecked++;
+    if (entry.billDelivered) reportChecked++;
   }
 
   progress.report = reportTotal > 0 ? Math.round((reportChecked / reportTotal) * 100) : 0;
 
+  // ---- PAYMENT PROGRESS - MATCHES getPaymentProgress() ----
   let paymentPct = 0;
   const finalPrice = entry.finalPrice || 0;
+  
   if (finalPrice > 0) {
     const pending = entry.pendingPayment || 0;
-    if (pending === 0) {
+    
+    if (pending !== 0) {
+      paymentPct = 50;
+    } else {
       const careOf = entry.careOfPerson || '';
       if (careOf && careOf.toLowerCase() !== 'none') {
-        paymentPct = (entry.goodwillCharges && entry.goodwillCharges > 0) ? 100 : 75;
+        if (entry.goodwillCharges && entry.goodwillCharges > 0) {
+          paymentPct = 100;
+        } else {
+          paymentPct = 75;
+        }
       } else {
         paymentPct = 100;
       }
-    } else {
-      paymentPct = 50;
     }
   }
+  
   progress.payment = paymentPct;
 
   return progress;
 }
-
 // ============================================================
 //  LABS - ROBUST getLabsForEntry()
 // ============================================================
@@ -844,52 +892,67 @@ function getEntryGradientClass(entry) {
 }
 
 function isPPSelectedForEntry(entry) {
-  if (!entry.labSelections) return false;
-  for (let labId = 1; labId <= 4; labId++) {
-    const labData = entry.labSelections[labId];
-    if (!labData) continue;
-    if (labData.tests) {
-      for (const test of labData.tests) {
-        if (test.id === 'pp' || test.generalName === 'PP') return true;
-      }
-    }
-    if (labData.packages) {
-      for (const pkg of labData.packages) {
-        if (pkg.tests) {
-          for (const test of pkg.tests) {
-            if ((test.generalName === 'PP' || test.id === 'pp') && test.selected !== false) return true;
-          }
+  // 1. Use the stored flag (from patientIndex)
+  if (entry.isPPSelected !== undefined) {
+    return entry.isPPSelected === true;
+  }
+  // 2. Fallback: check labSelections (full patient record)
+  if (entry.labSelections) {
+    for (let labId = 1; labId <= 4; labId++) {
+      const labData = entry.labSelections[labId];
+      if (!labData) continue;
+      if (labData.tests) {
+        for (const test of labData.tests) {
+          if (test.id === 'pp' || test.generalName === 'PP') return true;
         }
       }
-    }
-  }
-  return false;
-}
-
-function isExtraCollectionSelectedForEntry(entry) {
-  if (!entry.labSelections) return false;
-  for (let labId = 1; labId <= 4; labId++) {
-    const labData = entry.labSelections[labId];
-    if (!labData) continue;
-    if (labData.tests) {
-      for (const test of labData.tests) {
-        if (test.id === 'extra-collection' || test.generalName === 'Extra Collection') return true;
-      }
-    }
-    if (labData.packages) {
-      for (const pkg of labData.packages) {
-        if (pkg.tests) {
-          for (const test of pkg.tests) {
-            if (test.selected !== false) {
-              if (test.generalName === 'Extra Collection' || test.id === 'extra-collection') return true;
+      if (labData.packages) {
+        for (const pkg of labData.packages) {
+          if (pkg.tests) {
+            for (const test of pkg.tests) {
+              if ((test.generalName === 'PP' || test.id === 'pp') && test.selected !== false) return true;
             }
           }
         }
       }
     }
   }
+  // 3. Do NOT fallback to ppTime/ppPhlebotomist – they can be filled without selection
   return false;
 }
+
+function isExtraCollectionSelectedForEntry(entry) {
+  // 1. Use the stored flag (from patientIndex)
+  if (entry.isExtraSelected !== undefined) {
+    return entry.isExtraSelected === true;
+  }
+  // 2. Fallback: check labSelections (full patient record)
+  if (entry.labSelections) {
+    for (let labId = 1; labId <= 4; labId++) {
+      const labData = entry.labSelections[labId];
+      if (!labData) continue;
+      if (labData.tests) {
+        for (const test of labData.tests) {
+          if (test.id === 'extra-collection' || test.generalName === 'Extra Collection') return true;
+        }
+      }
+      if (labData.packages) {
+        for (const pkg of labData.packages) {
+          if (pkg.tests) {
+            for (const test of pkg.tests) {
+              if (test.selected !== false) {
+                if (test.generalName === 'Extra Collection' || test.id === 'extra-collection') return true;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  // 3. Do NOT fallback to extraCollectionTime/extraCollectionPhlebotomist
+  return false;
+}
+
 
 // ============================================================
 //  FILTER ENTRIES
@@ -1071,6 +1134,7 @@ function updateEntryCount() {
     return;
   }
   
+  // Check if filters are active
   const hasActiveFilters = filterState.status !== 'all' || 
                           filterState.fromDate || 
                           filterState.toDate || 
@@ -1088,7 +1152,6 @@ function updateEntryCount() {
     countEl.textContent = total + ' Entries';
   }
 }
-
 // ============================================================
 //  LOAD ENTRIES
 // ============================================================
@@ -1205,20 +1268,14 @@ function renderEntries(entries) {
   entryListEl.querySelectorAll('.view-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
-      const rec = allEntries.find(e => e._firebaseKey === key);
-      if (rec) {
-        loadAndViewPatient(key);
-      }
+      loadAndViewPatient(key);
     });
   });
 
   entryListEl.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const key = this.dataset.key;
-      const rec = allEntries.find(e => e._firebaseKey === key);
-      if (rec) {
-        loadAndEditPatient(key);
-      }
+      loadAndEditPatient(key);
     });
   });
 
@@ -1487,6 +1544,7 @@ function createIndexData(data, key) {
     }
   }
   
+  // Extract labs
   const labs = [];
   let hasTests = false;
   
@@ -1519,20 +1577,74 @@ function createIndexData(data, key) {
     }
   }
   
+  // Determine if any contact has a number
+  let hasContactNumber = false;
+  if (data.contacts && Array.isArray(data.contacts)) {
+    hasContactNumber = data.contacts.some(c => c.number && c.number.trim().length > 0);
+  }
+  
+  // Report progress data
+  let totalReports = 0;
+  let receivedReports = 0;
+  if (data.reportsReceived && typeof data.reportsReceived === 'object') {
+    const values = Object.values(data.reportsReceived);
+    totalReports = values.length;
+    receivedReports = values.filter(v => v === true).length;
+  }
+  
+  // Payment pending
+  let pendingPayment = data.pendingPayment;
+  if (pendingPayment === undefined && data.finalPrice && data.cashReceived !== undefined && data.onlineReceived !== undefined) {
+    const cash = parseFloat(data.cashReceived) || 0;
+    const online = parseFloat(data.onlineReceived) || 0;
+    const finalPrice = parseFloat(data.finalPrice) || 0;
+    pendingPayment = finalPrice - cash - online;
+  }
+
+  // ---- NEW: Detect PP and Extra Collection selection ----
+  let isPPSelected = false;
+  let isExtraSelected = false;
+  if (data.labSelections && typeof data.labSelections === 'object') {
+    for (let labId = 1; labId <= 4; labId++) {
+      const labData = data.labSelections[labId];
+      if (!labData) continue;
+      if (labData.tests) {
+        for (const test of labData.tests) {
+          if (test.id === 'pp' || test.generalName === 'PP') isPPSelected = true;
+          if (test.id === 'extra-collection' || test.generalName === 'Extra Collection') isExtraSelected = true;
+        }
+      }
+      if (labData.packages) {
+        for (const pkg of labData.packages) {
+          if (pkg.tests) {
+            for (const test of pkg.tests) {
+              if (test.selected !== false) {
+                if (test.generalName === 'PP' || test.id === 'pp') isPPSelected = true;
+                if (test.generalName === 'Extra Collection' || test.id === 'extra-collection') isExtraSelected = true;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
   return {
     patientName: data.patientName || '',
     patientNameLower: (data.patientName || '').trim().toLowerCase(),
     age: data.age || '',
     gender: data.gender || '',
+    address: data.address || '',
+    doctorName: data.doctorName || '',
+    careOfPerson: data.careOfPerson || '',
+    hasContactNumber: hasContactNumber,
     visitDate: data.visitDate || '',
     visitTime: data.visitTime || '',
     visitTimestamp: visitTimestamp,
     labs: labs,
     center: data.center || '',
     visitType: data.visitType || '',
-    doctorName: data.doctorName || '',
     phlebotomist: data.phlebotomist || '',
-    careOfPerson: data.careOfPerson || '',
     ppTime: data.ppTime || '',
     ppPhlebotomist: data.ppPhlebotomist || '',
     extraCollectionTime: data.extraCollectionTime || '',
@@ -1544,7 +1656,22 @@ function createIndexData(data, key) {
     extraVisitDone: data.extraVisitDone || false,
     extraVisitDoneTime: data.extraVisitDoneTime || null,
     finalPrice: data.finalPrice || 0,
-    hasTests: hasTests
+    pendingPayment: pendingPayment || 0,
+    hasTests: hasTests,
+    onlineReportRequired: data.onlineReportRequired || false,
+    onlineReportSent: data.onlineReportSent || false,
+    reportDeliveryRequired: data.reportDeliveryRequired || false,
+    reportDelivered: data.reportDelivered || false,
+    billDeliveryRequired: data.billDeliveryRequired || false,
+    billDelivered: data.billDelivered || false,
+    totalReports: totalReports,
+    receivedReports: receivedReports,
+    cashReceived: data.cashReceived || 0,
+    onlineReceived: data.onlineReceived || 0,
+    goodwillCharges: data.goodwillCharges || 0,
+    // ---- NEW FLAGS ----
+    isPPSelected: isPPSelected,
+    isExtraSelected: isExtraSelected
   };
 }
 
@@ -1562,7 +1689,17 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
   const state = getFormState(formId);
   const data = gatherFormData(formId);
   const saveBtn = document.getElementById(`saveBtn-${formId}`);
-  
+
+  // Validate essential data
+  if (!data.patientName || !data.patientName.trim()) {
+    toast('Patient name is required.', 'error');
+    return false;
+  }
+  if (!data.visitDate) {
+    toast('Visit date is required.', 'error');
+    return false;
+  }
+
   if (saveBtn) {
     saveBtn.disabled = true;
     if (state.imageFiles && state.imageFiles.length > 0) {
@@ -1573,15 +1710,18 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
   }
 
   try {
-    let patientId = existingKey;
+    let patientId = existingKey; // existingKey is null for new entries
+
+    // --- Step 1: Upload images (if any) ---
     let imageUrls = [];
-    
     if (state.imageFiles && state.imageFiles.length > 0) {
+      // For new entries, generate a key BEFORE uploading so we can use it as folder name
       if (!patientId) {
         const newRef = db.ref('patients').push();
         patientId = newRef.key;
+        console.log('[savePatient] Generated new patientId:', patientId);
       }
-      
+
       try {
         imageUrls = await uploadImagesForPatient(patientId, state.imageFiles, (progress) => {
           if (saveBtn) {
@@ -1591,55 +1731,71 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       } catch (uploadErr) {
         console.warn('Image upload failed, but patient will still be saved without images:', uploadErr);
         toast('Warning: Images could not be uploaded. Patient saved without images.', 'error');
+        // Keep existing images (if any) and skip new ones
         imageUrls = [];
-        data.images = state.images.filter(img => 
+        data.images = state.images.filter(img =>
           typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
         );
       }
-      
+
       if (imageUrls.length > 0) {
-        const existingImages = state.images.filter(img => 
+        const existingImages = state.images.filter(img =>
           typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
         );
         data.images = [...existingImages, ...imageUrls];
       }
     } else {
-      data.images = state.images.filter(img => 
+      data.images = state.images.filter(img =>
         typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
       );
     }
-    
+
     delete data.imageFiles;
-    
+
+    // --- Step 2: Ensure patientId is set for new entries (if no images were uploaded) ---
+    if (!patientId) {
+      const newRef = db.ref('patients').push();
+      patientId = newRef.key;
+      console.log('[savePatient] Generated patientId (no images):', patientId);
+    }
+
+    // --- Step 3: Prepare index data ---
     const indexData = createIndexData(data, patientId);
-    
+    console.log('[savePatient] Saving patientId:', patientId, 'isEdit:', isEdit, 'existingKey:', existingKey);
+
+    // --- Step 4: Atomic update ---
     const updates = {};
     const patientPath = `patients/${patientId}`;
     const indexPath = `patientIndex/${patientId}`;
-    
-    if (isEdit && existingKey) {
-      updates[patientPath] = data;
-      updates[indexPath] = indexData;
-    } else {
-      if (!patientId) {
-        const newRef = db.ref('patients').push();
-        patientId = newRef.key;
-      }
-      updates[patientPath] = data;
-      updates[indexPath] = indexData;
+
+    updates[patientPath] = data;
+    updates[indexPath] = indexData;
+
+    // If editing with an existing key, ensure we use the same key (already set above)
+    // But if existingKey is provided, we should not generate a new one; patientId should equal existingKey.
+    // However, if we generated a new key because of image upload, we would be overwriting
+    // the edit target. So we must keep patientId = existingKey in edit mode.
+    // The code above already sets patientId = existingKey initially.
+    // The only case where patientId changes is if we generate a new one for new entries.
+    // So for edit, patientId remains existingKey.
+    // For safety, if isEdit and patientId !== existingKey, we should log an error.
+    if (isEdit && existingKey && patientId !== existingKey) {
+      console.error('[savePatient] Key mismatch! existingKey:', existingKey, 'patientId:', patientId);
+      toast('Error: Patient key mismatch. Please refresh and try again.', 'error');
+      return false;
     }
-    
+
     await db.ref().update(updates);
-    
+
     toast(isEdit ? 'Entry updated successfully.' : 'Entry saved successfully.', 'success');
-    
-    // Reload all entries and re-apply filters
+
+    // --- Step 5: Reload and refresh UI ---
     await loadAllEntries();
     applyFiltersAndPaginate();
     await loadPatientNamesForAutocomplete();
     populateDynamicFilters();
     populateVisitPhlebotomistFilter();
-    
+
     if (!isEdit) {
       // Reset new entry form
       resetFormState(formId);
@@ -1672,17 +1828,18 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       updateSectionProgressBars(formId);
       updateReportMessage(formId);
     } else {
-      // EDIT: reload current page, close the edit tab, and switch to Added Entries
+      // Edit mode: reload current page and close edit tab
       await loadEntriesPage(pagination.page);
-      closeEditTab(formId);      // <-- FIX: close the edit tab
-      switchTab('added');        // <-- FIX: show the entries list
+      closeEditTab(formId);
+      switchTab('added');
     }
-    
+
     if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.innerHTML = saveBtn.dataset.originalText || '💾 Save Entry';
     }
     return true;
+
   } catch (err) {
     console.error('Save error:', err);
     handleFirebaseError(err);
@@ -2077,23 +2234,40 @@ function getTestProgress(formId) {
 }
 
 function getVisitProgress(formId) {
-  const fields = [
-    { id: 'visitCenter' },
-    { id: 'visitType' },
-    { id: 'visitDate' },
-    { id: 'visitTime' },
-    { id: 'visitPhlebotomist' }
-  ];
-
   let completed = 0;
-  fields.forEach(field => {
-    const el = document.getElementById(field.id + '-' + formId);
+  const fields = ['visitCenter', 'visitType', 'visitDate', 'visitTime', 'visitPhlebotomist'];
+  
+  fields.forEach(fieldId => {
+    const el = document.getElementById(fieldId + '-' + formId);
     if (el && el.value && el.value.trim().length > 0) {
       completed++;
     }
   });
-
-  return Math.round((completed / fields.length) * 100);
+  
+  // Check if PP test is selected
+  const ppSelected = isPPSelected(formId);
+  if (ppSelected) {
+    const ppTime = document.getElementById(`visitPPTime-${formId}`);
+    const ppPhleb = document.getElementById(`visitPPPhlebotomist-${formId}`);
+    if (ppTime && ppTime.value && ppTime.value.trim().length > 0) completed++;
+    if (ppPhleb && ppPhleb.value && ppPhleb.value.trim().length > 0) completed++;
+  }
+  
+  // Check if Extra Collection test is selected
+  const extraSelected = isExtraCollectionSelected(formId);
+  if (extraSelected) {
+    const extraTime = document.getElementById(`visitExtraTime-${formId}`);
+    const extraPhleb = document.getElementById(`visitExtraPhlebotomist-${formId}`);
+    if (extraTime && extraTime.value && extraTime.value.trim().length > 0) completed++;
+    if (extraPhleb && extraPhleb.value && extraPhleb.value.trim().length > 0) completed++;
+  }
+  
+  // Calculate total expected fields
+  let totalFields = 5; // base fields
+  if (ppSelected) totalFields += 2;
+  if (extraSelected) totalFields += 2;
+  
+  return Math.min(100, Math.round((completed / totalFields) * 100));
 }
 
 function getReportProgress(formId) {
@@ -5021,6 +5195,33 @@ function setupPatientDetailsEvents(formId) {
 
   const patientFields = ['patientAge', 'patientGender', 'patientDoctor'];
   patientFields.forEach(fieldId => {
+    const el = document.getElementById(fieldId + '-' + formId);
+    if (el) {
+      el.addEventListener('input', function() {
+        updateSectionProgressBars(formId);
+      });
+      el.addEventListener('change', function() {
+        updateSectionProgressBars(formId);
+      });
+    }
+  });
+  const visitFields = ['visitCenter', 'visitType', 'visitDate', 'visitTime', 'visitPhlebotomist'];
+
+visitFields.forEach(fieldId => {
+  const el = document.getElementById(fieldId + '-' + formId);
+  if (el) {
+    el.addEventListener('input', function() {
+      updateSectionProgressBars(formId);
+    });
+    el.addEventListener('change', function() {
+      updateSectionProgressBars(formId);
+    });
+  }
+});
+
+// ---- PP & Extra Collection Fields (NEW) ----
+  const ppExtraFields = ['visitPPTime', 'visitPPPhlebotomist', 'visitExtraTime', 'visitExtraPhlebotomist'];
+  ppExtraFields.forEach(fieldId => {
     const el = document.getElementById(fieldId + '-' + formId);
     if (el) {
       el.addEventListener('input', function() {
