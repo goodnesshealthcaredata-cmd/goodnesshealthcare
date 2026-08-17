@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRF Generator · Goodness Healthcare</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js">
+    </script>
+
+    <style>
+        /* ============================================================
+           CSS VARIABLES & RESET
+           ============================================================ */
+        :root {
+            --primary: #09637E;
+            --primary-dark: #064a5f;
+            --primary-light: #0a7a9b;
+            --secondary: #088395;
+            --secondary-light: #0a9db3;
+            --accent: #7AB2B2;
+            --accent-light: #9cc7c7;
+            --bg-light: #EBF4F6;
+            --bg-white: #ffffff;
+            --text-dark: #1a2e35;
+            --text-medium: #4a6a73;
+            --text-light: #7a9aa3;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.25rem;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-light);
+            color: var(--text-dark);
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        #app {
+            max-width: 1600px;
+            width: 100%;
+            background: var(--bg-white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: 24px 28px 36px;
+            transition: var(--transition);
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid rgba(9, 99, 126, 0.10);
+        }
+
+        .app-header .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .app-header .logo-icon {
+            font-size: 1.8rem;
+        }
+        .app-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.3px;
+        }
+        .app-header .badge {
+            background: var(--bg-light);
+            color: var(--text-medium);
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: 30px;
+            border: 1px solid #dce5ea;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .app-header .selected-count {
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 16px;
+            border-radius: 30px;
+        }
+
+        /* ============================================================
+           TWO-COLUMN LAYOUT
+           ============================================================ */
+        .app-layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .sidebar {
+            flex: 0 0 380px;
+            min-width: 320px;
+            max-width: 420px;
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--bg-light);
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 8px;
+        }
+
+        .preview-area {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ============================================================
+           CONTROL PANEL (Sidebar)
+           ============================================================ */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 14px 16px;
+            background: var(--bg-light);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(7, 131, 149, 0.10);
+            margin-bottom: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .control-group label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .control-group input,
+        .control-group select {
+            padding: 6px 10px;
+            border: 1px solid #dce5ea;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-family: var(--font);
+            background: var(--bg-white);
+            color: var(--text-dark);
+            transition: var(--transition);
+            width: 100%;
+            height: 36px;
+        }
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.10);
+        }
+        .control-group input:disabled,
+        .control-group select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .control-group .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .control-group .search-wrapper input {
+            padding-right: 34px;
+        }
+        .control-group .search-wrapper .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+            font-size: 0.85rem;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 2px;
+        }
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.72rem;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            white-space: nowrap;
+            height: 34px;
+            flex: 1;
+            min-width: 70px;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(9, 99, 126, 0.20);
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(9, 99, 126, 0.30);
+        }
+        .btn-success {
+            background: #0b8a6b;
+            color: white;
+            box-shadow: 0 2px 8px rgba(11, 138, 107, 0.20);
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #096a52;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-medium);
+            border: 1px solid #dce5ea;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background: #dce5ea;
+            color: var(--text-dark);
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ============================================================
+           STATUS
+           ============================================================ */
+        .status-bar {
+            font-size: 0.75rem;
+            color: var(--text-medium);
+            padding: 3px 0 6px;
+            min-height: 26px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .status-bar .dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+        .status-bar .dot.green { background: var(--success); }
+        .status-bar .dot.orange { background: var(--warning); }
+        .status-bar .dot.red { background: var(--error); }
+
+        /* ============================================================
+           PATIENT LIST (Sidebar)
+           ============================================================ */
+        .patient-list-section {
+            margin-bottom: 10px;
+        }
+        .patient-list-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .patient-list-section .section-header h3 {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .patient-list-section .section-header .count-badge {
+            background: var(--bg-light);
+            padding: 1px 10px;
+            border-radius: 30px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+
+        .selected-patients-section {
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            background: rgba(9, 99, 126, 0.06);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(9, 99, 126, 0.15);
+        }
+        .selected-patients-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .selected-patients-section .section-header h4 {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        .selected-patients-list {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .selected-patient-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 8px;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid #e5e7eb;
+            font-size: 0.72rem;
+        }
+        .selected-patient-chip .remove-btn {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .selected-patient-chip .remove-btn:hover {
+            color: #dc2626;
+        }
+
+        .patient-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding-right: 4px;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--radius-sm);
+            background: var(--bg-white);
+        }
+        .patient-list::-webkit-scrollbar { width: 4px; }
+        .patient-list::-webkit-scrollbar-track { background: var(--bg-light); }
+        .patient-list::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; }
+
+        .patient-list-item {
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+        }
+        .patient-list-item:last-child { border-bottom: none; }
+        .patient-list-item:hover { background: var(--bg-light); }
+        .patient-list-item.selected {
+            background: rgba(9, 99, 126, 0.08);
+            border-left: 3px solid var(--primary);
+        }
+        .patient-list-item .patient-name { font-weight: 500; color: var(--text-dark); }
+        .patient-list-item .patient-meta {
+            font-size: 0.6rem;
+            color: var(--text-light);
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .patient-list-item .patient-meta .lab-badge {
+            background: var(--bg-light);
+            padding: 1px 6px;
+            border-radius: 30px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+        .patient-list-item .check-mark {
+            color: var(--success);
+            font-weight: 700;
+            margin-left: 4px;
+        }
+        .patient-list-empty {
+            padding: 14px;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.78rem;
+        }
+
+        /* ============================================================
+           TRF PREVIEW - Fixed at 50% zoom
+           ============================================================ */
+        .trf-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 8px;
+            margin-top: 4px;
+            padding: 8px;
+            background: #f0f2f5;
+            border-radius: var(--radius-md);
+            border: 1px solid #e5e7eb;
+            min-height: 200px;
+        }
+
+        .trf-container {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            flex-shrink: 0;
+            background: white;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            transform: scale(0.50);
+            transform-origin: top center;
+            margin: 0 auto;
+            margin-bottom: -148.5mm;
+        }
+
+        .trf-wrapper .trf-container:nth-last-child(2) {
+            margin-bottom: -148.5mm;
+        }
+
+        .trf-wrapper .trf-container:last-child {
+            margin-bottom: 0;
+        }
+
+        .trf-wrapper .trf-container:only-child {
+            margin-bottom: 0;
+        }
+
+        .trf-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* ---- TRF Overlay Fields - LARGER FONTS ---- */
+        .trf-field {
+            position: absolute;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 700;
+            color: #0a1a1f;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+            user-select: none;
+            line-height: 1.2;
+        }
+
+        /* SINGLE COLUMN TEST DETAILS - with proper line height */
+        .trf-field.test-details {
+            white-space: pre-wrap;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        /* ---- Empty overlay ---- */
+        .trf-empty-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(2px);
+            color: var(--text-light);
+            font-size: 1rem;
+            font-weight: 500;
+            pointer-events: none;
+            user-select: none;
+            z-index: 5;
+            text-align: center;
+            padding: 30px;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .trf-empty-overlay.hidden { display: none; }
+        .trf-empty-overlay .big-icon { font-size: 2.4rem; }
+        .trf-empty-overlay .sub-text { font-size: 0.8rem; color: var(--text-medium); }
+
+        /* ---- Global empty overlay ---- */
+        #globalEmptyOverlay {
+            width: 100%;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+            background: transparent;
+        }
+        #globalEmptyOverlay .big-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        #globalEmptyOverlay .title {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        #globalEmptyOverlay .sub {
+            font-size: 0.9rem;
+            color: var(--text-medium);
+            margin-top: 4px;
+        }
+
+        /* ============================================================
+           PRINT STYLES - All options available
+           ============================================================ */
+        @media print {
+            body { 
+                padding: 0; 
+                background: white; 
+                margin: 0; 
+            }
+            
+            @page {
+                margin: 5mm;
+            }
+            
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            #app { 
+                box-shadow: none; 
+                border-radius: 0; 
+                padding: 0; 
+                max-width: 100%; 
+            }
+            
+            .app-header, .sidebar, .no-print, .status-bar,
+            .patient-list-section, .selected-patients-section, .control-panel { 
+                display: none !important; 
+            }
+            
+            .app-layout { 
+                display: block !important; 
+            }
+            
+            .preview-area { 
+                max-width: 100% !important; 
+                padding: 0 !important;
+            }
+            
+            .trf-wrapper {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: flex-start !important;
+                gap: 8mm !important;
+                padding: 4mm !important;
+                background: white !important;
+                border-radius: 0 !important;
+                border: none !important;
+                transform: none !important;
+                min-height: auto !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+            
+            .trf-container {
+                box-shadow: none !important;
+                width: 148mm !important;
+                height: 209mm !important;
+                margin: 0 !important;
+                transform: none !important;
+                transform-origin: top left !important;
+                page-break-after: avoid !important;
+                flex-shrink: 0 !important;
+                display: inline-block !important;
+                border: 1px solid #e5e7eb !important;
+                background: white !important;
+                margin-bottom: 0 !important;
+            }
+            .trf-field.test-details {
+            white-space: pre-wrap;
+            line-height: 1px;
+            font-weight: 600;
+        }
+            .trf-container {
+                page-break-inside: avoid !important;
+                page-break-after: avoid !important;
+            }
+            
+            .trf-field {
+                color: #000 !important;
+                text-shadow: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .trf-background {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .trf-empty-overlay { 
+                display: none !important; 
+            }
+            
+            .trf-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .sidebar {
+                flex: 0 0 320px;
+                min-width: 280px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .app-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                flex: none;
+                width: 100%;
+                max-width: 100%;
+                position: static;
+                max-height: none;
+                overflow-y: visible;
+            }
+            .trf-wrapper {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 900px) {
+            #app { padding: 16px 20px; }
+            .control-panel { padding: 14px 16px; gap: 10px; }
+            .trf-wrapper { padding: 10px 6px; overflow-x: auto; justify-content: flex-start; }
+            .trf-container { transform: scale(0.55); transform-origin: top left; margin: 0; }
+            .app-header h1 { font-size: 1.1rem; }
+            .patient-list { max-height: 120px; }
+            .sidebar { max-height: none; }
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 6px; }
+            #app { padding: 10px; border-radius: var(--radius-md); }
+            .trf-container { transform: scale(0.38); transform-origin: top left; }
+            .btn { font-size: 0.65rem; padding: 4px 10px; height: 30px; flex: 1; min-width: 50px; }
+            .control-group input, .control-group select { font-size: 0.75rem; padding: 4px 8px; height: 30px; }
+            .app-header .logo-icon { font-size: 1.4rem; }
+            .patient-list-item { font-size: 0.7rem; padding: 4px 8px; }
+            .sidebar { flex: none; width: 100%; min-width: unset; padding-right: 0; }
+        }
+
+        @media (max-width: 420px) {
+            .trf-container { transform: scale(0.28); transform-origin: top left; }
+        }
+
+        .scroll-hint {
+            font-size: 0.6rem;
+            color: var(--text-light);
+            text-align: center;
+            padding: 4px 0 0;
+            display: none;
+        }
+        @media (max-width: 1024px) {
+            .scroll-hint { display: block; }
+        }
+
+        /* ---- Calibration Panel ---- */
+        #calibrationPanel {
+            margin-top: 16px;
+            padding: 16px;
+            background: #fef3c7;
+            border-radius: var(--radius-sm);
+            border: 1px solid #f59e0b;
+        }
+        #calibrationPanel h4 {
+            margin-bottom: 8px;
+            color: #92400e;
+        }
+        #calibrationPanel p {
+            font-size: 0.85rem;
+            color: #78350f;
+            margin-bottom: 8px;
+        }
+        .calib-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            font-size: 0.8rem;
+        }
+        .calib-item {
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            border-radius: 6px;
+            background: white;
+        }
+        .calib-item strong {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-medium);
+        }
+        .calib-item .calib-row {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .calib-item .calib-row label {
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .calib-item .calib-row input {
+            width: 50px;
+            padding: 2px 4px;
+            border: 1px solid #dce5ea;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        .calib-item .calib-row input[data-prop="fontSize"] {
+            width: 45px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+
+        <!-- ===== HEADER ===== -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-icon">🧪</span>
+                <h1>TRF Generator</h1>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span class="badge">Neuberg · Dr. Ajay Shah Laboratory</span>
+                <span class="selected-count" id="selectedCount">0 selected</span>
+            </div>
+        </header>
+
+        <!-- ===== TWO-COLUMN LAYOUT ===== -->
+        <div class="app-layout">
+
+            <!-- ===== SIDEBAR ===== -->
+            <div class="sidebar no-print">
+
+                <!-- Control Panel -->
+                <div class="control-panel">
+                    <div class="control-group">
+                        <label for="datePicker">📅 Collection Date</label>
+                        <input type="date" id="datePicker" />
+                    </div>
+
+                    <div class="control-group">
+                        <label for="searchInput">🔍 Search</label>
+                        <div class="search-wrapper">
+                            <input type="text" id="searchInput" placeholder="Type patient name..." disabled />
+                            <span class="search-icon">⌕</span>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="generateBtn" disabled>📄 Generate</button>
+                        <button class="btn btn-success" id="downloadBtn" disabled>⬇ Download All</button>
+                        <button class="btn btn-secondary" id="printBtn" disabled>🖨 Print / PDF</button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-danger" id="clearSelectionBtn" disabled>✕ Clear Selection</button>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="status-bar" id="statusBar">
+                    <span class="dot" id="statusDot"></span>
+                    <span id="statusText">Loading patient data…</span>
+                </div>
+
+                <!-- Selected Patients -->
+                <div class="selected-patients-section" id="selectedSection">
+                    <div class="section-header">
+                        <h4>✅ Selected Patients</h4>
+                        <span class="count-badge" id="selectedCountBadge">0</span>
+                    </div>
+                    <div class="selected-patients-list" id="selectedPatientsList">
+                        <div style="color:var(--text-light);font-size:0.72rem;padding:4px 0;">No patients selected</div>
+                    </div>
+                </div>
+
+                <!-- Patient List -->
+                <div class="patient-list-section">
+                    <div class="section-header">
+                        <h3>👤 Available Patients</h3>
+                        <span class="count-badge" id="patientCount">0 patients</span>
+                    </div>
+                    <div class="patient-list" id="patientList">
+                        <div class="patient-list-empty">Select a date to see patients</div>
+                    </div>
+                </div>
+
+                <!-- Calibration Toggle -->
+                <button class="btn btn-secondary" id="calibrationToggleBtn" style="width:100%;margin-top:6px;font-size:0.7rem;">🔧 Calibration (Ctrl+Shift+C)</button>
+
+            </div>
+
+            <!-- ===== PREVIEW AREA ===== -->
+            <div class="preview-area">
+
+                <div class="trf-wrapper" id="trfWrapper">
+                    <div id="globalEmptyOverlay">
+                        <div class="big-icon">📋</div>
+                        <div class="title">Select patients to generate TRFs</div>
+                        <div class="sub">Choose a date, then click patients from the list</div>
+                    </div>
+                </div>
+
+                <div class="scroll-hint no-print">← Scroll horizontally to view all TRFs →</div>
+
+                <!-- ===== CALIBRATION PANEL ===== -->
+                <div id="calibrationPanel" style="display:none;">
+                    <h4>🔧 Calibration Mode</h4>
+                    <p>Adjust field positions (percentage of TRF width/height):</p>
+                    <div id="calibrationControls" class="calib-grid"></div>
+                    <button class="btn btn-primary" id="calibrationSaveBtn" style="margin-top:10px;">Save Positions</button>
+                    <button class="btn btn-secondary" id="calibrationHideBtn" style="margin-top:10px;margin-left:8px;">Hide Calibration</button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            //  FIREBASE CONFIGURATION
+            // ============================================================
+            const firebaseConfig = {
+                apiKey: "AIzaSyBYvXfJIVRQSFgXp50sGegSN5U8xq88C3g",
+                authDomain: "goodness-data.firebaseapp.com",
+                databaseURL: "https://goodness-data-default-rtdb.firebaseio.com",
+                projectId: "goodness-data",
+                storageBucket: "goodness-data.firebasestorage.app",
+                messagingSenderId: "1034454680105",
+                appId: "1:1034454680105:web:74727c22489373383b9238",
+                measurementId: "G-TD30ZYVDCG"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+
+            // ============================================================
+            //  TRF CONFIGURATION — LARGER FONTS
+            // ============================================================
+           const TRF_POSITIONS = {
+                patientName: { left: 25, top: 18, fontSize: 6 },
+                referenceDoctor: { left: 26, top: 23.5, fontSize: 6 },
+                age: { left: 13, top: 30, fontSize: 6 },
+                sex: { left: 42, top: 30, fontSize: 6 },
+                collectionDate: { left: 76.5, top: 30, fontSize: 6 },
+                testDetails: { left: 6, top: 45.5, fontSize: 5.5}
+            };
+
+            // ============================================================
+            //  STATE
+            // ============================================================
+
+            let allPatients = [];
+            let patientFullDataCache = {};
+            let filteredPatients = [];
+            let selectedPatientIds = [];
+            let selectedDate = '';
+            let isLoading = true;
+            let trfsGenerated = false;
+
+            // DOM refs
+            const datePicker = document.getElementById('datePicker');
+            const searchInput = document.getElementById('searchInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const printBtn = document.getElementById('printBtn');
+            const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+            const statusText = document.getElementById('statusText');
+            const statusDot = document.getElementById('statusDot');
+            const patientList = document.getElementById('patientList');
+            const patientCount = document.getElementById('patientCount');
+            const selectedPatientsList = document.getElementById('selectedPatientsList');
+            const selectedCountBadge = document.getElementById('selectedCountBadge');
+            const selectedCount = document.getElementById('selectedCount');
+            const trfWrapper = document.getElementById('trfWrapper');
+            const globalEmptyOverlay = document.getElementById('globalEmptyOverlay');
+
+            const trfImageUrl = 'https://lh3.googleusercontent.com/d/12lLOdZuBmafcndul0DuWv4tsxPrNRvs8';
+
+            // ============================================================
+            //  HELPERS
+            // ============================================================
+
+            function isValidTestName(name) {
+                if (!name) return false;
+                const lower = name.toLowerCase().trim();
+                if (lower === 'new test' || lower === 'extra collection' || lower === 'add tests later' ) return false;
+                return true;
+            }
+
+            function filterValidTests(tests) {
+                if (!tests || !Array.isArray(tests)) return [];
+                return tests.filter(t => isValidTestName(t));
+            }
+
+            function getTestNames(entry) {
+                const tests = [];
+                if (entry.labSelections) {
+                    for (let labId = 1; labId <= 4; labId++) {
+                        const labData = entry.labSelections[labId];
+                        if (!labData) continue;
+                        if (labData.tests) {
+                            labData.tests.forEach(t => {
+                                if (t.generalName && !tests.includes(t.generalName)) {
+                                    if (isValidTestName(t.generalName)) tests.push(t.generalName);
+                                }
+                            });
+                        }
+                        if (labData.packages) {
+                            labData.packages.forEach(pkg => {
+                                if (pkg.packageName && !tests.includes(pkg.packageName)) {
+                                    if (isValidTestName(pkg.packageName)) tests.push(pkg.packageName);
+                                }
+                            });
+                        }
+                    }
+                }
+                if (tests.length === 0) tests.push('No tests selected');
+                return tests;
+            }
+
+            function setStatus(msg, dotColor = 'orange') {
+                statusText.textContent = msg;
+                statusDot.className = 'dot ' + dotColor;
+            }
+
+            function formatDateForDisplay(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+                return dateStr;
+            }
+
+            function getTodayStr() {
+                const d = new Date();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${d.getFullYear()}-${month}-${day}`;
+            }
+
+            function sanitizeFileName(name) {
+                return (name || 'patient').replace(/[^a-zA-Z0-9]/g, '_');
+            }
+
+            function getLabsForEntry(entry) {
+                if (!entry) return [];
+                const labs = [];
+                if (entry.labSelections) {
+                    for (let labId = 1; labId <= 4; labId++) {
+                        const labData = entry.labSelections[labId];
+                        if (labData) {
+                            const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+                            const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+                            if (hasTests || hasPackages) labs.push(labId);
+                        }
+                    }
+                }
+                if (labs.length === 0 && entry.labs && Array.isArray(entry.labs)) {
+                    entry.labs.forEach(l => { if (l >= 1 && l <= 4 && !labs.includes(l)) labs.push(l); });
+                }
+                return labs;
+            }
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // ============================================================
+            //  LOAD PATIENTS FROM FIREBASE
+            // ============================================================
+
+            async function loadPatientsFromFirebase() {
+                try {
+                    setStatus('Loading patient data from Firebase…', 'orange');
+                    const snapshot = await db.ref('patientIndex').once('value');
+                    const data = snapshot.val();
+
+                    if (!data) {
+                        setStatus('No patient data found in Firebase.', 'red');
+                        return [];
+                    }
+
+                    const entries = [];
+                    for (const [key, val] of Object.entries(data)) {
+                        entries.push({
+                            id: key,
+                            patientName: val.patientName || 'Unknown',
+                            referenceDoctor: val.doctorName || '',
+                            age: val.age || '',
+                            gender: val.gender || '',
+                            collectionDate: val.visitDate || '',
+                            tests: [],
+                            labs: getLabsForEntry(val),
+                            _indexData: val
+                        });
+                    }
+
+                    entries.sort((a, b) => (a.patientName || '').localeCompare(b.patientName || ''));
+                    return entries;
+                } catch (err) {
+                    console.error('Firebase load error:', err);
+                    setStatus('❌ Failed to load data: ' + err.message, 'red');
+                    return [];
+                }
+            }
+
+            // ============================================================
+            //  FETCH FULL PATIENT RECORD ON DEMAND
+            // ============================================================
+
+            async function fetchFullPatient(patientId) {
+                if (patientFullDataCache[patientId]) {
+                    return patientFullDataCache[patientId];
+                }
+                try {
+                    const snap = await db.ref(`patients/${patientId}`).once('value');
+                    const data = snap.val() || {};
+                    patientFullDataCache[patientId] = data;
+                    return data;
+                } catch (err) {
+                    console.error('Error fetching full patient:', err);
+                    return {};
+                }
+            }
+
+            // ============================================================
+            //  POSITIONING
+            // ============================================================
+
+            function positionFields(fieldEls) {
+                for (const [key, field] of Object.entries(fieldEls || {})) {
+                    if (!field) continue;
+                    const pos = TRF_POSITIONS[key];
+                    if (!pos) continue;
+                    field.style.left = pos.left + '%';
+                    field.style.top = pos.top + '%';
+                    const fontSizeVh = (pos.fontSize / 297) * 100;
+                    field.style.fontSize = fontSizeVh + 'vh';
+                    field.style.fontFamily = 'Arial, Helvetica, sans-serif';
+                    field.style.fontWeight = '700';
+                    field.style.color = '#0a1a1f';
+                    field.style.letterSpacing = '0.3px';
+                    field.style.textShadow = '0 0 4px rgba(255,255,255,0.8)';
+                    if (key === 'testDetails') {
+                        field.style.whiteSpace = 'pre-wrap';
+                        field.style.lineHeight = '1.5';
+                        field.style.fontWeight = '600';
+                    } else {
+                        field.style.whiteSpace = 'nowrap';
+                        field.style.lineHeight = '1.5';
+                    }
+                }
+            }
+
+            // ============================================================
+            //  UI UPDATE FUNCTIONS
+            // ============================================================
+
+            function getUniqueDates(entries) {
+                const dates = new Set();
+                entries.forEach(e => { if (e.collectionDate) dates.add(e.collectionDate); });
+                return Array.from(dates).sort();
+            }
+
+            function getPatientsForDate(date, entries) {
+                return entries.filter(e => e.collectionDate === date);
+            }
+
+            function getSelectedPatients() {
+                return allPatients.filter(p => selectedPatientIds.includes(p.id));
+            }
+
+            function updateSelectedUI() {
+                const selected = getSelectedPatients();
+                const count = selected.length;
+
+                selectedCount.textContent = count + ' selected';
+                selectedCountBadge.textContent = count;
+
+                if (count === 0) {
+                    selectedPatientsList.innerHTML =
+                        `<div style="color:var(--text-light);font-size:0.72rem;padding:4px 0;">No patients selected</div>`;
+                    generateBtn.disabled = true;
+                    downloadBtn.disabled = true;
+                    printBtn.disabled = true;
+                    clearSelectionBtn.disabled = true;
+                    trfsGenerated = false;
+                    if (globalEmptyOverlay) {
+                        globalEmptyOverlay.style.display = 'block';
+                    }
+                    trfWrapper.innerHTML = `
+                        <div id="globalEmptyOverlay">
+                            <div class="big-icon">📋</div>
+                            <div class="title">Select patients to generate TRFs</div>
+                            <div class="sub">Choose a date, then click patients from the list</div>
+                        </div>
+                    `;
+                } else {
+                    selectedPatientsList.innerHTML = '';
+                    selected.forEach(p => {
+                        const div = document.createElement('div');
+                        div.className = 'selected-patient-chip';
+                        div.innerHTML = `
+                            <span>${escapeHtml(p.patientName)}</span>
+                            <button class="remove-btn" data-id="${p.id}" title="Remove">✕</button>
+                        `;
+                        selectedPatientsList.appendChild(div);
+                    });
+                    generateBtn.disabled = false;
+                    downloadBtn.disabled = true;
+                    printBtn.disabled = true;
+                    clearSelectionBtn.disabled = false;
+                    if (globalEmptyOverlay) {
+                        globalEmptyOverlay.style.display = 'none';
+                    }
+
+                    selectedPatientsList.querySelectorAll('.remove-btn').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const id = this.dataset.id;
+                            removePatientFromSelection(id);
+                        });
+                    });
+                }
+
+                document.querySelectorAll('.patient-list-item').forEach(el => {
+                    const id = el.dataset.id;
+                    const check = el.querySelector('.check-mark');
+                    if (selectedPatientIds.includes(id)) {
+                        if (!check) {
+                            const span = document.createElement('span');
+                            span.className = 'check-mark';
+                            span.textContent = ' ✓';
+                            el.querySelector('.patient-name').appendChild(span);
+                        }
+                        el.classList.add('selected');
+                    } else {
+                        if (check) check.remove();
+                        el.classList.remove('selected');
+                    }
+                });
+            }
+
+            function renderPatientList(patients) {
+                if (!patients || patients.length === 0) {
+                    patientList.innerHTML = `<div class="patient-list-empty">No patients found for this date</div>`;
+                    patientCount.textContent = '0 patients';
+                    return;
+                }
+
+                let html = '';
+                patients.forEach(p => {
+                    const isSelected = selectedPatientIds.includes(p.id);
+                    const labBadge = p.labs && p.labs.length > 0 ?
+                        `<span class="lab-badge">${p.labs.length} lab${p.labs.length > 1 ? 's' : ''}</span>` :
+                        '';
+                    html += `
+                        <div class="patient-list-item ${isSelected ? 'selected' : ''}" data-id="${p.id}">
+                            <span class="patient-name">${escapeHtml(p.patientName)}${isSelected ? ' <span class="check-mark">✓</span>' : ''}</span>
+                            <div class="patient-meta">
+                                ${p.age ? `Age: ${p.age}` : ''}
+                                ${p.gender ? `· ${p.gender === 'M' ? 'Male' : p.gender === 'F' ? 'Female' : p.gender}` : ''}
+                                ${labBadge}
+                            </div>
+                        </div>
+                    `;
+                });
+                patientList.innerHTML = html;
+                patientCount.textContent = patients.length + ' patient' + (patients.length > 1 ? 's' : '');
+
+                patientList.querySelectorAll('.patient-list-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        togglePatientSelection(id);
+                    });
+                });
+            }
+
+            // ============================================================
+            //  SELECTION MANAGEMENT
+            // ============================================================
+
+            async function togglePatientSelection(patientId) {
+                const idx = selectedPatientIds.indexOf(patientId);
+                if (idx !== -1) {
+                    selectedPatientIds.splice(idx, 1);
+                } else {
+                    const patient = allPatients.find(p => p.id === patientId);
+                    if (patient && (!patient.tests || patient.tests.length === 0)) {
+                        const fullData = await fetchFullPatient(patientId);
+                        if (fullData) {
+                            patient.tests = filterValidTests(getTestNames(fullData));
+                            patient.referenceDoctor = patient.referenceDoctor || fullData.doctorName || '';
+                            patient.age = patient.age || fullData.age || '';
+                            patient.gender = patient.gender || fullData.gender || '';
+                        }
+                    }
+                    selectedPatientIds.push(patientId);
+                }
+                trfsGenerated = false;
+                downloadBtn.disabled = true;
+                printBtn.disabled = true;
+                trfWrapper.innerHTML = `
+                    <div id="globalEmptyOverlay">
+                        <div class="big-icon">📋</div>
+                        <div class="title">Select patients and click Generate</div>
+                        <div class="sub">${selectedPatientIds.length} patient(s) selected</div>
+                    </div>
+                `;
+                updateSelectedUI();
+                setStatus(`Selected ${selectedPatientIds.length} patients. Click Generate to create TRFs.`, 'orange');
+            }
+
+            function removePatientFromSelection(patientId) {
+                const idx = selectedPatientIds.indexOf(patientId);
+                if (idx !== -1) {
+                    selectedPatientIds.splice(idx, 1);
+                    trfsGenerated = false;
+                    downloadBtn.disabled = true;
+                    printBtn.disabled = true;
+                    trfWrapper.innerHTML = `
+                        <div id="globalEmptyOverlay">
+                            <div class="big-icon">📋</div>
+                            <div class="title">Select patients and click Generate</div>
+                            <div class="sub">${selectedPatientIds.length} patient(s) selected</div>
+                        </div>
+                    `;
+                    updateSelectedUI();
+                }
+            }
+
+            function clearSelection() {
+                selectedPatientIds = [];
+                trfsGenerated = false;
+                downloadBtn.disabled = true;
+                printBtn.disabled = true;
+                trfWrapper.innerHTML = `
+                    <div id="globalEmptyOverlay">
+                        <div class="big-icon">📋</div>
+                        <div class="title">Select patients to generate TRFs</div>
+                        <div class="sub">Choose a date, then click patients from the list</div>
+                    </div>
+                `;
+                updateSelectedUI();
+                setStatus('Selection cleared', 'orange');
+            }
+
+            // ============================================================
+            //  GENERATE TRFs (SINGLE COLUMN)
+            // ============================================================
+
+            function generateTRFs() {
+                const selected = getSelectedPatients();
+                if (selected.length === 0) {
+                    setStatus('Please select at least one patient', 'red');
+                    return;
+                }
+
+                const promises = selected.map(async p => {
+                    if (!p.tests || p.tests.length === 0) {
+                        const fullData = await fetchFullPatient(p.id);
+                        if (fullData) {
+                            p.tests = filterValidTests(getTestNames(fullData));
+                            p.referenceDoctor = p.referenceDoctor || fullData.doctorName || '';
+                            p.age = p.age || fullData.age || '';
+                            p.gender = p.gender || fullData.gender || '';
+                        }
+                    }
+                    return p;
+                });
+
+                Promise.all(promises).then(() => {
+                    renderTRFs();
+                    trfsGenerated = true;
+                    downloadBtn.disabled = false;
+                    printBtn.disabled = false;
+                    setStatus(`✅ Generated ${selected.length} TRF(s)`, 'green');
+                });
+            }
+
+            // ============================================================
+            //  RENDER TRFs
+            // ============================================================
+
+            function renderTRFs() {
+                const selected = getSelectedPatients();
+
+                if (selected.length === 0) {
+                    trfWrapper.innerHTML = `
+                        <div id="globalEmptyOverlay">
+                            <div class="big-icon">📋</div>
+                            <div class="title">Select patients to generate TRFs</div>
+                            <div class="sub">Choose a date, then click patients from the list</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                selected.forEach((patient) => {
+                    const containerId = 'trf-' + patient.id;
+                    html += `
+                        <div class="trf-container" id="${containerId}">
+                            <img class="trf-background" src="${trfImageUrl}" alt="TRF Background" crossorigin="anonymous" />
+                            <div class="trf-field patient-name" id="pn-${patient.id}"></div>
+                            <div class="trf-field reference-doctor" id="rd-${patient.id}"></div>
+                            <div class="trf-field age" id="age-${patient.id}"></div>
+                            <div class="trf-field sex" id="sex-${patient.id}"></div>
+                            <div class="trf-field collection-date" id="cd-${patient.id}"></div>
+                            <div class="trf-field test-details" id="td-${patient.id}"></div>
+                        </div>
+                    `;
+                });
+
+                trfWrapper.innerHTML = html;
+
+                selected.forEach(patient => {
+                    fillTRF(patient);
+                });
+            }
+
+            function fillTRF(patient) {
+                const id = patient.id;
+                const pn = document.getElementById('pn-' + id);
+                const rd = document.getElementById('rd-' + id);
+                const age = document.getElementById('age-' + id);
+                const sex = document.getElementById('sex-' + id);
+                const cd = document.getElementById('cd-' + id);
+                const td = document.getElementById('td-' + id);
+
+                const fieldEls = {
+                    patientName: pn,
+                    referenceDoctor: rd,
+                    age: age,
+                    sex: sex,
+                    collectionDate: cd,
+                    testDetails: td
+                };
+
+                const testLines = patient.tests || ['No tests selected'];
+                const validTests = testLines.filter(t => isValidTestName(t));
+
+                // SINGLE COLUMN - always use single column
+                pn.textContent = patient.patientName || '';
+                rd.textContent = patient.referenceDoctor || '';
+                age.textContent = patient.age ? patient.age + ' yrs' : '';
+                sex.textContent = patient.gender === 'M' ? 'Male' :
+                    patient.gender === 'F' ? 'Female' :
+                    patient.gender || '';
+                cd.textContent = formatDateForDisplay(patient.collectionDate);
+
+                // Always single column
+                td.textContent = validTests.join('\n');
+
+                if (validTests.length === 0) {
+                    td.textContent = 'No tests selected';
+                }
+
+                // Ensure no two-column class
+                td.classList.remove('two-column');
+
+                positionFields(fieldEls);
+            }
+
+            // ============================================================
+            //  CANVAS EXPORT (SINGLE COLUMN)
+            // ============================================================
+
+            async function downloadAllTRFs() {
+                const selected = getSelectedPatients();
+                
+                if (selected.length === 0) {
+                    setStatus('No patients selected', 'red');
+                    return;
+                }
+
+                if (!trfsGenerated) {
+                    setStatus('Please generate TRFs first (click Generate button)', 'red');
+                    return;
+                }
+
+                setStatus(`Generating ${selected.length} TRF images…`, 'orange');
+
+                try {
+                    const imgLoad = new Promise((resolve, reject) => {
+                        const i = new Image();
+                        i.crossOrigin = 'anonymous';
+                        i.onload = () => resolve(i);
+                        i.onerror = () => reject(new Error('Failed to load TRF image'));
+                        i.src = trfImageUrl;
+                    });
+
+                    const loadedImg = await imgLoad;
+                    const CANVAS_WIDTH = 2480;
+                    const CANVAS_HEIGHT = 3508;
+
+                    let downloadedCount = 0;
+
+                    for (const patient of selected) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = CANVAS_WIDTH;
+                        canvas.height = CANVAS_HEIGHT;
+                        const ctx = canvas.getContext('2d');
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                        ctx.drawImage(loadedImg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                        const testLines = patient.tests || ['No tests selected'];
+                        const validTests = testLines.filter(t => isValidTestName(t));
+
+                        function drawField(key, text) {
+                            if (!text || (typeof text === 'string' && !text.trim())) return;
+                            const pos = TRF_POSITIONS[key];
+                            if (!pos) return;
+                            const x = (pos.left / 100) * CANVAS_WIDTH;
+                            const y = (pos.top / 100) * CANVAS_HEIGHT;
+                            const fontSize = (pos.fontSize / 297) * CANVAS_HEIGHT * 0.9;
+
+                            ctx.save();
+                            ctx.font = `700 ${fontSize}px Arial, Helvetica, sans-serif`;
+                            ctx.fillStyle = '#0a1a1f';
+                            ctx.textBaseline = 'top';
+                            ctx.textAlign = 'left';
+                            ctx.shadowColor = 'rgba(255,255,255,0.5)';
+                            ctx.shadowBlur = 3;
+
+                            if (key === 'testDetails') {
+                                
+                                const lines = typeof text === 'string' ? text.split('\n') : text;
+                                lines.forEach((line, i) => {
+                                    ctx.fillText(line, x, y + i * lineHeight);
+                                });
+                            } else {
+                                ctx.fillText(text, x, y);
+                            }
+                            ctx.restore();
+                        }
+
+                        // Draw test details (single column)
+                        const text = validTests.join('\n') || 'No tests selected';
+                        drawField('testDetails', text);
+
+                        drawField('patientName', patient.patientName || '');
+                        drawField('referenceDoctor', patient.referenceDoctor || '');
+                        drawField('age', patient.age ? patient.age + ' yrs' : '');
+                        drawField('sex', patient.gender === 'M' ? 'Male' :
+                            patient.gender === 'F' ? 'Female' :
+                            patient.gender || '');
+                        drawField('collectionDate', formatDateForDisplay(patient.collectionDate));
+
+                        const safeName = sanitizeFileName(patient.patientName);
+                        const dateStr = patient.collectionDate ?
+                            patient.collectionDate.replace(/-/g, '-') :
+                            'nodate';
+                        const filename = `TRF_${safeName}_${dateStr}.png`;
+
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = canvas.toDataURL('image/png', 1.0);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        downloadedCount++;
+                        setStatus(`Downloaded ${downloadedCount}/${selected.length} TRFs…`, 'orange');
+                    }
+
+                    setStatus(`✅ Downloaded ${downloadedCount} TRF images successfully`, 'green');
+                } catch (err) {
+                    console.error('Download error:', err);
+                    setStatus('❌ Download failed: ' + err.message, 'red');
+                }
+            }
+
+            // ============================================================
+            //  PRINT
+            // ============================================================
+
+            function printTRFs() {
+                const selected = getSelectedPatients();
+                if (selected.length === 0) {
+                    setStatus('No patients selected', 'red');
+                    return;
+                }
+
+                if (!trfsGenerated) {
+                    setStatus('Please generate TRFs first (click Generate button)', 'red');
+                    return;
+                }
+
+                setTimeout(() => {
+                    window.print();
+                }, 100);
+            }
+
+            // ============================================================
+            //  EVENT HANDLERS
+            // ============================================================
+
+            datePicker.addEventListener('change', function() {
+                selectedDate = this.value;
+                selectedPatientIds = [];
+                trfsGenerated = false;
+                downloadBtn.disabled = true;
+                printBtn.disabled = true;
+                trfWrapper.innerHTML = `
+                    <div id="globalEmptyOverlay">
+                        <div class="big-icon">📋</div>
+                        <div class="title">Select patients to generate TRFs</div>
+                        <div class="sub">Choose a date, then click patients from the list</div>
+                    </div>
+                `;
+                updateSelectedUI();
+
+                if (!selectedDate) {
+                    patientList.innerHTML = `<div class="patient-list-empty">Select a date to see patients</div>`;
+                    patientCount.textContent = '0 patients';
+                    searchInput.disabled = true;
+                    searchInput.value = '';
+                    setStatus('Select a date to begin', 'orange');
+                    return;
+                }
+
+                const patients = getPatientsForDate(selectedDate, allPatients);
+                filteredPatients = patients;
+                renderPatientList(patients);
+                searchInput.disabled = false;
+                searchInput.value = '';
+                setStatus(`${patients.length} patients found for ${formatDateForDisplay(selectedDate)}`, 'green');
+            });
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                if (!selectedDate) return;
+                let patients = getPatientsForDate(selectedDate, allPatients);
+                if (query) {
+                    patients = patients.filter(p =>
+                        (p.patientName || '').toLowerCase().includes(query)
+                    );
+                }
+                filteredPatients = patients;
+                renderPatientList(patients);
+            });
+
+            generateBtn.addEventListener('click', generateTRFs);
+
+            downloadBtn.addEventListener('click', downloadAllTRFs);
+            printBtn.addEventListener('click', printTRFs);
+            clearSelectionBtn.addEventListener('click', clearSelection);
+
+            // ============================================================
+            //  CALIBRATION MODE
+            // ============================================================
+
+            let calibrationVisible = false;
+            const calibrationPanel = document.getElementById('calibrationPanel');
+
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
+                    e.preventDefault();
+                    toggleCalibration();
+                }
+            });
+
+            function toggleCalibration() {
+                calibrationVisible = !calibrationVisible;
+                calibrationPanel.style.display = calibrationVisible ? 'block' : 'none';
+                if (calibrationVisible) {
+                    buildCalibrationControls();
+                }
+            }
+
+            document.getElementById('calibrationToggleBtn').addEventListener('click', toggleCalibration);
+            document.getElementById('calibrationHideBtn').addEventListener('click', toggleCalibration);
+
+            function buildCalibrationControls() {
+                const container = document.getElementById('calibrationControls');
+                let html = '';
+                for (const [key, pos] of Object.entries(TRF_POSITIONS)) {
+                    html += `
+                        <div class="calib-item">
+                            <strong>${key}</strong>
+                            <div class="calib-row">
+                                <label>L% <input type="number" step="0.1" class="calib-input" data-key="${key}" data-prop="left" value="${pos.left}" /></label>
+                                <label>T% <input type="number" step="0.1" class="calib-input" data-key="${key}" data-prop="top" value="${pos.top}" /></label>
+                                <label>FS <input type="number" step="0.1" class="calib-input" data-key="${key}" data-prop="fontSize" value="${pos.fontSize}" /></label>
+                            </div>
+                        </div>
+                    `;
+                }
+                container.innerHTML = html;
+
+                container.querySelectorAll('.calib-input').forEach(input => {
+                    input.addEventListener('input', function() {
+                        const key = this.dataset.key;
+                        const prop = this.dataset.prop;
+                        const val = parseFloat(this.value);
+                        if (!isNaN(val) && TRF_POSITIONS[key]) {
+                            TRF_POSITIONS[key][prop] = val;
+                            if (trfsGenerated) {
+                                const selected = getSelectedPatients();
+                                if (selected.length > 0) {
+                                    selected.forEach(p => {
+                                        const fieldEls = {
+                                            patientName: document.getElementById('pn-' + p.id),
+                                            referenceDoctor: document.getElementById('rd-' + p.id),
+                                            age: document.getElementById('age-' + p.id),
+                                            sex: document.getElementById('sex-' + p.id),
+                                            collectionDate: document.getElementById('cd-' + p.id),
+                                            testDetails: document.getElementById('td-' + p.id)
+                                        };
+                                        positionFields(fieldEls);
+                                    });
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            document.getElementById('calibrationSaveBtn').addEventListener('click', function() {
+                try {
+                    localStorage.setItem('TRF_POSITIONS', JSON.stringify(TRF_POSITIONS));
+                    setStatus('✅ Positions saved to browser storage', 'green');
+                } catch (e) {
+                    setStatus('⚠️ Could not save positions: ' + e.message, 'red');
+                }
+            });
+
+            try {
+                const saved = localStorage.getItem('TRF_POSITIONS');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    for (const [key, val] of Object.entries(parsed)) {
+                        if (TRF_POSITIONS[key]) {
+                            TRF_POSITIONS[key] = val;
+                        }
+                    }
+                }
+            } catch (e) { /* ignore */ }
+
+            // ============================================================
+            //  INIT
+            // ============================================================
+
+            async function init() {
+                try {
+                    datePicker.value = getTodayStr();
+
+                    allPatients = await loadPatientsFromFirebase();
+
+                    if (!allPatients || allPatients.length === 0) {
+                        setStatus('⚠️ No patient data found in Firebase. Please add some patients first.', 'red');
+                        return;
+                    }
+
+                    setStatus(`✅ Loaded ${allPatients.length} patient records from Firebase`, 'green');
+
+                    datePicker.dispatchEvent(new Event('change'));
+
+                } catch (err) {
+                    console.error('Init error:', err);
+                    setStatus('❌ Failed to initialize: ' + err.message, 'red');
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+            window.downloadAllTRFs = downloadAllTRFs;
+            window.toggleCalibration = toggleCalibration;
+
+        })();
+    </script>
+
+</body>
+</html>
