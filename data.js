@@ -690,7 +690,7 @@ const LAB_DATA = {
         "generalName": "eGFR",
         "labName": "Estimated Glomerular Filtration Rate (eGFR) with Creatinine",
         "mrp": 300,
-        "b2b": 150
+        "b2b": 50
       },
       {
         "id": "allergy-drug-test",
@@ -1083,6 +1083,13 @@ const LAB_DATA = {
         "labName": "Allergy-Phadiatop, Inf",
         "mrp": 1350,
         "b2b": 1080
+      },
+      {
+        "id": "add-tests-later",
+        "generalName": "Add Tests Later",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
       }
     ],
     "packages": [
@@ -1494,17 +1501,83 @@ const LAB_DATA = {
   },
   "2": {
     "name": "Dr. Jariwala Laboratory",
-    "tests": [],
+    "tests": [
+      {
+        "id": "add-tests-later",
+        "generalName": "Add Tests Later",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "new-tests",
+        "generalName": "New Tests",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "extra-collection",
+        "generalName": "Extra Collection",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      }
+    ],
     "packages": []
   },
   "3": {
     "name": "General Diagnostics",
-    "tests": [],
+    "tests": [
+      {
+        "id": "add-tests-later",
+        "generalName": "Add Tests Later",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "new-tests",
+        "generalName": "New Tests",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "extra-collection",
+        "generalName": "Extra Collection",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      }
+    ],
     "packages": []
   },
   "4": {
     "name": "Trucheck Diagnostics",
-    "tests": [],
+    "tests": [
+      {
+        "id": "add-tests-later",
+        "generalName": "Add Tests Later",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "new-tests",
+        "generalName": "New Tests",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "extra-collection",
+        "generalName": "Extra Collection",
+        "labName": "",
+        "mrp": "",
+        "b2b": ""
+      }
+    ],
     "packages": []
   }
 }
