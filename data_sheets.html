@@ -1,16 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Data Sheet | Complete Data Manager</title>
-    <!-- Google Fonts: Rubik + DM Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-    <!-- Font Awesome 6 (Free Icons) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- SheetJS Library for Excel Export -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Data Table View</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
     <style>
+        :root {
+            --primary: #09637E;
+            --primary-dark: #064a5f;
+            --primary-light: #0a7a9b;
+            --secondary: #088395;
+            --secondary-light: #0a9db3;
+            --accent: #7AB2B2;
+            --accent-light: #9cc7c7;
+            --bg-light: #EBF4F6;
+            --bg-white: #ffffff;
+            --text-dark: #1a2e35;
+            --text-medium: #4a6a73;
+            --text-light: #7a9aa3;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.15);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.25rem;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,1708 +43,1498 @@
         }
 
         body {
-            background: #0F3D5E;
-            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-            color: #1A2C3C;
-            line-height: 1.45;
-        }
-
-        html {
-            scroll-behavior: smooth;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-light);
+            padding: 20px;
+            color: var(--text-dark);
         }
 
         .app-container {
-            max-width: 1600px;
+            max-width: 100%;
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
             margin: 0 auto;
-            padding: 24px 28px;
         }
 
-        .health-header {
+        /* Header */
+        .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 32px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--bg-light);
         }
 
-        .logo-area {
+        .app-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
         }
 
-        .logo-icon {
-            background: linear-gradient(135deg, #1ECAD3, #0FA9B2);
-            width: 48px;
-            height: 48px;
-            border-radius: 18px;
+        .app-header h1 span {
+            background: var(--primary);
+            color: white;
+            font-size: 14px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .header-actions {
             display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
             align-items: center;
-            justify-content: center;
-            box-shadow: 0 12px 20px -10px rgba(0,0,0,0.3);
         }
 
-        .logo-icon i {
-            font-size: 26px;
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
             color: white;
         }
-
-        .logo-text h1 {
-            font-family: 'Rubik', sans-serif;
-            font-weight: 700;
-            font-size: 1.9rem;
-            letter-spacing: -0.3px;
-            background: linear-gradient(to right, #FFF, #C0E0FF);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .logo-text p {
-            font-size: 0.8rem;
-            color: #9DC3E6;
-            font-weight: 500;
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-medium);
+        }
+        .btn-secondary:hover {
+            background: #d5e6ea;
+            transform: translateY(-1px);
         }
 
-        .badge-premium {
-            background: rgba(30,202,211,0.18);
-            backdrop-filter: blur(4px);
-            padding: 8px 18px;
-            border-radius: 60px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #D2F0F2;
-            border: 1px solid rgba(30,202,211,0.3);
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .dashboard-card {
-            background: #F5F7FA;
-            border-radius: 28px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
-            transition: all 0.2s ease;
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .filters-section {
-            padding: 24px 28px;
-            background: white;
-            border-bottom: 1px solid #E5EAF0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-end;
-            justify-content: space-between;
+        .btn-warning {
+            background: var(--warning);
+            color: white;
         }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 170px;
-        }
-
-        .filter-group label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #1F5E7E;
-            font-family: 'Rubik', sans-serif;
-        }
-
-        .filter-group input, .filter-group select {
-            padding: 12px 16px;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 16px;
-            font-family: 'DM Sans', monospace;
-            font-size: 0.9rem;
-            background: #FFFFFF;
-            transition: all 0.2s ease;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .filter-group input:focus, .filter-group select:focus {
-            border-color: #1ECAD3;
-            box-shadow: 0 0 0 3px rgba(30,202,211,0.2);
-        }
-
-        .search-wrapper {
-            flex: 2;
-            min-width: 240px;
-            position: relative;
-        }
-
-        .search-wrapper i {
-            position: absolute;
-            left: 16px;
-            top: 38px;
-            color: #89A9C9;
-            font-size: 1rem;
-        }
-
-        .search-input {
-            padding: 12px 16px 12px 44px !important;
-            width: 100%;
-            border-radius: 100px;
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-outline {
             background: transparent;
-            border: 1.5px solid #B9CFE4;
-            padding: 10px 22px;
-            border-radius: 40px;
-            font-weight: 500;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            color: #1F5E7E;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--primary);
+            border: 2px solid var(--primary);
         }
-
         .btn-outline:hover {
-            background: rgba(30,202,211,0.08);
-            border-color: #1ECAD3;
-            color: #0F3D5E;
-        }
-
-        .btn-primary {
-            background: linear-gradient(105deg, #1ECAD3, #15B8C0);
-            border: none;
-            padding: 10px 26px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-family: 'Rubik', sans-serif;
-            font-size: 0.85rem;
+            background: var(--primary);
             color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -8px rgba(30,202,211,0.4);
-            filter: brightness(1.02);
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px;
         }
 
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-success {
-            background: linear-gradient(105deg, #28A745, #218838);
-            border: none;
-            padding: 10px 26px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-family: 'Rubik', sans-serif;
-            font-size: 0.85rem;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -8px rgba(40,167,69,0.4);
-            filter: brightness(1.02);
-        }
-
-        .btn-success:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(105deg, #6C757D, #5A6268);
-            border: none;
-            padding: 10px 26px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-family: 'Rubik', sans-serif;
-            font-size: 0.85rem;
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -8px rgba(108,117,125,0.4);
-            filter: brightness(1.02);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .sort-group {
-            min-width: 170px;
-        }
-
-        .sort-select {
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
             padding: 12px 16px;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 16px;
-            font-family: 'DM Sans', monospace;
-            font-size: 0.9rem;
-            background: #FFFFFF;
-            transition: all 0.2s ease;
+            background: var(--bg-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+        }
+
+        .stats-bar span {
+            font-size: 13px;
+            color: var(--text-medium);
+        }
+
+        .stats-bar strong {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        /* Filters Row */
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: var(--bg-light);
+            border-radius: var(--radius-sm);
+        }
+
+        .filters-row .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filters-row label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-medium);
+            white-space: nowrap;
+        }
+
+        .filters-row input,
+        .filters-row select {
+            padding: 4px 8px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            background: white;
+            transition: var(--transition);
+            min-width: 120px;
+        }
+
+        .filters-row input:focus,
+        .filters-row select:focus {
             outline: none;
-            cursor: pointer;
-            width: 100%;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.1);
         }
 
-        .sort-select:focus {
-            border-color: #1ECAD3;
-            box-shadow: 0 0 0 3px rgba(30,202,211,0.2);
+        .filters-row input[type="date"] {
+            min-width: 140px;
         }
 
-        .stats-row {
-            padding: 18px 28px 0 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            flex-wrap: wrap;
-            font-size: 0.85rem;
-            color: #2A577B;
-            font-weight: 500;
-            background: white;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        /* Top Scrollbar for Table */
-        .table-scroll-wrapper {
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 200px;
             position: relative;
-            background: white;
         }
 
-        .top-scrollbar {
-            overflow-x: auto;
-            overflow-y: hidden;
-            height: 12px;
-            margin: 0 24px;
-            background: #F0F2F5;
-            border-radius: 6px;
-        }
-
-        .top-scrollbar::-webkit-scrollbar {
-            height: 12px;
-        }
-
-        .top-scrollbar::-webkit-scrollbar-track {
-            background: #E2E8F0;
-            border-radius: 6px;
-        }
-
-        .top-scrollbar::-webkit-scrollbar-thumb {
-            background: #1ECAD3;
-            border-radius: 6px;
-        }
-
-        .top-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #0FA9B2;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            padding: 0 24px 0 24px;
-            background: white;
-        }
-
-        .data-table {
+        .search-input-wrapper input {
             width: 100%;
-            border-collapse: collapse;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            border: 1px solid #DCE5EC;
+            padding: 6px 12px 6px 32px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            background: white;
+            transition: var(--transition);
         }
 
-        .data-table th,
-        .data-table td {
-            border: 1px solid #E2EBF3;
-            padding: 12px 16px;
-            vertical-align: middle;
-            white-space: nowrap;
+        .search-input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.1);
         }
 
-        .data-table td:first-child,
-        .data-table th:first-child {
-            white-space: nowrap;
-            min-width: 110px;
+        .search-input-wrapper .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 14px;
         }
 
-        .data-table th {
-            text-align: left;
-            background: #F9FBFD;
-            font-family: 'Rubik', sans-serif;
+        /* Highlight */
+        .highlight-match {
+            background: #ffeb3b;
+            padding: 0 1px;
+            border-radius: 2px;
             font-weight: 600;
-            color: #0F3D5E;
-            border-bottom: 2px solid #D0DDE8;
-            position: sticky;
-            top: 0;
         }
 
-        .data-table td {
-            color: #1F3E54;
-        }
-
-        .data-table tr:hover td {
-            background-color: #F0F9FD;
-            transition: 0.1s;
-        }
-
-        .amount-cell {
-            font-weight: 600;
-            color: #0F3D5E;
-        }
-
-        /* Column Filter Styles */
-        .filter-header {
+        /* Column Visibility Toggle */
+        .column-toggle-container {
             position: relative;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .filter-header:hover {
-            background-color: #E8F4F8;
-        }
-
-        .filter-icon {
-            margin-left: 8px;
-            font-size: 0.7rem;
-            color: #89A9C9;
-            transition: color 0.2s;
             display: inline-block;
         }
 
-        .filter-header:hover .filter-icon {
-            color: #1ECAD3;
-        }
-
-        .filter-dropdown {
+        .column-toggle-dropdown {
+            display: none;
             position: absolute;
-            background: white;
-            border: 1px solid #D0DDE8;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            padding: 12px;
-            min-width: 220px;
-            max-width: 280px;
-            z-index: 10000;
             top: 100%;
-            left: 0;
-            margin-top: 5px;
-        }
-
-        .filter-dropdown input[type="text"] {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-        }
-
-        .filter-dropdown .filter-options {
-            max-height: 250px;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            padding: 12px 16px;
+            min-width: 220px;
+            max-height: 350px;
             overflow-y: auto;
+            z-index: 100;
+            margin-top: 4px;
         }
 
-        .filter-option-all {
-            border-bottom: 1px solid #E5EAF0;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
+        .column-toggle-dropdown.show {
+            display: block;
         }
 
-        .filter-option {
+        .column-toggle-dropdown .toggle-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 8px;
+            padding: 4px 0;
+            font-size: 13px;
+            color: var(--text-medium);
             cursor: pointer;
-            border-radius: 6px;
+            transition: var(--transition);
         }
 
-        .filter-option:hover {
-            background-color: #F0F9FD;
+        .column-toggle-dropdown .toggle-item:hover {
+            color: var(--text-dark);
         }
 
-        .filter-option input[type="checkbox"] {
+        .column-toggle-dropdown .toggle-item input[type="checkbox"] {
             width: 16px;
             height: 16px;
-            margin: 0;
-            margin-right: 8px;
+            accent-color: var(--primary);
             cursor: pointer;
         }
 
-        .filter-option label {
-            cursor: pointer;
-            flex: 1;
-            font-size: 0.8rem;
-            text-transform: none;
-            letter-spacing: normal;
-            color: #1F3E54;
+        .column-toggle-dropdown .toggle-all {
+            border-bottom: 1px solid var(--bg-light);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
         }
 
-        .blank-option {
-            border-top: 1px solid #E5EAF0;
-            margin-top: 4px;
-            padding-top: 8px;
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
         }
 
-        .filter-dropdown .filter-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid #E5EAF0;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 1200px;
         }
 
-        .filter-apply, .filter-clear, .filter-close {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            border: none;
-            font-weight: 500;
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .filter-apply {
-            background: #1ECAD3;
-            color: white;
+        th {
+            background: var(--bg-light);
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dark);
+            border: 1px solid #d1d9dd;
+            white-space: nowrap;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            min-width: 80px;
         }
 
-        .filter-apply:hover {
-            background: #15B8C0;
+        td {
+            padding: 6px 10px;
+            border: 1px solid #d1d9dd;
+            vertical-align: middle;
+            max-width: 200px;
+            word-wrap: break-word;
+            font-size: 12px;
+            color: var(--text-medium);
         }
 
-        .filter-clear {
-            background: #F0F2F5;
-            color: #666;
+        tr:hover td {
+            background: #f8fbfc;
         }
 
-        .filter-clear:hover {
-            background: #E4E7EB;
-        }
+        /* Column Widths - Customizable */
+        .col-rowNum { min-width: 40px; max-width: 50px; }
+        .col-patientId { min-width: 100px; max-width: 150px; }
+        .col-visitDate { min-width: 90px; max-width: 110px; }
+        .col-patientName { min-width: 120px; max-width: 180px; }
+        .col-age { min-width: 40px; max-width: 60px; }
+        .col-gender { min-width: 60px; max-width: 80px; }
+        .col-doctorName { min-width: 100px; max-width: 160px; }
+        .col-careOfPerson { min-width: 100px; max-width: 160px; }
+        .col-address { min-width: 150px; max-width: 250px; }
+        .col-labNames { min-width: 120px; max-width: 200px; }
+        .col-lab1Tests { min-width: 120px; max-width: 200px; }
+        .col-lab2Tests { min-width: 120px; max-width: 200px; }
+        .col-lab3Tests { min-width: 120px; max-width: 200px; }
+        .col-lab4Tests { min-width: 120px; max-width: 200px; }
+        .col-center { min-width: 80px; max-width: 120px; }
+        .col-visitType { min-width: 90px; max-width: 120px; }
+        .col-visitTime { min-width: 70px; max-width: 90px; }
+        .col-ppTime { min-width: 70px; max-width: 90px; }
+        .col-ppPhlebotomist { min-width: 100px; max-width: 150px; }
+        .col-extraCollectionTime { min-width: 70px; max-width: 90px; }
+        .col-extraPhlebotomist { min-width: 100px; max-width: 150px; }
+        .col-totalMRP { min-width: 80px; max-width: 100px; }
+        .col-totalB2B { min-width: 80px; max-width: 100px; }
+        .col-finalPrice { min-width: 80px; max-width: 100px; }
+        .col-cashReceived { min-width: 80px; max-width: 100px; }
+        .col-onlineReceived { min-width: 80px; max-width: 100px; }
+        .col-pendingPayment { min-width: 80px; max-width: 100px; }
+        .col-goodwillCharges { min-width: 80px; max-width: 100px; }
 
-        .filter-close {
-            background: #DC3545;
-            color: white;
-            margin-left: auto;
-        }
-
-        .filter-close:hover {
-            background: #C82333;
-        }
-
-        .filter-active {
-            color: #1ECAD3 !important;
-        }
-
-        .pagination-container {
-            padding: 20px 28px 28px 28px;
+        .header-filter {
+            display: block;
+            width: 100%;
+            padding: 2px 4px;
+            border: 1px solid #d1d9dd;
+            border-radius: 3px;
+            font-size: 10px;
             background: white;
-            border-radius: 0 0 28px 28px;
+            margin-top: 2px;
+            max-width: 120px;
+        }
+
+        .header-filter:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .patient-id {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: var(--text-light);
+        }
+
+        .lab-tag {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            margin: 1px 2px;
+        }
+
+        .lab-tag-1 {
+            background: #fce4ec;
+            color: #c62828;
+        }
+        .lab-tag-2 {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .lab-tag-3 {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        .lab-tag-4 {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .currency {
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+        }
+
+        .truncate {
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .truncate:hover {
+            white-space: normal;
+            overflow: visible;
+            background: white;
+            position: relative;
+            z-index: 5;
+            box-shadow: var(--shadow-sm);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* Pagination */
+        .pagination-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
-            border-top: 1px solid #E5EAF0;
+            gap: 12px;
+            padding: 12px 0;
+            border-top: 1px solid var(--bg-light);
         }
 
         .pagination-controls {
             display: flex;
+            align-items: center;
             gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
         }
 
-        .page-btn {
+        .pagination-controls button {
+            padding: 4px 12px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
             background: white;
-            border: 1px solid #D0DDE8;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #1F5E7E;
             cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 12px;
+            transition: var(--transition);
+            color: var(--text-medium);
         }
 
-        .page-btn:hover:not(:disabled) {
-            background: #1ECAD3;
-            border-color: #1ECAD3;
-            color: white;
+        .pagination-controls button:hover:not(:disabled) {
+            background: var(--bg-light);
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
-        .page-btn:disabled {
-            opacity: 0.4;
+        .pagination-controls button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .page-numbers {
+        .pagination-controls button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination-controls .page-info {
+            font-size: 13px;
+            color: var(--text-medium);
+            padding: 0 8px;
+        }
+
+        .per-page-select {
             display: flex;
+            align-items: center;
             gap: 6px;
-            flex-wrap: wrap;
         }
 
-        .page-number {
+        .per-page-select label {
+            font-size: 12px;
+            color: var(--text-medium);
+        }
+
+        .per-page-select select {
+            padding: 4px 8px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
             background: white;
-            border: 1px solid #D0DDE8;
-            padding: 8px 13px;
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #1F5E7E;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 40px;
+        }
+
+        /* Loading */
+        .loading {
             text-align: center;
+            padding: 40px;
+            color: var(--text-light);
         }
 
-        .page-number:hover {
-            background: #1ECAD3;
-            border-color: #1ECAD3;
-            color: white;
-        }
-
-        .page-number.active {
-            background: #1ECAD3;
-            border-color: #1ECAD3;
-            color: white;
-        }
-
-        .rows-per-page {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .rows-per-page select {
-            padding: 8px 12px;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 12px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            background: white;
-            cursor: pointer;
-            outline: none;
-        }
-
-        .rows-per-page select:focus {
-            border-color: #1ECAD3;
-        }
-
-        .pagination-info {
-            color: #2A577B;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .loader-state, .empty-msg, .error-msg {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 24px;
-            gap: 14px;
-            background: #FBFDFF;
-            border-radius: 28px;
-            color: #2C6283;
-            font-weight: 500;
-        }
-
-        .error-msg {
-            background: #FFF6F0;
-            color: #C4450C;
-        }
-
-        .refresh-spinner {
-            animation: spin 1s linear infinite;
+        .loading-spinner {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--bg-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+        .toast.error {
+            background: var(--error);
+        }
+        .toast.info {
+            background: var(--primary);
+        }
+
+        /* Scrollbar */
+        .table-wrapper::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #c1c7cd;
+            border-radius: 3px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a0a7ae;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .pagination-container {
+            body {
+                padding: 10px;
+            }
+            .app-container {
+                padding: 12px;
+            }
+            .app-header h1 {
+                font-size: 18px;
+            }
+            .app-header {
                 flex-direction: column;
                 align-items: stretch;
             }
-            
-            .pagination-controls {
+            .header-actions {
                 justify-content: center;
             }
-            
-            .stats-row {
+            .filters-row {
                 flex-direction: column;
-                gap: 10px;
+                align-items: stretch;
             }
-            
-            .button-group {
-                justify-content: flex-start;
+            .filters-row .filter-group {
+                flex-wrap: wrap;
             }
-            
-            .filter-dropdown {
-                position: fixed;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%);
-                width: 90%;
-                max-width: 320px;
+            .search-input-wrapper {
+                min-width: 100%;
+            }
+            .stats-bar {
+                font-size: 12px;
+                gap: 12px;
+                padding: 8px 12px;
+            }
+            .pagination-container {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .pagination-controls {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .column-toggle-dropdown {
+                left: auto;
+                right: 0;
+                min-width: 180px;
             }
         }
     </style>
 </head>
 <body>
-<div class="app-container">
-    <div class="health-header">
-        <div class="logo-area">
-            <div class="logo-icon">
-                <i class="fas fa-table"></i>
-            </div>
-            <div class="logo-text">
-                <h1>Data Sheet</h1>
-            </div>
-        </div>
-    </div>
 
-    <div class="dashboard-card">
-        <div class="filters-section">
-            <div class="filter-group">
-                <label><i class="far fa-calendar-alt"></i> From Date</label>
-                <input type="date" id="fromDateFilter" placeholder="Start date">
-            </div>
-            <div class="filter-group">
-                <label><i class="far fa-calendar-check"></i> To Date</label>
-                <input type="date" id="toDateFilter" placeholder="End date">
-            </div>
-            <div class="search-wrapper">
-                <label><i class="fas fa-search"></i> Global search</label>
-                <input type="text" id="globalSearchInput" class="search-input" placeholder="Search any column...">
-            </div>
-            <div class="filter-group sort-group">
-                <label><i class="fas fa-sort-amount-down"></i> Sort by Date</label>
-                <select id="sortOrderSelect" class="sort-select">
-                    <option value="desc" selected>📅 Newest First ↓</option>
-                    <option value="asc">📅 Oldest First ↑</option>
-                </select>
-            </div>
-            <div class="button-group">
-                <button class="btn-secondary" id="fullExcelBtn" disabled>
-                    <i class="fas fa-database"></i> Full Excel
-                </button>
-                <button class="btn-success" id="filteredExcelBtn" disabled>
-                    <i class="fas fa-filter"></i> Download Filtered
-                </button>
-                <button class="btn-primary" id="refreshBtn">
-                    <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh
-                </button>
-                <button class="btn-outline" id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> Reset</button>
-            </div>
-        </div>
-
-        <div class="stats-row" id="statsDisplay">
-            <span><i class="fas fa-spinner fa-pulse"></i> Connecting to sheet...</span>
-            <span><i class="fas fa-filter"></i> All columns filterable</span>
-        </div>
-
-        <!-- Top Scrollbar for better table navigation -->
-        <div class="table-scroll-wrapper">
-            <div class="top-scrollbar" id="topScrollbar"></div>
-            <div class="table-container" id="dynamicTableContainer">
-                <div class="loader-state">
-                    <i class="fas fa-sync-alt fa-spin" style="font-size: 36px; color:#1ECAD3;"></i>
-                    <p>Fetching records from secure sheet</p>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="app-header">
+            <h1>
+                📋 Patient Data
+                <span id="recordBadge">0</span>
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="refreshBtn">⟳ Refresh</button>
+                <div class="column-toggle-container">
+                    <button class="btn btn-primary" id="toggleColumnsBtn">📊 Columns</button>
+                    <div class="column-toggle-dropdown" id="columnToggleDropdown">
+                        <div class="toggle-item toggle-all">
+                            <input type="checkbox" id="toggleAllColumns" checked />
+                            <label for="toggleAllColumns"><strong>Select All</strong></label>
+                        </div>
+                        <div id="columnToggleList"></div>
+                    </div>
                 </div>
+                <button class="btn btn-success" id="exportBtn">📥 Export CSV</button>
+                <button class="btn btn-warning" id="clearFiltersBtn">✕ Clear Filters</button>
             </div>
         </div>
-        
-        <div class="pagination-container" id="paginationContainer" style="display: none;">
-            <div class="pagination-info" id="paginationInfo">
-                Showing 0 to 0 of 0 entries
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <span>Total Records: <strong id="totalRecords">0</strong></span>
+            <span>Filtered: <strong id="filteredRecords">0</strong></span>
+            <span>Showing: <strong id="showingRecords">0</strong></span>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-row" id="filtersRow">
+            <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="globalSearch" placeholder="Search across all columns..." />
             </div>
-            <div class="pagination-controls">
-                <button class="page-btn" id="firstPageBtn" disabled>
-                    <i class="fas fa-angle-double-left"></i> First
-                </button>
-                <button class="page-btn" id="prevPageBtn" disabled>
-                    <i class="fas fa-chevron-left"></i> Prev
-                </button>
-                <div class="page-numbers" id="pageNumbers"></div>
-                <button class="page-btn" id="nextPageBtn" disabled>
-                    Next <i class="fas fa-chevron-right"></i>
-                </button>
-                <button class="page-btn" id="lastPageBtn" disabled>
-                    Last <i class="fas fa-angle-double-right"></i>
-                </button>
+            <div class="filter-group">
+                <label>From:</label>
+                <input type="date" id="filterFromDate" />
             </div>
-            <div class="rows-per-page">
-                <span>Rows per page:</span>
-                <select id="rowsPerPageSelect">
-                    <option value="10">10</option>
-                    <option value="20" selected>20</option>
+            <div class="filter-group">
+                <label>To:</label>
+                <input type="date" id="filterToDate" />
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingIndicator" class="loading">
+            <div class="loading-spinner"></div>
+            <p style="margin-top:12px;">Loading patient data...</p>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper" id="tableWrapper" style="display:none;">
+            <table id="dataTable">
+                <thead id="tableHead">
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer">
+            <div class="per-page-select">
+                <label>Entries per page:</label>
+                <select id="perPageSelect">
+                    <option value="25">25</option>
                     <option value="50">50</option>
+                    <option value="75">75</option>
                     <option value="100">100</option>
                 </select>
             </div>
+            <div class="pagination-controls" id="paginationControls">
+                <button id="prevPageBtn">◀ Prev</button>
+                <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                <button id="nextPageBtn">Next ▶</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Google Sheet CSV URL - Update this with your published Google Sheet CSV link
-    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTXinJqkALxMdxrd0h26geavFTtx4wRKNvsa4uEMEbgvXD-lm7tRs3Ynz4b0qzzAoEq2IshzrZHzjdH/pub?gid=0&single=true&output=csv';
-    
-    let masterSheetData = [];
-    let filteredData = [];
-    let isLoading = true;
-    
-    let currentPage = 1;
-    let rowsPerPage = 20;
-    let totalPages = 1;
-    
-    let isRefreshing = false;
-    
-    // Store column filters for each column
-    let columnFilters = new Map(); // columnName -> Set of selected values
-    let columnUniqueValues = new Map(); // columnName -> Set of unique values
-    let columnHasBlank = new Map(); // columnName -> boolean
-    let currentDropdown = null;
-    let currentActiveColumn = null;
-    
-    let sortOrder = 'desc';
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
-    // DOM Elements
-    const fromDateEl = document.getElementById('fromDateFilter');
-    const toDateEl = document.getElementById('toDateFilter');
-    const globalSearchEl = document.getElementById('globalSearchInput');
-    const sortOrderSelect = document.getElementById('sortOrderSelect');
-    const resetBtn = document.getElementById('resetFiltersBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const fullExcelBtn = document.getElementById('fullExcelBtn');
-    const filteredExcelBtn = document.getElementById('filteredExcelBtn');
-    const refreshIcon = document.getElementById('refreshIcon');
-    const containerDiv = document.getElementById('dynamicTableContainer');
-    const topScrollbar = document.getElementById('topScrollbar');
-    const statsSpan = document.getElementById('statsDisplay');
-    const paginationContainer = document.getElementById('paginationContainer');
-    const firstPageBtn = document.getElementById('firstPageBtn');
-    const prevPageBtn = document.getElementById('prevPageBtn');
-    const nextPageBtn = document.getElementById('nextPageBtn');
-    const lastPageBtn = document.getElementById('lastPageBtn');
-    const pageNumbersDiv = document.getElementById('pageNumbers');
-    const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
-    const paginationInfo = document.getElementById('paginationInfo');
+    <script>
+        // ============================================================
+        //  FIREBASE CONFIGURATION
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYvXfJIVRQSFgXp50sGegSN5U8xq88C3g",
+            authDomain: "goodness-data.firebaseapp.com",
+            databaseURL: "https://goodness-data-default-rtdb.firebaseio.com",
+            projectId: "goodness-data",
+            storageBucket: "goodness-data.firebasestorage.app",
+            messagingSenderId: "1034454680105",
+            appId: "1:1034454680105:web:74727c22489373383b9238",
+            measurementId: "G-TD30ZYVDCG"
+        };
 
-    function parseMedicalDate(dateStr) {
-        if (!dateStr || dateStr.trim() === '') return null;
-        let cleaned = dateStr.toString().trim();
-        let standardDate = new Date(cleaned);
-        if (!isNaN(standardDate.getTime())) return standardDate;
-        if (cleaned.includes('/')) {
-            let parts = cleaned.split('/');
-            if (parts.length === 3) {
-                let day, month, year;
-                if (parseInt(parts[0],10) > 12) {
-                    day = parseInt(parts[0],10);
-                    month = parseInt(parts[1],10) - 1;
-                    year = parseInt(parts[2],10);
-                } else {
-                    month = parseInt(parts[0],10) - 1;
-                    day = parseInt(parts[1],10);
-                    year = parseInt(parts[2],10);
-                }
-                let d = new Date(year, month, day);
-                if (!isNaN(d.getTime())) return d;
-            }
-        }
-        return null;
-    }
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    function isWithinDateRange(dateCell, fromDateObj, toDateObj) {
-        if (!dateCell) return true;
-        const rowDate = parseMedicalDate(dateCell);
-        if (!rowDate) return false;
-        if (fromDateObj && rowDate < fromDateObj) return false;
-        if (toDateObj && rowDate > toDateObj) return false;
-        return true;
-    }
+        // ============================================================
+        //  LAB NAMES
+        // ============================================================
+        const LAB_NAMES = {
+            1: 'Dr. Ajay Shah',
+            2: 'Dr. Jariwala',
+            3: 'General Diagnostics',
+            4: 'Trucheck Diagnostics'
+        };
 
-    function matchesGlobal(rowObj, term) {
-        if (!term || term.trim() === '') return true;
-        const lowerTerm = term.trim().toLowerCase();
-        for (let key in rowObj) {
-            if (key === 'date') continue;
-            let val = rowObj[key];
-            if (val !== undefined && val !== null && String(val).toLowerCase().includes(lowerTerm)) {
-                return true;
-            }
-        }
-        return false;
-    }
+        // ============================================================
+        //  COLUMN DEFINITIONS with width classes
+        // ============================================================
+        const COLUMNS = [
+            { key: 'rowNum', label: '#', visible: true, widthClass: 'col-rowNum' },
+            { key: 'patientId', label: 'Patient ID', visible: true, widthClass: 'col-patientId' },
+            { key: 'visitDate', label: 'Visit Date', visible: true, widthClass: 'col-visitDate' },
+            { key: 'patientName', label: 'Patient Name', visible: true, filterable: true, widthClass: 'col-patientName' },
+            { key: 'age', label: 'Age', visible: true, widthClass: 'col-age' },
+            { key: 'gender', label: 'Gender', visible: true, widthClass: 'col-gender' },
+            { key: 'doctorName', label: 'Dr. Name', visible: true, filterable: true, widthClass: 'col-doctorName' },
+            { key: 'careOfPerson', label: 'Care of Person', visible: true, filterable: true, widthClass: 'col-careOfPerson' },
+            { key: 'address', label: 'Address', visible: true, widthClass: 'col-address' },
+            { key: 'labNames', label: 'Lab Name', visible: true, filterable: true, widthClass: 'col-labNames' },
+            { key: 'lab1Tests', label: 'Dr. Ajay Shah', visible: true, widthClass: 'col-lab1Tests' },
+            { key: 'lab2Tests', label: 'Dr. Jariwala', visible: true, widthClass: 'col-lab2Tests' },
+            { key: 'lab3Tests', label: 'General Diagnostics', visible: true, widthClass: 'col-lab3Tests' },
+            { key: 'lab4Tests', label: 'Trucheck Diagnostics', visible: true, widthClass: 'col-lab4Tests' },
+            { key: 'center', label: 'Center', visible: true, filterable: true, widthClass: 'col-center' },
+            { key: 'visitType', label: 'Visit Type', visible: true, filterable: true, widthClass: 'col-visitType' },
+            { key: 'visitTime', label: 'Visit Time', visible: true, widthClass: 'col-visitTime' },
+            { key: 'ppTime', label: 'PP Time', visible: true, widthClass: 'col-ppTime' },
+            { key: 'ppPhlebotomist', label: 'PP Phlebotomist', visible: true, filterable: true, widthClass: 'col-ppPhlebotomist' },
+            { key: 'extraCollectionTime', label: 'Extra Collection', visible: true, widthClass: 'col-extraCollectionTime' },
+            { key: 'extraPhlebotomist', label: 'Collecting Person', visible: true, filterable: true, widthClass: 'col-extraPhlebotomist' },
+            { key: 'totalMRP', label: 'Total MRP', visible: true, widthClass: 'col-totalMRP' },
+            { key: 'totalB2B', label: 'Total B2B', visible: true, widthClass: 'col-totalB2B' },
+            { key: 'finalPrice', label: 'Final Price', visible: true, widthClass: 'col-finalPrice' },
+            { key: 'cashReceived', label: 'Cash Received', visible: true, widthClass: 'col-cashReceived' },
+            { key: 'onlineReceived', label: 'Online Received', visible: true, widthClass: 'col-onlineReceived' },
+            { key: 'pendingPayment', label: 'Pending Payment', visible: true, widthClass: 'col-pendingPayment' },
+            { key: 'goodwillCharges', label: 'Goodwill Charges', visible: true, widthClass: 'col-goodwillCharges' }
+        ];
 
-    function matchesColumnFilters(rowObj) {
-        for (let [column, selectedValues] of columnFilters.entries()) {
-            if (selectedValues.size === 0) continue;
-            
-            let rowValue = (rowObj[column] || '').toString().trim();
-            
-            if (selectedValues.has('(Blank)')) {
-                if (rowValue === '') continue;
-                if (selectedValues.has(rowValue)) continue;
-                return false;
-            } else {
-                if (rowValue === '') return false;
-                if (!selectedValues.has(rowValue)) return false;
-            }
-        }
-        return true;
-    }
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let allPatients = [];
+        let filteredPatients = [];
+        let displayedPatients = [];
+        let isLoading = true;
+        let searchTerm = '';
 
-    function updateColumnUniqueValues() {
-        columnUniqueValues.clear();
-        columnHasBlank.clear();
-        
-        const fromRaw = fromDateEl.value;
-        const toRaw = toDateEl.value;
-        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
-        const toDateObj = toRaw ? new Date(toRaw) : null;
-        const searchTerm = globalSearchEl.value;
-        
-        let tempFiltered = masterSheetData.filter(row => {
-            return isWithinDateRange(row.date, fromDateObj, toDateObj) && matchesGlobal(row, searchTerm);
+        // Pagination
+        let currentPage = 1;
+        let perPage = 25;
+
+        // Column visibility
+        let columnVisibility = {};
+        COLUMNS.forEach(c => columnVisibility[c.key] = c.visible);
+
+        // Column filters
+        let columnFilters = {};
+        COLUMNS.forEach(c => {
+            if (c.filterable) columnFilters[c.key] = 'all';
         });
-        
-        if (tempFiltered.length === 0) return;
-        
-        const columns = Object.keys(tempFiltered[0]).filter(col => col !== 'date');
-        
-        columns.forEach(column => {
-            let uniqueValues = new Set();
-            let hasBlank = false;
-            
-            tempFiltered.forEach(row => {
-                let val = row[column];
-                if (val && val.toString().trim() !== '') {
-                    uniqueValues.add(val.toString().trim());
-                } else {
-                    hasBlank = true;
-                }
-            });
-            
-            columnUniqueValues.set(column, uniqueValues);
-            columnHasBlank.set(column, hasBlank);
-        });
-    }
 
-    function applyFiltersAndRender() {
-        if (!masterSheetData.length) {
-            filteredData = [];
-            currentPage = 1;
-            renderTable();
-            updateStatsUI();
-            enableDownloadButtons();
-            return;
+        let dateFrom = '';
+        let dateTo = '';
+
+        // ============================================================
+        //  DOM REFS
+        // ============================================================
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const tableWrapper = document.getElementById('tableWrapper');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const toggleColumnsBtn = document.getElementById('toggleColumnsBtn');
+        const columnToggleDropdown = document.getElementById('columnToggleDropdown');
+        const columnToggleList = document.getElementById('columnToggleList');
+        const toggleAllColumns = document.getElementById('toggleAllColumns');
+        const globalSearch = document.getElementById('globalSearch');
+        const filterFromDate = document.getElementById('filterFromDate');
+        const filterToDate = document.getElementById('filterToDate');
+        const totalRecords = document.getElementById('totalRecords');
+        const filteredRecords = document.getElementById('filteredRecords');
+        const showingRecords = document.getElementById('showingRecords');
+        const recordBadge = document.getElementById('recordBadge');
+        const perPageSelect = document.getElementById('perPageSelect');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageInfo = document.getElementById('pageInfo');
+        const toastEl = document.getElementById('toast');
+
+        // ============================================================
+        //  TOAST
+        // ============================================================
+        function toast(msg, type = 'success') {
+            toastEl.textContent = msg;
+            toastEl.className = 'toast show ' + type;
+            clearTimeout(toastEl._timeout);
+            toastEl._timeout = setTimeout(() => toastEl.classList.remove('show'), 3000);
         }
 
-        const fromRaw = fromDateEl.value;
-        const toRaw = toDateEl.value;
-        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
-        const toDateObj = toRaw ? new Date(toRaw) : null;
-        const searchTerm = globalSearchEl.value;
+        // ============================================================
+        //  ESCAPE HTML
+        // ============================================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
-        let filtered = masterSheetData.filter(row => {
-            return isWithinDateRange(row.date, fromDateObj, toDateObj) && matchesGlobal(row, searchTerm);
-        });
-        
-        filtered = filtered.filter(row => matchesColumnFilters(row));
-        
-        filteredData = sortByDate(filtered);
-        
-        currentPage = 1;
-        updatePagination();
-        renderTable();
-        updateStatsUI();
-        enableDownloadButtons();
-    }
-
-    function sortByDate(data) {
-        return [...data].sort((a, b) => {
-            const dateA = parseMedicalDate(a.date);
-            const dateB = parseMedicalDate(b.date);
+        // ============================================================
+        //  HIGHLIGHT TEXT - NEW
+        // ============================================================
+        function highlightText(text, searchTerm) {
+            if (!text || !searchTerm || searchTerm.trim() === '') return escapeHtml(text);
+            const term = searchTerm.trim();
+            const lowerText = text.toLowerCase();
+            const lowerTerm = term.toLowerCase();
             
-            if (!dateA && !dateB) return 0;
-            if (!dateA) return 1;
-            if (!dateB) return -1;
+            if (!lowerText.includes(lowerTerm)) return escapeHtml(text);
             
-            if (sortOrder === 'desc') {
-                return dateB - dateA;
-            } else {
-                return dateA - dateB;
+            let result = '';
+            let lastIndex = 0;
+            let index = lowerText.indexOf(lowerTerm);
+            
+            while (index !== -1) {
+                // Add text before match
+                result += escapeHtml(text.substring(lastIndex, index));
+                // Add highlighted match
+                result += `<span class="highlight-match">${escapeHtml(text.substring(index, index + term.length))}</span>`;
+                lastIndex = index + term.length;
+                index = lowerText.indexOf(lowerTerm, lastIndex);
             }
-        });
-    }
+            // Add remaining text
+            result += escapeHtml(text.substring(lastIndex));
+            return result;
+        }
 
-    function getDisplayColumns() {
-        if (filteredData.length === 0 && masterSheetData.length === 0) return [];
-        
-        const sampleData = filteredData.length > 0 ? filteredData[0] : masterSheetData[0];
-        let allColumns = Object.keys(sampleData);
-        
-        return allColumns.filter(col => col !== 'date');
-    }
+        // ============================================================
+        //  GET LABS
+        // ============================================================
+        function getLabsForEntry(entry) {
+            if (!entry) return [];
+            const labs = [];
 
-    function getTimestamp() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
-    }
-
-    function exportToExcel(data, filename, dataType) {
-        try {
-            if (!data || data.length === 0) {
-                if (dataType === 'filtered') {
-                    alert('No filtered data to export');
-                } else {
-                    alert('No data loaded');
-                }
-                return false;
-            }
-            
-            const columnsToDisplay = getDisplayColumns();
-            
-            let worksheetData = [columnsToDisplay];
-            
-            for (let row of data) {
-                let rowData = [];
-                columnsToDisplay.forEach(col => {
-                    let val = row[col] !== undefined && row[col] !== null ? row[col] : '';
-                    rowData.push(val);
+            if (entry.labs && Array.isArray(entry.labs)) {
+                entry.labs.forEach(lab => {
+                    const numLab = Number(lab);
+                    if (!isNaN(numLab) && numLab >= 1 && numLab <= 4 && !labs.includes(numLab)) {
+                        labs.push(numLab);
+                    }
                 });
-                worksheetData.push(rowData);
+                if (labs.length > 0) return labs;
             }
-            
-            const colWidths = columnsToDisplay.map((col, idx) => {
-                let maxLen = col.length;
-                for (let i = 0; i < Math.min(worksheetData.length, 100); i++) {
-                    const cellValue = worksheetData[i][idx] ? String(worksheetData[i][idx]).length : 0;
-                    maxLen = Math.max(maxLen, cellValue);
+
+            if (entry.labSelections && typeof entry.labSelections === 'object') {
+                for (let labId = 1; labId <= 4; labId++) {
+                    const labData = entry.labSelections[labId];
+                    if (labData && typeof labData === 'object') {
+                        const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+                        const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+                        if (hasTests || hasPackages) {
+                            labs.push(labId);
+                        }
+                    }
                 }
-                return Math.min(Math.max(maxLen + 2, 10), 40);
+                if (labs.length > 0) return labs;
+            }
+
+            for (let labId = 1; labId <= 4; labId++) {
+                const key = labId.toString();
+                if (entry[key] && typeof entry[key] === 'object') {
+                    const labData = entry[key];
+                    const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+                    const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+                    if (hasTests || hasPackages) {
+                        labs.push(labId);
+                    }
+                }
+            }
+
+            return [...new Set(labs)];
+        }
+
+        // ============================================================
+        //  GET LAB TEST NAMES
+        // ============================================================
+        function getLabTestNames(entry, labId) {
+            if (!entry) return '';
+
+            const testNames = [];
+            const packages = [];
+
+            if (entry.labSelections && entry.labSelections[labId]) {
+                const labData = entry.labSelections[labId];
+                if (labData.tests && Array.isArray(labData.tests)) {
+                    labData.tests.forEach(test => {
+                        testNames.push(test.generalName || test.name || 'Test');
+                    });
+                }
+                if (labData.packages && Array.isArray(labData.packages)) {
+                    labData.packages.forEach(pkg => {
+                        packages.push(pkg.packageName || 'Package');
+                        if (pkg.tests && Array.isArray(pkg.tests)) {
+                            pkg.tests.forEach(test => {
+                                if (test.selected !== false) {
+                                    testNames.push(test.generalName || test.name || 'Test');
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+
+            if (testNames.length === 0 && packages.length === 0) {
+                const key = labId.toString();
+                if (entry[key] && typeof entry[key] === 'object') {
+                    const labData = entry[key];
+                    if (labData.tests && Array.isArray(labData.tests)) {
+                        labData.tests.forEach(test => {
+                            testNames.push(test.generalName || test.name || 'Test');
+                        });
+                    }
+                    if (labData.packages && Array.isArray(labData.packages)) {
+                        labData.packages.forEach(pkg => {
+                            packages.push(pkg.packageName || 'Package');
+                            if (pkg.tests && Array.isArray(pkg.tests)) {
+                                pkg.tests.forEach(test => {
+                                    if (test.selected !== false) {
+                                        testNames.push(test.generalName || test.name || 'Test');
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }
+            }
+
+            const allItems = [...packages, ...testNames];
+            return allItems.length > 0 ? allItems.join(', ') : '';
+        }
+
+        // ============================================================
+        //  FORMAT CURRENCY
+        // ============================================================
+        function formatCurrency(value) {
+            if (value === undefined || value === null || isNaN(value)) return '₹0';
+            return '₹' + Number(value).toLocaleString('en-IN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
             });
-            
-            const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-            ws['!cols'] = colWidths.map(w => ({ wch: w }));
-            
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Data Sheet");
-            
-            XLSX.writeFile(wb, filename);
-            return true;
-        } catch (error) {
-            console.error('Export error:', error);
-            alert('Error generating Excel file: ' + error.message);
-            return false;
         }
-    }
 
-    function exportFullData() {
-        if (isLoading) {
-            alert("⏳ Data loading...\nPlease wait for data to finish loading before exporting.");
-            return;
-        }
-        
-        if (!masterSheetData.length) {
-            alert("No data loaded. Please refresh or check your data source.");
-            return;
-        }
-        
-        const rowCount = masterSheetData.length;
-        const confirmed = confirm(`📊 Export full dataset?\nRows: ${rowCount}\nClick OK to proceed.`);
-        
-        if (confirmed) {
-            const timestamp = getTimestamp();
-            const filename = `full_data_${timestamp}.xlsx`;
-            exportToExcel(masterSheetData, filename, 'full');
-        }
-    }
+        // ============================================================
+        //  LOAD DATA
+        // ============================================================
+        async function loadData() {
+            isLoading = true;
+            loadingIndicator.style.display = 'block';
+            tableWrapper.style.display = 'none';
 
-    function exportFilteredData() {
-        if (isLoading) {
-            alert("⏳ Data loading...\nPlease wait for data to finish loading before exporting.");
-            return;
-        }
-        
-        if (!masterSheetData.length) {
-            alert("No data loaded. Please refresh or check your data source.");
-            return;
-        }
-        
-        if (filteredData.length === 0) {
-            alert("No filtered data to export.\nPlease adjust your filters to see results.");
-            return;
-        }
-        
-        const rowCount = filteredData.length;
-        const confirmed = confirm(`📊 Export filtered data?\nRows: ${rowCount}\nClick OK to proceed.`);
-        
-        if (confirmed) {
-            const timestamp = getTimestamp();
-            const filename = `filtered_data_${timestamp}.xlsx`;
-            exportToExcel(filteredData, filename, 'filtered');
-        }
-    }
+            try {
+                const snap = await db.ref('patients').once('value');
+                const data = snap.val();
 
-    function enableDownloadButtons() {
-        if (!isLoading && masterSheetData.length > 0) {
-            fullExcelBtn.disabled = false;
-            filteredExcelBtn.disabled = false;
-        } else {
-            fullExcelBtn.disabled = true;
-            filteredExcelBtn.disabled = true;
-        }
-    }
+                allPatients = [];
 
-    function updateStatsUI() {
-        if (!masterSheetData.length) {
-            statsSpan.innerHTML = `<span><i class="fas fa-database"></i> No data loaded</span>
-                                   <span><i class="fas fa-filter"></i> All columns filterable</span>`;
-            return;
-        }
-        const totalRecords = masterSheetData.length;
-        const shown = filteredData.length;
-        const lastUpdated = new Date().toLocaleTimeString();
-        const sortText = sortOrder === 'desc' ? 'Newest First ↓' : 'Oldest First ↑';
-        
-        statsSpan.innerHTML = `<span><i class="fas fa-clinic-medical"></i> Showing ${shown} of ${totalRecords} records | Last updated: ${lastUpdated}</span>
-                               <span><i class="fas fa-sort-amount-down"></i> Sort: <strong>${sortText}</strong> | <i class="fas fa-filter"></i> Column filters active: ${columnFilters.size > 0 ? Array.from(columnFilters.keys()).length : 0}</span>`;
-    }
+                if (data) {
+                    const keys = Object.keys(data);
+                    for (const key of keys) {
+                        const patient = data[key];
+                        patient._firebaseKey = key;
+                        allPatients.push(patient);
+                    }
 
-    function updatePagination() {
-        totalPages = Math.ceil(filteredData.length / rowsPerPage);
-        if (totalPages === 0) totalPages = 1;
-        if (currentPage > totalPages) currentPage = totalPages;
-        
-        if (filteredData.length > rowsPerPage) {
-            paginationContainer.style.display = 'flex';
-        } else {
-            paginationContainer.style.display = 'none';
-        }
-        
-        firstPageBtn.disabled = currentPage === 1;
-        prevPageBtn.disabled = currentPage === 1;
-        nextPageBtn.disabled = currentPage === totalPages;
-        lastPageBtn.disabled = currentPage === totalPages;
-        
-        const start = (currentPage - 1) * rowsPerPage + 1;
-        const end = Math.min(currentPage * rowsPerPage, filteredData.length);
-        if (filteredData.length === 0) {
-            paginationInfo.textContent = `Showing 0 to 0 of 0 entries`;
-        } else {
-            paginationInfo.textContent = `Showing ${start} to ${end} of ${filteredData.length} entries`;
-        }
-        
-        renderPageNumbers();
-    }
-    
-    function renderPageNumbers() {
-        pageNumbersDiv.innerHTML = '';
-        
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, currentPage + 2);
-        
-        if (endPage - startPage < 4) {
-            if (startPage > 1) {
-                startPage = Math.max(1, endPage - 4);
-            }
-            if (endPage < totalPages) {
-                endPage = Math.min(totalPages, startPage + 4);
+                    allPatients.sort((a, b) => {
+                        const dateA = a.visitDate || '';
+                        const dateB = b.visitDate || '';
+                        return dateB.localeCompare(dateA);
+                    });
+                }
+
+                console.log('[Table] Loaded', allPatients.length, 'patients');
+                totalRecords.textContent = allPatients.length;
+
+                buildColumnToggleList();
+
+                applyFilters();
+                toast('Data loaded successfully!', 'success');
+
+            } catch (err) {
+                console.error('Error loading data:', err);
+                toast('Error loading data: ' + err.message, 'error');
+            } finally {
+                isLoading = false;
+                loadingIndicator.style.display = 'none';
+                tableWrapper.style.display = 'block';
             }
         }
-        
-        for (let i = startPage; i <= endPage; i++) {
-            const pageBtn = document.createElement('button');
-            pageBtn.className = 'page-number' + (i === currentPage ? ' active' : '');
-            pageBtn.textContent = i;
-            pageBtn.onclick = () => {
-                currentPage = i;
-                renderTable();
-                updatePagination();
-                syncTopScrollbar();
-            };
-            pageNumbersDiv.appendChild(pageBtn);
-        }
-    }
-    
-    function getCurrentPageData() {
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        return filteredData.slice(start, end);
-    }
 
-    function syncTopScrollbar() {
-        const tableContainer = document.querySelector('.table-container');
-        if (tableContainer && topScrollbar) {
-            topScrollbar.scrollLeft = tableContainer.scrollLeft;
-        }
-    }
+        // ============================================================
+        //  BUILD COLUMN TOGGLE LIST
+        // ============================================================
+        function buildColumnToggleList() {
+            let html = '';
+            COLUMNS.forEach(col => {
+                html += `
+                    <div class="toggle-item">
+                        <input type="checkbox" id="col_${col.key}" ${columnVisibility[col.key] ? 'checked' : ''} />
+                        <label for="col_${col.key}">${col.label}</label>
+                    </div>
+                `;
+            });
+            columnToggleList.innerHTML = html;
 
-    function closeDropdown() {
-        if (currentDropdown) {
-            currentDropdown.remove();
-            currentDropdown = null;
-            currentActiveColumn = null;
+            columnToggleList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const key = this.id.replace('col_', '');
+                    columnVisibility[key] = this.checked;
+                    updateToggleAllState();
+                    renderTable();
+                });
+            });
         }
-    }
 
-    function createColumnFilter(columnName, columnIndex) {
-        const th = document.querySelector(`.data-table th:nth-child(${columnIndex + 1})`);
-        if (!th) return;
-        
-        const originalText = columnName.charAt(0).toUpperCase() + columnName.slice(1).replace(/([A-Z])/g, ' $1');
-        th.innerHTML = `${originalText} <i class="fas fa-filter filter-icon"></i>`;
-        th.classList.add('filter-header');
-        
-        const filterIcon = th.querySelector('.filter-icon');
-        
-        const currentSelections = columnFilters.get(columnName) || new Set();
-        if (currentSelections.size > 0) {
-            filterIcon.style.color = '#1ECAD3';
+        function updateToggleAllState() {
+            const allChecked = COLUMNS.every(col => columnVisibility[col.key]);
+            toggleAllColumns.checked = allChecked;
         }
-        
-        filterIcon.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            if (currentDropdown && currentActiveColumn === columnName) {
-                closeDropdown();
+
+        // ============================================================
+        //  APPLY FILTERS
+        // ============================================================
+        function applyFilters() {
+            let result = [...allPatients];
+
+            // Global search
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase().trim();
+                result = result.filter(p => {
+                    const searchable = [
+                        p.patientName || '',
+                        p._firebaseKey || '',
+                        p.doctorName || '',
+                        p.careOfPerson || '',
+                        p.center || '',
+                        p.visitType || '',
+                        p.phlebotomist || '',
+                        p.ppPhlebotomist || '',
+                        p.extraCollectionPhlebotomist || '',
+                        p.address || '',
+                        p.age || '',
+                        p.gender || ''
+                    ].join(' ').toLowerCase();
+                    return searchable.includes(term);
+                });
+            }
+
+            // Date range
+            if (dateFrom) {
+                result = result.filter(p => (p.visitDate || '') >= dateFrom);
+            }
+            if (dateTo) {
+                result = result.filter(p => (p.visitDate || '') <= dateTo);
+            }
+
+            // Column filters
+            COLUMNS.forEach(col => {
+                if (col.filterable && columnFilters[col.key] && columnFilters[col.key] !== 'all') {
+                    const filterValue = columnFilters[col.key];
+                    result = result.filter(p => {
+                        let value = getColumnValue(p, col.key);
+                        if (col.key === 'labNames') {
+                            const labs = getLabsForEntry(p);
+                            const labNames = labs.map(id => LAB_NAMES[id] || 'Lab ' + id);
+                            return labNames.some(name => name === filterValue);
+                        }
+                        return value === filterValue;
+                    });
+                }
+            });
+
+            filteredPatients = result;
+            filteredRecords.textContent = filteredPatients.length;
+
+            currentPage = 1;
+            updatePagination();
+            renderTable();
+            updateStats();
+        }
+
+        // ============================================================
+        //  GET COLUMN VALUE
+        // ============================================================
+        function getColumnValue(patient, key) {
+            switch (key) {
+                case 'rowNum': return '';
+                case 'patientId': return patient._firebaseKey || '';
+                case 'visitDate': return patient.visitDate || '';
+                case 'patientName': return patient.patientName || '';
+                case 'age': return patient.age || '';
+                case 'gender': return patient.gender || '';
+                case 'doctorName': return patient.doctorName || '';
+                case 'careOfPerson': return patient.careOfPerson || '';
+                case 'address': return patient.address || '';
+                case 'labNames':
+                    const labs = getLabsForEntry(patient);
+                    return labs.map(id => LAB_NAMES[id] || 'Lab ' + id).join(', ');
+                case 'lab1Tests': return getLabTestNames(patient, 1);
+                case 'lab2Tests': return getLabTestNames(patient, 2);
+                case 'lab3Tests': return getLabTestNames(patient, 3);
+                case 'lab4Tests': return getLabTestNames(patient, 4);
+                case 'center': return patient.center || '';
+                case 'visitType': return patient.visitType || '';
+                case 'visitTime': return patient.visitTime || '';
+                case 'ppTime': return patient.ppTime || '';
+                case 'ppPhlebotomist': return patient.ppPhlebotomist || '';
+                case 'extraCollectionTime': return patient.extraCollectionTime || '';
+                case 'extraPhlebotomist': return patient.extraCollectionPhlebotomist || '';
+                case 'totalMRP': return patient.totalMRP || 0;
+                case 'totalB2B': return patient.totalB2B || 0;
+                case 'finalPrice': return patient.finalPrice || 0;
+                case 'cashReceived': return patient.cashReceived || 0;
+                case 'onlineReceived': return patient.onlineReceived || 0;
+                case 'pendingPayment': return patient.pendingPayment || 0;
+                case 'goodwillCharges': return patient.goodwillCharges || 0;
+                default: return '';
+            }
+        }
+
+        // ============================================================
+        //  UPDATE PAGINATION
+        // ============================================================
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredPatients.length / perPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * perPage;
+            const end = Math.min(start + perPage, filteredPatients.length);
+            displayedPatients = filteredPatients.slice(start, end);
+
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+
+            showingRecords.textContent = displayedPatients.length;
+            recordBadge.textContent = filteredPatients.length;
+        }
+
+        // ============================================================
+        //  RENDER TABLE WITH HIGHLIGHTING
+        // ============================================================
+        function renderTable() {
+            // Build header
+            let headerHtml = '<tr>';
+            COLUMNS.forEach(col => {
+                if (columnVisibility[col.key]) {
+                    headerHtml += `<th class="${col.widthClass || ''}">
+                        ${col.label}
+                        ${col.filterable ? buildFilterDropdown(col.key) : ''}
+                    </th>`;
+                }
+            });
+            headerHtml += '</tr>';
+            tableHead.innerHTML = headerHtml;
+
+            // Re-bind filter events
+            COLUMNS.forEach(col => {
+                if (col.filterable) {
+                    const filterEl = document.getElementById(`filter_${col.key}`);
+                    if (filterEl) {
+                        filterEl.addEventListener('change', function() {
+                            columnFilters[col.key] = this.value;
+                            applyFilters();
+                        });
+                    }
+                }
+            });
+
+            // Build body with highlighting
+            if (displayedPatients.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="${COLUMNS.filter(c => columnVisibility[c.key]).length}" style="text-align:center;padding:40px;color:var(--text-light);">
+                            No patient records found.
+                        </td>
+                    </tr>
+                `;
                 return;
             }
-            
-            if (currentDropdown) {
-                closeDropdown();
-            }
-            
-            currentActiveColumn = columnName;
-            
-            const rect = th.getBoundingClientRect();
-            
-            const dropdown = document.createElement('div');
-            dropdown.className = 'filter-dropdown';
-            
-            dropdown.style.position = 'absolute';
-            dropdown.style.top = `${rect.height}px`;
-            dropdown.style.left = '0px';
-            
-            const searchInput = document.createElement('input');
-            searchInput.type = 'text';
-            searchInput.placeholder = 'Search options...';
-            searchInput.autocomplete = 'off';
-            
-            const optionsContainer = document.createElement('div');
-            optionsContainer.className = 'filter-options';
-            
-            const uniqueValues = columnUniqueValues.get(columnName) || new Set();
-            const sortedValues = Array.from(uniqueValues).sort();
-            const hasBlank = columnHasBlank.get(columnName) || false;
-            
-            let tempSelections = new Set(currentSelections);
-            
-            function renderOptions(searchTerm = '') {
-                optionsContainer.innerHTML = '';
-                
-                const allOptionDiv = document.createElement('div');
-                allOptionDiv.className = 'filter-option filter-option-all';
-                
-                const allCheckbox = document.createElement('input');
-                allCheckbox.type = 'checkbox';
-                allCheckbox.id = `select_all_${columnName.replace(/\s/g, '_')}`;
-                
-                let totalOptions = sortedValues.length;
-                if (hasBlank) totalOptions++;
-                let selectedCount = tempSelections.size;
-                allCheckbox.checked = (selectedCount === totalOptions && totalOptions > 0);
-                allCheckbox.indeterminate = (selectedCount > 0 && selectedCount < totalOptions);
-                
-                const allLabel = document.createElement('label');
-                allLabel.htmlFor = allCheckbox.id;
-                allLabel.textContent = '☑ Select All';
-                allLabel.style.fontWeight = '600';
-                
-                allCheckbox.addEventListener('change', (e) => {
-                    if (allCheckbox.checked) {
-                        sortedValues.forEach(v => tempSelections.add(v));
-                        if (hasBlank) tempSelections.add('(Blank)');
+
+            let bodyHtml = '';
+            displayedPatients.forEach((patient, idx) => {
+                const rowNum = (currentPage - 1) * perPage + idx + 1;
+                const labs = getLabsForEntry(patient);
+
+                bodyHtml += '<tr>';
+                COLUMNS.forEach(col => {
+                    if (columnVisibility[col.key]) {
+                        let value = getColumnValue(patient, col.key);
+                        let displayValue = '';
+
+                        if (col.key === 'labNames') {
+                            // Show lab tags with highlighting
+                            const labTags = labs.map(id => {
+                                const name = LAB_NAMES[id] || 'Lab ' + id;
+                                const highlighted = highlightText(name, searchTerm);
+                                return `<span class="lab-tag lab-tag-${id}">${highlighted}</span>`;
+                            }).join('');
+                            displayValue = labTags || '—';
+                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue}</td>`;
+                        } else if (col.key === 'rowNum') {
+                            bodyHtml += `<td class="${col.widthClass || ''}">${rowNum}</td>`;
+                        } else if (col.key === 'patientId') {
+                            displayValue = highlightText(String(value), searchTerm);
+                            bodyHtml += `<td class="${col.widthClass || ''} patient-id">${displayValue || '—'}</td>`;
+                        } else if (col.key === 'address') {
+                            displayValue = highlightText(String(value), searchTerm);
+                            bodyHtml += `<td class="${col.widthClass || ''}"><span class="truncate" title="${escapeHtml(String(value))}">${displayValue || '—'}</span></td>`;
+                        } else if (['totalMRP', 'totalB2B', 'finalPrice', 'cashReceived', 'onlineReceived', 'pendingPayment', 'goodwillCharges'].includes(col.key)) {
+                            const formatted = formatCurrency(value);
+                            const isPending = col.key === 'pendingPayment' && value > 0;
+                            bodyHtml += `<td class="${col.widthClass || ''} currency" style="${isPending ? 'color:var(--error);font-weight:600;' : ''}">${formatted}</td>`;
+                        } else {
+                            displayValue = highlightText(String(value), searchTerm);
+                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue || '—'}</td>`;
+                        }
+                    }
+                });
+                bodyHtml += '</tr>';
+            });
+
+            tableBody.innerHTML = bodyHtml;
+        }
+
+        // ============================================================
+        //  BUILD FILTER DROPDOWN
+        // ============================================================
+        function buildFilterDropdown(colKey) {
+            const values = new Set();
+            allPatients.forEach(p => {
+                let val = getColumnValue(p, colKey);
+                if (val && String(val).trim()) {
+                    if (colKey === 'labNames') {
+                        const labs = getLabsForEntry(p);
+                        labs.forEach(id => {
+                            values.add(LAB_NAMES[id] || 'Lab ' + id);
+                        });
                     } else {
-                        tempSelections.clear();
+                        values.add(String(val).trim());
                     }
-                    renderOptions(searchInput.value);
-                });
-                
-                allOptionDiv.appendChild(allCheckbox);
-                allOptionDiv.appendChild(allLabel);
-                optionsContainer.appendChild(allOptionDiv);
-                
-                const filtered = sortedValues.filter(v => 
-                    v.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                
-                filtered.forEach(value => {
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'filter-option';
-                    
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.value = value;
-                    checkbox.checked = tempSelections.has(value);
-                    checkbox.id = `filter_${columnName.replace(/\s/g, '_')}_${value.replace(/\s/g, '_')}`;
-                    
-                    const label = document.createElement('label');
-                    label.htmlFor = checkbox.id;
-                    label.textContent = value;
-                    
-                    checkbox.addEventListener('change', (e) => {
-                        if (checkbox.checked) {
-                            tempSelections.add(value);
-                        } else {
-                            tempSelections.delete(value);
-                        }
-                        const selectAllCheckbox = optionsContainer.querySelector(`#select_all_${columnName.replace(/\s/g, '_')}`);
-                        if (selectAllCheckbox) {
-                            let totalOpts = sortedValues.length;
-                            if (hasBlank) totalOpts++;
-                            let selectedCnt = tempSelections.size;
-                            selectAllCheckbox.checked = (selectedCnt === totalOpts && totalOpts > 0);
-                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
-                        }
-                    });
-                    
-                    optionDiv.appendChild(checkbox);
-                    optionDiv.appendChild(label);
-                    optionsContainer.appendChild(optionDiv);
-                });
-                
-                if (hasBlank) {
-                    const blankOptionDiv = document.createElement('div');
-                    blankOptionDiv.className = 'filter-option blank-option';
-                    
-                    const blankCheckbox = document.createElement('input');
-                    blankCheckbox.type = 'checkbox';
-                    blankCheckbox.value = '(Blank)';
-                    blankCheckbox.checked = tempSelections.has('(Blank)');
-                    blankCheckbox.id = `filter_${columnName.replace(/\s/g, '_')}_blank`;
-                    
-                    const blankLabel = document.createElement('label');
-                    blankLabel.htmlFor = blankCheckbox.id;
-                    blankLabel.textContent = '(Blank)';
-                    blankLabel.style.fontStyle = 'italic';
-                    blankLabel.style.color = '#888';
-                    
-                    blankCheckbox.addEventListener('change', (e) => {
-                        if (blankCheckbox.checked) {
-                            tempSelections.add('(Blank)');
-                        } else {
-                            tempSelections.delete('(Blank)');
-                        }
-                        const selectAllCheckbox = optionsContainer.querySelector(`#select_all_${columnName.replace(/\s/g, '_')}`);
-                        if (selectAllCheckbox) {
-                            let totalOpts = sortedValues.length;
-                            if (hasBlank) totalOpts++;
-                            let selectedCnt = tempSelections.size;
-                            selectAllCheckbox.checked = (selectedCnt === totalOpts && totalOpts > 0);
-                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
-                        }
-                    });
-                    
-                    blankOptionDiv.appendChild(blankCheckbox);
-                    blankOptionDiv.appendChild(blankLabel);
-                    optionsContainer.appendChild(blankOptionDiv);
                 }
-                
-                if (filtered.length === 0 && (!hasBlank || searchTerm !== '')) {
-                    const noResult = document.createElement('div');
-                    noResult.style.padding = '12px';
-                    noResult.style.textAlign = 'center';
-                    noResult.style.color = '#999';
-                    noResult.textContent = 'No matching options';
-                    optionsContainer.appendChild(noResult);
-                }
-            }
-            
-            searchInput.addEventListener('input', (e) => {
-                renderOptions(e.target.value);
             });
-            
-            renderOptions();
-            
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'filter-actions';
-            
-            const applyBtn = document.createElement('button');
-            applyBtn.textContent = 'Apply';
-            applyBtn.className = 'filter-apply';
-            applyBtn.onclick = () => {
-                if (tempSelections.size === 0) {
-                    columnFilters.delete(columnName);
-                } else {
-                    columnFilters.set(columnName, tempSelections);
-                }
-                applyFiltersAndRender();
-                closeDropdown();
-                if (columnFilters.has(columnName) && columnFilters.get(columnName).size > 0) {
-                    filterIcon.style.color = '#1ECAD3';
-                } else {
-                    filterIcon.style.color = '';
-                }
-            };
-            
-            const clearBtn = document.createElement('button');
-            clearBtn.textContent = 'Clear All';
-            clearBtn.className = 'filter-clear';
-            clearBtn.onclick = () => {
-                tempSelections.clear();
-                renderOptions(searchInput.value);
-            };
-            
-            const closeBtn = document.createElement('button');
-            closeBtn.textContent = 'Close';
-            closeBtn.className = 'filter-close';
-            closeBtn.onclick = () => {
-                closeDropdown();
-            };
-            
-            actionsDiv.appendChild(applyBtn);
-            actionsDiv.appendChild(clearBtn);
-            actionsDiv.appendChild(closeBtn);
-            
-            dropdown.appendChild(searchInput);
-            dropdown.appendChild(optionsContainer);
-            dropdown.appendChild(actionsDiv);
-            
-            th.style.position = 'relative';
-            th.appendChild(dropdown);
-            currentDropdown = dropdown;
-        });
-    }
 
-    function renderTable() {
-        if (filteredData.length === 0 && masterSheetData.length > 0) {
-            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-inbox" style="font-size: 2rem; color:#1ECAD3;"></i><br />No records match the filters. Adjust date, search, or column filters.</div>`;
-            paginationContainer.style.display = 'none';
-            topScrollbar.style.display = 'none';
-            return;
-        }
-        if (filteredData.length === 0 && masterSheetData.length === 0) {
-            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-cloud-download-alt"></i><br />Waiting for Google Sheet data. Ensure published CSV is accessible.</div>`;
-            paginationContainer.style.display = 'none';
-            topScrollbar.style.display = 'none';
-            return;
-        }
-        
-        const pageData = getCurrentPageData();
-        const allColumns = getDisplayColumns();
-        
-        let html = `<table class="data-table" id="dataTable"><thead><tr>`;
-        allColumns.forEach((col, idx) => {
-            let displayHeader = col.charAt(0).toUpperCase() + col.slice(1).replace(/([A-Z])/g, ' $1');
-            html += `<th data-column="${col}" data-index="${idx}">${displayHeader}</th>`;
-        });
-        html += `</thead><tbody>`;
-        
-        for (let row of pageData) {
-            html += `<tr>`;
-            allColumns.forEach(col => {
-                let cellVal = row[col] !== undefined && row[col] !== null ? row[col] : '—';
-                html += `<td>${cellVal}</td>`;
-            });
-            html += `</tr>`;
-        }
-        html += `</tbody><tr>`;
-        containerDiv.innerHTML = html;
-        
-        // Setup top scrollbar synchronization
-        const tableContainer = document.querySelector('.table-container');
-        const dataTable = document.getElementById('dataTable');
-        
-        if (tableContainer && dataTable) {
-            topScrollbar.style.display = 'block';
-            
-            // Set top scrollbar width to match table
-            const updateScrollWidth = () => {
-                const tableWidth = dataTable.scrollWidth;
-                topScrollbar.style.width = '100%';
-                const scrollDiv = document.createElement('div');
-                scrollDiv.style.width = `${tableWidth}px`;
-                scrollDiv.style.height = '1px';
-                topScrollbar.innerHTML = '';
-                topScrollbar.appendChild(scrollDiv);
-            };
-            updateScrollWidth();
-            
-            // Sync scroll positions
-            tableContainer.addEventListener('scroll', () => {
-                topScrollbar.scrollLeft = tableContainer.scrollLeft;
-            });
-            
-            topScrollbar.addEventListener('scroll', () => {
-                tableContainer.scrollLeft = topScrollbar.scrollLeft;
-            });
-        }
-        
-        // Add filter icons to all column headers
-        setTimeout(() => {
-            allColumns.forEach((col, idx) => {
-                createColumnFilter(col, idx);
-            });
-        }, 50);
-    }
+            const sortedValues = Array.from(values).sort();
+            const currentValue = columnFilters[colKey] || 'all';
 
-    function csvToObjects(csvString) {
-        const lines = csvString.split(/\r?\n/);
-        if (lines.length < 2) return [];
-        let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-        const rows = [];
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].trim() === '') continue;
-            let values = [];
-            let inQuote = false;
-            let current = '';
-            for (let ch of lines[i]) {
-                if (ch === '"') {
-                    inQuote = !inQuote;
-                } else if (ch === ',' && !inQuote) {
-                    values.push(current.trim());
-                    current = '';
-                } else {
-                    current += ch;
-                }
-            }
-            values.push(current.trim());
-            if (values.length < headers.length) {
-                while (values.length < headers.length) values.push('');
-            }
-            let obj = {};
-            headers.forEach((h, idx) => {
-                let rawVal = values[idx] ? values[idx].replace(/^"|"$/g, '') : '';
-                obj[h] = rawVal;
+            let html = `<select class="header-filter" id="filter_${colKey}">
+                <option value="all">All</option>`;
+            sortedValues.forEach(v => {
+                const selected = v === currentValue ? 'selected' : '';
+                html += `<option value="${escapeHtml(v)}" ${selected}>${escapeHtml(v)}</option>`;
             });
-            let dateKey = headers[0] || (headers.find(h => /date|visit/i.test(h)) || headers[0]);
-            if (dateKey) obj.date = obj[dateKey];
-            else obj.date = '';
-            rows.push(obj);
+            html += '</select>';
+            return html;
         }
-        return rows;
-    }
 
-    async function loadSheetData(showRefreshAnimation = false) {
-        isLoading = true;
-        enableDownloadButtons();
-        
-        if (showRefreshAnimation) {
-            isRefreshing = true;
-            refreshBtn.disabled = true;
-            refreshIcon.className = 'fas fa-sync-alt refresh-spinner';
+        // ============================================================
+        //  UPDATE STATS
+        // ============================================================
+        function updateStats() {
+            filteredRecords.textContent = filteredPatients.length;
+            showingRecords.textContent = displayedPatients.length;
+            recordBadge.textContent = filteredPatients.length;
         }
-        
-        containerDiv.innerHTML = `<div class="loader-state"><i class="fas fa-spinner fa-pulse" style="font-size: 36px; color:#1ECAD3;"></i><p>Loading records ...</p></div>`;
-        topScrollbar.style.display = 'none';
-        
-        try {
-            const cacheBuster = `&_cb=${Date.now()}`;
-            const response = await fetch(SHEET_CSV_URL + cacheBuster, { 
-                cache: "no-store",
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
-                }
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status} - Sheet unavailable`);
-            const csvText = await response.text();
-            if (!csvText.trim()) throw new Error("Empty CSV data");
-            const parsed = csvToObjects(csvText);
-            if (parsed.length === 0) throw new Error("No rows found in sheet");
-            masterSheetData = parsed;
-            
-            // Initialize column filters
-            columnFilters.clear();
-            updateColumnUniqueValues();
-            
-            applyFiltersAndRender();
-            
-            if (showRefreshAnimation) {
-                refreshIcon.className = 'fas fa-check';
-                setTimeout(() => {
-                    refreshIcon.className = 'fas fa-sync-alt';
-                }, 1000);
+
+        // ============================================================
+        //  EXPORT CSV
+        // ============================================================
+        function exportCSV() {
+            if (filteredPatients.length === 0) {
+                toast('No data to export.', 'error');
+                return;
             }
-        } catch (err) {
-            console.error(err);
-            containerDiv.innerHTML = `<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> <strong>Could not fetch Google Sheet</strong><br />Ensure sheet is published as CSV. CORS/public access needed.<br />Details: ${err.message}<br><br>Please update SHEET_CSV_URL with your published Google Sheet CSV link.</div>`;
-            statsSpan.innerHTML = `<span><i class="fas fa-ban"></i> Data error</span><span>Check link or network</span>`;
-            masterSheetData = [];
-            filteredData = [];
-            paginationContainer.style.display = 'none';
-            topScrollbar.style.display = 'none';
-            
-            if (showRefreshAnimation) {
-                refreshIcon.className = 'fas fa-exclamation-triangle';
-                setTimeout(() => {
-                    refreshIcon.className = 'fas fa-sync-alt';
-                }, 1500);
-            }
-        } finally {
-            isLoading = false;
-            enableDownloadButtons();
-            
-            if (showRefreshAnimation) {
-                isRefreshing = false;
-                refreshBtn.disabled = false;
-                setTimeout(() => {
-                    if (refreshIcon.className !== 'fas fa-sync-alt') {
-                        refreshIcon.className = 'fas fa-sync-alt';
+
+            const visibleCols = COLUMNS.filter(c => columnVisibility[c.key]);
+
+            let headers = visibleCols.map(c => c.label);
+            let csv = headers.join(',') + '\n';
+
+            filteredPatients.forEach(patient => {
+                const row = visibleCols.map(col => {
+                    let value = getColumnValue(patient, col.key);
+                    if (col.key === 'labNames') {
+                        const labs = getLabsForEntry(patient);
+                        value = labs.map(id => LAB_NAMES[id] || 'Lab ' + id).join(', ');
                     }
-                }, 1000);
-            }
-        }
-    }
+                    if (typeof value === 'string') {
+                        value = value.replace(/,/g, ';').replace(/\n/g, ' ');
+                    }
+                    return String(value);
+                });
+                csv += row.join(',') + '\n';
+            });
 
-    function bindEvents() {
-        fromDateEl.addEventListener('change', () => {
-            updateColumnUniqueValues();
-            applyFiltersAndRender();
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `patient_data_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+            toast('CSV exported successfully!', 'success');
+        }
+
+        // ============================================================
+        //  CLEAR FILTERS
+        // ============================================================
+        function clearAllFilters() {
+            globalSearch.value = '';
+            searchTerm = '';
+            filterFromDate.value = '';
+            filterToDate.value = '';
+            dateFrom = '';
+            dateTo = '';
+
+            COLUMNS.forEach(col => {
+                if (col.filterable) {
+                    columnFilters[col.key] = 'all';
+                    const filterEl = document.getElementById(`filter_${col.key}`);
+                    if (filterEl) filterEl.value = 'all';
+                }
+            });
+
+            applyFilters();
+            toast('All filters cleared!', 'info');
+        }
+
+        // ============================================================
+        //  EVENT LISTENERS
+        // ============================================================
+        // Global search - update search term and re-render
+        globalSearch.addEventListener('input', function() {
+            searchTerm = this.value;
+            applyFilters();
         });
-        toDateEl.addEventListener('change', () => {
-            updateColumnUniqueValues();
-            applyFiltersAndRender();
+
+        // Date filters
+        filterFromDate.addEventListener('change', function() {
+            dateFrom = this.value;
+            applyFilters();
         });
-        globalSearchEl.addEventListener('input', () => {
-            updateColumnUniqueValues();
-            applyFiltersAndRender();
+
+        filterToDate.addEventListener('change', function() {
+            dateTo = this.value;
+            applyFilters();
         });
-        
-        sortOrderSelect.addEventListener('change', (e) => {
-            sortOrder = e.target.value;
-            applyFiltersAndRender();
+
+        // Refresh
+        refreshBtn.addEventListener('click', async function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '⏳ Loading...';
+            this.disabled = true;
+            await loadData();
+            this.innerHTML = originalText;
+            this.disabled = false;
         });
-        
-        resetBtn.addEventListener('click', () => {
-            fromDateEl.value = '';
-            toDateEl.value = '';
-            globalSearchEl.value = '';
-            sortOrderSelect.value = 'desc';
-            sortOrder = 'desc';
-            columnFilters.clear();
-            updateColumnUniqueValues();
-            applyFiltersAndRender();
+
+        // Export
+        exportBtn.addEventListener('click', exportCSV);
+
+        // Clear filters
+        clearFiltersBtn.addEventListener('click', clearAllFilters);
+
+        // Column toggle
+        toggleColumnsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            columnToggleDropdown.classList.toggle('show');
         });
-        
-        refreshBtn.addEventListener('click', () => {
-            if (!isRefreshing) {
-                loadSheetData(true);
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.column-toggle-container')) {
+                columnToggleDropdown.classList.remove('show');
             }
         });
-        
-        fullExcelBtn.addEventListener('click', exportFullData);
-        filteredExcelBtn.addEventListener('click', exportFilteredData);
-        
-        firstPageBtn.addEventListener('click', () => {
-            currentPage = 1;
+
+        toggleAllColumns.addEventListener('change', function() {
+            const checked = this.checked;
+            COLUMNS.forEach(col => {
+                columnVisibility[col.key] = checked;
+                const cb = document.getElementById(`col_${col.key}`);
+                if (cb) cb.checked = checked;
+            });
             renderTable();
-            updatePagination();
-            syncTopScrollbar();
         });
-        
-        prevPageBtn.addEventListener('click', () => {
+
+        // Pagination
+        perPageSelect.addEventListener('change', function() {
+            perPage = parseInt(this.value);
+            currentPage = 1;
+            updatePagination();
+            renderTable();
+            updateStats();
+        });
+
+        prevPageBtn.addEventListener('click', function() {
             if (currentPage > 1) {
                 currentPage--;
-                renderTable();
                 updatePagination();
-                syncTopScrollbar();
+                renderTable();
+                updateStats();
             }
         });
-        
-        nextPageBtn.addEventListener('click', () => {
+
+        nextPageBtn.addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredPatients.length / perPage);
             if (currentPage < totalPages) {
                 currentPage++;
-                renderTable();
                 updatePagination();
-                syncTopScrollbar();
+                renderTable();
+                updateStats();
             }
         });
-        
-        lastPageBtn.addEventListener('click', () => {
-            currentPage = totalPages;
-            renderTable();
-            updatePagination();
-            syncTopScrollbar();
-        });
-        
-        rowsPerPageSelect.addEventListener('change', (e) => {
-            rowsPerPage = parseInt(e.target.value);
-            currentPage = 1;
-            updatePagination();
-            renderTable();
-            syncTopScrollbar();
-        });
-        
-        // Close dropdown on window click
-        window.addEventListener('click', (e) => {
-            if (currentDropdown && !currentDropdown.contains(e.target)) {
-                closeDropdown();
-            }
-        });
-    }
 
-    function init() {
-        bindEvents();
-        loadSheetData(false);
-    }
-    init();
-</script>
-    <script src="pwa.js"></script>
+        // ============================================================
+        //  INIT
+        // ============================================================
+        loadData();
+    </script>
 </body>
 </html>
