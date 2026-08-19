@@ -72,7 +72,7 @@ let pagination = {
 let filterState = {
   sort: 'desc',
   status: 'all',
-  fromDate: '',
+  fromDate: getFirstDayOfCurrentMonth(),
   toDate: '',
   labs: [true, true, true, true],
   center: 'all',
@@ -82,6 +82,14 @@ let filterState = {
   doctor: 'all',
   search: ''
 };
+
+// Helper function to get first day of current month in YYYY-MM-DD format
+function getFirstDayOfCurrentMonth() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+}
 
 const formStates = new Map();
 
@@ -319,9 +327,7 @@ async function uploadImagesForPatient(patientId, imageFiles, onProgress) {
       }
     } catch (err) {
       console.error('Error uploading image:', err);
-      // Continue with other images, but we'll throw at the end if none succeeded
       if (urls.length === 0) throw err;
-      // Otherwise, we'll just skip this image and log the error
       toast('Warning: One image failed to upload. Others may have succeeded.', 'error');
     }
   }
@@ -656,7 +662,7 @@ async function searchAllPatients(searchTerm) {
 function getEntryProgress(entry) {
   const progress = { patient: 0, test: 0, visit: 0, report: 0, payment: 0 };
 
-  // ---- PATIENT PROGRESS - MATCHES getPatientProgress() ----
+  // ---- PATIENT PROGRESS ----
   let patientFilled = 0;
   const patientFields = ['patientName', 'age', 'gender', 'address', 'doctorName', 'careOfPerson'];
   
@@ -666,15 +672,14 @@ function getEntryProgress(entry) {
     }
   });
   
-  // Use hasContactNumber from index
   if (entry.hasContactNumber === true) {
     patientFilled++;
   }
   
-  const totalPatientFields = 7; // 6 fields + contacts
+  const totalPatientFields = 7;
   progress.patient = Math.min(100, Math.round((patientFilled / totalPatientFields) * 100));
 
-  // ---- TEST PROGRESS - MATCHES getTestProgress() ----
+  // ---- TEST PROGRESS ----
   let hasTest = false;
   let totalSelected = 0;
   
@@ -692,13 +697,11 @@ function getEntryProgress(entry) {
     }
   }
   
-  // Fallback: check labs array
   if (!hasTest && entry.labs && Array.isArray(entry.labs) && entry.labs.length > 0) {
     hasTest = true;
     totalSelected = entry.labs.length;
   }
   
-  // Fallback: check hasTests flag
   if (!hasTest && entry.hasTests === true) {
     hasTest = true;
     totalSelected = 1;
@@ -706,6 +709,7 @@ function getEntryProgress(entry) {
   
   progress.test = hasTest ? 100 : 0;
 
+  // ---- VISIT PROGRESS ----
   let visitFilled = 0;
   const visitFields = ['center', 'visitType', 'visitDate', 'visitTime', 'phlebotomist'];
   
@@ -715,52 +719,44 @@ function getEntryProgress(entry) {
     }
   });
   
-  // Determine if PP is selected (based on either labSelections or filled PP fields)
   const ppSelected = isPPSelectedForEntry(entry);
   const extraSelected = isExtraCollectionSelectedForEntry(entry);
   
-  // Count PP fields if selected
   if (ppSelected) {
     if (entry.ppTime && entry.ppTime.toString().trim().length > 0) visitFilled++;
     if (entry.ppPhlebotomist && entry.ppPhlebotomist.toString().trim().length > 0) visitFilled++;
   }
   
-  // Count Extra fields if selected
   if (extraSelected) {
     if (entry.extraCollectionTime && entry.extraCollectionTime.toString().trim().length > 0) visitFilled++;
     if (entry.extraCollectionPhlebotomist && entry.extraCollectionPhlebotomist.toString().trim().length > 0) visitFilled++;
   }
   
-  // Total expected fields = 5 + (2 if PP selected) + (2 if Extra selected)
   let totalVisitFields = 5;
   if (ppSelected) totalVisitFields += 2;
   if (extraSelected) totalVisitFields += 2;
   
   progress.visit = Math.min(100, Math.round((visitFilled / totalVisitFields) * 100));
 
-  // ---- REPORT PROGRESS - MATCHES getReportProgress() ----
+  // ---- REPORT PROGRESS ----
   let reportChecked = 0;
   let reportTotal = 0;
 
-  // Reports received
   if (entry.totalReports !== undefined && entry.totalReports > 0) {
     reportTotal += entry.totalReports;
     reportChecked += entry.receivedReports || 0;
   }
 
-  // Online Report
   if (entry.onlineReportRequired) {
     reportTotal++;
     if (entry.onlineReportSent) reportChecked++;
   }
 
-  // Report Delivery
   if (entry.reportDeliveryRequired) {
     reportTotal++;
     if (entry.reportDelivered) reportChecked++;
   }
 
-  // Bill Delivery
   if (entry.billDeliveryRequired) {
     reportTotal++;
     if (entry.billDelivered) reportChecked++;
@@ -768,7 +764,7 @@ function getEntryProgress(entry) {
 
   progress.report = reportTotal > 0 ? Math.round((reportChecked / reportTotal) * 100) : 0;
 
-  // ---- PAYMENT PROGRESS - MATCHES getPaymentProgress() ----
+  // ---- PAYMENT PROGRESS ----
   let paymentPct = 0;
   const finalPrice = entry.finalPrice || 0;
   
@@ -795,6 +791,7 @@ function getEntryProgress(entry) {
 
   return progress;
 }
+
 // ============================================================
 //  LABS - ROBUST getLabsForEntry()
 // ============================================================
@@ -843,7 +840,7 @@ function getLabsForEntry(entry) {
 }
 
 // ============================================================
-//  LAB COLOR CODING - FIXED
+//  LAB COLOR CODING
 // ============================================================
 function getEntryStyle(labs) {
   if (!labs || labs.length === 0) return '';
@@ -892,11 +889,9 @@ function getEntryGradientClass(entry) {
 }
 
 function isPPSelectedForEntry(entry) {
-  // 1. Use the stored flag (from patientIndex)
   if (entry.isPPSelected !== undefined) {
     return entry.isPPSelected === true;
   }
-  // 2. Fallback: check labSelections (full patient record)
   if (entry.labSelections) {
     for (let labId = 1; labId <= 4; labId++) {
       const labData = entry.labSelections[labId];
@@ -917,16 +912,13 @@ function isPPSelectedForEntry(entry) {
       }
     }
   }
-  // 3. Do NOT fallback to ppTime/ppPhlebotomist – they can be filled without selection
   return false;
 }
 
 function isExtraCollectionSelectedForEntry(entry) {
-  // 1. Use the stored flag (from patientIndex)
   if (entry.isExtraSelected !== undefined) {
     return entry.isExtraSelected === true;
   }
-  // 2. Fallback: check labSelections (full patient record)
   if (entry.labSelections) {
     for (let labId = 1; labId <= 4; labId++) {
       const labData = entry.labSelections[labId];
@@ -949,10 +941,8 @@ function isExtraCollectionSelectedForEntry(entry) {
       }
     }
   }
-  // 3. Do NOT fallback to extraCollectionTime/extraCollectionPhlebotomist
   return false;
 }
-
 
 // ============================================================
 //  FILTER ENTRIES
@@ -990,9 +980,16 @@ function filterEntries(entries) {
         case 'visit-pending':
           return progress.visit < 100;
         case 'report-received-pending': {
-          if (entry.reportsReceived) {
+          // FIXED: Check if ANY report receive checkbox is unchecked
+          if (entry.reportsReceived && typeof entry.reportsReceived === 'object') {
             const values = Object.values(entry.reportsReceived);
+            // If there are any false values, then report received is pending
             return values.some(v => v === false);
+          }
+          // If no reportsReceived data exists, check if there are any tests
+          // If there are tests but no reportsReceived, consider it pending
+          if (entry.hasTests === true || (entry.labs && entry.labs.length > 0)) {
+            return true;
           }
           return false;
         }
@@ -1004,6 +1001,13 @@ function filterEntries(entries) {
           return !entry.finalPrice || entry.finalPrice <= 0;
         case 'payment-pending':
           return entry.pendingPayment && entry.pendingPayment > 0;
+        case 'goodwill-pending': {
+          const careOf = entry.careOfPerson || '';
+          if (careOf && careOf.toLowerCase() !== 'none') {
+            return !entry.goodwillCharges || entry.goodwillCharges <= 0;
+          }
+          return false;
+        }
         case 'pending':
           return progress.patient < 100 || progress.test < 100 || 
                  progress.visit < 100 || progress.report < 100 || progress.payment < 100;
@@ -1134,7 +1138,6 @@ function updateEntryCount() {
     return;
   }
   
-  // Check if filters are active
   const hasActiveFilters = filterState.status !== 'all' || 
                           filterState.fromDate || 
                           filterState.toDate || 
@@ -1152,6 +1155,7 @@ function updateEntryCount() {
     countEl.textContent = total + ' Entries';
   }
 }
+
 // ============================================================
 //  LOAD ENTRIES
 // ============================================================
@@ -1586,7 +1590,11 @@ function createIndexData(data, key) {
   // Report progress data
   let totalReports = 0;
   let receivedReports = 0;
+  let reportsReceived = {};
+  
   if (data.reportsReceived && typeof data.reportsReceived === 'object') {
+    // Store the full reportsReceived object for filtering
+    reportsReceived = { ...data.reportsReceived };
     const values = Object.values(data.reportsReceived);
     totalReports = values.length;
     receivedReports = values.filter(v => v === true).length;
@@ -1601,7 +1609,7 @@ function createIndexData(data, key) {
     pendingPayment = finalPrice - cash - online;
   }
 
-  // ---- NEW: Detect PP and Extra Collection selection ----
+  // Detect PP and Extra Collection selection
   let isPPSelected = false;
   let isExtraSelected = false;
   if (data.labSelections && typeof data.labSelections === 'object') {
@@ -1669,9 +1677,10 @@ function createIndexData(data, key) {
     cashReceived: data.cashReceived || 0,
     onlineReceived: data.onlineReceived || 0,
     goodwillCharges: data.goodwillCharges || 0,
-    // ---- NEW FLAGS ----
     isPPSelected: isPPSelected,
-    isExtraSelected: isExtraSelected
+    isExtraSelected: isExtraSelected,
+    // CRITICAL FIX: Store reportsReceived in index for filtering
+    reportsReceived: reportsReceived
   };
 }
 
@@ -1710,12 +1719,11 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
   }
 
   try {
-    let patientId = existingKey; // existingKey is null for new entries
+    let patientId = existingKey;
 
     // --- Step 1: Upload images (if any) ---
     let imageUrls = [];
     if (state.imageFiles && state.imageFiles.length > 0) {
-      // For new entries, generate a key BEFORE uploading so we can use it as folder name
       if (!patientId) {
         const newRef = db.ref('patients').push();
         patientId = newRef.key;
@@ -1731,7 +1739,6 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
       } catch (uploadErr) {
         console.warn('Image upload failed, but patient will still be saved without images:', uploadErr);
         toast('Warning: Images could not be uploaded. Patient saved without images.', 'error');
-        // Keep existing images (if any) and skip new ones
         imageUrls = [];
         data.images = state.images.filter(img =>
           typeof img === 'string' && img.startsWith('https://ik.imagekit.io/')
@@ -1752,7 +1759,7 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
 
     delete data.imageFiles;
 
-    // --- Step 2: Ensure patientId is set for new entries (if no images were uploaded) ---
+    // --- Step 2: Ensure patientId is set for new entries ---
     if (!patientId) {
       const newRef = db.ref('patients').push();
       patientId = newRef.key;
@@ -1771,14 +1778,6 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
     updates[patientPath] = data;
     updates[indexPath] = indexData;
 
-    // If editing with an existing key, ensure we use the same key (already set above)
-    // But if existingKey is provided, we should not generate a new one; patientId should equal existingKey.
-    // However, if we generated a new key because of image upload, we would be overwriting
-    // the edit target. So we must keep patientId = existingKey in edit mode.
-    // The code above already sets patientId = existingKey initially.
-    // The only case where patientId changes is if we generate a new one for new entries.
-    // So for edit, patientId remains existingKey.
-    // For safety, if isEdit and patientId !== existingKey, we should log an error.
     if (isEdit && existingKey && patientId !== existingKey) {
       console.error('[savePatient] Key mismatch! existingKey:', existingKey, 'patientId:', patientId);
       toast('Error: Patient key mismatch. Please refresh and try again.', 'error');
@@ -2244,7 +2243,6 @@ function getVisitProgress(formId) {
     }
   });
   
-  // Check if PP test is selected
   const ppSelected = isPPSelected(formId);
   if (ppSelected) {
     const ppTime = document.getElementById(`visitPPTime-${formId}`);
@@ -2253,7 +2251,6 @@ function getVisitProgress(formId) {
     if (ppPhleb && ppPhleb.value && ppPhleb.value.trim().length > 0) completed++;
   }
   
-  // Check if Extra Collection test is selected
   const extraSelected = isExtraCollectionSelected(formId);
   if (extraSelected) {
     const extraTime = document.getElementById(`visitExtraTime-${formId}`);
@@ -2262,8 +2259,7 @@ function getVisitProgress(formId) {
     if (extraPhleb && extraPhleb.value && extraPhleb.value.trim().length > 0) completed++;
   }
   
-  // Calculate total expected fields
-  let totalFields = 5; // base fields
+  let totalFields = 5;
   if (ppSelected) totalFields += 2;
   if (extraSelected) totalFields += 2;
   
@@ -3492,7 +3488,7 @@ function setupVisitScheduleListeners() {
 }
 
 // ============================================================
-//  BUILD FILTERS UI
+//  BUILD FILTERS UI - FIXED with proper doctor search
 // ============================================================
 function buildFiltersUI() {
   const statusOptions = [
@@ -3504,7 +3500,8 @@ function buildFiltersUI() {
     { value: 'report-online-pending', label: 'Report Online Send Pending' },
     { value: 'report-delivery-pending', label: 'Report Delivery Pending' },
     { value: 'final-price-pending', label: 'Final Price Pending' },
-    { value: 'payment-pending', label: 'Payment Pending' }
+    { value: 'payment-pending', label: 'Payment Pending' },
+    { value: 'goodwill-pending', label: 'Goodwill Charges Pending' }
   ];
 
   const html = `
@@ -3577,11 +3574,18 @@ function buildFiltersUI() {
             <option value="all">All</option>
           </select>
         </div>
-        <div class="filter-group">
+        <div class="filter-group doctor-filter-group">
           <label>Dr. Name:</label>
-          <select id="filterDoctor">
-            <option value="all">All</option>
-          </select>
+          <div class="doctor-filter-wrapper">
+            <div class="doctor-search-container">
+              <input type="text" id="filterDoctorSearch" placeholder="🔍 Search doctor..." class="doctor-search-input" autocomplete="off" />
+              <button class="doctor-clear-btn" id="doctorClearBtn" title="Clear doctor filter">✕</button>
+            </div>
+            <div class="doctor-selected" id="doctorSelected">
+              <span class="doctor-selected-value">All Doctors</span>
+            </div>
+            <div class="doctor-options-list" id="doctorOptionsList"></div>
+          </div>
         </div>
         <div class="right-controls">
           <span class="entry-count" id="entryCount">Loading entries...</span>
@@ -3658,11 +3662,8 @@ function buildFiltersUI() {
     applyFiltersAndPaginate();
   });
 
-  document.getElementById('filterDoctor').addEventListener('change', function() {
-    filterState.doctor = this.value;
-    pagination.page = 1;
-    applyFiltersAndPaginate();
-  });
+  // Setup doctor search only
+  setupDoctorSearch();
 
   document.getElementById('clearFiltersBtn').addEventListener('click', function() {
     clearAllFilters();
@@ -3691,12 +3692,1111 @@ function buildFiltersUI() {
   });
 }
 
+// ============================================================
+//  SETUP DOCTOR SEARCH - FIXED without HTML highlighting
+// ============================================================
+function setupDoctorSearch() {
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  const optionsList = document.getElementById('doctorOptionsList');
+  const selectedDisplay = document.getElementById('doctorSelected');
+  const clearBtn = document.getElementById('doctorClearBtn');
+  
+  if (!doctorSearch || !optionsList || !selectedDisplay) return;
+  
+  let allDoctors = [];
+  let isOpen = false;
+  
+  // Function to populate doctor options
+  function populateDoctorOptions() {
+    const doctors = new Set();
+    const entriesToUse = allEntries.length > 0 ? allEntries : [];
+    
+    entriesToUse.forEach(entry => {
+      if (entry.doctorName) doctors.add(entry.doctorName);
+    });
+    
+    allDoctors = Array.from(doctors).sort((a, b) => a.localeCompare(b));
+    updateDisplay();
+  }
+  
+  // Update selected display
+  function updateDisplay() {
+    const selectedSpan = selectedDisplay.querySelector('.doctor-selected-value');
+    if (selectedSpan) {
+      const currentDoctor = filterState.doctor || 'all';
+      
+      if (currentDoctor === 'all') {
+        selectedSpan.textContent = 'All Doctors';
+        selectedSpan.style.color = 'var(--text-light)';
+        selectedSpan.style.fontWeight = 'normal';
+      } else {
+        selectedSpan.textContent = '👨‍⚕️ ' + currentDoctor;
+        selectedSpan.style.color = 'var(--text)';
+        selectedSpan.style.fontWeight = '500';
+      }
+    }
+    
+    if (clearBtn) {
+      const currentDoctor = filterState.doctor || 'all';
+      clearBtn.style.display = (currentDoctor !== 'all') ? 'flex' : 'none';
+    }
+  }
+  
+  // Update options list - SIMPLE without HTML highlighting
+  function updateOptions(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    
+    // Filter doctors
+    let filtered = allDoctors;
+    if (term) {
+      filtered = allDoctors.filter(d => d.toLowerCase().includes(term));
+    }
+    
+    if (!isOpen) {
+      optionsList.style.display = 'none';
+      return;
+    }
+    
+    let html = '';
+    // Always show "All" option at top
+    const allSelected = filterState.doctor === 'all' || !filterState.doctor;
+    html += `<div class="doctor-option ${allSelected ? 'selected' : ''}" data-value="all">
+      <span>All Doctors</span>
+      ${allSelected ? '<span class="checkmark">✓</span>' : ''}
+    </div>`;
+    
+    if (filtered.length === 0 && term) {
+      html += `<div class="doctor-option no-results">
+        <span>No doctors found</span>
+      </div>`;
+    } else {
+      filtered.forEach(d => {
+        const isSelected = filterState.doctor === d;
+        html += `<div class="doctor-option ${isSelected ? 'selected' : ''}" data-value="${escapeHtml(d)}">
+          <span>${escapeHtml(d)}</span>
+          ${isSelected ? '<span class="checkmark">✓</span>' : ''}
+        </div>`;
+      });
+    }
+    
+    optionsList.innerHTML = html;
+    optionsList.style.display = 'block';
+    
+    // Add click listeners
+    optionsList.querySelectorAll('.doctor-option:not(.no-results)').forEach(opt => {
+      opt.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const value = this.dataset.value;
+        if (value) {
+          selectDoctor(value);
+          optionsList.style.display = 'none';
+          isOpen = false;
+          doctorSearch.value = '';
+          doctorSearch.blur();
+        }
+      });
+    });
+  }
+  
+  // Select a doctor
+  function selectDoctor(value) {
+    filterState.doctor = value;
+    pagination.page = 1;
+    updateDisplay();
+    applyFiltersAndPaginate();
+    if (isOpen) {
+      updateOptions(doctorSearch.value);
+    }
+  }
+  
+  // Handle search input
+  doctorSearch.addEventListener('input', function(e) {
+    const value = this.value;
+    if (!isOpen) {
+      isOpen = true;
+    }
+    updateOptions(value);
+  });
+  
+  // Handle search focus
+  doctorSearch.addEventListener('focus', function() {
+    isOpen = true;
+    const value = this.value;
+    updateOptions(value);
+  });
+  
+  // Handle search blur
+  doctorSearch.addEventListener('blur', function() {
+    setTimeout(() => {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    }, 200);
+  });
+  
+  // Handle search keydown
+  doctorSearch.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      optionsList.style.display = 'none';
+      isOpen = false;
+      this.blur();
+    }
+    if (e.key === 'Enter') {
+      const selected = optionsList.querySelector('.doctor-option.selected');
+      if (selected) {
+        selected.click();
+      } else {
+        const first = optionsList.querySelector('.doctor-option:not(.no-results)');
+        if (first) first.click();
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const options = optionsList.querySelectorAll('.doctor-option:not(.no-results)');
+      if (options.length > 0) {
+        let currentIndex = -1;
+        options.forEach((opt, idx) => {
+          if (opt.classList.contains('selected')) currentIndex = idx;
+        });
+        const nextIndex = Math.min(currentIndex + 1, options.length - 1);
+        options.forEach(opt => opt.classList.remove('selected'));
+        options[nextIndex].classList.add('selected');
+        options[nextIndex].scrollIntoView({ block: 'nearest' });
+      }
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const options = optionsList.querySelectorAll('.doctor-option:not(.no-results)');
+      if (options.length > 0) {
+        let currentIndex = 0;
+        options.forEach((opt, idx) => {
+          if (opt.classList.contains('selected')) currentIndex = idx;
+        });
+        const prevIndex = Math.max(currentIndex - 1, 0);
+        options.forEach(opt => opt.classList.remove('selected'));
+        options[prevIndex].classList.add('selected');
+        options[prevIndex].scrollIntoView({ block: 'nearest' });
+      }
+    }
+  });
+  
+  // Clear button
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      filterState.doctor = 'all';
+      pagination.page = 1;
+      doctorSearch.value = '';
+      optionsList.style.display = 'none';
+      isOpen = false;
+      updateDisplay();
+      applyFiltersAndPaginate();
+      doctorSearch.focus();
+    });
+  }
+  
+  // Click on selected display to open options
+  selectedDisplay.addEventListener('click', function() {
+    if (isOpen) {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    } else {
+      isOpen = true;
+      doctorSearch.focus();
+      updateOptions(doctorSearch.value);
+    }
+  });
+  
+  // Click outside to close
+  document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.doctor-filter-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    }
+  });
+  
+  // Override populateDynamicFilters to also update doctor options
+  const originalPopulateDynamicFilters = populateDynamicFilters;
+  populateDynamicFilters = function() {
+    originalPopulateDynamicFilters();
+    populateDoctorOptions();
+  };
+  
+  // Initial population
+  populateDoctorOptions();
+  updateDisplay();
+}
+
+// ============================================================
+//  CLEAR ALL FILTERS - FIXED
+// ============================================================
+function clearAllFilters() {
+  filterState.status = 'all';
+  filterState.fromDate = getFirstDayOfCurrentMonth();
+  filterState.toDate = '';
+  filterState.labs = [true, true, true, true];
+  filterState.center = 'all';
+  filterState.visitType = 'all';
+  filterState.phlebotomist = 'all';
+  filterState.careOfPerson = 'all';
+  filterState.doctor = 'all';
+  filterState.search = '';
+  pagination.page = 1;
+
+  const searchEl = document.getElementById('filterSearch');
+  if (searchEl) searchEl.value = '';
+
+  const statusEl = document.getElementById('filterStatus');
+  if (statusEl) statusEl.value = 'all';
+
+  const fromDateEl = document.getElementById('filterFromDate');
+  if (fromDateEl) fromDateEl.value = filterState.fromDate;
+
+  const toDateEl = document.getElementById('filterToDate');
+  if (toDateEl) toDateEl.value = '';
+
+  document.querySelectorAll('.lab-checkbox').forEach(cb => {
+    cb.checked = true;
+  });
+
+  // Clear doctor search
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  if (doctorSearch) {
+    doctorSearch.value = '';
+  }
+  
+  // Reset doctor selection display
+  const selectedDisplay = document.getElementById('doctorSelected');
+  if (selectedDisplay) {
+    const span = selectedDisplay.querySelector('.doctor-selected-value');
+    if (span) {
+      span.textContent = 'All Doctors';
+      span.style.color = 'var(--text-light)';
+      span.style.fontWeight = 'normal';
+    }
+  }
+  
+  // Hide clear button
+  const clearBtn = document.getElementById('doctorClearBtn');
+  if (clearBtn) {
+    clearBtn.style.display = 'none';
+  }
+  
+  // Hide options
+  const optionsList = document.getElementById('doctorOptionsList');
+  if (optionsList) {
+    optionsList.style.display = 'none';
+  }
+
+  populateDynamicFilters();
+  applyFiltersAndPaginate();
+  toast('All filters cleared. Showing all entries from the start of the month.', 'success');
+}
+
+// ============================================================
+//  SETUP DOCTOR SEARCH - FIXED with better UI
+// ============================================================
+function setupDoctorSearch() {
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  const optionsList = document.getElementById('doctorOptionsList');
+  const selectedDisplay = document.getElementById('doctorSelected');
+  const clearBtn = document.getElementById('doctorClearBtn');
+  
+  if (!doctorSearch || !optionsList || !selectedDisplay) return;
+  
+  let allDoctors = [];
+  let isOpen = false;
+  
+  // Function to populate doctor options
+  function populateDoctorOptions() {
+    const doctors = new Set();
+    const entriesToUse = allEntries.length > 0 ? allEntries : [];
+    
+    entriesToUse.forEach(entry => {
+      if (entry.doctorName) doctors.add(entry.doctorName);
+    });
+    
+    allDoctors = Array.from(doctors).sort((a, b) => a.localeCompare(b));
+    updateDisplay();
+  }
+  
+  // Update selected display
+  function updateDisplay() {
+    const selectedSpan = selectedDisplay.querySelector('.doctor-selected-value');
+    if (selectedSpan) {
+      if (filterState.doctor === 'all' || !filterState.doctor) {
+        selectedSpan.textContent = 'All Doctors';
+        selectedSpan.style.color = 'var(--text-light)';
+        selectedSpan.style.fontWeight = 'normal';
+      } else {
+        selectedSpan.textContent = '👨‍⚕️ ' + filterState.doctor;
+        selectedSpan.style.color = 'var(--text)';
+        selectedSpan.style.fontWeight = '500';
+      }
+    }
+    // Show/hide clear button
+    if (clearBtn) {
+      clearBtn.style.display = (filterState.doctor && filterState.doctor !== 'all') ? 'flex' : 'none';
+    }
+  }
+  
+  // Update options list
+  function updateOptions(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    
+    // Filter doctors
+    let filtered = allDoctors;
+    if (term) {
+      filtered = allDoctors.filter(d => d.toLowerCase().includes(term));
+    }
+    
+    if (!isOpen || filtered.length === 0) {
+      optionsList.style.display = 'none';
+      return;
+    }
+    
+    let html = '';
+    // Always show "All" option at top
+    const allSelected = filterState.doctor === 'all' || !filterState.doctor;
+    html += `<div class="doctor-option ${allSelected ? 'selected' : ''}" data-value="all">
+      <span>All Doctors</span>
+      ${allSelected ? '<span class="checkmark">✓</span>' : ''}
+    </div>`;
+    
+    filtered.forEach(d => {
+      const isSelected = filterState.doctor === d;
+      const lowerD = d.toLowerCase();
+      const termLower = term.toLowerCase();
+      const startIdx = lowerD.indexOf(termLower);
+      let displayName = d;
+      if (startIdx !== -1 && term) {
+        const before = d.substring(0, startIdx);
+        const match = d.substring(startIdx, startIdx + term.length);
+        const after = d.substring(startIdx + term.length);
+        displayName = `${escapeHtml(before)}<span class="highlight">${escapeHtml(match)}</span>${escapeHtml(after)}`;
+      } else {
+        displayName = escapeHtml(d);
+      }
+      html += `<div class="doctor-option ${isSelected ? 'selected' : ''}" data-value="${escapeHtml(d)}">
+        <span>${displayName}</span>
+        ${isSelected ? '<span class="checkmark">✓</span>' : ''}
+      </div>`;
+    });
+    
+    optionsList.innerHTML = html;
+    optionsList.style.display = 'block';
+    
+    // Add click listeners
+    optionsList.querySelectorAll('.doctor-option').forEach(opt => {
+      opt.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const value = this.dataset.value;
+        selectDoctor(value);
+        optionsList.style.display = 'none';
+        isOpen = false;
+        doctorSearch.value = '';
+        doctorSearch.blur();
+      });
+    });
+  }
+  
+  // Select a doctor
+  function selectDoctor(value) {
+    filterState.doctor = value;
+    pagination.page = 1;
+    updateDisplay();
+    applyFiltersAndPaginate();
+    // Update options to reflect selection
+    if (isOpen) {
+      updateOptions(doctorSearch.value);
+    }
+  }
+  
+  // Handle search input
+  doctorSearch.addEventListener('input', function(e) {
+    const value = this.value;
+    if (!isOpen) {
+      isOpen = true;
+    }
+    if (value.length > 0 || isOpen) {
+      updateOptions(value);
+    } else {
+      optionsList.style.display = 'none';
+    }
+  });
+  
+  // Handle search focus
+  doctorSearch.addEventListener('focus', function() {
+    isOpen = true;
+    const value = this.value;
+    updateOptions(value);
+  });
+  
+  // Handle search blur
+  doctorSearch.addEventListener('blur', function() {
+    setTimeout(() => {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    }, 200);
+  });
+  
+  // Handle search keydown
+  doctorSearch.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      optionsList.style.display = 'none';
+      isOpen = false;
+      this.blur();
+    }
+    if (e.key === 'Enter') {
+      const selected = optionsList.querySelector('.doctor-option.selected');
+      if (selected) {
+        selected.click();
+      } else {
+        const first = optionsList.querySelector('.doctor-option');
+        if (first) first.click();
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const options = optionsList.querySelectorAll('.doctor-option');
+      if (options.length > 0) {
+        let currentIndex = -1;
+        options.forEach((opt, idx) => {
+          if (opt.classList.contains('selected')) currentIndex = idx;
+        });
+        const nextIndex = Math.min(currentIndex + 1, options.length - 1);
+        options.forEach(opt => opt.classList.remove('selected'));
+        options[nextIndex].classList.add('selected');
+        options[nextIndex].scrollIntoView({ block: 'nearest' });
+      }
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const options = optionsList.querySelectorAll('.doctor-option');
+      if (options.length > 0) {
+        let currentIndex = 0;
+        options.forEach((opt, idx) => {
+          if (opt.classList.contains('selected')) currentIndex = idx;
+        });
+        const prevIndex = Math.max(currentIndex - 1, 0);
+        options.forEach(opt => opt.classList.remove('selected'));
+        options[prevIndex].classList.add('selected');
+        options[prevIndex].scrollIntoView({ block: 'nearest' });
+      }
+    }
+  });
+  
+  // Clear button
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      selectDoctor('all');
+      doctorSearch.value = '';
+      optionsList.style.display = 'none';
+      isOpen = false;
+      doctorSearch.focus();
+    });
+  }
+  
+  // Click on selected display to open options
+  selectedDisplay.addEventListener('click', function() {
+    if (isOpen) {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    } else {
+      isOpen = true;
+      doctorSearch.focus();
+      updateOptions(doctorSearch.value);
+    }
+  });
+  
+  // Click outside to close
+  document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.doctor-filter-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    }
+  });
+  
+  // Override populateDynamicFilters to also update doctor options
+  const originalPopulateDynamicFilters = populateDynamicFilters;
+  populateDynamicFilters = function() {
+    originalPopulateDynamicFilters();
+    populateDoctorOptions();
+  };
+  
+  // Initial population
+  populateDoctorOptions();
+  
+  // Set initial display
+  updateDisplay();
+}
+
+// ============================================================
+//  CLEAR ALL FILTERS - FIXED
+// ============================================================
+function clearAllFilters() {
+  filterState.status = 'all';
+  filterState.fromDate = getFirstDayOfCurrentMonth();
+  filterState.toDate = '';
+  filterState.labs = [true, true, true, true];
+  filterState.center = 'all';
+  filterState.visitType = 'all';
+  filterState.phlebotomist = 'all';
+  filterState.careOfPerson = 'all';
+  filterState.doctor = 'all';
+  filterState.search = '';
+  pagination.page = 1;
+
+  const searchEl = document.getElementById('filterSearch');
+  if (searchEl) searchEl.value = '';
+
+  const statusEl = document.getElementById('filterStatus');
+  if (statusEl) statusEl.value = 'all';
+
+  const fromDateEl = document.getElementById('filterFromDate');
+  if (fromDateEl) fromDateEl.value = filterState.fromDate;
+
+  const toDateEl = document.getElementById('filterToDate');
+  if (toDateEl) toDateEl.value = '';
+
+  document.querySelectorAll('.lab-checkbox').forEach(cb => {
+    cb.checked = true;
+  });
+
+  // Clear doctor search
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  if (doctorSearch) {
+    doctorSearch.value = '';
+  }
+  
+  // Reset doctor selection display
+  const selectedDisplay = document.getElementById('doctorSelected');
+  if (selectedDisplay) {
+    const span = selectedDisplay.querySelector('.doctor-selected-value');
+    if (span) {
+      span.textContent = 'All Doctors';
+      span.style.color = 'var(--text-light)';
+      span.style.fontWeight = 'normal';
+    }
+  }
+  
+  // Hide clear button
+  const clearBtn = document.getElementById('doctorClearBtn');
+  if (clearBtn) {
+    clearBtn.style.display = 'none';
+  }
+  
+  // Hide options
+  const optionsList = document.getElementById('doctorOptionsList');
+  if (optionsList) {
+    optionsList.style.display = 'none';
+  }
+
+  populateDynamicFilters();
+  applyFiltersAndPaginate();
+  toast('All filters cleared. Showing all entries from the start of the month.', 'success');
+}
+
+// ============================================================
+//  SETUP DOCTOR SEARCH - FIXED
+// ============================================================
+function setupDoctorSearch() {
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  const optionsList = document.getElementById('doctorOptionsList');
+  const selectedDisplay = document.getElementById('doctorSelected');
+  const clearBtn = document.getElementById('doctorClearBtn');
+  
+  if (!doctorSearch || !optionsList || !selectedDisplay) return;
+  
+  let allDoctors = [];
+  let isOpen = false;
+  let selectedDoctor = filterState.doctor || 'all';
+  
+  // Function to populate doctor options
+  function populateDoctorOptions() {
+    const doctors = new Set();
+    const entriesToUse = allEntries.length > 0 ? allEntries : [];
+    
+    entriesToUse.forEach(entry => {
+      if (entry.doctorName) doctors.add(entry.doctorName);
+    });
+    
+    allDoctors = Array.from(doctors).sort((a, b) => a.localeCompare(b));
+    updateDisplay();
+  }
+  
+  // Update selected display
+  function updateDisplay() {
+    const selectedSpan = selectedDisplay.querySelector('.doctor-selected-value');
+    if (selectedSpan) {
+      if (selectedDoctor === 'all') {
+        selectedSpan.textContent = 'All Doctors';
+        selectedSpan.style.color = 'var(--text-light)';
+      } else {
+        selectedSpan.textContent = '👨‍⚕️ ' + selectedDoctor;
+        selectedSpan.style.color = 'var(--text)';
+      }
+    }
+    // Show/hide clear button
+    if (clearBtn) {
+      clearBtn.style.display = (selectedDoctor !== 'all') ? 'flex' : 'none';
+    }
+  }
+  
+  // Update options list
+  function updateOptions(searchTerm) {
+    const term = searchTerm.toLowerCase().trim();
+    
+    // Filter doctors
+    let filtered = allDoctors;
+    if (term) {
+      filtered = allDoctors.filter(d => d.toLowerCase().includes(term));
+    }
+    
+    // Show "All" option at top
+    const allMatches = 'all'.includes(term) || !term;
+    
+    if (!isOpen || filtered.length === 0) {
+      optionsList.style.display = 'none';
+      return;
+    }
+    
+    let html = '';
+    if (allMatches) {
+      const isSelected = selectedDoctor === 'all';
+      html += `<div class="doctor-option ${isSelected ? 'selected' : ''}" data-value="all">All Doctors ${isSelected ? '✓' : ''}</div>`;
+    }
+    
+    filtered.forEach(d => {
+      const isSelected = selectedDoctor === d;
+      const lowerD = d.toLowerCase();
+      const termLower = term.toLowerCase();
+      const startIdx = lowerD.indexOf(termLower);
+      let displayName = d;
+      if (startIdx !== -1 && term) {
+        const before = d.substring(0, startIdx);
+        const match = d.substring(startIdx, startIdx + term.length);
+        const after = d.substring(startIdx + term.length);
+        displayName = `${escapeHtml(before)}<span class="highlight">${escapeHtml(match)}</span>${escapeHtml(after)}`;
+      } else {
+        displayName = escapeHtml(d);
+      }
+      html += `<div class="doctor-option ${isSelected ? 'selected' : ''}" data-value="${escapeHtml(d)}">${displayName} ${isSelected ? '✓' : ''}</div>`;
+    });
+    
+    optionsList.innerHTML = html;
+    optionsList.style.display = 'block';
+    
+    // Add click listeners
+    optionsList.querySelectorAll('.doctor-option').forEach(opt => {
+      opt.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const value = this.dataset.value;
+        selectDoctor(value);
+        optionsList.style.display = 'none';
+        isOpen = false;
+        doctorSearch.value = '';
+        doctorSearch.blur();
+      });
+    });
+  }
+  
+  // Select a doctor
+  function selectDoctor(value) {
+    selectedDoctor = value;
+    filterState.doctor = value;
+    pagination.page = 1;
+    updateDisplay();
+    applyFiltersAndPaginate();
+  }
+  
+  // Handle search input
+  doctorSearch.addEventListener('input', function(e) {
+    const value = this.value;
+    if (!isOpen) {
+      isOpen = true;
+    }
+    if (value.length > 0 || isOpen) {
+      updateOptions(value);
+    } else {
+      optionsList.style.display = 'none';
+    }
+  });
+  
+  // Handle search focus
+  doctorSearch.addEventListener('focus', function() {
+    isOpen = true;
+    const value = this.value;
+    updateOptions(value);
+  });
+  
+  // Handle search blur
+  doctorSearch.addEventListener('blur', function() {
+    setTimeout(() => {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    }, 200);
+  });
+  
+  // Handle search keydown
+  doctorSearch.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      optionsList.style.display = 'none';
+      isOpen = false;
+      this.blur();
+    }
+    if (e.key === 'Enter') {
+      const selected = optionsList.querySelector('.doctor-option.selected');
+      if (selected) {
+        selected.click();
+      } else {
+        const first = optionsList.querySelector('.doctor-option');
+        if (first) first.click();
+      }
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const options = optionsList.querySelectorAll('.doctor-option');
+      if (options.length > 0) {
+        let currentIndex = -1;
+        options.forEach((opt, idx) => {
+          if (opt.classList.contains('selected')) currentIndex = idx;
+        });
+        const nextIndex = Math.min(currentIndex + 1, options.length - 1);
+        options.forEach(opt => opt.classList.remove('selected'));
+        options[nextIndex].classList.add('selected');
+        options[nextIndex].scrollIntoView({ block: 'nearest' });
+      }
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const options = optionsList.querySelectorAll('.doctor-option');
+      if (options.length > 0) {
+        let currentIndex = 0;
+        options.forEach((opt, idx) => {
+          if (opt.classList.contains('selected')) currentIndex = idx;
+        });
+        const prevIndex = Math.max(currentIndex - 1, 0);
+        options.forEach(opt => opt.classList.remove('selected'));
+        options[prevIndex].classList.add('selected');
+        options[prevIndex].scrollIntoView({ block: 'nearest' });
+      }
+    }
+  });
+  
+  // Clear button
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      selectDoctor('all');
+      doctorSearch.value = '';
+      optionsList.style.display = 'none';
+      isOpen = false;
+      doctorSearch.focus();
+    });
+  }
+  
+  // Click on selected display to open options
+  selectedDisplay.addEventListener('click', function() {
+    if (isOpen) {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    } else {
+      isOpen = true;
+      doctorSearch.focus();
+      updateOptions(doctorSearch.value);
+    }
+  });
+  
+  // Click outside to close
+  document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.doctor-filter-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    }
+  });
+  
+  // Override populateDynamicFilters to also update doctor options
+  const originalPopulateDynamicFilters = populateDynamicFilters;
+  populateDynamicFilters = function() {
+    originalPopulateDynamicFilters();
+    populateDoctorOptions();
+  };
+  
+  // Initial population
+  populateDoctorOptions();
+  
+  // Set initial selected
+  if (filterState.doctor && filterState.doctor !== 'all') {
+    selectedDoctor = filterState.doctor;
+    updateDisplay();
+  }
+}
+
+// ============================================================
+//  CLEAR ALL FILTERS - UPDATED
+// ============================================================
+function clearAllFilters() {
+  filterState.status = 'all';
+  filterState.fromDate = getFirstDayOfCurrentMonth();
+  filterState.toDate = '';
+  filterState.labs = [true, true, true, true];
+  filterState.center = 'all';
+  filterState.visitType = 'all';
+  filterState.phlebotomist = 'all';
+  filterState.careOfPerson = 'all';
+  filterState.doctor = 'all';
+  filterState.search = '';
+  pagination.page = 1;
+
+  const searchEl = document.getElementById('filterSearch');
+  if (searchEl) searchEl.value = '';
+
+  const statusEl = document.getElementById('filterStatus');
+  if (statusEl) statusEl.value = 'all';
+
+  const fromDateEl = document.getElementById('filterFromDate');
+  if (fromDateEl) fromDateEl.value = filterState.fromDate;
+
+  const toDateEl = document.getElementById('filterToDate');
+  if (toDateEl) toDateEl.value = '';
+
+  document.querySelectorAll('.lab-checkbox').forEach(cb => {
+    cb.checked = true;
+  });
+
+  // Clear doctor search
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  if (doctorSearch) {
+    doctorSearch.value = '';
+  }
+  
+  // Reset doctor selection display
+  const selectedDisplay = document.getElementById('doctorSelected');
+  if (selectedDisplay) {
+    const span = selectedDisplay.querySelector('.doctor-selected-value');
+    if (span) {
+      span.textContent = 'All Doctors';
+      span.style.color = 'var(--text-light)';
+    }
+  }
+  
+  // Hide clear button
+  const clearBtn = document.getElementById('doctorClearBtn');
+  if (clearBtn) {
+    clearBtn.style.display = 'none';
+  }
+  
+  // Hide options
+  const optionsList = document.getElementById('doctorOptionsList');
+  if (optionsList) {
+    optionsList.style.display = 'none';
+  }
+
+  populateDynamicFilters();
+  applyFiltersAndPaginate();
+  toast('All filters cleared. Showing all entries from the start of the month.', 'success');
+}
+
+
+// ============================================================
+//  SETUP DOCTOR FILTER WITH SEARCH - FIXED
+// ============================================================
+function setupDoctorFilter() {
+  const doctorSelect = document.getElementById('filterDoctor');
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  const optionsList = document.getElementById('doctorOptionsList');
+  
+  if (!doctorSelect || !doctorSearch || !optionsList) return;
+  
+  let allDoctors = [];
+  let isOpen = false;
+  
+  // Function to populate doctor options
+  function populateDoctorOptions() {
+    const doctors = new Set();
+    const entriesToUse = allEntries.length > 0 ? allEntries : [];
+    
+    entriesToUse.forEach(entry => {
+      if (entry.doctorName) doctors.add(entry.doctorName);
+    });
+    
+    allDoctors = Array.from(doctors).sort((a, b) => a.localeCompare(b));
+    
+    // Update select
+    updateSelect('', true);
+  }
+  
+  // Update select with filtered options
+  function updateSelect(searchTerm, resetSelection = false) {
+    const term = searchTerm.toLowerCase().trim();
+    const currentValue = doctorSelect.value;
+    
+    // Filter doctors
+    const filtered = allDoctors.filter(d => 
+      d.toLowerCase().includes(term)
+    );
+    
+    // Rebuild select
+    doctorSelect.innerHTML = '<option value="all">All</option>';
+    filtered.forEach(d => {
+      const option = document.createElement('option');
+      option.value = d;
+      option.textContent = d;
+      doctorSelect.appendChild(option);
+    });
+    
+    // Try to restore selection
+    if (!resetSelection && currentValue !== 'all' && filtered.includes(currentValue)) {
+      doctorSelect.value = currentValue;
+    } else if (resetSelection) {
+      doctorSelect.value = filterState.doctor || 'all';
+      if (doctorSelect.value !== 'all' && !filtered.includes(doctorSelect.value)) {
+        doctorSelect.value = 'all';
+      }
+    } else {
+      // If current value is 'all' or not in filtered, set to 'all'
+      if (currentValue !== 'all' && !filtered.includes(currentValue)) {
+        doctorSelect.value = 'all';
+      } else {
+        doctorSelect.value = currentValue;
+      }
+    }
+    
+    // Update filter state if changed
+    if (doctorSelect.value !== filterState.doctor) {
+      filterState.doctor = doctorSelect.value;
+      pagination.page = 1;
+      applyFiltersAndPaginate();
+    }
+    
+    // Update options list for click selection
+    updateOptionsList(filtered, term);
+  }
+  
+  // Update the clickable options list
+  function updateOptionsList(filtered, term) {
+    if (!isOpen || filtered.length === 0) {
+      optionsList.style.display = 'none';
+      return;
+    }
+    
+    let html = '';
+    // Add "All" option
+    const allMatches = 'all'.includes(term) || !term;
+    if (allMatches) {
+      html += `<div class="doctor-option ${doctorSelect.value === 'all' ? 'selected' : ''}" data-value="all">All</div>`;
+    }
+    
+    filtered.forEach(d => {
+      const isSelected = doctorSelect.value === d;
+      const lowerD = d.toLowerCase();
+      const termLower = term.toLowerCase();
+      const startIdx = lowerD.indexOf(termLower);
+      let displayName = d;
+      if (startIdx !== -1 && term) {
+        const before = d.substring(0, startIdx);
+        const match = d.substring(startIdx, startIdx + term.length);
+        const after = d.substring(startIdx + term.length);
+        displayName = `${escapeHtml(before)}<span class="highlight">${escapeHtml(match)}</span>${escapeHtml(after)}`;
+      } else {
+        displayName = escapeHtml(d);
+      }
+      html += `<div class="doctor-option ${isSelected ? 'selected' : ''}" data-value="${escapeHtml(d)}">${displayName}</div>`;
+    });
+    
+    optionsList.innerHTML = html;
+    optionsList.style.display = 'block';
+    
+    // Add click listeners
+    optionsList.querySelectorAll('.doctor-option').forEach(opt => {
+      opt.addEventListener('click', function() {
+        const value = this.dataset.value;
+        doctorSelect.value = value;
+        filterState.doctor = value;
+        pagination.page = 1;
+        applyFiltersAndPaginate();
+        optionsList.style.display = 'none';
+        isOpen = false;
+        doctorSearch.value = '';
+        doctorSearch.blur();
+      });
+    });
+  }
+  
+  // Handle search input
+  doctorSearch.addEventListener('input', function(e) {
+    const value = this.value;
+    if (!isOpen) {
+      isOpen = true;
+    }
+    updateSelect(value, false);
+  });
+  
+  // Handle search focus
+  doctorSearch.addEventListener('focus', function() {
+    isOpen = true;
+    const value = this.value;
+    updateSelect(value, false);
+  });
+  
+  // Handle search blur - close options with delay
+  doctorSearch.addEventListener('blur', function() {
+    setTimeout(() => {
+      optionsList.style.display = 'none';
+      isOpen = false;
+    }, 200);
+  });
+  
+  // Handle search keydown
+  doctorSearch.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      optionsList.style.display = 'none';
+      isOpen = false;
+      this.blur();
+    }
+    if (e.key === 'Enter') {
+      const selected = optionsList.querySelector('.doctor-option.selected');
+      if (selected) {
+        selected.click();
+      } else {
+        const first = optionsList.querySelector('.doctor-option');
+        if (first) first.click();
+      }
+    }
+  });
+  
+  // Handle select change
+  doctorSelect.addEventListener('change', function() {
+    filterState.doctor = this.value;
+    pagination.page = 1;
+    applyFiltersAndPaginate();
+    // Update options list highlight
+    if (isOpen) {
+      const value = doctorSearch.value;
+      updateSelect(value, false);
+    }
+  });
+  
+  // Override populateDynamicFilters to also update doctor options
+  const originalPopulateDynamicFilters = populateDynamicFilters;
+  populateDynamicFilters = function() {
+    originalPopulateDynamicFilters();
+    populateDoctorOptions();
+  };
+  
+  // Initial population
+  populateDoctorOptions();
+}
+
 function populateDynamicFilters() {
   const centers = new Set();
   const visitTypes = new Set();
   const phlebotomists = new Set();
   const careOfPersons = new Set();
-  const doctors = new Set();
 
   const entriesToUse = allEntries.length > 0 ? allEntries : [];
   
@@ -3705,7 +4805,6 @@ function populateDynamicFilters() {
     if (entry.visitType) visitTypes.add(entry.visitType);
     if (entry.phlebotomist) phlebotomists.add(entry.phlebotomist);
     if (entry.careOfPerson) careOfPersons.add(entry.careOfPerson);
-    if (entry.doctorName) doctors.add(entry.doctorName);
   });
 
   const sortOptions = (set) => Array.from(set).sort((a, b) => a.localeCompare(b));
@@ -3761,24 +4860,11 @@ function populateDynamicFilters() {
       careOfPersonSelect.value = filterState.careOfPerson;
     }
   }
-
-  const doctorSelect = document.getElementById('filterDoctor');
-  if (doctorSelect) {
-    doctorSelect.innerHTML = '<option value="all">All</option>';
-    sortOptions(doctors).forEach(val => {
-      doctorSelect.innerHTML += `<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`;
-    });
-    if (filterState.doctor !== 'all' && !doctors.has(filterState.doctor)) {
-      doctorSelect.value = 'all';
-    } else {
-      doctorSelect.value = filterState.doctor;
-    }
-  }
 }
 
 function clearAllFilters() {
   filterState.status = 'all';
-  filterState.fromDate = '';
+  filterState.fromDate = getFirstDayOfCurrentMonth();
   filterState.toDate = '';
   filterState.labs = [true, true, true, true];
   filterState.center = 'all';
@@ -3796,7 +4882,7 @@ function clearAllFilters() {
   if (statusEl) statusEl.value = 'all';
 
   const fromDateEl = document.getElementById('filterFromDate');
-  if (fromDateEl) fromDateEl.value = '';
+  if (fromDateEl) fromDateEl.value = filterState.fromDate;
 
   const toDateEl = document.getElementById('filterToDate');
   if (toDateEl) toDateEl.value = '';
@@ -3805,9 +4891,15 @@ function clearAllFilters() {
     cb.checked = true;
   });
 
+  const doctorSearch = document.getElementById('filterDoctorSearch');
+  if (doctorSearch) {
+    doctorSearch.value = '';
+    doctorSearch.dispatchEvent(new Event('input'));
+  }
+
   populateDynamicFilters();
   applyFiltersAndPaginate();
-  toast('All filters cleared. Showing all entries.', 'success');
+  toast('All filters cleared. Showing all entries from the start of the month.', 'success');
 }
 
 // ============================================================
@@ -4047,8 +5139,6 @@ function buildViewModalContent(entry) {
   }
 
   html += `</div></div>`;
-
-  
 
   return html;
 }
@@ -5219,7 +6309,6 @@ visitFields.forEach(fieldId => {
   }
 });
 
-// ---- PP & Extra Collection Fields (NEW) ----
   const ppExtraFields = ['visitPPTime', 'visitPPPhlebotomist', 'visitExtraTime', 'visitExtraPhlebotomist'];
   ppExtraFields.forEach(fieldId => {
     const el = document.getElementById(fieldId + '-' + formId);
