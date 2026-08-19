@@ -3128,6 +3128,145 @@
         gap: 6px;
       }
     }
+
+/* Doctor filter with search only - CLEAN */
+.doctor-filter-group {
+  position: relative;
+  min-width: 180px;
+}
+
+.doctor-filter-wrapper {
+  position: relative;
+}
+
+.doctor-search-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-bottom: 2px;
+}
+
+.doctor-search-input {
+  width: 100%;
+  padding: 4px 28px 4px 8px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: white;
+  box-sizing: border-box;
+  height: 28px;
+}
+
+.doctor-search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.doctor-clear-btn {
+  position: absolute;
+  right: 4px;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 2px 4px;
+  display: none;
+  border-radius: 50%;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.doctor-clear-btn:hover {
+  background: #f0f0f0;
+  color: #dc3545;
+}
+
+.doctor-selected {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #f9f9f9;
+  cursor: pointer;
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.doctor-selected:hover {
+  border-color: var(--primary);
+  background: #f5f5f5;
+}
+
+.doctor-selected-value {
+  color: var(--text-light);
+  font-weight: normal;
+}
+
+.doctor-options-list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  margin-top: 2px;
+}
+
+.doctor-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.doctor-option:last-child {
+  border-bottom: none;
+}
+
+.doctor-option:hover {
+  background: #e8f0fe;
+}
+
+.doctor-option.selected {
+  background: #e8f0fe;
+  color: var(--text);
+}
+
+.doctor-option.selected .checkmark {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.doctor-option.no-results {
+  color: var(--text-light);
+  cursor: default;
+  justify-content: center;
+  padding: 12px;
+}
+
+.checkmark {
+  color: var(--primary);
+  font-weight: 600;
+  margin-left: 8px;
+}
+
   </style>
 </head>
 <body>
