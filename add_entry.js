@@ -1796,19 +1796,26 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
     populateVisitPhlebotomistFilter();
 
     if (!isEdit) {
-      // Reset new entry form
-      resetFormState(formId);
-      const panel = document.getElementById(getPanelId(formId));
-      if (panel) {
-        panel.querySelectorAll('input, select, textarea').forEach(el => {
-          if (el.id && el.id.includes('-' + formId)) {
-            if (el.type === 'checkbox') {
-              el.checked = false;
-            } else if (el.type !== 'button' && el.type !== 'submit') {
-              el.value = '';
-            }
+  // Reset new entry form
+  resetFormState(formId);
+  const panel = document.getElementById(getPanelId(formId));
+  if (panel) {
+    panel.querySelectorAll('input, select, textarea').forEach(el => {
+      if (el.id && el.id.includes('-' + formId)) {
+        if (el.type === 'checkbox') {
+          // FIX: Set report requirement checkboxes to checked by default
+          if (el.id.includes('reportOnlineRequired') || 
+              el.id.includes('reportDeliveryRequired') || 
+              el.id.includes('reportBillDeliveryRequired')) {
+            el.checked = true;
+          } else {
+            el.checked = false;
           }
-        });
+        } else if (el.type !== 'button' && el.type !== 'submit') {
+          el.value = '';
+        }
+      }
+    });
         const container = document.getElementById('contacts-container-' + formId);
         if (container) {
           container.innerHTML = '';
@@ -5677,21 +5684,28 @@ function createNewEntryPanel() {
   setupPatientDetailsEvents(formId);
 
   const clearBtn = document.getElementById('clearBtn-' + formId);
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      if (confirm('Clear all entered data?')) {
-        resetFormState(formId);
-        const panel = document.getElementById(getPanelId(formId));
-        if (panel) {
-          panel.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.id && el.id.includes('-' + formId)) {
-              if (el.type === 'checkbox') {
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    if (confirm('Clear all entered data?')) {
+      resetFormState(formId);
+      const panel = document.getElementById(getPanelId(formId));
+      if (panel) {
+        panel.querySelectorAll('input, select, textarea').forEach(el => {
+          if (el.id && el.id.includes('-' + formId)) {
+            if (el.type === 'checkbox') {
+              // FIX: Set report requirement checkboxes to checked by default
+              if (el.id.includes('reportOnlineRequired') || 
+                  el.id.includes('reportDeliveryRequired') || 
+                  el.id.includes('reportBillDeliveryRequired')) {
+                el.checked = true;
+              } else {
                 el.checked = false;
-              } else if (el.type !== 'button' && el.type !== 'submit') {
-                el.value = '';
               }
+            } else if (el.type !== 'button' && el.type !== 'submit') {
+              el.value = '';
             }
-          });
+          }
+        });
           const container = document.getElementById('contacts-container-' + formId);
           if (container) {
             container.innerHTML = '';
@@ -6087,20 +6101,21 @@ function createReportDetailsHTML(formId) {
         <div class="report-section-title">Report Requirements</div>
         <div class="checkbox-row">
           <div class="checkbox-item">
-            <input type="checkbox" id="reportOnlineRequired-${formId}" />
+            <input type="checkbox" id="reportOnlineRequired-${formId}" checked />
             <label for="reportOnlineRequired-${formId}">Online Report Required</label>
           </div>
           <div class="checkbox-item">
-            <input type="checkbox" id="reportDeliveryRequired-${formId}" />
+            <input type="checkbox" id="reportDeliveryRequired-${formId}" checked />
             <label for="reportDeliveryRequired-${formId}">Report Delivery Required</label>
           </div>
           <div class="checkbox-item">
-            <input type="checkbox" id="reportBillDeliveryRequired-${formId}" />
+            <input type="checkbox" id="reportBillDeliveryRequired-${formId}" checked />
             <label for="reportBillDeliveryRequired-${formId}">Bill Delivery Required</label>
           </div>
         </div>
       </div>
 
+      <!-- Rest of the function remains the same -->
       <div class="report-section">
         <div class="report-section-title">Report Received</div>
         <div class="select-all-row">
