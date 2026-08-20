@@ -921,29 +921,50 @@
         //  HIGHLIGHT TEXT - NEW
         // ============================================================
         function highlightText(text, searchTerm) {
-            if (!text || !searchTerm || searchTerm.trim() === '') return escapeHtml(text);
-            const term = searchTerm.trim();
-            const lowerText = text.toLowerCase();
-            const lowerTerm = term.toLowerCase();
-            
-            if (!lowerText.includes(lowerTerm)) return escapeHtml(text);
-            
-            let result = '';
-            let lastIndex = 0;
-            let index = lowerText.indexOf(lowerTerm);
-            
-            while (index !== -1) {
-                // Add text before match
-                result += escapeHtml(text.substring(lastIndex, index));
-                // Add highlighted match
-                result += `<span class="highlight-match">${escapeHtml(text.substring(index, index + term.length))}</span>`;
-                lastIndex = index + term.length;
-                index = lowerText.indexOf(lowerTerm, lastIndex);
-            }
-            // Add remaining text
-            result += escapeHtml(text.substring(lastIndex));
-            return result;
-        }
+    if (text === null || text === undefined) return '';
+
+    text = String(text);
+
+    if (!searchTerm || searchTerm.trim() === '') {
+        return escapeHtml(text);
+    }
+
+    const term = String(searchTerm).trim();
+
+    if (!term) {
+        return escapeHtml(text);
+    }
+
+    const lowerText = text.toLowerCase();
+    const lowerTerm = term.toLowerCase();
+
+    if (!lowerText.includes(lowerTerm)) {
+        return escapeHtml(text);
+    }
+
+    let result = '';
+    let lastIndex = 0;
+    let index = lowerText.indexOf(lowerTerm);
+
+    while (index !== -1) {
+        result += escapeHtml(
+            text.substring(lastIndex, index)
+        );
+
+        result += `<span class="highlight-match">${
+            escapeHtml(
+                text.substring(index, index + term.length)
+            )
+        }</span>`;
+
+        lastIndex = index + term.length;
+        index = lowerText.indexOf(lowerTerm, lastIndex);
+    }
+
+    result += escapeHtml(text.substring(lastIndex));
+
+    return result;
+}
 
         // ============================================================
         //  GET LABS
@@ -1143,27 +1164,65 @@
         function applyFilters() {
             let result = [...allPatients];
 
-            // Global search
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase().trim();
-                result = result.filter(p => {
-                    const searchable = [
-                        p.patientName || '',
-                        p._firebaseKey || '',
-                        p.doctorName || '',
-                        p.careOfPerson || '',
-                        p.center || '',
-                        p.visitType || '',
-                        p.phlebotomist || '',
-                        p.ppPhlebotomist || '',
-                        p.extraCollectionPhlebotomist || '',
-                        p.address || '',
-                        p.age || '',
-                        p.gender || ''
-                    ].join(' ').toLowerCase();
-                    return searchable.includes(term);
-                });
-            }
+            // ============================================================
+// GLOBAL SEARCH - SEARCH ALL PATIENT DATA
+// ============================================================
+if (searchTerm && searchTerm.trim() !== '') {
+    const term = searchTerm.toLowerCase().trim();
+
+    result = result.filter(p => {
+
+        // Collect all normal patient fields
+        const searchableValues = [
+            p._firebaseKey,
+            p.patientName,
+            p.visitDate,
+            p.age,
+            p.gender,
+            p.doctorName,
+            p.careOfPerson,
+            p.address,
+            p.center,
+            p.visitType,
+            p.visitTime,
+            p.ppTime,
+            p.phlebotomist,
+            p.ppPhlebotomist,
+            p.extraCollectionTime,
+            p.extraCollectionPhlebotomist,
+            p.totalMRP,
+            p.totalB2B,
+            p.finalPrice,
+            p.cashReceived,
+            p.onlineReceived,
+            p.pendingPayment,
+            p.goodwillCharges
+        ];
+
+        // Add lab names
+        const labs = getLabsForEntry(p);
+
+        labs.forEach(labId => {
+            searchableValues.push(
+                LAB_NAMES[labId] || 'Lab ' + labId
+            );
+
+            // Add all tests/packages for this lab
+            searchableValues.push(
+                getLabTestNames(p, labId)
+            );
+        });
+
+        // Convert everything to one searchable string
+        const searchableText = searchableValues
+            .filter(value => value !== null && value !== undefined)
+            .map(value => String(value))
+            .join(' ')
+            .toLowerCase();
+
+        return searchableText.includes(term);
+    });
+}
 
             // Date range
             if (dateFrom) {
