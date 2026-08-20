@@ -1852,9 +1852,15 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
 
 // 🔔 SEND NOTIFICATION ONLY FOR NEW ENTRY
 if (!isEdit) {
-  sendOneSignalNotification(
+  const phlebotomist =
+    data.phlebotomist || 'Not assigned';
+
+  const visitTime =
+    data.visitTime || 'Not specified';
+
+  await sendOneSignalNotification(
     "🔔 New Visit Added",
-    `${data.patientName} • ${data.visitDate} • ${data.visitTime || ''}`
+    `${data.patientName} • ${data.visitDate} • ${visitTime} • 👤 ${phlebotomist}`
   );
 }
 
@@ -3445,18 +3451,26 @@ Object.keys(indexUpdates).forEach(key => {
 if (isDone === true) {
 
   let visitTime = entry.visitTime || '';
+  let phlebotomist = entry.phlebotomist || '';
+  let doneTimeForNotification = '';
 
   if (visitType === 'pp') {
     visitTime = entry.ppTime || visitTime;
-  }
-
-  if (visitType === 'extra') {
+    phlebotomist = entry.ppPhlebotomist || phlebotomist;
+    doneTimeForNotification = indexUpdates.ppVisitDoneTime || '';
+  } 
+  else if (visitType === 'extra') {
     visitTime = entry.extraCollectionTime || visitTime;
+    phlebotomist = entry.extraCollectionPhlebotomist || phlebotomist;
+    doneTimeForNotification = indexUpdates.extraVisitDoneTime || '';
+  } 
+  else {
+    doneTimeForNotification = indexUpdates.visitDoneTime || '';
   }
 
-  sendOneSignalNotification(
+  await sendOneSignalNotification(
     "✅ Visit Completed",
-    `${entry.patientName} • ${visitTime}`
+    `${entry.patientName} • ${entry.visitDate || ''} • Visit: ${visitTime} • 👤 ${phlebotomist || 'Not assigned'} • ✅ Done: ${doneTimeForNotification || 'Time unavailable'}`
   );
 }
 
