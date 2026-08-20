@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Goodness Healthcare | Premium Dashboard</title>
 
+<!-- ===== ONESIGNAL SDK v16 (loaded early) ===== -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
 <style>
 /* ===== PREMIUM TEAL THEME STYLES ===== */
 * {
@@ -94,6 +97,38 @@ body {
   color: white;
   font-weight: 600;
   margin-left: 8px;
+}
+
+/* Notification Button */
+#enableNotificationsBtn {
+  margin-top: 12px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(122, 178, 178, 0.6);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+#enableNotificationsBtn:hover {
+  background: #088395;
+  border-color: #EBF4F6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+#enableNotificationsBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 #logoutBtnSidebar {
@@ -415,6 +450,10 @@ body {
     <div class="user-profile-section">
       <div>🔐 <b id="sidebarLoginId">—</b></div>
       <div>👤 <b id="sidebarUserName">—</b></div>
+
+      <!-- Notification Button -->
+      <button id="enableNotificationsBtn">🔔 Enable Notifications</button>
+
       <button id="logoutBtnSidebar">🚪 Logout</button>
     </div>
 
@@ -523,6 +562,7 @@ const logoutBtn = document.getElementById("logoutBtnSidebar");
 const menuToggle = document.getElementById("menuToggleBtn");
 const overlay = document.getElementById("mobileOverlay");
 const topbarLogo = document.getElementById("topbarLogo");
+const notifBtn = document.getElementById("enableNotificationsBtn");
 
 let currentUserData = null;
 let currentUserEmail = null;
@@ -738,7 +778,6 @@ async function preloadTestReportsInBackground() {
   
   if (currentUserData && currentUserData.sections.includes(testReportsSection)) {
     console.log("🔄 Preloading Test Reports section in background (not switching)...");
-    // Create pane quietly without switching to it
     await ensureSectionPane(testReportsSection, testReportsFile);
     console.log("✅ Test Reports preloaded successfully in background");
   }
@@ -837,6 +876,74 @@ window.addEventListener("resize", () => {
   }
 });
 
+/* ============================================================
+   ===== CORRECT ONESIGNAL v16 IMPLEMENTATION (FIXED) =====
+   ============================================================ */
+
+// Helper to update notification button state
+function updateNotifButtonState(subscribed) {
+  if (subscribed) {
+    notifBtn.textContent = '✅ Notifications On';
+    notifBtn.disabled = true;
+    notifBtn.style.opacity = '0.8';
+  } else {
+    notifBtn.textContent = '🔔 Enable Notifications';
+    notifBtn.disabled = false;
+    notifBtn.style.opacity = '1';
+  }
+}
+
+// Initialize OneSignal only once after login
+let oneSignalInitialized = false;
+
+function initOneSignal() {
+  if (oneSignalInitialized) return;
+  oneSignalInitialized = true;
+
+  // Use the OneSignalDeferred pattern for v16
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      // Initialize with only the appId (other options are not needed)
+      await OneSignal.init({
+        appId: '9a0685b4-968f-45a4-ad32-c28a0b2f0bdd',
+      });
+
+      console.log('✅ OneSignal initialized successfully (v16).');
+
+      // Check current subscription status
+      const isSubscribed = await OneSignal.Notifications.permissionGranted();
+      updateNotifButtonState(isSubscribed);
+
+      // Listen for permission changes
+      OneSignal.Notifications.addEventListener('permissionChange', (permission) => {
+        updateNotifButtonState(permission.granted);
+      });
+
+      // Attach click handler to our button
+      notifBtn.addEventListener('click', async () => {
+        if (notifBtn.disabled) return;
+        try {
+          // Request permission
+          const granted = await OneSignal.Notifications.requestPermission();
+          updateNotifButtonState(granted);
+          if (granted) {
+            console.log('✅ User subscribed to notifications.');
+          } else {
+            console.log('❌ User denied notification permission.');
+          }
+        } catch (error) {
+          console.error('Error requesting notification permission:', error);
+          alert('Could not enable notifications. Please check your browser settings.');
+        }
+      });
+
+    } catch (error) {
+      console.error('OneSignal initialization error:', error);
+    }
+  });
+}
+
 /* ===== AUTHENTICATION ===== */
 onAuthStateChanged(auth, (user) => {
   if (!user) {
@@ -851,6 +958,12 @@ onAuthStateChanged(auth, (user) => {
   }
   currentUserEmail = user.email;
   resetAndInitDashboard(userData);
+
+  // === INITIALIZE ONESIGNAL AFTER LOGIN ===
+  // Give a small delay to ensure the SDK is ready
+  setTimeout(() => {
+    initOneSignal();
+  }, 1000);
 });
 
 /* ===== LOGOUT ===== */
