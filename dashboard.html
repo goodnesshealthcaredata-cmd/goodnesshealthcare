@@ -916,8 +916,16 @@ function initOneSignal() {
             console.log("🔔 OneSignal SDK available.");
 
             await OneSignal.init({
-                appId: "9a0685b4-968f-45a4-ad32-c28a0b2f0bdd"
-            });
+    appId: "9a0685b4-968f-45a4-ad32-c28a0b2f0bdd",
+
+    serviceWorkerPath:
+        "goodnesshealthcare/push/onesignal/OneSignalSDKWorker.js",
+
+    serviceWorkerParam: {
+        scope:
+            "/goodnesshealthcare/push/onesignal/"
+    }
+});
 
             console.log("✅ OneSignal initialized successfully.");
 
