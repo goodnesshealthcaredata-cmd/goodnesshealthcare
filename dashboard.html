@@ -877,76 +877,219 @@ window.addEventListener("resize", () => {
 });
 
 /* ============================================================
-   ===== CORRECT ONESIGNAL v16 IMPLEMENTATION (FIXED) =====
+   ===== ONESIGNAL v16 NOTIFICATION SYSTEM =====
    ============================================================ */
 
-// Helper to update notification button state
-function updateNotifButtonState(subscribed) {
-  if (subscribed) {
-    notifBtn.textContent = '✅ Notifications On';
-    notifBtn.disabled = true;
-    notifBtn.style.opacity = '0.8';
-  } else {
-    notifBtn.textContent = '🔔 Enable Notifications';
-    notifBtn.disabled = false;
-    notifBtn.style.opacity = '1';
-  }
+let oneSignalInitialized = false;
+let oneSignalInitializing = false;
+
+// ------------------------------------------------------------
+// Update button
+// ------------------------------------------------------------
+function updateNotifButtonState(granted) {
+    if (!notifBtn) return;
+
+    if (granted) {
+        notifBtn.textContent = "✅ Notifications On";
+        notifBtn.disabled = true;
+        notifBtn.style.opacity = "0.8";
+    } else {
+        notifBtn.textContent = "🔔 Enable Notifications";
+        notifBtn.disabled = false;
+        notifBtn.style.opacity = "1";
+    }
 }
 
-// Initialize OneSignal only once after login
-let oneSignalInitialized = false;
 
+// ------------------------------------------------------------
+// Initialize OneSignal
+// ------------------------------------------------------------
 function initOneSignal() {
-  if (oneSignalInitialized) return;
-  oneSignalInitialized = true;
 
-  // Use the OneSignalDeferred pattern for v16
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      // Initialize with only the appId (other options are not needed)
-      await OneSignal.init({
-        appId: '9a0685b4-968f-45a4-ad32-c28a0b2f0bdd',
-        serviceWorkerPath: "OneSignalSDKWorker.js",
-
-    serviceWorkerParam: {
-        scope: "/goodnesshealthcare/"
+    if (oneSignalInitialized || oneSignalInitializing) {
+        return;
     }
-      });
 
-      console.log('✅ OneSignal initialized successfully (v16).');
+    oneSignalInitializing = true;
 
-      // Check current subscription status
-      const isSubscribed = await OneSignal.Notifications.permissionGranted();
-      updateNotifButtonState(isSubscribed);
+    console.log("🔔 Starting OneSignal initialization...");
 
-      // Listen for permission changes
-      OneSignal.Notifications.addEventListener('permissionChange', (permission) => {
-        updateNotifButtonState(permission.granted);
-      });
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-      // Attach click handler to our button
-      notifBtn.addEventListener('click', async () => {
-        if (notifBtn.disabled) return;
+    window.OneSignalDeferred.push(async function(OneSignal) {
+
         try {
-          // Request permission
-          const granted = await OneSignal.Notifications.requestPermission();
-          updateNotifButtonState(granted);
-          if (granted) {
-            console.log('✅ User subscribed to notifications.');
-          } else {
-            console.log('❌ User denied notification permission.');
-          }
-        } catch (error) {
-          console.error('Error requesting notification permission:', error);
-          alert('Could not enable notifications. Please check your browser settings.');
-        }
-      });
 
-    } catch (error) {
-      console.error('OneSignal initialization error:', error);
-    }
-  });
+            console.log("🔔 OneSignal SDK available.");
+
+            await OneSignal.init({
+                appId: "9a0685b4-968f-45a4-ad32-c28a0b2f0bdd"
+            });
+
+            console.log("✅ OneSignal initialized.");
+
+            oneSignalInitialized = true;
+            oneSignalInitializing = false;
+
+
+            // ------------------------------------------------
+            // Check current permission
+            // ------------------------------------------------
+            const permissionGranted =
+                await OneSignal.Notifications.permissionGranted();
+
+            console.log(
+                "🔔 Current notification permission:",
+                permissionGranted
+            );
+
+            updateNotifButtonState(permissionGranted);
+
+
+            // ------------------------------------------------
+            // Permission change listener
+            // ------------------------------------------------
+            OneSignal.Notifications.addEventListener(
+                "permissionChange",
+                function(permission) {
+
+                    console.log(
+                        "🔔 Permission changed:",
+                        permission
+                    );
+
+                    updateNotifButtonState(permission.granted);
+                }
+            );
+
+
+            // ------------------------------------------------
+            // BUTTON CLICK
+            // ------------------------------------------------
+            if (notifBtn) {
+
+                // Remove old handler safely by replacing button
+                const newNotifBtn = notifBtn.cloneNode(true);
+
+                notifBtn.parentNode.replaceChild(
+                    newNotifBtn,
+                    notifBtn
+                );
+
+                // Update reference
+                window.enableNotificationsButton = newNotifBtn;
+
+
+                newNotifBtn.addEventListener(
+                    "click",
+                    async function(event) {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        console.log(
+                            "🔔 Enable Notifications clicked"
+                        );
+
+                        try {
+
+                            // Check current browser permission
+                            if (
+                                "Notification" in window
+                            ) {
+
+                                console.log(
+                                    "Browser permission:",
+                                    Notification.permission
+                                );
+
+                                // If browser has completely blocked it
+                                if (
+                                    Notification.permission === "denied"
+                                ) {
+
+                                    alert(
+                                        "Notifications are blocked for this website.\n\n" +
+                                        "Please click the 🔒 icon near the website address → " +
+                                        "Notifications → Allow, then reload the page."
+                                    );
+
+                                    return;
+                                }
+                            }
+
+
+                            console.log(
+                                "🔔 Requesting OneSignal permission..."
+                            );
+
+
+                            // THIS IS THE IMPORTANT PART
+                            const granted =
+                                await OneSignal.Notifications.requestPermission();
+
+
+                            console.log(
+                                "🔔 Permission result:",
+                                granted
+                            );
+
+
+                            updateNotifButtonState(granted);
+
+
+                            if (granted) {
+
+                                console.log(
+                                    "✅ Notifications enabled successfully."
+                                );
+
+                                alert(
+                                    "✅ Notifications have been enabled for this device."
+                                );
+
+                            } else {
+
+                                console.log(
+                                    "❌ User did not allow notifications."
+                                );
+
+                            }
+
+                        } catch (error) {
+
+                            console.error(
+                                "❌ Notification permission error:",
+                                error
+                            );
+
+                            alert(
+                                "Unable to enable notifications.\n\n" +
+                                "Please check the browser permission and try again."
+                            );
+                        }
+
+                    }
+                );
+
+            }
+
+        } catch (error) {
+
+            oneSignalInitializing = false;
+
+            console.error(
+                "❌ OneSignal initialization failed:",
+                error
+            );
+
+            // IMPORTANT:
+            // Don't permanently mark initialization as complete.
+            oneSignalInitialized = false;
+
+        }
+
+    });
 }
 
 /* ===== AUTHENTICATION ===== */
@@ -967,8 +1110,9 @@ onAuthStateChanged(auth, (user) => {
   // === INITIALIZE ONESIGNAL AFTER LOGIN ===
   // Give a small delay to ensure the SDK is ready
   setTimeout(() => {
+    console.log("🔔 Initializing OneSignal after login...");
     initOneSignal();
-  }, 1000);
+}, 1500);
 });
 
 /* ===== LOGOUT ===== */
