@@ -26,48 +26,62 @@ const CLOUDFLARE_WORKER_URL = "https://wandering-hall-ed75.goodnesshealthcare1.w
 // ONESIGNAL NOTIFICATION
 // ============================================================
 
-const ONESIGNAL_APP_ID = "9a0685b4-968f-45a4-ad32-c28a0b2f0bdd";
-const ONESIGNAL_REST_API_KEY = "uipe5yohdeiin3jaoqyqqzeaw";
-
 async function sendOneSignalNotification(title, message) {
+
   try {
+
+    console.log("🔔 Sending notification through Cloudflare Worker...");
+    console.log("Title:", title);
+    console.log("Message:", message);
+
+
     const response = await fetch(
-      "https://api.onesignal.com/notifications",
+      CLOUDFLARE_WORKER_URL,
       {
         method: "POST",
+
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`
+          "Content-Type": "application/json"
         },
+
         body: JSON.stringify({
-          app_id: ONESIGNAL_APP_ID,
-
-          // Send to ALL subscribed users/devices
-          included_segments: ["Subscribed Users"],
-
-          headings: {
-            en: title
-          },
-
-          contents: {
-            en: message
-          }
+          type: "onesignal_notification",
+          title: title,
+          message: message
         })
       }
     );
 
+
     const result = await response.json();
 
+
     if (!response.ok) {
-      console.error("OneSignal notification failed:", result);
+
+      console.error(
+        "❌ Notification Worker failed:",
+        result
+      );
+
       return false;
     }
 
-    console.log("OneSignal notification sent:", result);
+
+    console.log(
+      "✅ Notification sent through Cloudflare Worker:",
+      result
+    );
+
     return true;
 
+
   } catch (error) {
-    console.error("OneSignal notification error:", error);
+
+    console.error(
+      "❌ Notification Worker error:",
+      error
+    );
+
     return false;
   }
 }
