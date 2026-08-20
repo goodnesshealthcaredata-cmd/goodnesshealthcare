@@ -23,6 +23,56 @@ const IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/xjmper25s";
 const CLOUDFLARE_WORKER_URL = "https://wandering-hall-ed75.goodnesshealthcare1.workers.dev";
 
 // ============================================================
+// ONESIGNAL NOTIFICATION
+// ============================================================
+
+const ONESIGNAL_APP_ID = "9a0685b4-968f-45a4-ad32-c28a0b2f0bdd";
+const ONESIGNAL_REST_API_KEY = "uipe5yohdeiin3jaoqyqqzeaw";
+
+async function sendOneSignalNotification(title, message) {
+  try {
+    const response = await fetch(
+      "https://api.onesignal.com/notifications",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`
+        },
+        body: JSON.stringify({
+          app_id: ONESIGNAL_APP_ID,
+
+          // Send to ALL subscribed users/devices
+          included_segments: ["Subscribed Users"],
+
+          headings: {
+            en: title
+          },
+
+          contents: {
+            en: message
+          }
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("OneSignal notification failed:", result);
+      return false;
+    }
+
+    console.log("OneSignal notification sent:", result);
+    return true;
+
+  } catch (error) {
+    console.error("OneSignal notification error:", error);
+    return false;
+  }
+}
+
+// ============================================================
 //  DOM REFS
 // ============================================================
 const tabBar = document.getElementById('tabBar');
@@ -1786,7 +1836,18 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
 
     await db.ref().update(updates);
 
-    toast(isEdit ? 'Entry updated successfully.' : 'Entry saved successfully.', 'success');
+// 🔔 SEND NOTIFICATION ONLY FOR NEW ENTRY
+if (!isEdit) {
+  sendOneSignalNotification(
+    "🔔 New Visit Added",
+    `${data.patientName} • ${data.visitDate} • ${data.visitTime || ''}`
+  );
+}
+
+toast(
+  isEdit ? 'Entry updated successfully.' : 'Entry saved successfully.',
+  'success'
+);
 
     // --- Step 5: Reload and refresh UI ---
     await loadAllEntries();
@@ -3361,12 +3422,31 @@ async function updateVisitStatusFromIndex(entry, visitType, isDone) {
     });
     
     await db.ref().update(allUpdates);
-    
-    Object.keys(indexUpdates).forEach(key => {
-      entry[key] = indexUpdates[key];
-    });
-    
-    toast(`Visit ${isDone ? 'marked as done' : 'marked as pending'}`, 'success');
+
+Object.keys(indexUpdates).forEach(key => {
+  entry[key] = indexUpdates[key];
+});
+
+// 🔔 SEND NOTIFICATION ONLY WHEN VISIT IS MARKED DONE
+if (isDone === true) {
+
+  let visitTime = entry.visitTime || '';
+
+  if (visitType === 'pp') {
+    visitTime = entry.ppTime || visitTime;
+  }
+
+  if (visitType === 'extra') {
+    visitTime = entry.extraCollectionTime || visitTime;
+  }
+
+  sendOneSignalNotification(
+    "✅ Visit Completed",
+    `${entry.patientName} • ${visitTime}`
+  );
+}
+
+toast(`Visit ${isDone ? 'marked as done' : 'marked as pending'}`, 'success');
     renderVisitScheduleFromIndex(currentEntries);
   } catch (err) {
     handleFirebaseError(err);
