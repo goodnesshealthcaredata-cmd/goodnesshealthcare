@@ -1076,6 +1076,334 @@ function initOneSignal() {
     });
 }
 
+/* ============================================================
+   ===== PWA RESUME / BACKGROUND RECOVERY SYSTEM =====
+   ============================================================ */
+
+let pwaRecoveryRunning = false;
+let lastHiddenAt = Date.now();
+
+
+// ------------------------------------------------------------
+// When PWA goes into background
+// ------------------------------------------------------------
+
+document.addEventListener("visibilitychange", () => {
+
+    if (document.visibilityState === "hidden") {
+
+        lastHiddenAt = Date.now();
+
+        console.log(
+            "⏸️ PWA moved to background."
+        );
+
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // PWA became visible again
+    // --------------------------------------------------------
+
+    if (document.visibilityState === "visible") {
+
+        const hiddenDuration =
+            Date.now() - lastHiddenAt;
+
+        console.log(
+            "▶️ PWA resumed after",
+            Math.round(hiddenDuration / 1000),
+            "seconds."
+        );
+
+
+        // Don't immediately rebuild everything for a
+        // very short visibility change.
+        if (hiddenDuration < 3000) {
+            return;
+        }
+
+
+        recoverDashboardAfterResume();
+
+    }
+
+});
+
+
+// ------------------------------------------------------------
+// Main recovery function
+// ------------------------------------------------------------
+
+async function recoverDashboardAfterResume() {
+
+    if (pwaRecoveryRunning) {
+        console.log(
+            "⏳ PWA recovery already running."
+        );
+        return;
+    }
+
+
+    pwaRecoveryRunning = true;
+
+
+    console.log(
+        "🔄 Starting PWA resume recovery..."
+    );
+
+
+    try {
+
+        // ----------------------------------------------------
+        // 1. Check internet connection
+        // ----------------------------------------------------
+
+        if (!navigator.onLine) {
+
+            console.warn(
+                "⚠️ Device is currently offline."
+            );
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // 2. Update PWA service worker
+        // ----------------------------------------------------
+
+        if ("serviceWorker" in navigator) {
+
+            try {
+
+                const registrations =
+                    await navigator.serviceWorker
+                        .getRegistrations();
+
+
+                for (
+                    const registration
+                    of registrations
+                ) {
+
+                    try {
+
+                        await registration.update();
+
+                        console.log(
+                            "✅ Service Worker checked."
+                        );
+
+                    } catch (swError) {
+
+                        console.warn(
+                            "⚠️ Service Worker update check failed:",
+                            swError
+                        );
+
+                    }
+
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    "⚠️ Unable to inspect Service Workers:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        // ----------------------------------------------------
+        // 3. Verify Firebase authentication
+        // ----------------------------------------------------
+
+        const user =
+            auth.currentUser;
+
+
+        if (!user) {
+
+            console.warn(
+                "⚠️ Firebase user no longer available."
+            );
+
+            return;
+        }
+
+
+        const userData =
+            USERS[user.email];
+
+
+        if (!userData) {
+
+            console.warn(
+                "⚠️ User data not found."
+            );
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // 4. Check current iframe
+        // ----------------------------------------------------
+
+        if (currentActiveSection) {
+
+            const paneInfo =
+                sectionPanes.get(
+                    currentActiveSection
+                );
+
+
+            if (
+                paneInfo &&
+                paneInfo.iframe
+            ) {
+
+                console.log(
+                    "🔄 Checking active section:",
+                    currentActiveSection
+                );
+
+
+                try {
+
+                    // Ping iframe.
+                    // If it is alive, do not destroy it.
+
+                    const iframeWindow =
+                        paneInfo.iframe.contentWindow;
+
+
+                    if (iframeWindow) {
+
+                        iframeWindow.postMessage(
+                            {
+                                type:
+                                    "GOODNESS_PWA_RESUME"
+                            },
+                            "*"
+                        );
+
+                    }
+
+                } catch (iframeError) {
+
+                    console.warn(
+                        "⚠️ Active iframe did not respond:",
+                        iframeError
+                    );
+
+                }
+
+            }
+
+        }
+
+
+        // ----------------------------------------------------
+        // 5. Notify all loaded section iframes
+        // ----------------------------------------------------
+
+        sectionPanes.forEach(
+            (paneInfo, sectionName) => {
+
+                if (
+                    paneInfo &&
+                    paneInfo.iframe
+                ) {
+
+                    try {
+
+                        paneInfo.iframe.contentWindow
+                            .postMessage(
+                                {
+                                    type:
+                                        "GOODNESS_PWA_RESUME"
+                                },
+                                "*"
+                            );
+
+                    } catch (error) {
+
+                        console.warn(
+                            "⚠️ Could not notify:",
+                            sectionName
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        // ----------------------------------------------------
+        // 6. Re-check OneSignal state
+        //
+        // DO NOT initialize it again.
+        // initOneSignal() already protects against duplicate
+        // initialization.
+        // ----------------------------------------------------
+
+        if (
+            !oneSignalInitialized
+        ) {
+
+            console.log(
+                "🔔 OneSignal not initialized. Retrying..."
+            );
+
+            initOneSignal();
+
+        }
+
+
+        console.log(
+            "✅ PWA resume recovery completed."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ PWA resume recovery failed:",
+            error
+        );
+
+    } finally {
+
+        pwaRecoveryRunning = false;
+
+    }
+
+}
+
+// ============================================================
+// NETWORK RECONNECTION RECOVERY
+// ============================================================
+
+window.addEventListener(
+    "online",
+    () => {
+
+        console.log(
+            "🌐 Internet connection restored."
+        );
+
+        recoverDashboardAfterResume();
+
+    }
+);
 /* ===== AUTHENTICATION ===== */
 onAuthStateChanged(auth, (user) => {
   if (!user) {
@@ -1110,9 +1438,30 @@ if (logoutBtn) {
   });
 }
 
-window.addEventListener('pageshow', (event) => {
-  if (event.persisted) window.location.reload();
-});
+window.addEventListener(
+    "pageshow",
+    event => {
+
+        console.log(
+            "📱 Dashboard pageshow:",
+            {
+                persisted: event.persisted
+            }
+        );
+
+
+        if (event.persisted) {
+
+            console.log(
+                "♻️ Page restored from BFCache."
+            );
+
+            recoverDashboardAfterResume();
+
+        }
+
+    }
+);
 
 console.log("✅ Dashboard with PERSISTENT SECTIONS | Default: Home Page | Test Reports preloaded in background silently.");
 </script>
