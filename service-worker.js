@@ -1,4 +1,4 @@
-const CACHE_NAME = "goodness-cache-v13";
+const CACHE_NAME = "goodness-cache-v14";
 
 const urlsToCache = [
   "/goodnesshealthcare/",
