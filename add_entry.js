@@ -632,6 +632,118 @@ async function loadPatientRecord(patientId) {
   }
 }
 
+// ============================================================
+// PWA RESUME RECOVERY
+// ============================================================
+
+let pwaResumeRunning = false;
+let lastPwaVisibleTime = Date.now();
+
+
+// ============================================================
+// VISIBILITY CHANGE RECOVERY
+// ============================================================
+
+document.addEventListener('visibilitychange', function () {
+
+    // App/page went into background
+    if (document.visibilityState === 'hidden') {
+        lastPwaVisibleTime = Date.now();
+
+        console.log(
+            '[PWA] Add Entry moved to background.'
+        );
+
+        return;
+    }
+
+
+    // App/page came back to foreground
+    if (document.visibilityState === 'visible') {
+
+        const hiddenFor =
+            Date.now() - lastPwaVisibleTime;
+
+        console.log(
+            '[PWA] Add Entry became visible again after',
+            Math.round(hiddenFor / 1000),
+            'seconds.'
+        );
+
+
+        // Don't refresh for tiny visibility changes
+        if (hiddenFor < 3000) {
+            return;
+        }
+
+
+        refreshDataAfterResume();
+    }
+
+});
+
+
+// ============================================================
+// ONLINE / INTERNET RECOVERY
+// ============================================================
+
+window.addEventListener('online', function () {
+
+    console.log(
+        '🌐 [PWA] Internet connection restored.'
+    );
+
+    refreshDataAfterResume();
+
+});
+
+
+async function refreshDataAfterResume() {
+
+    if (pwaResumeRunning) {
+        console.log('[PWA] Resume recovery already running.');
+        return;
+    }
+
+    if (!navigator.onLine) {
+        console.warn('[PWA] Device is offline.');
+        return;
+    }
+
+    pwaResumeRunning = true;
+
+    try {
+
+        console.log('[PWA] Refreshing Add Entry data after resume...');
+
+        // Refresh Firebase index
+        await loadAllEntries();
+
+        // Refresh autocomplete names
+        await loadPatientNamesForAutocomplete();
+
+        // Re-apply existing filters
+        applyFiltersAndPaginate();
+
+        // Refresh visit schedule
+        renderVisitScheduleFromIndex(currentEntries);
+
+        console.log('[PWA] Add Entry data refreshed successfully.');
+
+    } catch (error) {
+
+        console.error(
+            '[PWA] Resume refresh failed:',
+            error
+        );
+
+    } finally {
+
+        pwaResumeRunning = false;
+
+    }
+}
+
 async function loadPatientNamesForAutocomplete() {
   try {
     const snap = await db.ref('patientIndex').once('value');
@@ -1424,37 +1536,177 @@ function renderPagination() {
 //  VIEW/EDIT/DELETE
 // ============================================================
 async function loadAndViewPatient(key) {
-  const fullData = await loadPatientRecord(key);
-  if (fullData) {
-    openViewModal(fullData);
-  }
+
+    if (!key) {
+        toast('Invalid patient entry.', 'error');
+        return;
+    }
+
+    try {
+
+        toast('Loading patient...', 'success');
+
+        const fullData =
+            await loadPatientRecord(key);
+
+        if (!fullData) {
+
+            toast(
+                'Patient record could not be loaded. Refreshing data...',
+                'error'
+            );
+
+            await refreshDataAfterResume();
+
+            const retryData =
+                await loadPatientRecord(key);
+
+            if (retryData) {
+                openViewModal(retryData);
+            } else {
+                toast(
+                    'Patient record not found.',
+                    'error'
+                );
+            }
+
+            return;
+        }
+
+        openViewModal(fullData);
+
+    } catch (error) {
+
+        console.error(
+            '[View] Failed:',
+            error
+        );
+
+        toast(
+            'Unable to load patient. Please try again.',
+            'error'
+        );
+
+    }
 }
 
+
 async function loadAndEditPatient(key) {
-  const fullData = await loadPatientRecord(key);
-  if (fullData) {
-    openEditTab(key, fullData);
-  }
+
+    if (!key) {
+        toast('Invalid patient entry.', 'error');
+        return;
+    }
+
+    try {
+
+        toast('Loading patient...', 'success');
+
+        const fullData =
+            await loadPatientRecord(key);
+
+        if (!fullData) {
+
+            toast(
+                'Patient record could not be loaded. Refreshing data...',
+                'error'
+            );
+
+            await refreshDataAfterResume();
+
+            const retryData =
+                await loadPatientRecord(key);
+
+            if (retryData) {
+                openEditTab(key, retryData);
+            } else {
+                toast(
+                    'Patient record not found.',
+                    'error'
+                );
+            }
+
+            return;
+        }
+
+        openEditTab(key, fullData);
+
+    } catch (error) {
+
+        console.error(
+            '[Edit] Failed:',
+            error
+        );
+
+        toast(
+            'Unable to open Edit. Please try again.',
+            'error'
+        );
+
+    }
 }
 
 async function deletePatient(key) {
-  try {
-    const updates = {};
-    updates[`patients/${key}`] = null;
-    updates[`patientIndex/${key}`] = null;
-    await db.ref().update(updates);
-    
-    allEntries = allEntries.filter(e => e._firebaseKey !== key);
-    allPatientNames = allPatientNames.filter(e => e.key !== key);
-    
-    toast('Entry deleted successfully.', 'success');
-    
-    applyFiltersAndPaginate();
-    populateDynamicFilters();
-    populateVisitPhlebotomistFilter();
-  } catch (err) {
-    handleFirebaseError(err);
-  }
+
+    if (!key) {
+        toast('Invalid patient entry.', 'error');
+        return false;
+    }
+
+    if (!navigator.onLine) {
+
+        toast(
+            'You are offline. Please reconnect and try again.',
+            'error'
+        );
+
+        return false;
+    }
+
+    try {
+
+        const updates = {};
+
+        updates[`patients/${key}`] = null;
+        updates[`patientIndex/${key}`] = null;
+
+        await db.ref().update(updates);
+
+        // Only update local UI AFTER Firebase succeeds
+        allEntries =
+            allEntries.filter(
+                e => e._firebaseKey !== key
+            );
+
+        allPatientNames =
+            allPatientNames.filter(
+                e => e.key !== key
+            );
+
+        toast(
+            'Entry deleted successfully.',
+            'success'
+        );
+
+        applyFiltersAndPaginate();
+
+        populateDynamicFilters();
+
+        populateVisitPhlebotomistFilter();
+
+        return true;
+
+    } catch (err) {
+
+        console.error(
+            '[Delete] Failed:',
+            err
+        );
+
+        handleFirebaseError(err);
+
+        return false;
+    }
 }
 
 // ============================================================
@@ -7107,6 +7359,7 @@ function init() {
     renderVisitScheduleFromIndex(currentEntries);
     applyFiltersAndPaginate();
   });
+  
 }
 
 // ============================================================
@@ -7187,6 +7440,27 @@ document.addEventListener('click', function(e) {
       }
     }
   }
+});
+
+// ============================================================
+// RECEIVE PWA RESUME SIGNAL FROM DASHBOARD
+// ============================================================
+
+window.addEventListener('message', async function(event) {
+
+    if (
+        !event.data ||
+        event.data.type !== 'GOODNESS_PWA_RESUME'
+    ) {
+        return;
+    }
+
+    console.log(
+        '📱 [PWA] Add Entry received resume signal.'
+    );
+
+    await refreshDataAfterResume();
+
 });
 
 // Start the app
