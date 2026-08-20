@@ -883,9 +883,6 @@ window.addEventListener("resize", () => {
 let oneSignalInitialized = false;
 let oneSignalInitializing = false;
 
-// ------------------------------------------------------------
-// Update button
-// ------------------------------------------------------------
 function updateNotifButtonState(granted) {
     if (!notifBtn) return;
 
@@ -900,10 +897,6 @@ function updateNotifButtonState(granted) {
     }
 }
 
-
-// ------------------------------------------------------------
-// Initialize OneSignal
-// ------------------------------------------------------------
 function initOneSignal() {
 
     if (oneSignalInitialized || oneSignalInitializing) {
@@ -926,29 +919,25 @@ function initOneSignal() {
                 appId: "9a0685b4-968f-45a4-ad32-c28a0b2f0bdd"
             });
 
-            console.log("✅ OneSignal initialized.");
+            console.log("✅ OneSignal initialized successfully.");
 
             oneSignalInitialized = true;
             oneSignalInitializing = false;
 
-
-            // ------------------------------------------------
-            // Check current permission
-            // ------------------------------------------------
-            const permissionGranted =
-                await OneSignal.Notifications.permissionGranted();
-
-            console.log(
-                "🔔 Current notification permission:",
-                permissionGranted
-            );
-
-            updateNotifButtonState(permissionGranted);
+            /*
+             * IMPORTANT:
+             * Do NOT call:
+             *
+             * OneSignal.Notifications.permissionGranted()
+             *
+             * That method is not available in your loaded SDK.
+             */
 
 
             // ------------------------------------------------
             // Permission change listener
             // ------------------------------------------------
+
             OneSignal.Notifications.addEventListener(
                 "permissionChange",
                 function(permission) {
@@ -964,21 +953,17 @@ function initOneSignal() {
 
 
             // ------------------------------------------------
-            // BUTTON CLICK
+            // Enable Notifications button
             // ------------------------------------------------
+
             if (notifBtn) {
 
-                // Remove old handler safely by replacing button
                 const newNotifBtn = notifBtn.cloneNode(true);
 
                 notifBtn.parentNode.replaceChild(
                     newNotifBtn,
                     notifBtn
                 );
-
-                // Update reference
-                window.enableNotificationsButton = newNotifBtn;
-
 
                 newNotifBtn.addEventListener(
                     "click",
@@ -993,24 +978,21 @@ function initOneSignal() {
 
                         try {
 
-                            // Check current browser permission
-                            if (
-                                "Notification" in window
-                            ) {
+                            // Check browser permission first
+                            if ("Notification" in window) {
 
                                 console.log(
-                                    "Browser permission:",
+                                    "Browser notification permission:",
                                     Notification.permission
                                 );
 
-                                // If browser has completely blocked it
                                 if (
                                     Notification.permission === "denied"
                                 ) {
 
                                     alert(
                                         "Notifications are blocked for this website.\n\n" +
-                                        "Please click the 🔒 icon near the website address → " +
+                                        "Click the 🔒 icon beside the website address → " +
                                         "Notifications → Allow, then reload the page."
                                     );
 
@@ -1020,11 +1002,11 @@ function initOneSignal() {
 
 
                             console.log(
-                                "🔔 Requesting OneSignal permission..."
+                                "🔔 Requesting OneSignal notification permission..."
                             );
 
 
-                            // THIS IS THE IMPORTANT PART
+                            // Request browser permission
                             const granted =
                                 await OneSignal.Notifications.requestPermission();
 
@@ -1045,15 +1027,14 @@ function initOneSignal() {
                                 );
 
                                 alert(
-                                    "✅ Notifications have been enabled for this device."
+                                    "✅ Notifications have been enabled on this device."
                                 );
 
                             } else {
 
                                 console.log(
-                                    "❌ User did not allow notifications."
+                                    "❌ Notification permission was not granted."
                                 );
-
                             }
 
                         } catch (error) {
@@ -1065,28 +1046,23 @@ function initOneSignal() {
 
                             alert(
                                 "Unable to enable notifications.\n\n" +
-                                "Please check the browser permission and try again."
+                                "Please check your browser notification settings."
                             );
                         }
 
                     }
                 );
-
             }
 
         } catch (error) {
 
             oneSignalInitializing = false;
-
-            console.error(
-                "❌ OneSignal initialization failed:",
-                error
-            );
-
-            // IMPORTANT:
-            // Don't permanently mark initialization as complete.
             oneSignalInitialized = false;
 
+            console.error(
+                "❌ OneSignal initialization error:",
+                error
+            );
         }
 
     });
