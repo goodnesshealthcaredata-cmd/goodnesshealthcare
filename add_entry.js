@@ -170,7 +170,8 @@ function createEmptyFormState() {
     activeLabId: 1,
     b2bVisible: false,
     images: [],
-    imageFiles: []
+    imageFiles: [],
+    originalData: null
   };
 }
 
@@ -1748,6 +1749,40 @@ function createIndexData(data, key) {
   };
 }
 
+function getEditNotificationChanges(originalData, newData, state) {
+
+  const changes = [];
+
+  // ---------------------------------------------
+  // Additional Information changed
+  // ---------------------------------------------
+  const oldAdditionalInfo =
+    (originalData?.additionalInformation || '').trim();
+
+  const newAdditionalInfo =
+    (newData?.additionalInformation || '').trim();
+
+  if (oldAdditionalInfo !== newAdditionalInfo) {
+    changes.push('Additional Information updated');
+  }
+
+  // ---------------------------------------------
+  // New image uploaded
+  // ---------------------------------------------
+  const newImageCount =
+    state?.imageFiles?.length || 0;
+
+  if (newImageCount > 0) {
+    changes.push(
+      newImageCount === 1
+        ? '1 new image uploaded'
+        : `${newImageCount} new images uploaded`
+    );
+  }
+
+  return changes;
+}
+
 async function savePatient(formId, isEdit = false, existingKey = null) {
   const validation = validateForm(formId);
   if (!validation.isValid) {
@@ -1850,8 +1885,16 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
 
     await db.ref().update(updates);
 
-// 🔔 SEND NOTIFICATION ONLY FOR NEW ENTRY
+// ============================================================
+// 🔔 ONESIGNAL NOTIFICATIONS
+// ============================================================
+
 if (!isEdit) {
+
+  // ----------------------------------------------------------
+  // NEW ENTRY
+  // ----------------------------------------------------------
+
   const phlebotomist =
     data.phlebotomist || 'Not assigned';
 
@@ -1862,6 +1905,33 @@ if (!isEdit) {
     "🔔 New Visit Added",
     `${data.patientName} • ${data.visitDate} • ${visitTime} • 👤 ${phlebotomist}`
   );
+
+} else {
+
+  // ----------------------------------------------------------
+  // EDIT ENTRY
+  // Notify only if Additional Information changed
+  // OR new image(s) were uploaded
+  // ----------------------------------------------------------
+
+  const editChanges =
+    getEditNotificationChanges(
+      state.originalData,
+      data,
+      state
+    );
+
+  if (editChanges.length > 0) {
+
+    const changeText =
+      editChanges.join(' • ');
+
+    await sendOneSignalNotification(
+      "✏️ Entry Updated",
+      `${data.patientName} • ${changeText}`
+    );
+
+  }
 }
 
 toast(
@@ -5903,8 +5973,13 @@ function createEditPanel(key, data) {
   addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
 
   formStates.set(formId, createEmptyFormState());
-  
-  populateForm(formId, data);
+
+const editState = getFormState(formId);
+
+// Keep a deep copy of the original saved data
+editState.originalData = JSON.parse(JSON.stringify(data));
+
+populateForm(formId, data);
 
   setupFormNavigation(formId);
   setupPatientDetailsEvents(formId);
