@@ -67,10 +67,10 @@ async function sendOneSignalNotification(title, message) {
     }
 
 
-    console.log(
-      "✅ Notification sent through Cloudflare Worker:",
-      result
-    );
+   console.log(
+    "✅ FULL ONESIGNAL RESPONSE:",
+    JSON.stringify(result, null, 2)
+);
 
     return true;
 
