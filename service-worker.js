@@ -1,5 +1,3 @@
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-
 const CACHE_NAME = "goodness-cache-v12";
 
 const urlsToCache = [
