@@ -1749,38 +1749,194 @@ function createIndexData(data, key) {
   };
 }
 
-function getEditNotificationChanges(originalData, newData, state) {
+// ============================================================
+// EDIT NOTIFICATION CHANGE DETECTION
+// ============================================================
 
-  const changes = [];
+function detectEditNotifications(originalData, newData, state) {
 
-  // ---------------------------------------------
-  // Additional Information changed
-  // ---------------------------------------------
-  const oldAdditionalInfo =
+  const notifications = [];
+
+  const patientName =
+    newData.patientName || originalData?.patientName || 'Patient';
+
+  const visitDate =
+    newData.visitDate || originalData?.visitDate || '';
+
+  // ----------------------------------------------------------
+  // 1. ADDITIONAL INFORMATION
+  // ----------------------------------------------------------
+
+  const oldAdditionalInformation =
     (originalData?.additionalInformation || '').trim();
 
-  const newAdditionalInfo =
+  const newAdditionalInformation =
     (newData?.additionalInformation || '').trim();
 
-  if (oldAdditionalInfo !== newAdditionalInfo) {
-    changes.push('Additional Information updated');
+  if (
+    oldAdditionalInformation !== newAdditionalInformation &&
+    newAdditionalInformation !== ''
+  ) {
+    notifications.push({
+      type: 'additionalInformation',
+      title: '📝 Additional Information Added',
+      message:
+        `${patientName} • ${visitDate}`
+    });
   }
 
-  // ---------------------------------------------
-  // New image uploaded
-  // ---------------------------------------------
+
+  // ----------------------------------------------------------
+  // 2. NEW IMAGE UPLOADED
+  // ----------------------------------------------------------
+
   const newImageCount =
     state?.imageFiles?.length || 0;
 
   if (newImageCount > 0) {
-    changes.push(
-      newImageCount === 1
-        ? '1 new image uploaded'
-        : `${newImageCount} new images uploaded`
-    );
+
+    notifications.push({
+      type: 'newImage',
+      title: '📷 New Image Uploaded',
+      message:
+        `${patientName} • ${visitDate}`
+    });
   }
 
-  return changes;
+
+  // ----------------------------------------------------------
+  // 3. REPORT ONLINE SENT
+  // ----------------------------------------------------------
+
+  const oldOnlineReportSent =
+    originalData?.onlineReportSent === true;
+
+  const newOnlineReportSent =
+    newData?.onlineReportSent === true;
+
+  // Only notify when it changes from unchecked → checked
+  if (
+    !oldOnlineReportSent &&
+    newOnlineReportSent
+  ) {
+
+    notifications.push({
+      type: 'onlineReportSent',
+      title: '📤 Report Online Sent',
+      message:
+        `${patientName} • ${visitDate}`
+    });
+  }
+
+
+  // ----------------------------------------------------------
+  // 4. REPORT DELIVERED
+  // ----------------------------------------------------------
+
+  const oldReportDelivered =
+    originalData?.reportDelivered === true;
+
+  const newReportDelivered =
+    newData?.reportDelivered === true;
+
+  // Only notify when it changes from unchecked → checked
+  if (
+    !oldReportDelivered &&
+    newReportDelivered
+  ) {
+
+    notifications.push({
+      type: 'reportDelivered',
+      title: '📄 Report Delivered',
+      message:
+        `${patientName} • ${visitDate}`
+    });
+  }
+
+
+  // ----------------------------------------------------------
+  // 5. BILL DELIVERED
+  // ----------------------------------------------------------
+
+  const oldBillDelivered =
+    originalData?.billDelivered === true;
+
+  const newBillDelivered =
+    newData?.billDelivered === true;
+
+  // Only notify when it changes from unchecked → checked
+  if (
+    !oldBillDelivered &&
+    newBillDelivered
+  ) {
+
+    notifications.push({
+      type: 'billDelivered',
+      title: '🧾 Bill Delivered',
+      message:
+        `${patientName} • ${visitDate}`
+    });
+  }
+
+
+  // ----------------------------------------------------------
+  // 6. PAYMENT RECEIVED
+  // ----------------------------------------------------------
+
+  const oldCash =
+    parseFloat(originalData?.cashReceived) || 0;
+
+  const newCash =
+    parseFloat(newData?.cashReceived) || 0;
+
+  const oldOnline =
+    parseFloat(originalData?.onlineReceived) || 0;
+
+  const newOnline =
+    parseFloat(newData?.onlineReceived) || 0;
+
+  const cashDifference =
+    newCash - oldCash;
+
+  const onlineDifference =
+    newOnline - oldOnline;
+
+
+  // Notify only when money received has increased
+  if (
+    cashDifference > 0 ||
+    onlineDifference > 0
+  ) {
+
+    const paymentParts = [];
+
+    if (cashDifference > 0) {
+      paymentParts.push(
+        `Rs ${cashDifference} cash received`
+      );
+    }
+
+    if (onlineDifference > 0) {
+      paymentParts.push(
+        `Rs ${onlineDifference} online received`
+      );
+    }
+
+    const pendingPayment =
+      parseFloat(newData?.pendingPayment) || 0;
+
+    notifications.push({
+      type: 'paymentReceived',
+      title: '💰 Payment Received',
+      message:
+        `${patientName} • ${visitDate} • ` +
+        `${paymentParts.join(' • ')} • ` +
+        `Pending payment Rs ${pendingPayment}`
+    });
+  }
+
+
+  return notifications;
 }
 
 async function savePatient(formId, isEdit = false, existingKey = null) {
@@ -1891,9 +2047,9 @@ async function savePatient(formId, isEdit = false, existingKey = null) {
 
 if (!isEdit) {
 
-  // ----------------------------------------------------------
-  // NEW ENTRY
-  // ----------------------------------------------------------
+  // ==========================================================
+  // 1. NEW ENTRY ADDED
+  // ==========================================================
 
   const phlebotomist =
     data.phlebotomist || 'Not assigned';
@@ -1903,37 +2059,38 @@ if (!isEdit) {
 
   await sendOneSignalNotification(
     "🔔 New Visit Added",
-    `${data.patientName} • ${data.visitDate} • ${visitTime} • 👤 ${phlebotomist}`
+    `${data.patientName} • ${data.visitDate} • ` +
+    `Visit Time ${visitTime} • 👤 ${phlebotomist}`
   );
 
 } else {
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // EDIT ENTRY
-  // Notify only if Additional Information changed
-  // OR new image(s) were uploaded
+  // Detect every individual notification-worthy change
+  // ==========================================================
+
+  const editState = getFormState(formId);
+
+  const notifications = detectEditNotifications(
+    editState.originalData,
+    data,
+    editState
+  );
+
+
+  // ----------------------------------------------------------
+  // SEND EACH NOTIFICATION SEPARATELY
   // ----------------------------------------------------------
 
-  const editChanges =
-    getEditNotificationChanges(
-      state.originalData,
-      data,
-      state
-    );
-
-  if (editChanges.length > 0) {
-
-    const changeText =
-      editChanges.join(' • ');
+  for (const notification of notifications) {
 
     await sendOneSignalNotification(
-      "✏️ Entry Updated",
-      `${data.patientName} • ${changeText}`
+      notification.title,
+      notification.message
     );
-
   }
 }
-
 toast(
   isEdit ? 'Entry updated successfully.' : 'Entry saved successfully.',
   'success'
@@ -5972,11 +6129,12 @@ function createEditPanel(key, data) {
   const addedPanel = document.getElementById('panel-added');
   addedPanel.parentNode.insertBefore(panel, addedPanel.nextSibling);
 
-  formStates.set(formId, createEmptyFormState());
+ formStates.set(formId, createEmptyFormState());
 
 const editState = getFormState(formId);
 
-// Keep a deep copy of the original saved data
+// Keep an untouched copy of the original saved entry.
+// This is used to detect exactly what changed during editing.
 editState.originalData = JSON.parse(JSON.stringify(data));
 
 populateForm(formId, data);
