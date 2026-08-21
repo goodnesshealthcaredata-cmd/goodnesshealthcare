@@ -1097,6 +1097,13 @@ const LAB_DATA = {
         "labName": "Culture,Aerobic",
         "mrp": 950,
         "b2b": 400
+      },
+      {
+        "id": "bile-acid",
+        "generalName": "Bile Acid",
+        "labName": "Bile Acid",
+        "mrp": 2000,
+        "b2b": 1800
       }
     ],
     "packages": [
@@ -2683,6 +2690,41 @@ const LAB_DATA = {
         "labName": "Prostate Specific Antigen (PSA)-Total",
         "mrp": 770,
         "b2b": 100
+      },
+      {
+        "id": "bile-acid",
+        "generalName": "Bile Acid",
+        "labName": "Bile Acids",
+        "mrp": 2390,
+        "b2b": 600
+      },
+      {
+        "id": "kft",
+        "generalName": "KFT",
+        "labName": "Kidney Function Test",
+        "mrp": 320,
+        "b2b": 120
+      },
+      {
+        "id": "urinary-electrolytes-spot",
+        "generalName": "Urinary Electrolytes Spot",
+        "labName": "Urinary Electrolytes Spot",
+        "mrp": 1150,
+        "b2b": 140
+      },
+      {
+        "id": "diabetes-monitoring-profile",
+        "generalName": "Diabetes Monitoring Profile",
+        "labName": "Diabetes Monitoring Profile",
+        "mrp": "",
+        "b2b": ""
+      },
+      {
+        "id": "arthritis-screen-profile",
+        "generalName": "Arthritis Screen Profile",
+        "labName": "Arthritis Screen Profile (4 Marker)",
+        "mrp": 1081,
+        "b2b": 266
       }
     ],
     "packages": [
@@ -3029,6 +3071,198 @@ const LAB_DATA = {
         ],
         "mrp": 2200,
         "b2b": 900
+      },
+      {
+        "id": "life-health-a8-women-advance",
+        "packageName": "Life Health A8 Women Advance",
+        "tests": [
+          {
+            "generalName": "Specific Cardiac Profile",
+            "labName": "Specific Cardiac Profile (6 Parameters)"
+          },
+          {
+            "generalName": "CBC",
+            "labName": "CBC-Complete Hemogram Test(28)"
+          },
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (Iron,TIBC, Transferrin saturation)"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "LFT (Liver Function Test)"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "Kidney Profile - RFT (Maxi)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Hba1c (Whole Blood)"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Profile - Total T3,Total T4,TSH (TFT)"
+          },
+          {
+            "generalName": "FSH",
+            "labName": "Follicle Stimulating Hormone (FSH)"
+          },
+          {
+            "generalName": "LH",
+            "labName": "Luteinizing Hormone (LH)"
+          },
+          {
+            "generalName": "Prolactin",
+            "labName": "Prolactin"
+          },
+          {
+            "generalName": "Estradiol Level",
+            "labName": "Estradiol"
+          },
+          {
+            "generalName": "25 OH Vitamin D",
+            "labName": "Vitamin D3"
+          },
+          {
+            "generalName": "Folic Acid Level",
+            "labName": "Folic acid"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B12"
+          }
+        ],
+        "mrp": 2800,
+        "b2b": 950
+      },
+      {
+        "id": "comprehensive-full-body-checkup",
+        "packageName": "Comprehensive Full Body Checkup",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC-Complete Hemogram Test(28)"
+          },
+          {
+            "generalName": "25 OH Vitamin D",
+            "labName": "Vitamin D3"
+          },
+          {
+            "generalName": "HBsAg",
+            "labName": "Hepatitis B Surface Antigen (HBsAg) (Quantitative)"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B12"
+          },
+          {
+            "generalName": "Urine Routine",
+            "labName": "Urine Complete"
+          },
+          {
+            "generalName": "Peripheral Smear",
+            "labName": "Peripheral blood smear (PBS)"
+          },
+          {
+            "generalName": "ESR",
+            "labName": "ESR (Erythrocyte Sedimentation Rate)"
+          },
+          {
+            "generalName": "Electrolytes",
+            "labName": "Serum Electrolyte Profile"
+          },
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (Iron,TIBC, Transferrin saturation)"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "LFT (Liver Function Test)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Profile - Total T3,Total T4,TSH (TFT)"
+          },
+          {
+            "generalName": "CRP",
+            "labName": "C - Reactive Protein (CRP)"
+          },
+          {
+            "generalName": "Urinary Electrolytes Spot",
+            "labName": "Urinary Electrolytes Spot"
+          },
+          {
+            "generalName": "KFT",
+            "labName": "Kidney Function Test"
+          },
+          {
+            "generalName": "Diabetes Monitoring Profile",
+            "labName": "Diabetes Monitoring Profile"
+          },
+          {
+            "generalName": "Arthritis Screen Profile",
+            "labName": "Arthritis Screen Profile (4 Marker)"
+          }
+        ],
+        "mrp": 2000,
+        "b2b": 1050
+      },
+      {
+        "id": "gd-life-a6",
+        "packageName": "GD LIFE - A6",
+        "tests": [
+          {
+            "generalName": "Homocysteine",
+            "labName": "Homocysteine"
+          },
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (Iron,TIBC, Transferrin saturation)"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "LFT (Liver Function Test)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Profile - Total T3,Total T4,TSH (TFT)"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Hba1c (Whole Blood)"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "Kidney Profile - RFT (Maxi)"
+          },
+          {
+            "generalName": "CBC",
+            "labName": "CBC-Complete Hemogram Test(28)"
+          },
+          {
+            "generalName": "25 OH Vitamin D",
+            "labName": "Vitamin D3"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B12"
+          }
+        ],
+        "mrp": 1800,
+        "b2b": 750
       }
     ]
   },
