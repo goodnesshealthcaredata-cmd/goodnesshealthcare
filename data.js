@@ -2725,6 +2725,13 @@ const LAB_DATA = {
         "labName": "Arthritis Screen Profile (4 Marker)",
         "mrp": 1081,
         "b2b": 266
+      },
+      {
+        "id": "gd-wellness-cardiac-risk-marker",
+        "generalName": "GD Wellness Cardiac Risk Marker",
+        "labName": "GD Wellness Cardiac Risk Marker (5 Parameters)",
+        "mrp": 1800,
+        "b2b": 1000
       }
     ],
     "packages": [
@@ -3263,6 +3270,102 @@ const LAB_DATA = {
         ],
         "mrp": 1800,
         "b2b": 750
+      },
+      {
+        "id": "gd-tax-saver-health-package",
+        "packageName": "GD- TAX SAVER HEALTH PACKAGE",
+        "tests": [
+          {
+            "generalName": "25 OH Vitamin D",
+            "labName": "Vitamin D3"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B12"
+          },
+          {
+            "generalName": "RA Factor",
+            "labName": "Rheumatoid Factor (RF)"
+          },
+          {
+            "generalName": "ESR",
+            "labName": "ESR (Erythrocyte Sedimentation Rate)"
+          },
+          {
+            "generalName": "Electrolytes",
+            "labName": "Serum Electrolyte Profile"
+          },
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (Iron,TIBC, Transferrin saturation)"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "LFT (Liver Function Test)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Profile - Total T3,Total T4,TSH (TFT)"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Hba1c (Whole Blood)"
+          },
+          {
+            "generalName": "GD Wellness Cardiac Risk Marker",
+            "labName": "GD Wellness Cardiac Risk Marker (5 Parameters)"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "Kidney Profile - RFT (Maxi)"
+          },
+          {
+            "generalName": "CBC",
+            "labName": "CBC-Complete Hemogram Test(28)"
+          }
+        ],
+        "mrp": 2499,
+        "b2b": 950
+      },
+      {
+        "id": "gd-wellness-15-1",
+        "packageName": "GD Wellness 15.1",
+        "tests": [
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (Iron,TIBC, Transferrin saturation)"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "LFT (Liver Function Test)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "Total TFT",
+            "labName": "Thyroid Profile - Total T3,Total T4,TSH (TFT)"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "Kidney Profile - RFT (Maxi)"
+          },
+          {
+            "generalName": "25 OH Vitamin D",
+            "labName": "Vitamin D3"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B12"
+          }
+        ],
+        "mrp": 1000,
+        "b2b": 550
       }
     ]
   },
