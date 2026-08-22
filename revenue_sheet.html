@@ -1,14 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Revenue Sheet | Goodness Health</title>
-    <!-- Google Fonts: Rubik + DM Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
-    <!-- Font Awesome 6 (Free Icons) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Data Table View</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
+    </script>
     <style>
+        :root {
+            --primary: #09637E;
+            --primary-dark: #064a5f;
+            --primary-light: #0a7a9b;
+            --secondary: #088395;
+            --secondary-light: #0a9db3;
+            --accent: #7AB2B2;
+            --accent-light: #9cc7c7;
+            --bg-light: #EBF4F6;
+            --bg-white: #ffffff;
+            --text-dark: #1a2e35;
+            --text-medium: #4a6a73;
+            --text-light: #7a9aa3;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.15);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.25rem;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -16,1575 +43,1496 @@
         }
 
         body {
-            background: #0F3D5E;
-            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-            color: #1A2C3C;
-            line-height: 1.45;
-        }
-
-        html {
-            scroll-behavior: smooth;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-light);
+            padding: 20px;
+            color: var(--text-dark);
         }
 
         .app-container {
             max-width: 100%;
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 24px;
             margin: 0 auto;
-            padding: 24px 28px;
         }
 
-        .health-header {
+        /* Header */
+        .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 32px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--bg-light);
         }
 
-        .logo-area {
+        .app-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
         }
 
-        .logo-icon {
-            background: linear-gradient(135deg, #1ECAD3, #0FA9B2);
-            width: 48px;
-            height: 48px;
-            border-radius: 18px;
+        .app-header h1 span {
+            background: var(--primary);
+            color: white;
+            font-size: 14px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .header-actions {
             display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
             align-items: center;
-            justify-content: center;
-            box-shadow: 0 12px 20px -10px rgba(0,0,0,0.3);
         }
 
-        .logo-icon i {
-            font-size: 26px;
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
             color: white;
         }
-
-        .logo-text h1 {
-            font-family: 'Rubik', sans-serif;
-            font-weight: 700;
-            font-size: 1.9rem;
-            letter-spacing: -0.3px;
-            background: linear-gradient(to right, #FFF, #C0E0FF);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .logo-text p {
-            font-size: 0.8rem;
-            color: #9DC3E6;
-            font-weight: 500;
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-medium);
+        }
+        .btn-secondary:hover {
+            background: #d5e6ea;
+            transform: translateY(-1px);
         }
 
-        .badge-premium {
-            background: rgba(30,202,211,0.18);
-            backdrop-filter: blur(4px);
-            padding: 8px 18px;
-            border-radius: 60px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #D2F0F2;
-            border: 1px solid rgba(30,202,211,0.3);
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .dashboard-card {
-            background: #F5F7FA;
-            border-radius: 28px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
-            overflow: hidden;
-            transition: all 0.2s ease;
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .filters-section {
-            padding: 24px 28px;
-            background: white;
-            border-bottom: 1px solid #E5EAF0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-end;
-            justify-content: space-between;
+        .btn-warning {
+            background: var(--warning);
+            color: white;
         }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            min-width: 170px;
-        }
-
-        .filter-group label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #1F5E7E;
-            font-family: 'Rubik', sans-serif;
-        }
-
-        .filter-group input {
-            padding: 12px 16px;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 16px;
-            font-family: 'DM Sans', monospace;
-            font-size: 0.9rem;
-            background: #FFFFFF;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        .filter-group input:focus {
-            border-color: #1ECAD3;
-            box-shadow: 0 0 0 3px rgba(30,202,211,0.2);
-        }
-
-        .search-wrapper {
-            flex: 2;
-            min-width: 240px;
-            position: relative;
-        }
-
-        .search-wrapper i {
-            position: absolute;
-            left: 16px;
-            top: 38px;
-            color: #89A9C9;
-            font-size: 1rem;
-        }
-
-        .search-input {
-            padding: 12px 16px 12px 44px !important;
-            width: 100%;
-            border-radius: 100px;
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-outline {
             background: transparent;
-            border: 1.5px solid #B9CFE4;
-            padding: 10px 22px;
-            border-radius: 40px;
-            font-weight: 500;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            color: #1F5E7E;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--primary);
+            border: 2px solid var(--primary);
         }
-
         .btn-outline:hover {
-            background: rgba(30,202,211,0.08);
-            border-color: #1ECAD3;
-            color: #0F3D5E;
-        }
-
-        .btn-primary {
-            background: linear-gradient(105deg, #1ECAD3, #15B8C0);
-            border: none;
-            padding: 10px 26px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-family: 'Rubik', sans-serif;
-            font-size: 0.85rem;
+            background: var(--primary);
             color: white;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -8px rgba(30,202,211,0.4);
-            filter: brightness(1.02);
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px;
         }
 
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .stats-row {
-            padding: 18px 28px 0 28px;
+        /* Stats Bar */
+        .stats-bar {
             display: flex;
-            justify-content: space-between;
-            align-items: baseline;
+            gap: 24px;
             flex-wrap: wrap;
-            font-size: 0.85rem;
-            color: #2A577B;
-            font-weight: 500;
-            background: white;
-        }
-
-        /* Scrollable wrapper for both totals and table */
-        .scroll-wrapper {
-            overflow-x: auto;
-            background: white;
-        }
-
-        /* Totals Header Row - directly above table columns, inside same scroll wrapper */
-        .totals-header {
-            background: white;
-            border-bottom: 2px solid #1ECAD3;
-            min-width: max-content;
-        }
-
-        .totals-table {
-            width: max-content;
-            min-width: 100%;
-            border-collapse: collapse;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-        }
-
-        .totals-table td {
             padding: 12px 16px;
-            text-align: left;
-            font-weight: 700;
-            background: linear-gradient(135deg, #E8F8F9, #D0F0F2);
-            color: #0F3D5E;
-            border-bottom: 2px solid #1ECAD3;
-            white-space: nowrap;
+            background: var(--bg-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
         }
 
-        /* First 4 columns in totals row - lighter background */
-        .totals-table td:first-child,
-        .totals-table td:nth-child(2),
-        .totals-table td:nth-child(3),
-        .totals-table td:nth-child(4) {
-            background: #F9FBFD;
-            border-bottom: 2px solid #E5EAF0;
-            color: #2A577B;
-            font-weight: 500;
+        .stats-bar span {
+            font-size: 13px;
+            color: var(--text-medium);
         }
 
-        .total-amount {
-            font-size: 1rem;
-            font-weight: 800;
-            color: #0F3D5E;
-            display: block;
+        .stats-bar strong {
+            color: var(--text-dark);
+            font-weight: 600;
         }
 
-        .total-label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #1F5E7E;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .table-container {
-            background: white;
-            min-width: max-content;
-        }
-
-        .data-table {
-            width: max-content;
-            min-width: 100%;
-            border-collapse: collapse;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.8rem;
-            border: 1px solid #DCE5EC;
-        }
-
-        .data-table th,
-        .data-table td {
-            border: 1px solid #E2EBF3;
+        /* Filters Row */
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
             padding: 12px 16px;
-            vertical-align: middle;
+            background: var(--bg-light);
+            border-radius: var(--radius-sm);
+        }
+
+        .filters-row .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filters-row label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-medium);
             white-space: nowrap;
         }
 
-        /* Column widths - applied consistently to both tables */
-        .data-table th:first-child,
-        .data-table td:first-child,
-        .totals-table td:first-child {
-            min-width: 110px;
-            width: 110px;
+        .filters-row input,
+        .filters-row select {
+            padding: 4px 8px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            background: white;
+            transition: var(--transition);
+            min-width: 120px;
         }
 
-        .data-table th:nth-child(2),
-        .data-table td:nth-child(2),
-        .totals-table td:nth-child(2) {
-            min-width: 150px;
-            width: 150px;
+        .filters-row input:focus,
+        .filters-row select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.1);
         }
 
-        .data-table th:nth-child(3),
-        .data-table td:nth-child(3),
-        .totals-table td:nth-child(3) {
+        .filters-row input[type="date"] {
             min-width: 140px;
-            width: 140px;
         }
 
-        .data-table th:nth-child(4),
-        .data-table td:nth-child(4),
-        .totals-table td:nth-child(4) {
-            min-width: 140px;
-            width: 140px;
-        }
-
-        .data-table th:nth-child(n+5),
-        .data-table td:nth-child(n+5),
-        .totals-table td:nth-child(n+5) {
-            min-width: 140px;
-            width: 140px;
-        }
-
-        .data-table th {
-            text-align: left;
-            background: #F9FBFD;
-            font-family: 'Rubik', sans-serif;
-            font-weight: 600;
-            color: #0F3D5E;
-            border-bottom: 2px solid #D0DDE8;
-            position: sticky;
-            top: 0;
-            font-size: 0.75rem;
-            white-space: nowrap;
-        }
-
-        .data-table td {
-            color: #1F3E54;
-        }
-
-        .data-table tr:hover td {
-            background-color: #F0F9FD;
-            transition: 0.1s;
-        }
-
-        .amount-cell {
-            font-weight: 600;
-            color: #0F3D5E;
-        }
-
-        /* Column Filter Styles */
-        .filter-header {
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 200px;
             position: relative;
-            cursor: pointer;
-            user-select: none;
         }
 
-        .filter-header:hover {
-            background-color: #E8F4F8;
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 6px 12px 6px 32px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            background: white;
+            transition: var(--transition);
         }
 
-        .filter-icon {
-            margin-left: 8px;
-            font-size: 0.7rem;
-            color: #89A9C9;
-            transition: color 0.2s;
+        .search-input-wrapper input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.1);
+        }
+
+        .search-input-wrapper .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        /* Highlight */
+        .highlight-match {
+            background: #ffeb3b;
+            padding: 0 1px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
+        /* Column Visibility Toggle */
+        .column-toggle-container {
+            position: relative;
             display: inline-block;
         }
 
-        .filter-header:hover .filter-icon {
-            color: #1ECAD3;
-        }
-
-        .filter-dropdown {
+        .column-toggle-dropdown {
+            display: none;
             position: absolute;
-            background: white;
-            border: 1px solid #D0DDE8;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            padding: 12px;
-            min-width: 240px;
-            max-width: 300px;
-            z-index: 10000;
             top: 100%;
-            left: 0;
-            margin-top: 5px;
-        }
-
-        .filter-dropdown input[type="text"] {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #E2E8F0;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-        }
-
-        .filter-dropdown .filter-options {
-            max-height: 280px;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            padding: 12px 16px;
+            min-width: 220px;
+            max-height: 350px;
             overflow-y: auto;
+            z-index: 100;
+            margin-top: 4px;
         }
 
-        .filter-option-all {
-            border-bottom: 1px solid #E5EAF0;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
+        .column-toggle-dropdown.show {
+            display: block;
         }
 
-        .filter-option {
+        .column-toggle-dropdown .toggle-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 8px;
+            padding: 4px 0;
+            font-size: 13px;
+            color: var(--text-medium);
             cursor: pointer;
-            border-radius: 6px;
+            transition: var(--transition);
         }
 
-        .filter-option:hover {
-            background-color: #F0F9FD;
+        .column-toggle-dropdown .toggle-item:hover {
+            color: var(--text-dark);
         }
 
-        .filter-option input[type="checkbox"] {
+        .column-toggle-dropdown .toggle-item input[type="checkbox"] {
             width: 16px;
             height: 16px;
-            margin: 0;
-            margin-right: 8px;
+            accent-color: var(--primary);
             cursor: pointer;
         }
 
-        .filter-option label {
-            cursor: pointer;
-            flex: 1;
-            font-size: 0.85rem;
-            text-transform: none;
-            letter-spacing: normal;
-            color: #1F3E54;
+        .column-toggle-dropdown .toggle-all {
+            border-bottom: 1px solid var(--bg-light);
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
         }
 
-        .blank-option {
-            border-top: 1px solid #E5EAF0;
-            margin-top: 4px;
-            padding-top: 8px;
-        }
-
-        .filter-dropdown .filter-actions {
+        /* Summary Totals */
+        .summary-totals {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid #E5EAF0;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+            padding: 12px 16px;
+            background: var(--bg-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 13px;
+            border: 1px solid #d1d9dd;
         }
 
-        .filter-apply, .filter-clear, .filter-close {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            border: none;
+        .summary-totals .total-item {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .summary-totals .total-item .label {
             font-weight: 500;
+            color: var(--text-medium);
         }
 
-        .filter-apply {
-            background: #1ECAD3;
-            color: white;
+        .summary-totals .total-item .value {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-family: 'Courier New', monospace;
         }
 
-        .filter-apply:hover {
-            background: #15B8C0;
+        .summary-totals .total-item .value.profit {
+            color: var(--success);
         }
 
-        .filter-clear {
-            background: #F0F2F5;
-            color: #666;
+        .summary-totals .total-item .value.loss {
+            color: var(--error);
         }
 
-        .filter-clear:hover {
-            background: #E4E7EB;
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
         }
 
-        .filter-close {
-            background: #DC3545;
-            color: white;
-            margin-left: auto;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 800px;
         }
 
-        .filter-close:hover {
-            background: #C82333;
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .filter-active {
-            color: #1ECAD3 !important;
+        th {
+            background: var(--bg-light);
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dark);
+            border: 1px solid #d1d9dd;
+            white-space: nowrap;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            min-width: 80px;
         }
 
-        /* Pagination Styles */
-        .pagination-container {
-            padding: 20px 28px 28px 28px;
+        td {
+            padding: 6px 10px;
+            border: 1px solid #d1d9dd;
+            vertical-align: middle;
+            max-width: 200px;
+            word-wrap: break-word;
+            font-size: 12px;
+            color: var(--text-medium);
+        }
+
+        tr:hover td {
+            background: #f8fbfc;
+        }
+
+        /* Column Widths */
+        .col-visitDate { min-width: 90px; max-width: 110px; }
+        .col-patientName { min-width: 120px; max-width: 180px; }
+        .col-center { min-width: 80px; max-width: 120px; }
+        .col-careOfPerson { min-width: 100px; max-width: 160px; }
+        .col-totalMRP,
+        .col-totalB2B,
+        .col-finalPrice,
+        .col-cashReceived,
+        .col-onlineReceived,
+        .col-pendingPayment,
+        .col-goodwillCharges,
+        .col-estimatedProfit,
+        .col-actualProfit {
+            min-width: 80px;
+            max-width: 110px;
+            text-align: right;
+        }
+
+        .header-filter {
+            display: block;
+            width: 100%;
+            padding: 2px 4px;
+            border: 1px solid #d1d9dd;
+            border-radius: 3px;
+            font-size: 10px;
             background: white;
-            border-radius: 0 0 28px 28px;
+            margin-top: 2px;
+            max-width: 120px;
+        }
+
+        .header-filter:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .currency {
+            font-weight: 500;
+            font-family: 'Courier New', monospace;
+        }
+
+        .truncate {
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .truncate:hover {
+            white-space: normal;
+            overflow: visible;
+            background: white;
+            position: relative;
+            z-index: 5;
+            box-shadow: var(--shadow-sm);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* Pagination */
+        .pagination-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 15px;
-            border-top: 1px solid #E5EAF0;
+            gap: 12px;
+            padding: 12px 0;
+            border-top: 1px solid var(--bg-light);
         }
 
         .pagination-controls {
             display: flex;
+            align-items: center;
             gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
         }
 
-        .page-btn {
+        .pagination-controls button {
+            padding: 4px 12px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
             background: white;
-            border: 1px solid #D0DDE8;
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #1F5E7E;
             cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 12px;
+            transition: var(--transition);
+            color: var(--text-medium);
         }
 
-        .page-btn:hover:not(:disabled) {
-            background: #1ECAD3;
-            border-color: #1ECAD3;
-            color: white;
+        .pagination-controls button:hover:not(:disabled) {
+            background: var(--bg-light);
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
-        .page-btn:disabled {
-            opacity: 0.4;
+        .pagination-controls button:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
-        .page-numbers {
+        .pagination-controls button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination-controls .page-info {
+            font-size: 13px;
+            color: var(--text-medium);
+            padding: 0 8px;
+        }
+
+        .per-page-select {
             display: flex;
+            align-items: center;
             gap: 6px;
-            flex-wrap: wrap;
         }
 
-        .page-number {
+        .per-page-select label {
+            font-size: 12px;
+            color: var(--text-medium);
+        }
+
+        .per-page-select select {
+            padding: 4px 8px;
+            border: 1px solid #d1d9dd;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
             background: white;
-            border: 1px solid #D0DDE8;
-            padding: 8px 13px;
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #1F5E7E;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 40px;
+        }
+
+        /* Loading */
+        .loading {
             text-align: center;
+            padding: 40px;
+            color: var(--text-light);
         }
 
-        .page-number:hover {
-            background: #1ECAD3;
-            border-color: #1ECAD3;
-            color: white;
-        }
-
-        .page-number.active {
-            background: #1ECAD3;
-            border-color: #1ECAD3;
-            color: white;
-        }
-
-        .rows-per-page {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .rows-per-page select {
-            padding: 8px 12px;
-            border: 1.5px solid #E2E8F0;
-            border-radius: 12px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem;
-            background: white;
-            cursor: pointer;
-            outline: none;
-        }
-
-        .rows-per-page select:focus {
-            border-color: #1ECAD3;
-        }
-
-        .pagination-info {
-            color: #2A577B;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .loader-state, .empty-msg, .error-msg {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 24px;
-            gap: 14px;
-            background: #FBFDFF;
-            border-radius: 28px;
-            color: #2C6283;
-            font-weight: 500;
-        }
-
-        .error-msg {
-            background: #FFF6F0;
-            color: #C4450C;
-        }
-
-        .refresh-spinner {
-            animation: spin 1s linear infinite;
+        .loading-spinner {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--bg-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        @media (max-width: 1200px) {
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+        .toast.error {
+            background: var(--error);
+        }
+        .toast.info {
+            background: var(--primary);
+        }
+
+        /* Scrollbar */
+        .table-wrapper::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: #c1c7cd;
+            border-radius: 3px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #a0a7ae;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
             .app-container {
-                padding: 16px;
+                padding: 12px;
+            }
+            .app-header h1 {
+                font-size: 18px;
+            }
+            .app-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .header-actions {
+                justify-content: center;
+            }
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filters-row .filter-group {
+                flex-wrap: wrap;
+            }
+            .search-input-wrapper {
+                min-width: 100%;
+            }
+            .stats-bar {
+                font-size: 12px;
+                gap: 12px;
+                padding: 8px 12px;
+            }
+            .pagination-container {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .pagination-controls {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .column-toggle-dropdown {
+                left: auto;
+                right: 0;
+                min-width: 180px;
+            }
+            .summary-totals {
+                font-size: 12px;
+                gap: 8px 16px;
+                padding: 8px 12px;
+            }
+            .summary-totals .total-item {
+                white-space: normal;
             }
         }
     </style>
 </head>
 <body>
-<div class="app-container">
-    <div class="health-header">
-        <div class="logo-area">
-            <div class="logo-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="logo-text">
-                <h1>Revenue Sheet</h1>
-            </div>
-        </div>
-    </div>
 
-    <div class="dashboard-card">
-        <div class="filters-section">
-            <div class="filter-group">
-                <label><i class="far fa-calendar-alt"></i> From Date (Visit Date)</label>
-                <input type="date" id="fromDateFilter" placeholder="Start date">
-            </div>
-            <div class="filter-group">
-                <label><i class="far fa-calendar-check"></i> To Date (Visit Date)</label>
-                <input type="date" id="toDateFilter" placeholder="End date">
-            </div>
-            <div class="search-wrapper">
-                <label><i class="fas fa-search"></i> Global search</label>
-                <input type="text" id="globalSearchInput" class="search-input" placeholder="Search patient, care of, amount...">
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <button class="btn-primary" id="refreshBtn">
-                    <i class="fas fa-sync-alt" id="refreshIcon"></i> Refresh
-                </button>
-                <button class="btn-outline" id="resetFiltersBtn"><i class="fas fa-undo-alt"></i> Reset</button>
-            </div>
-        </div>
-
-        <div class="stats-row" id="statsDisplay">
-            <span><i class="fas fa-spinner fa-pulse"></i> Connecting to sheet...</span>
-            <span><i class="fas fa-chart-simple"></i> Revenue Analytics Dashboard</span>
-        </div>
-
-        <!-- Scroll wrapper - both totals and table scroll together -->
-        <div class="scroll-wrapper" id="scrollWrapper">
-            <!-- Totals Header Row - directly above table columns -->
-            <div id="totalsContainer" class="totals-header"></div>
-            <!-- Table Container -->
-            <div class="table-container" id="dynamicTableContainer">
-                <div class="loader-state">
-                    <i class="fas fa-sync-alt fa-spin" style="font-size: 36px; color:#1ECAD3;"></i>
-                    <p>Fetching revenue records from secure sheet</p>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="app-header">
+            <h1>
+                📋 Patient Data
+                <span id="recordBadge">0</span>
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="refreshBtn">⟳ Refresh</button>
+                <div class="column-toggle-container">
+                    <button class="btn btn-primary" id="toggleColumnsBtn">📊 Columns</button>
+                    <div class="column-toggle-dropdown" id="columnToggleDropdown">
+                        <div class="toggle-item toggle-all">
+                            <input type="checkbox" id="toggleAllColumns" checked />
+                            <label for="toggleAllColumns"><strong>Select All</strong></label>
+                        </div>
+                        <div id="columnToggleList"></div>
+                    </div>
                 </div>
+                <button class="btn btn-success" id="exportBtn">📥 Export CSV</button>
+                <button class="btn btn-warning" id="clearFiltersBtn">✕ Clear Filters</button>
             </div>
         </div>
-        
-        <!-- Pagination Section -->
-        <div class="pagination-container" id="paginationContainer" style="display: none;">
-            <div class="pagination-info" id="paginationInfo">
-                Showing 0 to 0 of 0 entries
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <span>Total Records: <strong id="totalRecords">0</strong></span>
+            <span>Filtered: <strong id="filteredRecords">0</strong></span>
+            <span>Showing: <strong id="showingRecords">0</strong></span>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-row" id="filtersRow">
+            <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="globalSearch" placeholder="Search across all columns..." />
             </div>
-            <div class="pagination-controls">
-                <button class="page-btn" id="firstPageBtn" disabled>
-                    <i class="fas fa-angle-double-left"></i> First
-                </button>
-                <button class="page-btn" id="prevPageBtn" disabled>
-                    <i class="fas fa-chevron-left"></i> Prev
-                </button>
-                <div class="page-numbers" id="pageNumbers"></div>
-                <button class="page-btn" id="nextPageBtn" disabled>
-                    Next <i class="fas fa-chevron-right"></i>
-                </button>
-                <button class="page-btn" id="lastPageBtn" disabled>
-                    Last <i class="fas fa-angle-double-right"></i>
-                </button>
+            <div class="filter-group">
+                <label>From:</label>
+                <input type="date" id="filterFromDate" />
             </div>
-            <div class="rows-per-page">
-                <span>Rows per page:</span>
-                <select id="rowsPerPageSelect">
-                    <option value="10">10</option>
-                    <option value="20" selected>20</option>
+            <div class="filter-group">
+                <label>To:</label>
+                <input type="date" id="filterToDate" />
+            </div>
+        </div>
+
+        <!-- Summary Totals -->
+        <div class="summary-totals" id="summaryTotals">
+            <!-- dynamically populated -->
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingIndicator" class="loading">
+            <div class="loading-spinner"></div>
+            <p style="margin-top:12px;">Loading patient data...</p>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper" id="tableWrapper" style="display:none;">
+            <table id="dataTable">
+                <thead id="tableHead">
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer">
+            <div class="per-page-select">
+                <label>Entries per page:</label>
+                <select id="perPageSelect">
+                    <option value="25">25</option>
                     <option value="50">50</option>
+                    <option value="75">75</option>
                     <option value="100">100</option>
                 </select>
             </div>
+            <div class="pagination-controls" id="paginationControls">
+                <button id="prevPageBtn">◀ Prev</button>
+                <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                <button id="nextPageBtn">Next ▶</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Google Sheet CSV URL - Replace with your published sheet URL
-    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQWwLwHzkJxXYlPZfzwPZmR4iMx2EftwkgIGi_tQRiiOlanZBeCU_1zik3eoGU8aQUYlcAhDwkJn05X/pub?gid=0&single=true&output=csv';
-    
-    let masterSheetData = [];
-    let filteredData = [];
-    
-    // Pagination variables
-    let currentPage = 1;
-    let rowsPerPage = 20;
-    let totalPages = 1;
-    
-    // Refresh state
-    let isRefreshing = false;
-    
-    // Column filter state for multiple columns
-    const columnFilters = {
-        'Center': {
-            values: new Set(),
-            hasBlank: false,
-            active: new Set(),
-            columnIndex: 2 // 3rd column (0-indexed)
-        },
-        'Care of': {
-            values: new Set(),
-            hasBlank: false,
-            active: new Set(),
-            columnIndex: 3 // 4th column (0-indexed)
-        }
-    };
-    
-    let currentDropdown = null;
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
-    const fromDateEl = document.getElementById('fromDateFilter');
-    const toDateEl = document.getElementById('toDateFilter');
-    const globalSearchEl = document.getElementById('globalSearchInput');
-    const resetBtn = document.getElementById('resetFiltersBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const refreshIcon = document.getElementById('refreshIcon');
-    const containerDiv = document.getElementById('dynamicTableContainer');
-    const statsSpan = document.getElementById('statsDisplay');
-    const totalsContainer = document.getElementById('totalsContainer');
-    const scrollWrapper = document.getElementById('scrollWrapper');
-    const paginationContainer = document.getElementById('paginationContainer');
-    const firstPageBtn = document.getElementById('firstPageBtn');
-    const prevPageBtn = document.getElementById('prevPageBtn');
-    const nextPageBtn = document.getElementById('nextPageBtn');
-    const lastPageBtn = document.getElementById('lastPageBtn');
-    const pageNumbersDiv = document.getElementById('pageNumbers');
-    const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
-    const paginationInfo = document.getElementById('paginationInfo');
+    <script>
+        // ============================================================
+        //  FIREBASE CONFIGURATION
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYvXfJIVRQSFgXp50sGegSN5U8xq88C3g",
+            authDomain: "goodness-data.firebaseapp.com",
+            databaseURL: "https://goodness-data-default-rtdb.firebaseio.com",
+            projectId: "goodness-data",
+            storageBucket: "goodness-data.firebasestorage.app",
+            messagingSenderId: "1034454680105",
+            appId: "1:1034454680105:web:74727c22489373383b9238",
+            measurementId: "G-TD30ZYVDCG"
+        };
 
-    function parseMedicalDate(dateStr) {
-        if (!dateStr || dateStr.trim() === '') return null;
-        let cleaned = dateStr.toString().trim();
-        let standardDate = new Date(cleaned);
-        if (!isNaN(standardDate.getTime())) return standardDate;
-        if (cleaned.includes('/')) {
-            let parts = cleaned.split('/');
-            if (parts.length === 3) {
-                let day, month, year;
-                if (parseInt(parts[0],10) > 12) {
-                    day = parseInt(parts[0],10);
-                    month = parseInt(parts[1],10) - 1;
-                    year = parseInt(parts[2],10);
-                } else {
-                    month = parseInt(parts[0],10) - 1;
-                    day = parseInt(parts[1],10);
-                    year = parseInt(parts[2],10);
-                }
-                let d = new Date(year, month, day);
-                if (!isNaN(d.getTime())) return d;
-            }
-        }
-        return null;
-    }
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    function isWithinDateRange(dateCell, fromDateObj, toDateObj) {
-        if (!dateCell) return false;
-        const rowDate = parseMedicalDate(dateCell);
-        if (!rowDate) return false;
-        if (fromDateObj && rowDate < fromDateObj) return false;
-        if (toDateObj && rowDate > toDateObj) return false;
-        return true;
-    }
+        // ============================================================
+        //  LAB NAMES (kept for potential search, but not displayed)
+        // ============================================================
+        const LAB_NAMES = {
+            1: 'Dr. Ajay Shah',
+            2: 'Dr. Jariwala',
+            3: 'General Diagnostics',
+            4: 'Trucheck Diagnostics'
+        };
 
-    function matchesGlobal(rowObj, term) {
-        if (!term || term.trim() === '') return true;
-        const lowerTerm = term.trim().toLowerCase();
-        for (let key in rowObj) {
-            let val = rowObj[key];
-            if (val !== undefined && val !== null && String(val).toLowerCase().includes(lowerTerm)) {
-                return true;
-            }
-        }
-        return false;
-    }
+        // ============================================================
+        //  COLUMN DEFINITIONS (only requested columns + new ones)
+        // ============================================================
+        const COLUMNS = [
+            { key: 'visitDate', label: 'Visit Date', visible: true, widthClass: 'col-visitDate' },
+            { key: 'patientName', label: 'Patient Name', visible: true, filterable: true, widthClass: 'col-patientName' },
+            { key: 'center', label: 'Center', visible: true, filterable: true, widthClass: 'col-center' },
+            { key: 'careOfPerson', label: 'Care of Person', visible: true, filterable: true, widthClass: 'col-careOfPerson' },
+            { key: 'totalMRP', label: 'Total MRP', visible: true, widthClass: 'col-totalMRP' },
+            { key: 'totalB2B', label: 'Total B2B', visible: true, widthClass: 'col-totalB2B' },
+            { key: 'finalPrice', label: 'Final Price', visible: true, widthClass: 'col-finalPrice' },
+            { key: 'cashReceived', label: 'Cash Received', visible: true, widthClass: 'col-cashReceived' },
+            { key: 'onlineReceived', label: 'Online Received', visible: true, widthClass: 'col-onlineReceived' },
+            { key: 'pendingPayment', label: 'Pending Payment', visible: true, widthClass: 'col-pendingPayment' },
+            { key: 'goodwillCharges', label: 'Goodwill Charges', visible: true, widthClass: 'col-goodwillCharges' },
+            { key: 'estimatedProfit', label: 'Estimated Profit', visible: true, widthClass: 'col-estimatedProfit' },
+            { key: 'actualProfit', label: 'Actual Profit', visible: true, widthClass: 'col-actualProfit' }
+        ];
 
-    function matchesColumnFilter(rowObj, columnName, filterConfig) {
-        if (filterConfig.active.size === 0) return true;
-        
-        const rowValue = (rowObj[columnName] || '').toString().trim();
-        
-        if (filterConfig.active.has('(Blank)')) {
-            if (rowValue === '') return true;
-            if (filterConfig.active.has(rowValue)) return true;
-            return false;
-        } else {
-            if (rowValue === '') return false;
-            return filterConfig.active.has(rowValue);
-        }
-    }
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let allPatients = [];
+        let filteredPatients = [];
+        let displayedPatients = [];
+        let isLoading = true;
+        let searchTerm = '';
 
-    function getColumnNameFromData(data, columnIndex) {
-        if (data && data.length > 0) {
-            const columns = Object.keys(data[0]);
-            return columns[columnIndex] || null;
-        }
-        return null;
-    }
+        // Pagination
+        let currentPage = 1;
+        let perPage = 25;
 
-    function updateColumnFilterOptions() {
-        // Reset filter values
-        for (let key in columnFilters) {
-            columnFilters[key].values.clear();
-            columnFilters[key].hasBlank = false;
-        }
-        
-        const fromRaw = fromDateEl.value;
-        const toRaw = toDateEl.value;
-        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
-        const toDateObj = toRaw ? new Date(toRaw) : null;
-        const searchTerm = globalSearchEl.value;
-        
-        let tempFiltered = masterSheetData.filter(row => {
-            return isWithinDateRange(row.visitDate || row.date, fromDateObj, toDateObj);
+        // Column visibility
+        let columnVisibility = {};
+        COLUMNS.forEach(c => columnVisibility[c.key] = c.visible);
+
+        // Column filters (only for filterable columns)
+        let columnFilters = {};
+        COLUMNS.forEach(c => {
+            if (c.filterable) columnFilters[c.key] = 'all';
         });
-        
-        tempFiltered = tempFiltered.filter(row => matchesGlobal(row, searchTerm));
-        
-        // Update filter options for each configured column
-        for (let columnName in columnFilters) {
-            const config = columnFilters[columnName];
-            const colName = getColumnNameFromData(tempFiltered, config.columnIndex);
-            
-            if (colName) {
-                tempFiltered.forEach(row => {
-                    let val = row[colName];
-                    if (val && val.toString().trim() !== '') {
-                        config.values.add(val.toString().trim());
-                    } else {
-                        config.hasBlank = true;
+
+        let dateFrom = '';
+        let dateTo = '';
+
+        // ============================================================
+        //  DOM REFS
+        // ============================================================
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const tableWrapper = document.getElementById('tableWrapper');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        const toggleColumnsBtn = document.getElementById('toggleColumnsBtn');
+        const columnToggleDropdown = document.getElementById('columnToggleDropdown');
+        const columnToggleList = document.getElementById('columnToggleList');
+        const toggleAllColumns = document.getElementById('toggleAllColumns');
+        const globalSearch = document.getElementById('globalSearch');
+        const filterFromDate = document.getElementById('filterFromDate');
+        const filterToDate = document.getElementById('filterToDate');
+        const totalRecords = document.getElementById('totalRecords');
+        const filteredRecords = document.getElementById('filteredRecords');
+        const showingRecords = document.getElementById('showingRecords');
+        const recordBadge = document.getElementById('recordBadge');
+        const perPageSelect = document.getElementById('perPageSelect');
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageInfo = document.getElementById('pageInfo');
+        const toastEl = document.getElementById('toast');
+        const summaryTotals = document.getElementById('summaryTotals');
+
+        // ============================================================
+        //  TOAST
+        // ============================================================
+        function toast(msg, type = 'success') {
+            toastEl.textContent = msg;
+            toastEl.className = 'toast show ' + type;
+            clearTimeout(toastEl._timeout);
+            toastEl._timeout = setTimeout(() => toastEl.classList.remove('show'), 3000);
+        }
+
+        // ============================================================
+        //  ESCAPE HTML
+        // ============================================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        //  HIGHLIGHT TEXT
+        // ============================================================
+        function highlightText(text, searchTerm) {
+            if (text === null || text === undefined) return '';
+            text = String(text);
+            if (!searchTerm || searchTerm.trim() === '') {
+                return escapeHtml(text);
+            }
+            const term = String(searchTerm).trim();
+            if (!term) return escapeHtml(text);
+            const lowerText = text.toLowerCase();
+            const lowerTerm = term.toLowerCase();
+            if (!lowerText.includes(lowerTerm)) {
+                return escapeHtml(text);
+            }
+            let result = '';
+            let lastIndex = 0;
+            let index = lowerText.indexOf(lowerTerm);
+            while (index !== -1) {
+                result += escapeHtml(text.substring(lastIndex, index));
+                result += `<span class="highlight-match">${escapeHtml(text.substring(index, index + term.length))}</span>`;
+                lastIndex = index + term.length;
+                index = lowerText.indexOf(lowerTerm, lastIndex);
+            }
+            result += escapeHtml(text.substring(lastIndex));
+            return result;
+        }
+
+        // ============================================================
+        //  GET LABS (kept for search; not displayed)
+        // ============================================================
+        function getLabsForEntry(entry) {
+            if (!entry) return [];
+            const labs = [];
+            if (entry.labs && Array.isArray(entry.labs)) {
+                entry.labs.forEach(lab => {
+                    const numLab = Number(lab);
+                    if (!isNaN(numLab) && numLab >= 1 && numLab <= 4 && !labs.includes(numLab)) {
+                        labs.push(numLab);
                     }
                 });
+                if (labs.length > 0) return labs;
             }
-        }
-    }
-
-    function sortByDateDescending(data) {
-        return [...data].sort((a, b) => {
-            const dateA = parseMedicalDate(a.visitDate || a.date);
-            const dateB = parseMedicalDate(b.visitDate || b.date);
-            
-            if (!dateA && !dateB) return 0;
-            if (!dateA) return 1;
-            if (!dateB) return -1;
-            
-            return dateB - dateA;
-        });
-    }
-
-    // Function to extract numeric value from a cell
-    function extractNumericValue(value) {
-        if (value === undefined || value === null || value === '') return 0;
-        if (typeof value === 'number') return value;
-        const numMatch = value.toString().replace(/[^0-9.-]/g, '');
-        const num = parseFloat(numMatch);
-        return isNaN(num) ? 0 : num;
-    }
-
-    // Function to calculate column totals from column 4 onwards
-    function calculateColumnTotals(data) {
-        if (!data || data.length === 0) return {};
-        
-        const columns = Object.keys(data[0]);
-        const totals = {};
-        
-        // Start from column index 4 (5th column) to the end
-        for (let i = 4; i < columns.length; i++) {
-            const colName = columns[i];
-            let total = 0;
-            
-            for (let row of data) {
-                const value = row[colName];
-                total += extractNumericValue(value);
-            }
-            
-            totals[colName] = total;
-        }
-        
-        return totals;
-    }
-
-    // Function to render totals row as a table that aligns with the data table columns
-    function renderTotalsRow(columns, totals) {
-        if (!columns || columns.length === 0) return '';
-        
-        let html = '<table class="totals-table"><tr>';
-        
-        for (let i = 0; i < columns.length; i++) {
-            const colName = columns[i];
-            if (i < 4) {
-                // First 4 columns (Visit Date, Patient Name, Center, Care of) - show blank or "TOTAL"
-                if (i === 0) {
-                    html += `<td><span class="total-label">TOTAL</span><span class="total-amount"></span></td>`;
-                } else {
-                    html += `<td><span class="total-label"></span><span class="total-amount"></span></td>`;
+            if (entry.labSelections && typeof entry.labSelections === 'object') {
+                for (let labId = 1; labId <= 4; labId++) {
+                    const labData = entry.labSelections[labId];
+                    if (labData && typeof labData === 'object') {
+                        const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+                        const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+                        if (hasTests || hasPackages) {
+                            labs.push(labId);
+                        }
+                    }
                 }
-            } else {
-                // Columns 5 onwards - show the total amount directly above the column
-                const total = totals[colName] || 0;
-                html += `<td><span class="total-label">${colName}</span><span class="total-amount">₹${Math.round(total).toLocaleString('en-IN')}</span></td>`;
+                if (labs.length > 0) return labs;
+            }
+            for (let labId = 1; labId <= 4; labId++) {
+                const key = labId.toString();
+                if (entry[key] && typeof entry[key] === 'object') {
+                    const labData = entry[key];
+                    const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
+                    const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
+                    if (hasTests || hasPackages) {
+                        labs.push(labId);
+                    }
+                }
+            }
+            return [...new Set(labs)];
+        }
+
+        // ============================================================
+        //  GET COLUMN VALUE (including computed profits)
+        // ============================================================
+        function getColumnValue(patient, key) {
+            switch (key) {
+                case 'visitDate': return patient.visitDate || '';
+                case 'patientName': return patient.patientName || '';
+                case 'center': return patient.center || '';
+                case 'careOfPerson': return patient.careOfPerson || '';
+                case 'totalMRP': return patient.totalMRP || 0;
+                case 'totalB2B': return patient.totalB2B || 0;
+                case 'finalPrice': return patient.finalPrice || 0;
+                case 'cashReceived': return patient.cashReceived || 0;
+                case 'onlineReceived': return patient.onlineReceived || 0;
+                case 'pendingPayment': return patient.pendingPayment || 0;
+                case 'goodwillCharges': return patient.goodwillCharges || 0;
+                case 'estimatedProfit': {
+                    const finalPrice = patient.finalPrice || 0;
+                    const b2b = patient.totalB2B || 0;
+                    const goodwill = patient.goodwillCharges || 0;
+                    return finalPrice - b2b - goodwill;
+                }
+                case 'actualProfit': {
+                    const cash = patient.cashReceived || 0;
+                    const online = patient.onlineReceived || 0;
+                    const b2b = patient.totalB2B || 0;
+                    const goodwill = patient.goodwillCharges || 0;
+                    return (cash + online) - b2b - goodwill;
+                }
+                default: return '';
             }
         }
-        
-        html += `</tr></table>`;
-        return html;
-    }
 
-    function applyFiltersAndRender() {
-        if (!masterSheetData.length) {
-            filteredData = [];
+        // ============================================================
+        //  FORMAT CURRENCY
+        // ============================================================
+        function formatCurrency(value) {
+            if (value === undefined || value === null || isNaN(value)) return '₹0';
+            return '₹' + Number(value).toLocaleString('en-IN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // ============================================================
+        //  LOAD DATA
+        // ============================================================
+        async function loadData() {
+            isLoading = true;
+            loadingIndicator.style.display = 'block';
+            tableWrapper.style.display = 'none';
+
+            try {
+                const snap = await db.ref('patients').once('value');
+                const data = snap.val();
+
+                allPatients = [];
+
+                if (data) {
+                    const keys = Object.keys(data);
+                    for (const key of keys) {
+                        const patient = data[key];
+                        patient._firebaseKey = key;
+                        allPatients.push(patient);
+                    }
+
+                    allPatients.sort((a, b) => {
+                        const dateA = a.visitDate || '';
+                        const dateB = b.visitDate || '';
+                        return dateB.localeCompare(dateA);
+                    });
+                }
+
+                console.log('[Table] Loaded', allPatients.length, 'patients');
+                totalRecords.textContent = allPatients.length;
+
+                buildColumnToggleList();
+
+                applyFilters();
+                toast('Data loaded successfully!', 'success');
+
+            } catch (err) {
+                console.error('Error loading data:', err);
+                toast('Error loading data: ' + err.message, 'error');
+            } finally {
+                isLoading = false;
+                loadingIndicator.style.display = 'none';
+                tableWrapper.style.display = 'block';
+            }
+        }
+
+        // ============================================================
+        //  BUILD COLUMN TOGGLE LIST
+        // ============================================================
+        function buildColumnToggleList() {
+            let html = '';
+            COLUMNS.forEach(col => {
+                html += `
+                    <div class="toggle-item">
+                        <input type="checkbox" id="col_${col.key}" ${columnVisibility[col.key] ? 'checked' : ''} />
+                        <label for="col_${col.key}">${col.label}</label>
+                    </div>
+                `;
+            });
+            columnToggleList.innerHTML = html;
+
+            columnToggleList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const key = this.id.replace('col_', '');
+                    columnVisibility[key] = this.checked;
+                    updateToggleAllState();
+                    renderTable();
+                    // summary totals don't depend on column visibility
+                });
+            });
+        }
+
+        function updateToggleAllState() {
+            const allChecked = COLUMNS.every(col => columnVisibility[col.key]);
+            toggleAllColumns.checked = allChecked;
+        }
+
+        // ============================================================
+        //  APPLY FILTERS
+        // ============================================================
+        function applyFilters() {
+            let result = [...allPatients];
+
+            // Global search - search all patient data (including labs)
+            if (searchTerm && searchTerm.trim() !== '') {
+                const term = searchTerm.toLowerCase().trim();
+                result = result.filter(p => {
+                    // Collect all normal patient fields
+                    const searchableValues = [
+                        p._firebaseKey,
+                        p.patientName,
+                        p.visitDate,
+                        p.age,
+                        p.gender,
+                        p.doctorName,
+                        p.careOfPerson,
+                        p.address,
+                        p.center,
+                        p.visitType,
+                        p.visitTime,
+                        p.ppTime,
+                        p.phlebotomist,
+                        p.ppPhlebotomist,
+                        p.extraCollectionTime,
+                        p.extraCollectionPhlebotomist,
+                        p.totalMRP,
+                        p.totalB2B,
+                        p.finalPrice,
+                        p.cashReceived,
+                        p.onlineReceived,
+                        p.pendingPayment,
+                        p.goodwillCharges
+                    ];
+
+                    // Add lab names and tests
+                    const labs = getLabsForEntry(p);
+                    labs.forEach(labId => {
+                        searchableValues.push(LAB_NAMES[labId] || 'Lab ' + labId);
+                        // Add all tests/packages for this lab (we don't have a direct function to extract all tests here, but we can try)
+                        // Use a simple extraction for search: we can stringify lab data
+                        const labData = p.labSelections ? p.labSelections[labId] : p[labId];
+                        if (labData) {
+                            const tests = labData.tests || [];
+                            const packages = labData.packages || [];
+                            tests.forEach(t => searchableValues.push(t.generalName || t.name || 'Test'));
+                            packages.forEach(pkg => {
+                                searchableValues.push(pkg.packageName || 'Package');
+                                if (pkg.tests) {
+                                    pkg.tests.forEach(t => {
+                                        if (t.selected !== false) {
+                                            searchableValues.push(t.generalName || t.name || 'Test');
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                    const searchableText = searchableValues
+                        .filter(value => value !== null && value !== undefined)
+                        .map(value => String(value))
+                        .join(' ')
+                        .toLowerCase();
+
+                    return searchableText.includes(term);
+                });
+            }
+
+            // Date range
+            if (dateFrom) {
+                result = result.filter(p => (p.visitDate || '') >= dateFrom);
+            }
+            if (dateTo) {
+                result = result.filter(p => (p.visitDate || '') <= dateTo);
+            }
+
+            // Column filters (only for filterable columns)
+            COLUMNS.forEach(col => {
+                if (col.filterable && columnFilters[col.key] && columnFilters[col.key] !== 'all') {
+                    const filterValue = columnFilters[col.key];
+                    result = result.filter(p => {
+                        let value = getColumnValue(p, col.key);
+                        return String(value) === filterValue;
+                    });
+                }
+            });
+
+            filteredPatients = result;
+            filteredRecords.textContent = filteredPatients.length;
+
             currentPage = 1;
-            renderTotals();
+            updatePagination();
             renderTable();
-            updateStatsUI();
-            return;
+            updateStats();
+            updateSummaryTotals();  // new: update summary totals based on filteredPatients
         }
 
-        const fromRaw = fromDateEl.value;
-        const toRaw = toDateEl.value;
-        const fromDateObj = fromRaw ? new Date(fromRaw) : null;
-        const toDateObj = toRaw ? new Date(toRaw) : null;
-        const searchTerm = globalSearchEl.value;
+        // ============================================================
+        //  UPDATE PAGINATION
+        // ============================================================
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredPatients.length / perPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
 
-        let dateFiltered = masterSheetData.filter(row => {
-            return isWithinDateRange(row.visitDate || row.date, fromDateObj, toDateObj);
-        });
+            const start = (currentPage - 1) * perPage;
+            const end = Math.min(start + perPage, filteredPatients.length);
+            displayedPatients = filteredPatients.slice(start, end);
 
-        let searchFiltered = dateFiltered.filter(row => matchesGlobal(row, searchTerm));
-        
-        // Apply column filters
-        let finalFiltered = searchFiltered;
-        for (let columnName in columnFilters) {
-            const config = columnFilters[columnName];
-            const colName = getColumnNameFromData(searchFiltered, config.columnIndex);
-            if (colName) {
-                finalFiltered = finalFiltered.filter(row => matchesColumnFilter(row, colName, config));
-            }
-        }
-        
-        filteredData = sortByDateDescending(finalFiltered);
-        
-        currentPage = 1;
-        renderTotals();
-        updatePagination();
-        renderTable();
-        updateStatsUI();
-    }
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
 
-    function renderTotals() {
-        if (!filteredData.length) {
-            totalsContainer.innerHTML = '';
-            return;
+            showingRecords.textContent = displayedPatients.length;
+            recordBadge.textContent = filteredPatients.length;
         }
-        
-        const columns = Object.keys(filteredData[0]);
-        const totals = calculateColumnTotals(filteredData);
-        const totalsHtml = renderTotalsRow(columns, totals);
-        totalsContainer.innerHTML = totalsHtml;
-    }
 
-    function updateStatsUI() {
-        if (!masterSheetData.length) {
-            statsSpan.innerHTML = `<span><i class="fas fa-database"></i> No data loaded</span>
-                                   <span><i class="fas fa-chart-simple"></i> Revenue Analytics Dashboard</span>`;
-            return;
-        }
-        const totalRecords = masterSheetData.length;
-        const shown = filteredData.length;
-        const lastUpdated = new Date().toLocaleTimeString();
-        
-        statsSpan.innerHTML = `<span><i class="fas fa-chart-line"></i> Showing ${shown} of ${totalRecords} records | Last updated: ${lastUpdated}</span>
-                               <span><i class="fas fa-chart-simple"></i> Revenue Analytics Dashboard | Sorted by date (newest first)</span>`;
-    }
+        // ============================================================
+        //  RENDER TABLE
+        // ============================================================
+        function renderTable() {
+            // Build header
+            let headerHtml = '<tr>';
+            COLUMNS.forEach(col => {
+                if (columnVisibility[col.key]) {
+                    headerHtml += `<th class="${col.widthClass || ''}">
+                        ${col.label}
+                        ${col.filterable ? buildFilterDropdown(col.key) : ''}
+                    </th>`;
+                }
+            });
+            headerHtml += '</tr>';
+            tableHead.innerHTML = headerHtml;
 
-    function updatePagination() {
-        totalPages = Math.ceil(filteredData.length / rowsPerPage);
-        if (totalPages === 0) totalPages = 1;
-        if (currentPage > totalPages) currentPage = totalPages;
-        
-        if (filteredData.length > rowsPerPage) {
-            paginationContainer.style.display = 'flex';
-        } else {
-            paginationContainer.style.display = 'none';
-        }
-        
-        firstPageBtn.disabled = currentPage === 1;
-        prevPageBtn.disabled = currentPage === 1;
-        nextPageBtn.disabled = currentPage === totalPages;
-        lastPageBtn.disabled = currentPage === totalPages;
-        
-        const start = (currentPage - 1) * rowsPerPage + 1;
-        const end = Math.min(currentPage * rowsPerPage, filteredData.length);
-        if (filteredData.length === 0) {
-            paginationInfo.textContent = `Showing 0 to 0 of 0 entries`;
-        } else {
-            paginationInfo.textContent = `Showing ${start} to ${end} of ${filteredData.length} entries`;
-        }
-        
-        renderPageNumbers();
-    }
-    
-    function renderPageNumbers() {
-        pageNumbersDiv.innerHTML = '';
-        
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, currentPage + 2);
-        
-        if (endPage - startPage < 4) {
-            if (startPage > 1) {
-                startPage = Math.max(1, endPage - 4);
-            }
-            if (endPage < totalPages) {
-                endPage = Math.min(totalPages, startPage + 4);
-            }
-        }
-        
-        for (let i = startPage; i <= endPage; i++) {
-            const pageBtn = document.createElement('button');
-            pageBtn.className = 'page-number' + (i === currentPage ? ' active' : '');
-            pageBtn.textContent = i;
-            pageBtn.onclick = () => {
-                currentPage = i;
-                renderTable();
-                updatePagination();
-            };
-            pageNumbersDiv.appendChild(pageBtn);
-        }
-    }
-    
-    function getCurrentPageData() {
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        return filteredData.slice(start, end);
-    }
+            // Re-bind filter events
+            COLUMNS.forEach(col => {
+                if (col.filterable) {
+                    const filterEl = document.getElementById(`filter_${col.key}`);
+                    if (filterEl) {
+                        filterEl.addEventListener('change', function() {
+                            columnFilters[col.key] = this.value;
+                            applyFilters();
+                        });
+                    }
+                }
+            });
 
-    function closeDropdown() {
-        if (currentDropdown) {
-            currentDropdown.remove();
-            currentDropdown = null;
-        }
-    }
-
-    function createColumnFilter(columnName, columnIndex, filterConfig) {
-        const th = document.querySelector(`.data-table th:nth-child(${columnIndex + 1})`);
-        if (!th) return;
-        
-        const originalText = columnName;
-        th.innerHTML = `${originalText} <i class="fas fa-filter filter-icon"></i>`;
-        th.classList.add('filter-header');
-        
-        const filterIcon = th.querySelector('.filter-icon');
-        
-        if (filterConfig.active.size > 0) {
-            filterIcon.style.color = '#1ECAD3';
-        }
-        
-        filterIcon.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            if (currentDropdown) {
-                closeDropdown();
+            // Build body
+            if (displayedPatients.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="${COLUMNS.filter(c => columnVisibility[c.key]).length}" style="text-align:center;padding:40px;color:var(--text-light);">
+                            No patient records found.
+                        </td>
+                    </tr>
+                `;
                 return;
             }
-            
-            const rect = th.getBoundingClientRect();
-            
-            const dropdown = document.createElement('div');
-            dropdown.className = 'filter-dropdown';
-            
-            dropdown.style.position = 'absolute';
-            dropdown.style.top = `${rect.height}px`;
-            dropdown.style.left = '0px';
-            
-            const searchInput = document.createElement('input');
-            searchInput.type = 'text';
-            searchInput.placeholder = 'Search options...';
-            searchInput.autocomplete = 'off';
-            
-            const optionsContainer = document.createElement('div');
-            optionsContainer.className = 'filter-options';
-            
-            const sortedValues = Array.from(filterConfig.values).sort();
-            
-            let currentSelections = new Set(filterConfig.active);
-            
-            function renderOptions(searchTerm = '') {
-                optionsContainer.innerHTML = '';
-                
-                const allOptionDiv = document.createElement('div');
-                allOptionDiv.className = 'filter-option filter-option-all';
-                
-                const allCheckbox = document.createElement('input');
-                allCheckbox.type = 'checkbox';
-                allCheckbox.id = `select_all_${columnName.replace(/\s/g, '_')}`;
-                
-                let totalOptions = sortedValues.length;
-                if (filterConfig.hasBlank) totalOptions++;
-                let selectedCount = currentSelections.size;
-                allCheckbox.checked = (selectedCount === totalOptions);
-                allCheckbox.indeterminate = (selectedCount > 0 && selectedCount < totalOptions);
-                
-                const allLabel = document.createElement('label');
-                allLabel.htmlFor = `select_all_${columnName.replace(/\s/g, '_')}`;
-                allLabel.textContent = '☑ Select All';
-                allLabel.style.fontWeight = '600';
-                
-                allCheckbox.addEventListener('change', (e) => {
-                    if (allCheckbox.checked) {
-                        sortedValues.forEach(v => currentSelections.add(v));
-                        if (filterConfig.hasBlank) currentSelections.add('(Blank)');
+
+            let bodyHtml = '';
+            displayedPatients.forEach((patient, idx) => {
+                bodyHtml += '<tr>';
+                COLUMNS.forEach(col => {
+                    if (columnVisibility[col.key]) {
+                        let value = getColumnValue(patient, col.key);
+                        let displayValue = '';
+
+                        if (col.key === 'visitDate' || col.key === 'patientName' || col.key === 'center' || col.key === 'careOfPerson') {
+                            displayValue = highlightText(String(value), searchTerm);
+                            // Truncate for long text
+                            if (col.key === 'patientName' || col.key === 'careOfPerson') {
+                                displayValue = `<span class="truncate" title="${escapeHtml(String(value))}">${displayValue || '—'}</span>`;
+                            }
+                        } else if (col.key === 'totalMRP' || col.key === 'totalB2B' || col.key === 'finalPrice' ||
+                                   col.key === 'cashReceived' || col.key === 'onlineReceived' || col.key === 'pendingPayment' ||
+                                   col.key === 'goodwillCharges' || col.key === 'estimatedProfit' || col.key === 'actualProfit') {
+                            const formatted = formatCurrency(value);
+                            const isPending = col.key === 'pendingPayment' && value > 0;
+                            const isProfit = (col.key === 'estimatedProfit' || col.key === 'actualProfit');
+                            const profitClass = (isProfit && value < 0) ? 'loss' : (isProfit && value >= 0 ? 'profit' : '');
+                            displayValue = `<span class="currency ${isPending ? 'text-error' : ''} ${profitClass}">${formatted}</span>`;
+                        } else {
+                            displayValue = highlightText(String(value), searchTerm);
+                        }
+
+                        bodyHtml += `<td class="${col.widthClass || ''}">${displayValue || '—'}</td>`;
+                    }
+                });
+                bodyHtml += '</tr>';
+            });
+
+            tableBody.innerHTML = bodyHtml;
+        }
+
+        // ============================================================
+        //  BUILD FILTER DROPDOWN
+        // ============================================================
+        function buildFilterDropdown(colKey) {
+            const values = new Set();
+            allPatients.forEach(p => {
+                let val = getColumnValue(p, colKey);
+                if (val && String(val).trim()) {
+                    values.add(String(val).trim());
+                }
+            });
+
+            const sortedValues = Array.from(values).sort();
+            const currentValue = columnFilters[colKey] || 'all';
+
+            let html = `<select class="header-filter" id="filter_${colKey}">
+                <option value="all">All</option>`;
+            sortedValues.forEach(v => {
+                const selected = v === currentValue ? 'selected' : '';
+                html += `<option value="${escapeHtml(v)}" ${selected}>${escapeHtml(v)}</option>`;
+            });
+            html += '</select>';
+            return html;
+        }
+
+        // ============================================================
+        //  UPDATE STATS
+        // ============================================================
+        function updateStats() {
+            filteredRecords.textContent = filteredPatients.length;
+            showingRecords.textContent = displayedPatients.length;
+            recordBadge.textContent = filteredPatients.length;
+        }
+
+        // ============================================================
+        //  UPDATE SUMMARY TOTALS (new)
+        // ============================================================
+        function updateSummaryTotals() {
+            const moneyKeys = [
+                'totalMRP', 'totalB2B', 'finalPrice', 'cashReceived', 
+                'onlineReceived', 'pendingPayment', 'goodwillCharges',
+                'estimatedProfit', 'actualProfit'
+            ];
+
+            const totals = {};
+            moneyKeys.forEach(key => totals[key] = 0);
+
+            filteredPatients.forEach(patient => {
+                moneyKeys.forEach(key => {
+                    let val = 0;
+                    if (key === 'estimatedProfit' || key === 'actualProfit') {
+                        val = getColumnValue(patient, key);
                     } else {
-                        currentSelections.clear();
+                        val = patient[key] || 0;
                     }
-                    renderOptions(searchInput.value);
+                    totals[key] += val;
                 });
-                
-                allOptionDiv.appendChild(allCheckbox);
-                allOptionDiv.appendChild(allLabel);
-                optionsContainer.appendChild(allOptionDiv);
-                
-                const filtered = sortedValues.filter(v => 
-                    v.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                
-                filtered.forEach(value => {
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'filter-option';
-                    
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.value = value;
-                    checkbox.checked = currentSelections.has(value);
-                    checkbox.id = `filter_${columnName.replace(/\s/g, '_')}_${value.replace(/\s/g, '_')}`;
-                    
-                    const label = document.createElement('label');
-                    label.htmlFor = checkbox.id;
-                    label.textContent = value;
-                    
-                    checkbox.addEventListener('change', (e) => {
-                        if (checkbox.checked) {
-                            currentSelections.add(value);
-                        } else {
-                            currentSelections.delete(value);
-                        }
-                        const selectAllCheckbox = optionsContainer.querySelector(`#select_all_${columnName.replace(/\s/g, '_')}`);
-                        if (selectAllCheckbox) {
-                            let totalOpts = sortedValues.length;
-                            if (filterConfig.hasBlank) totalOpts++;
-                            let selectedCnt = currentSelections.size;
-                            selectAllCheckbox.checked = (selectedCnt === totalOpts);
-                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
-                        }
-                    });
-                    
-                    optionDiv.appendChild(checkbox);
-                    optionDiv.appendChild(label);
-                    optionsContainer.appendChild(optionDiv);
-                });
-                
-                if (filterConfig.hasBlank) {
-                    const blankOptionDiv = document.createElement('div');
-                    blankOptionDiv.className = 'filter-option blank-option';
-                    
-                    const blankCheckbox = document.createElement('input');
-                    blankCheckbox.type = 'checkbox';
-                    blankCheckbox.value = '(Blank)';
-                    blankCheckbox.checked = currentSelections.has('(Blank)');
-                    blankCheckbox.id = `filter_${columnName.replace(/\s/g, '_')}_blank_option`;
-                    
-                    const blankLabel = document.createElement('label');
-                    blankLabel.htmlFor = `filter_${columnName.replace(/\s/g, '_')}_blank_option`;
-                    blankLabel.textContent = '(Blank)';
-                    blankLabel.style.fontStyle = 'italic';
-                    blankLabel.style.color = '#888';
-                    
-                    blankCheckbox.addEventListener('change', (e) => {
-                        if (blankCheckbox.checked) {
-                            currentSelections.add('(Blank)');
-                        } else {
-                            currentSelections.delete('(Blank)');
-                        }
-                        const selectAllCheckbox = optionsContainer.querySelector(`#select_all_${columnName.replace(/\s/g, '_')}`);
-                        if (selectAllCheckbox) {
-                            let totalOpts = sortedValues.length;
-                            if (filterConfig.hasBlank) totalOpts++;
-                            let selectedCnt = currentSelections.size;
-                            selectAllCheckbox.checked = (selectedCnt === totalOpts);
-                            selectAllCheckbox.indeterminate = (selectedCnt > 0 && selectedCnt < totalOpts);
-                        }
-                    });
-                    
-                    blankOptionDiv.appendChild(blankCheckbox);
-                    blankOptionDiv.appendChild(blankLabel);
-                    optionsContainer.appendChild(blankOptionDiv);
-                }
-                
-                if (filtered.length === 0 && (!filterConfig.hasBlank || (filterConfig.hasBlank && searchTerm.toLowerCase() !== '(blank)' && searchTerm !== ''))) {
-                    const noResult = document.createElement('div');
-                    noResult.style.padding = '12px';
-                    noResult.style.textAlign = 'center';
-                    noResult.style.color = '#999';
-                    noResult.textContent = 'No matching options';
-                    optionsContainer.appendChild(noResult);
-                }
-            }
-            
-            searchInput.addEventListener('input', (e) => {
-                renderOptions(e.target.value);
             });
-            
-            renderOptions();
-            
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'filter-actions';
-            
-            const applyBtn = document.createElement('button');
-            applyBtn.textContent = 'Apply';
-            applyBtn.className = 'filter-apply';
-            applyBtn.onclick = () => {
-                filterConfig.active.clear();
-                currentSelections.forEach(v => filterConfig.active.add(v));
-                applyFiltersAndRender();
-                closeDropdown();
-                if (filterConfig.active.size > 0) {
-                    filterIcon.style.color = '#1ECAD3';
-                } else {
-                    filterIcon.style.color = '';
-                }
+
+            // Build summary HTML
+            const labels = {
+                totalMRP: 'Total MRP',
+                totalB2B: 'Total B2B',
+                finalPrice: 'Final Price',
+                cashReceived: 'Cash Received',
+                onlineReceived: 'Online Received',
+                pendingPayment: 'Pending Payment',
+                goodwillCharges: 'Goodwill Charges',
+                estimatedProfit: 'Estimated Profit',
+                actualProfit: 'Actual Profit'
             };
-            
-            const clearBtn = document.createElement('button');
-            clearBtn.textContent = 'Clear All';
-            clearBtn.className = 'filter-clear';
-            clearBtn.onclick = () => {
-                currentSelections.clear();
-                renderOptions(searchInput.value);
-            };
-            
-            const closeBtn = document.createElement('button');
-            closeBtn.textContent = 'Close';
-            closeBtn.className = 'filter-close';
-            closeBtn.onclick = () => {
-                closeDropdown();
-            };
-            
-            actionsDiv.appendChild(applyBtn);
-            actionsDiv.appendChild(clearBtn);
-            actionsDiv.appendChild(closeBtn);
-            
-            dropdown.appendChild(searchInput);
-            dropdown.appendChild(optionsContainer);
-            dropdown.appendChild(actionsDiv);
-            
-            th.style.position = 'relative';
-            th.appendChild(dropdown);
-            currentDropdown = dropdown;
-        });
-    }
 
-    function formatCurrency(value) {
-        if (value === undefined || value === null || value === '') return '—';
-        const num = parseFloat(value.toString().replace(/[^0-9.-]/g, ''));
-        if (isNaN(num)) return value;
-        return `₹${Math.round(num).toLocaleString('en-IN')}`;
-    }
-
-    function renderTable() {
-        if (filteredData.length === 0 && masterSheetData.length > 0) {
-            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-inbox" style="font-size: 2rem; color:#1ECAD3;"></i><br />No records match the filters. Adjust date or search.</div>`;
-            paginationContainer.style.display = 'none';
-            return;
-        }
-        if (filteredData.length === 0 && masterSheetData.length === 0) {
-            containerDiv.innerHTML = `<div class="empty-msg"><i class="fas fa-cloud-download-alt"></i><br />Waiting for Google Sheet data. Ensure published CSV is accessible.</div>`;
-            paginationContainer.style.display = 'none';
-            return;
-        }
-        
-        const pageData = getCurrentPageData();
-        const columns = Object.keys(filteredData[0]);
-        
-        let html = `<table class="data-table"><thead><tr>`;
-        columns.forEach((col, idx) => {
-            let displayHeader = col;
-            html += `<th data-column="${col}" data-index="${idx}">${displayHeader}</th>`;
-        });
-        html += `</thead><tbody>`;
-        
-        for (let row of pageData) {
-            html += `<tr>`;
-            columns.forEach(col => {
-                let cellVal = row[col] !== undefined && row[col] !== null ? row[col] : '—';
-                let isAmountColumn = col.toLowerCase().includes('mrp') || 
-                                     col.toLowerCase().includes('b2b') || 
-                                     col.toLowerCase().includes('charges') || 
-                                     col.toLowerCase().includes('price') || 
-                                     col.toLowerCase().includes('received') || 
-                                     col.toLowerCase().includes('payment') || 
-                                     col.toLowerCase().includes('profit') ||
-                                     col.toLowerCase().includes('share') ||
-                                     col.toLowerCase().includes('discount');
-                
-                let content = '';
-                if (isAmountColumn && cellVal !== '—') {
-                    content = `<span class="amount-cell">${formatCurrency(cellVal)}</span>`;
-                } else {
-                    content = cellVal;
+            let html = '';
+            moneyKeys.forEach(key => {
+                const value = totals[key];
+                const formatted = formatCurrency(value);
+                let extraClass = '';
+                if (key === 'estimatedProfit' || key === 'actualProfit') {
+                    extraClass = value < 0 ? 'loss' : 'profit';
                 }
-                html += `<td>${content}</td>`;
+                html += `
+                    <div class="total-item">
+                        <span class="label">${labels[key]}:</span>
+                        <span class="value ${extraClass}">${formatted}</span>
+                    </div>
+                `;
             });
-            html += `</tr>`;
-        }
-        html += `</tbody></table>`;
-        containerDiv.innerHTML = html;
-        
-        // Add filters to Center and Care of columns
-        setTimeout(() => {
-            const columnsList = Object.keys(filteredData[0]);
-            
-            // Add filter for Center column (index 2)
-            if (columnsList.length > 2) {
-                const centerColumn = columnsList[2];
-                if (columnFilters['Center']) {
-                    createColumnFilter(centerColumn, 2, columnFilters['Center']);
-                }
-            }
-            
-            // Add filter for Care of column (index 3)
-            if (columnsList.length > 3) {
-                const careOfColumn = columnsList[3];
-                if (columnFilters['Care of']) {
-                    createColumnFilter(careOfColumn, 3, columnFilters['Care of']);
-                }
-            }
-        }, 50);
-    }
 
-    function csvToObjects(csvString) {
-        const lines = csvString.split(/\r?\n/);
-        if (lines.length < 2) return [];
-        let headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-        const rows = [];
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].trim() === '') continue;
-            let values = [];
-            let inQuote = false;
-            let current = '';
-            for (let ch of lines[i]) {
-                if (ch === '"') {
-                    inQuote = !inQuote;
-                } else if (ch === ',' && !inQuote) {
-                    values.push(current.trim());
-                    current = '';
-                } else {
-                    current += ch;
-                }
-            }
-            values.push(current.trim());
-            if (values.length < headers.length) {
-                while (values.length < headers.length) values.push('');
-            }
-            let obj = {};
-            headers.forEach((h, idx) => {
-                let rawVal = values[idx] ? values[idx].replace(/^"|"$/g, '') : '';
-                obj[h] = rawVal;
-            });
-            if (headers[0]) obj.visitDate = obj[headers[0]];
-            rows.push(obj);
+            summaryTotals.innerHTML = html;
         }
-        return rows;
-    }
 
-    async function loadSheetData(showRefreshAnimation = false) {
-        if (showRefreshAnimation) {
-            isRefreshing = true;
-            refreshBtn.disabled = true;
-            refreshIcon.className = 'fas fa-sync-alt refresh-spinner';
-        }
-        
-        containerDiv.innerHTML = `<div class="loader-state"><i class="fas fa-spinner fa-pulse" style="font-size: 36px; color:#1ECAD3;"></i><p>Loading revenue records ...</p></div>`;
-        
-        try {
-            const cacheBuster = `&_cb=${Date.now()}`;
-            const response = await fetch(SHEET_CSV_URL + cacheBuster, { 
-                cache: "no-store",
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
-                }
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status} - Sheet unavailable`);
-            const csvText = await response.text();
-            if (!csvText.trim()) throw new Error("Empty CSV data");
-            const parsed = csvToObjects(csvText);
-            if (parsed.length === 0) throw new Error("No rows found in sheet");
-            masterSheetData = parsed;
-            
-            // Initialize column filters with all values selected by default
-            updateColumnFilterOptions();
-            
-            // Set all values as active by default for each column filter
-            for (let columnName in columnFilters) {
-                const config = columnFilters[columnName];
-                config.active.clear();
-                config.values.forEach(v => config.active.add(v));
-                if (config.hasBlank) config.active.add('(Blank)');
+        // ============================================================
+        //  EXPORT CSV
+        // ============================================================
+        function exportCSV() {
+            if (filteredPatients.length === 0) {
+                toast('No data to export.', 'error');
+                return;
             }
-            
-            applyFiltersAndRender();
-            
-            if (showRefreshAnimation) {
-                refreshIcon.className = 'fas fa-check';
-                setTimeout(() => {
-                    refreshIcon.className = 'fas fa-sync-alt';
-                }, 1000);
-            }
-        } catch (err) {
-            console.error(err);
-            containerDiv.innerHTML = `<div class="error-msg"><i class="fas fa-exclamation-triangle"></i> <strong>Could not fetch Google Sheet</strong><br />Ensure sheet is published as CSV. CORS/public access needed.<br />Details: ${err.message}</div>`;
-            statsSpan.innerHTML = `<span><i class="fas fa-ban"></i> Data error</span><span>Check link or network</span>`;
-            masterSheetData = [];
-            filteredData = [];
-            paginationContainer.style.display = 'none';
-            
-            if (showRefreshAnimation) {
-                refreshIcon.className = 'fas fa-exclamation-triangle';
-                setTimeout(() => {
-                    refreshIcon.className = 'fas fa-sync-alt';
-                }, 1500);
-            }
-        } finally {
-            if (showRefreshAnimation) {
-                isRefreshing = false;
-                refreshBtn.disabled = false;
-                setTimeout(() => {
-                    if (refreshIcon.className !== 'fas fa-sync-alt') {
-                        refreshIcon.className = 'fas fa-sync-alt';
+
+            const visibleCols = COLUMNS.filter(c => columnVisibility[c.key]);
+
+            let headers = visibleCols.map(c => c.label);
+            let csv = headers.join(',') + '\n';
+
+            filteredPatients.forEach(patient => {
+                const row = visibleCols.map(col => {
+                    let value = getColumnValue(patient, col.key);
+                    if (typeof value === 'string') {
+                        value = value.replace(/,/g, ';').replace(/\n/g, ' ');
                     }
-                }, 1000);
-            }
-        }
-    }
+                    return String(value);
+                });
+                csv += row.join(',') + '\n';
+            });
 
-    function bindEvents() {
-        fromDateEl.addEventListener('change', () => {
-            updateColumnFilterOptions();
-            applyFiltersAndRender();
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `patient_data_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+            toast('CSV exported successfully!', 'success');
+        }
+
+        // ============================================================
+        //  CLEAR FILTERS
+        // ============================================================
+        function clearAllFilters() {
+            globalSearch.value = '';
+            searchTerm = '';
+            filterFromDate.value = '';
+            filterToDate.value = '';
+            dateFrom = '';
+            dateTo = '';
+
+            COLUMNS.forEach(col => {
+                if (col.filterable) {
+                    columnFilters[col.key] = 'all';
+                    const filterEl = document.getElementById(`filter_${col.key}`);
+                    if (filterEl) filterEl.value = 'all';
+                }
+            });
+
+            applyFilters();
+            toast('All filters cleared!', 'info');
+        }
+
+        // ============================================================
+        //  EVENT LISTENERS
+        // ============================================================
+        globalSearch.addEventListener('input', function() {
+            searchTerm = this.value;
+            applyFilters();
         });
-        toDateEl.addEventListener('change', () => {
-            updateColumnFilterOptions();
-            applyFiltersAndRender();
+
+        filterFromDate.addEventListener('change', function() {
+            dateFrom = this.value;
+            applyFilters();
         });
-        globalSearchEl.addEventListener('input', () => {
-            updateColumnFilterOptions();
-            applyFiltersAndRender();
+
+        filterToDate.addEventListener('change', function() {
+            dateTo = this.value;
+            applyFilters();
         });
-        
-        resetBtn.addEventListener('click', () => {
-            fromDateEl.value = '';
-            toDateEl.value = '';
-            globalSearchEl.value = '';
-            updateColumnFilterOptions();
-            
-            // Reset column filters to select all
-            for (let columnName in columnFilters) {
-                const config = columnFilters[columnName];
-                config.active.clear();
-                config.values.forEach(v => config.active.add(v));
-                if (config.hasBlank) config.active.add('(Blank)');
+
+        refreshBtn.addEventListener('click', async function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '⏳ Loading...';
+            this.disabled = true;
+            await loadData();
+            this.innerHTML = originalText;
+            this.disabled = false;
+        });
+
+        exportBtn.addEventListener('click', exportCSV);
+
+        clearFiltersBtn.addEventListener('click', clearAllFilters);
+
+        toggleColumnsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            columnToggleDropdown.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.column-toggle-container')) {
+                columnToggleDropdown.classList.remove('show');
             }
-            
-            applyFiltersAndRender();
         });
-        
-        refreshBtn.addEventListener('click', () => {
-            if (!isRefreshing) {
-                loadSheetData(true);
-            }
-        });
-        
-        firstPageBtn.addEventListener('click', () => {
-            currentPage = 1;
+
+        toggleAllColumns.addEventListener('change', function() {
+            const checked = this.checked;
+            COLUMNS.forEach(col => {
+                columnVisibility[col.key] = checked;
+                const cb = document.getElementById(`col_${col.key}`);
+                if (cb) cb.checked = checked;
+            });
             renderTable();
-            updatePagination();
         });
-        
-        prevPageBtn.addEventListener('click', () => {
+
+        perPageSelect.addEventListener('change', function() {
+            perPage = parseInt(this.value);
+            currentPage = 1;
+            updatePagination();
+            renderTable();
+            updateStats();
+        });
+
+        prevPageBtn.addEventListener('click', function() {
             if (currentPage > 1) {
                 currentPage--;
-                renderTable();
                 updatePagination();
+                renderTable();
+                updateStats();
             }
         });
-        
-        nextPageBtn.addEventListener('click', () => {
+
+        nextPageBtn.addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredPatients.length / perPage);
             if (currentPage < totalPages) {
                 currentPage++;
-                renderTable();
                 updatePagination();
+                renderTable();
+                updateStats();
             }
         });
-        
-        lastPageBtn.addEventListener('click', () => {
-            currentPage = totalPages;
-            renderTable();
-            updatePagination();
-        });
-        
-        rowsPerPageSelect.addEventListener('change', (e) => {
-            rowsPerPage = parseInt(e.target.value);
-            currentPage = 1;
-            updatePagination();
-            renderTable();
-        });
-    }
 
-    function init() {
-        bindEvents();
-        loadSheetData(false);
-    }
-    init();
-</script>
-    <script src="pwa.js"></script>
+        // ============================================================
+        //  INIT
+        // ============================================================
+        loadData();
+    </script>
 </body>
 </html>
