@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LabManager Pro · Tests & Packages</title>
+    <title>Code Generator</title>
     <!-- Firebase compat -->
     <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js">
     </script>
@@ -89,6 +89,7 @@
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
             margin-bottom: 28px;
             border: 1px solid #e8ecf1;
+            flex-wrap: wrap;
         }
         .tab-btn {
             padding: 12px 28px;
@@ -378,8 +379,9 @@
             color: #dc2626;
         }
 
-        /* ===== PACKAGE ITEMS ===== */
-        .package-item {
+        /* ===== PACKAGE / COMBO ITEMS ===== */
+        .package-item,
+        .combo-item {
             background: white;
             border: 2px solid #e8ecf1;
             border-radius: 14px;
@@ -388,21 +390,25 @@
             transition: all 0.2s ease;
             position: relative;
         }
-        .package-item:hover {
+        .package-item:hover,
+        .combo-item:hover {
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
-        .package-item .pkg-header {
+        .package-item .pkg-header,
+        .combo-item .pkg-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
         }
-        .package-item .pkg-name {
+        .package-item .pkg-name,
+        .combo-item .pkg-name {
             font-weight: 700;
             font-size: 1.15rem;
             color: #1a1a2e;
         }
-        .package-item .pkg-tests {
+        .package-item .pkg-tests,
+        .combo-item .pkg-tests {
             margin-top: 14px;
             padding-left: 28px;
             border-left: 4px solid;
@@ -410,16 +416,19 @@
             padding: 12px 20px;
             border-radius: 8px;
         }
-        .package-item .pkg-tests .test-ref {
+        .package-item .pkg-tests .test-ref,
+        .combo-item .pkg-tests .test-ref {
             font-size: 0.95rem;
             padding: 4px 0;
             color: #374151;
         }
-        .package-item .pkg-tests .test-ref i {
+        .package-item .pkg-tests .test-ref i,
+        .combo-item .pkg-tests .test-ref i {
             margin-right: 8px;
             font-size: 0.7rem;
         }
-        .package-item .missing-tag {
+        .package-item .missing-tag,
+        .combo-item .missing-tag {
             display: inline-block;
             padding: 2px 10px;
             border-radius: 20px;
@@ -429,7 +438,8 @@
             color: #dc2626;
             margin-left: 8px;
         }
-        .package-item .pkg-actions {
+        .package-item .pkg-actions,
+        .combo-item .pkg-actions {
             display: flex;
             gap: 6px;
             margin-top: 12px;
@@ -802,17 +812,19 @@
             <button class="tab-btn active" data-tab="add"><i class="fas fa-plus-circle"></i> Add New</button>
             <button class="tab-btn" data-tab="list"><i class="fas fa-list-ul"></i> Lab Wise List</button>
             <button class="tab-btn" data-tab="output"><i class="fas fa-code"></i> Output Format</button>
+            <button class="tab-btn" data-tab="newoutput"><i class="fas fa-file-code"></i> New Format</button>
         </div>
 
         <!-- ===== TAB 1: ADD NEW ===== -->
         <div id="tab-add" class="tab-content active">
             <div class="section-header">
                 <div>
-                    <h2>Manage Tests & Packages</h2>
+                    <h2>Manage Tests, Combos & Packages</h2>
                     <span class="subtitle">Add, edit, or delete laboratory data</span>
                 </div>
                 <div class="action-group">
                     <button class="btn btn-primary" id="showTestFormBtn"><i class="fas fa-flask"></i> Add Test</button>
+                    <button class="btn btn-success" id="showComboFormBtn"><i class="fas fa-layer-group"></i> Add Combo</button>
                     <button class="btn btn-success" id="showPackageFormBtn"><i class="fas fa-cube"></i> Add Package</button>
                     <button class="btn btn-warning" id="showEditPackageBtn"><i class="fas fa-edit"></i> Edit Package</button>
                     <button class="btn btn-outline" id="showEditSearchBtn"><i class="fas fa-pen"></i> Edit / Delete</button>
@@ -858,6 +870,43 @@
                     <button class="btn btn-outline" id="cancelTestBtn">Cancel</button>
                 </div>
                 <div id="testMsg" style="margin-top: 12px; color: #6b7280; font-size: 0.9rem;"></div>
+            </div>
+
+            <!-- COMBO FORM -->
+            <div id="comboFormContainer" class="form-card" style="display:none;">
+                <div class="form-title">
+                    <i class="fas fa-layer-group"></i> Combo
+                    <span class="badge-lab" id="comboEditBadge" style="display:none; margin-left: 12px;">✏️ Editing</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Combo Name <span class="required">*</span></label>
+                        <input id="comboName" placeholder="e.g. LFT" />
+                    </div>
+                    <div class="form-group">
+                        <label>MRP (₹) <span class="optional">(optional)</span></label>
+                        <input type="number" id="comboMrp" placeholder="850" />
+                    </div>
+                    <div class="form-group">
+                        <label>B2B (₹) <span class="optional">(optional)</span></label>
+                        <input type="number" id="comboB2b" placeholder="220" />
+                    </div>
+                    <div class="form-group">
+                        <label>Select Tests <span class="required">*</span></label>
+                        <div class="search-select-container" id="comboTestSelector">
+                            <input type="text" id="comboTestSearch" placeholder="🔍 Search tests by name..." autocomplete="off" />
+                            <div class="search-select-dropdown" id="comboTestDropdown"></div>
+                        </div>
+                        <div id="comboSelectedTests" style="display: flex; flex-wrap: wrap; margin-top: 10px; gap: 4px;"></div>
+                        <div id="comboTestEmptyMsg" style="margin-top: 6px; color: #6b7280; font-size: 0.85rem;"></div>
+                    </div>
+                </div>
+                <input type="hidden" id="comboEditId" />
+                <div style="display: flex; gap: 10px; margin-top: 8px;">
+                    <button class="btn btn-success" id="saveComboBtn"><i class="fas fa-save"></i> Save Combo</button>
+                    <button class="btn btn-outline" id="cancelComboBtn">Cancel</button>
+                </div>
+                <div id="comboMsg" style="margin-top: 12px; color: #6b7280; font-size: 0.9rem;"></div>
             </div>
 
             <!-- PACKAGE FORM -->
@@ -913,10 +962,10 @@
                 </div>
             </div>
 
-            <!-- EDIT SEARCH (tests + packages) -->
+            <!-- EDIT SEARCH (tests + combos + packages) -->
             <div id="editSearchContainer" class="form-card" style="display:none;">
-                <div class="form-title"><i class="fas fa-pen"></i> Edit or Delete (Tests & Packages)</div>
-                <input class="search-box" id="editSearchInput" placeholder="Search test or package..." style="width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:12px; font-size:0.95rem;" />
+                <div class="form-title"><i class="fas fa-pen"></i> Edit or Delete (Tests, Combos & Packages)</div>
+                <input class="search-box" id="editSearchInput" placeholder="Search test, combo or package..." style="width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:12px; font-size:0.95rem;" />
                 <div id="editSearchResults" style="margin-top: 16px;"></div>
             </div>
         </div>
@@ -926,7 +975,7 @@
             <div class="section-header">
                 <div>
                     <h2>Lab Wise Data</h2>
-                    <span class="subtitle">Browse tests and packages by laboratory</span>
+                    <span class="subtitle">Browse tests, combos and packages by laboratory</span>
                 </div>
             </div>
 
@@ -934,6 +983,7 @@
                 <select id="listLabSelect"></select>
                 <select id="listTypeSelect">
                     <option value="tests">🧪 Tests</option>
+                    <option value="combos">📦 Combos</option>
                     <option value="packages">📦 Packages</option>
                 </select>
                 <select id="listFilterSelect">
@@ -949,11 +999,11 @@
             <div id="listContainer"></div>
         </div>
 
-        <!-- ===== TAB 3: OUTPUT ===== -->
+        <!-- ===== TAB 3: OUTPUT (old format) ===== -->
         <div id="tab-output" class="tab-content">
             <div class="section-header">
                 <div>
-                    <h2>Output Format</h2>
+                    <h2>Output Format (LAB_DATA object)</h2>
                     <span class="subtitle">Generate and copy the LAB_DATA structure</span>
                 </div>
                 <div class="action-group">
@@ -963,6 +1013,22 @@
             </div>
             <div class="code-block" id="outputCode">// Click "Generate" to load data from Firebase</div>
             <div id="outputMsg" style="margin-top: 12px; color: #6b7280; font-size: 0.9rem;"></div>
+        </div>
+
+        <!-- ===== TAB 4: NEW FORMAT OUTPUT ===== -->
+        <div id="tab-newoutput" class="tab-content">
+            <div class="section-header">
+                <div>
+                    <h2>New Format Output (labsData array)</h2>
+                    <span class="subtitle">Generate and copy the labsData structure (tests, combos, packages)</span>
+                </div>
+                <div class="action-group">
+                    <button class="btn btn-primary" id="generateNewOutputBtn"><i class="fas fa-sync"></i> Generate</button>
+                    <button class="btn btn-success" id="copyNewOutputBtn"><i class="fas fa-copy"></i> Copy</button>
+                </div>
+            </div>
+            <div class="code-block" id="newOutputCode">// Click "Generate" to load data from Firebase</div>
+            <div id="newOutputMsg" style="margin-top: 12px; color: #6b7280; font-size: 0.9rem;"></div>
         </div>
     </div>
 
@@ -1036,6 +1102,14 @@
             }
         };
 
+        // mapping from our lab key to the new format lab id
+        const LAB_KEY_TO_NEW_ID = {
+            1: 'lab2',
+            2: 'lab3',
+            3: 'lab1',
+            4: 'lab4'
+        };
+
         function normalize(str) { return (str || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 
         function makeId(str) { return (str || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') ||
@@ -1107,8 +1181,9 @@
         function ensureLabs() {
             if (!allData) allData = {};
             LAB_KEYS.forEach(k => {
-                if (!allData[k]) allData[k] = { name: LAB_NAMES[k], tests: [], packages: [] };
+                if (!allData[k]) allData[k] = { name: LAB_NAMES[k], tests: [], combos: [], packages: [] };
                 if (!allData[k].tests) allData[k].tests = [];
+                if (!allData[k].combos) allData[k].combos = [];
                 if (!allData[k].packages) allData[k].packages = [];
             });
         }
@@ -1118,11 +1193,11 @@
             return value === undefined || value === null || value === '' || value === '""';
         }
 
-        // ===== RENDER LIST =====
+        // ===== RENDER LIST (now includes combos) =====
         function renderList() {
             if (!allData) {
                 document.getElementById('listContainer').innerHTML =
-                    '<div class="empty-state"><i class="fas fa-flask"></i><h3>No Data Available</h3><p>Start by adding your first test or package.</p></div>';
+                    '<div class="empty-state"><i class="fas fa-flask"></i><h3>No Data Available</h3><p>Start by adding your first test, combo or package.</p></div>';
                 return;
             }
             const labKey = parseInt(document.getElementById('listLabSelect').value);
@@ -1139,35 +1214,46 @@
             filterBar.style.borderColor = colors.border;
             filterBar.style.background = `linear-gradient(135deg, white, ${colors.light})`;
 
-            if (type === 'tests') {
-                let tests = lab.tests || [];
-
+            // Helper to filter items by missing fields
+            function filterItems(items, type) {
+                let result = items;
                 if (filterType === 'missing-data') {
-                    tests = tests.filter(t => isMissing(t.labName) || isMissing(t.mrp) || isMissing(t.b2b));
-                } else if (filterType === 'missing-test') {
-                    tests = tests.filter(t => isMissing(t.labName));
+                    result = result.filter(item => isMissing(item.mrp) || isMissing(item.b2b) ||
+                        (type === 'test' && isMissing(item.labName)) ||
+                        (type === 'combo' && (isMissing(item.tests) || !item.tests.length)) ||
+                        (type === 'package' && (isMissing(item.tests) || !item.tests.length))
+                    );
                 } else if (filterType === 'missing-mrp') {
-                    tests = tests.filter(t => isMissing(t.mrp));
+                    result = result.filter(item => isMissing(item.mrp));
                 } else if (filterType === 'missing-b2b') {
-                    tests = tests.filter(t => isMissing(t.b2b));
+                    result = result.filter(item => isMissing(item.b2b));
+                } else if (filterType === 'missing-test' && type === 'test') {
+                    result = result.filter(item => isMissing(item.labName));
+                } else if (filterType === 'missing-test' && type === 'combo') {
+                    result = result.filter(item => isMissing(item.tests) || !item.tests.length);
+                } else if (filterType === 'missing-test' && type === 'package') {
+                    result = result.filter(item => isMissing(item.tests) || !item.tests.length);
                 }
+                if (search) {
+                    result = result.filter(item => {
+                        const name = item.generalName || item.comboName || item.packageName || '';
+                        return name.toLowerCase().includes(search);
+                    });
+                }
+                return result;
+            }
 
-                if (search) tests = tests.filter(t => (t.generalName || '').toLowerCase().includes(search) || (t
-                    .labName || '')
-                    .toLowerCase().includes(search));
-
+            if (type === 'tests') {
+                let tests = filterItems(lab.tests || [], 'test');
                 if (!tests.length) {
                     container.innerHTML =
                         '<div class="empty-state"><i class="fas fa-vial"></i><h3>No Tests Found</h3><p>Try adjusting your filters or add a new test.</p></div>';
                     return;
                 }
-
                 const tableWrapper = document.createElement('div');
                 tableWrapper.className = 'table-wrapper';
-
                 const table = document.createElement('table');
                 table.className = 'test-table';
-
                 const thead = document.createElement('thead');
                 thead.innerHTML = `
               <tr>
@@ -1179,22 +1265,17 @@
               </tr>
             `;
                 table.appendChild(thead);
-
                 const tbody = document.createElement('tbody');
                 tests.forEach(t => {
                     const tr = document.createElement('tr');
                     const hasMissing = isMissing(t.labName) || isMissing(t.mrp) || isMissing(t.b2b);
-                    if (hasMissing) {
-                        tr.style.background = '#fef2f2';
-                    }
-
+                    if (hasMissing) tr.style.background = '#fef2f2';
                     const generalName = t.generalName || '';
                     const labName = t.labName || '';
                     const mrp = (t.mrp !== undefined && t.mrp !== '') ? '₹' + t.mrp :
-                    '<span class="missing">Missing</span>';
+                        '<span class="missing">Missing</span>';
                     const b2b = (t.b2b !== undefined && t.b2b !== '') ? '₹' + t.b2b :
                         '<span class="missing">Missing</span>';
-
                     tr.innerHTML = `
                 <td><strong>${generalName}</strong> ${hasMissing ? '<span class="missing-badge">⚠️ Missing</span>' : ''}</td>
                 <td>${labName || '<span style="color:#9ca3af;">Not specified</span>'}</td>
@@ -1219,9 +1300,7 @@
                         const lab = allData[labKey];
                         const test = (lab.tests || []).find(t => t.id === id);
                         if (!test) return;
-                        // Switch to Add New tab
                         switchTab('add');
-                        // Populate test form
                         const colors2 = LAB_COLORS[labKey];
                         resetForms();
                         document.getElementById('testFormContainer').style.display = 'block';
@@ -1241,12 +1320,10 @@
                             test.b2b : '';
                         document.getElementById('testEditId').value = id;
                         document.getElementById('testMsg').innerHTML = '<i class="fas fa-edit"></i> Editing test';
-                        // Set lab selector
                         document.getElementById('addLabSelect').value = labKey;
                         applyLabTheme(labKey);
                     });
                 });
-
                 container.querySelectorAll('.delTestFromListBtn').forEach(b => {
                     b.addEventListener('click', function() {
                         if (!confirm('Delete this test?')) return;
@@ -1258,47 +1335,123 @@
                             toast('Test deleted', true);
                             renderList();
                             refreshPkgTestOptions(labKey);
+                            refreshComboTestOptions(labKey);
                         });
                     });
                 });
 
-            } else {
-                // Packages
-                let pkgs = lab.packages || [];
-
-                if (filterType === 'missing-data' || filterType === 'missing-mrp' || filterType === 'missing-b2b') {
-                    pkgs = pkgs.filter(p => {
-                        if (filterType === 'missing-data') {
-                            return isMissing(p.mrp) || isMissing(p.b2b);
-                        } else if (filterType === 'missing-mrp') {
-                            return isMissing(p.mrp);
-                        } else if (filterType === 'missing-b2b') {
-                            return isMissing(p.b2b);
-                        }
-                        return true;
-                    });
-                } else if (filterType === 'missing-test') {
-                    pkgs = pkgs.filter(p => {
-                        const tests = p.tests || [];
-                        return tests.some(t => isMissing(t.labName));
-                    });
+            } else if (type === 'combos') {
+                let combos = filterItems(lab.combos || [], 'combo');
+                if (!combos.length) {
+                    container.innerHTML =
+                        '<div class="empty-state"><i class="fas fa-layer-group"></i><h3>No Combos Found</h3><p>Try adjusting your filters or add a new combo.</p></div>';
+                    return;
                 }
+                combos.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'combo-item';
+                    div.style.borderLeftColor = colors.border;
+                    div.style.borderLeftWidth = '4px';
 
-                if (search) pkgs = pkgs.filter(p => (p.packageName || '').toLowerCase().includes(search));
+                    const hasMissing = isMissing(c.mrp) || isMissing(c.b2b) || !c.tests || !c.tests.length;
+                    const mrpDisplay = (c.mrp !== undefined && c.mrp !== '') ? '₹' + c.mrp :
+                        '<span style="color:#ef4444;">Missing</span>';
+                    const b2bDisplay = (c.b2b !== undefined && c.b2b !== '') ? '₹' + c.b2b :
+                        '<span style="color:#ef4444;">Missing</span>';
 
+                    let testsHtml = (c.tests || []).map(testId => {
+                        // find test by id
+                        const test = (lab.tests || []).find(t => t.id === testId);
+                        const name = test ? test.generalName : '(deleted test)';
+                        return `<div class="test-ref"><i class="fas fa-circle" style="color:${colors.border}"></i> ${name}</div>`;
+                    }).join('');
+
+                    div.innerHTML = `
+                <div class="pkg-header">
+                  <span class="pkg-name">${c.comboName || ''} ${hasMissing ? '<span class="missing-tag">⚠️ Missing Data</span>' : ''}</span>
+                  <div class="right" style="display:flex; gap:20px; font-weight:500;">
+                    <span>MRP ${mrpDisplay}</span>
+                    <span>B2B ${b2bDisplay}</span>
+                  </div>
+                </div>
+                <div class="pkg-tests" style="border-left-color:${colors.border}">${testsHtml}</div>
+                <div class="pkg-actions">
+                  <button class="btn btn-sm btn-primary editComboFromListBtn" data-id="${c.id}" style="${colors ? `background:${colors.text}` : ''}"><i class="fas fa-edit"></i> Edit</button>
+                  <button class="btn btn-sm btn-danger delComboFromListBtn" data-id="${c.id}"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+              `;
+                    container.appendChild(div);
+                });
+
+                // Bind edit/delete for combos
+                container.querySelectorAll('.editComboFromListBtn').forEach(b => {
+                    b.addEventListener('click', function() {
+                        const id = this.dataset.id;
+                        const labKey = parseInt(document.getElementById('listLabSelect').value);
+                        const lab = allData[labKey];
+                        const combo = (lab.combos || []).find(c => c.id === id);
+                        if (!combo) return;
+                        switchTab('add');
+                        const colors2 = LAB_COLORS[labKey];
+                        resetForms();
+                        document.getElementById('comboFormContainer').style.display = 'block';
+                        if (colors2) {
+                            document.getElementById('comboFormContainer').style.borderColor = colors2.border;
+                            document.getElementById('comboFormContainer').style.background =
+                                `linear-gradient(135deg, white, ${colors2.light})`;
+                            document.getElementById('comboEditBadge').style.background = colors2.light;
+                            document.getElementById('comboEditBadge').style.color = colors2.text;
+                        }
+                        document.getElementById('comboEditBadge').style.display = 'inline';
+                        document.getElementById('comboName').value = combo.comboName || '';
+                        document.getElementById('comboMrp').value = (combo.mrp !== undefined && combo.mrp !== '') ?
+                            combo.mrp : '';
+                        document.getElementById('comboB2b').value = (combo.b2b !== undefined && combo.b2b !== '') ?
+                            combo.b2b : '';
+                        document.getElementById('comboEditId').value = id;
+                        // set selected tests
+                        selectedComboTests = (combo.tests || []).map(testId => {
+                            const test = (lab.tests || []).find(t => t.id === testId);
+                            return { id: testId, generalName: test ? test.generalName : '', labName: test ?
+                                    test.labName : '' };
+                        });
+                        renderComboSelectedTests();
+                        document.getElementById('comboMsg').innerHTML =
+                        '<i class="fas fa-edit"></i> Editing combo';
+                        document.getElementById('addLabSelect').value = labKey;
+                        applyLabTheme(labKey);
+                        refreshComboTestOptions(labKey);
+                        renderComboTestDropdown('');
+                    });
+                });
+                container.querySelectorAll('.delComboFromListBtn').forEach(b => {
+                    b.addEventListener('click', function() {
+                        if (!confirm('Delete this combo?')) return;
+                        const id = this.dataset.id;
+                        const labKey = parseInt(document.getElementById('listLabSelect').value);
+                        const lab = allData[labKey];
+                        lab.combos = (lab.combos || []).filter(c => c.id !== id);
+                        saveFirebaseData(() => {
+                            toast('Combo deleted', true);
+                            renderList();
+                        });
+                    });
+                });
+
+            } else { // packages
+                let pkgs = filterItems(lab.packages || [], 'package');
                 if (!pkgs.length) {
                     container.innerHTML =
                         '<div class="empty-state"><i class="fas fa-cube"></i><h3>No Packages Found</h3><p>Try adjusting your filters or add a new package.</p></div>';
                     return;
                 }
-
                 pkgs.forEach(p => {
                     const div = document.createElement('div');
                     div.className = 'package-item';
                     div.style.borderLeftColor = colors.border;
                     div.style.borderLeftWidth = '4px';
 
-                    const hasMissing = isMissing(p.mrp) || isMissing(p.b2b);
+                    const hasMissing = isMissing(p.mrp) || isMissing(p.b2b) || !p.tests || !p.tests.length;
                     const mrpDisplay = (p.mrp !== undefined && p.mrp !== '') ? '₹' + p.mrp :
                         '<span style="color:#ef4444;">Missing</span>';
                     const b2bDisplay = (p.b2b !== undefined && p.b2b !== '') ? '₹' + p.b2b :
@@ -1326,7 +1479,7 @@
                     container.appendChild(div);
                 });
 
-                // Bind edit/delete for packages in list
+                // Bind edit/delete for packages
                 container.querySelectorAll('.editPkgFromListBtn').forEach(b => {
                     b.addEventListener('click', function() {
                         const id = this.dataset.id;
@@ -1334,9 +1487,7 @@
                         const lab = allData[labKey];
                         const pkg = (lab.packages || []).find(p => p.id === id);
                         if (!pkg) return;
-                        // Switch to Add New tab
                         switchTab('add');
-                        // Populate package form
                         const colors2 = LAB_COLORS[labKey];
                         resetForms();
                         document.getElementById('packageFormContainer').style.display = 'block';
@@ -1358,14 +1509,12 @@
                             generalName: t.generalName || '', labName: t.labName || '' }));
                         renderPkgSelectedTests();
                         document.getElementById('pkgMsg').innerHTML = '<i class="fas fa-edit"></i> Editing package';
-                        document.getElementById('editSearchContainer').style.display = 'none';
                         document.getElementById('addLabSelect').value = labKey;
                         applyLabTheme(labKey);
                         refreshPkgTestOptions(labKey);
                         renderPkgTestDropdown('');
                     });
                 });
-
                 container.querySelectorAll('.delPkgFromListBtn').forEach(b => {
                     b.addEventListener('click', function() {
                         if (!confirm('Delete this package?')) return;
@@ -1382,7 +1531,7 @@
             }
         }
 
-        // ===== OUTPUT GENERATION =====
+        // ===== OUTPUT GENERATION (old format) =====
         function generateOutput() {
             ensureLabs();
             let out = {};
@@ -1412,6 +1561,172 @@
             let outputStr = 'const LAB_DATA = ' + JSON.stringify(out, null, 2);
             document.getElementById('outputCode').innerText = outputStr;
             return outputStr;
+        }
+
+        // ===== NEW FORMAT OUTPUT GENERATION (with lab-specific sequential IDs) =====
+        function generateNewOutput() {
+            ensureLabs();
+            let labsArray = [];
+            LAB_KEYS.forEach(k => {
+                const lab = allData[k];
+                if (!lab) return;
+                const newLabId = LAB_KEY_TO_NEW_ID[k]; // e.g., 'lab2'
+                const name = lab.name || LAB_NAMES[k];
+                // Extract lab number from newLabId (e.g., 2 from 'lab2')
+                const labNum = parseInt(newLabId.replace('lab', ''));
+
+                // --- Tests ---
+                const testIdMap = {}; // old test id -> new test id
+                const testsArray = (lab.tests || []).map((t, index) => {
+                    const newId = `l${labNum}_${String(index + 1).padStart(3, '0')}`;
+                    testIdMap[t.id] = newId;
+                    return {
+                        id: newId,
+                        name: t.generalName || '',
+                        mrp: (t.mrp !== undefined && t.mrp !== '') ? t.mrp : null,
+                        b2b: (t.b2b !== undefined && t.b2b !== '') ? t.b2b : null
+                    };
+                });
+
+                // --- Combos ---
+                const combosArray = (lab.combos || []).map((c, index) => {
+                    const newId = `l${labNum}_c${String(index + 1).padStart(3, '0')}`;
+                    const contains = (c.tests || []).map(testId => {
+                        const newTestId = testIdMap[testId] || null;
+                        return { type: 'test', id: newTestId };
+                    }).filter(item => item.id !== null);
+                    return {
+                        id: newId,
+                        name: c.comboName || '',
+                        mrp: (c.mrp !== undefined && c.mrp !== '') ? c.mrp : null,
+                        b2b: (c.b2b !== undefined && c.b2b !== '') ? c.b2b : null,
+                        contains: contains
+                    };
+                });
+
+                // --- Packages ---
+                const packagesArray = (lab.packages || []).map((p, index) => {
+                    const newId = `l${labNum}_p${String(index + 1).padStart(3, '0')}`;
+                    // For each test in package, find test by generalName (case-insensitive)
+                    const contains = (p.tests || []).map(t => {
+                        const found = (lab.tests || []).find(test => normalize(test.generalName) === normalize(t.generalName));
+                        const testId = found ? testIdMap[found.id] : null;
+                        if (testId) {
+                            return { type: 'test', id: testId };
+                        }
+                        return null;
+                    }).filter(item => item !== null);
+                    return {
+                        id: newId,
+                        name: p.packageName || '',
+                        mrp: (p.mrp !== undefined && p.mrp !== '') ? p.mrp : null,
+                        b2b: (p.b2b !== undefined && p.b2b !== '') ? p.b2b : null,
+                        contains: contains
+                    };
+                });
+
+                labsArray.push({
+                    id: newLabId,
+                    name: name,
+                    tests: testsArray,
+                    combos: combosArray,
+                    packages: packagesArray
+                });
+            });
+
+            const outputStr = 'const labsData = ' + JSON.stringify(labsArray, null, 2);
+            document.getElementById('newOutputCode').innerText = outputStr;
+            return outputStr;
+        }
+
+        // ===== COMBO TEST SELECTOR =====
+        let selectedComboTests = [];
+        let comboTestOptions = [];
+
+        function refreshComboTestOptions(labKey) {
+            const lab = allData ? allData[labKey] : null;
+            if (!lab) { comboTestOptions = []; return; }
+            comboTestOptions = (lab.tests || []).map(t => ({
+                id: t.id || makeId(t.generalName || ''),
+                generalName: t.generalName || '',
+                labName: t.labName || ''
+            }));
+            renderComboTestDropdown();
+            renderComboSelectedTests();
+            const emptyMsg = document.getElementById('comboTestEmptyMsg');
+            if (!comboTestOptions.length) {
+                emptyMsg.innerHTML = '<i class="fas fa-info-circle"></i> No tests available. Please add Single Tests first.';
+            } else {
+                emptyMsg.innerText = '';
+            }
+        }
+
+        function renderComboTestDropdown(filter = '') {
+            const dropdown = document.getElementById('comboTestDropdown');
+            dropdown.innerHTML = '';
+            const f = filter.toLowerCase().trim();
+            let opts = comboTestOptions;
+            if (f) opts = opts.filter(t => (t.generalName || '').toLowerCase().includes(f) || (t.labName || '').toLowerCase()
+                .includes(f));
+            if (!opts.length) {
+                const div = document.createElement('div');
+                div.className = 'search-select-option';
+                div.style.justifyContent = 'center';
+                div.style.color = '#9ca3af';
+                div.innerText = 'No matching tests';
+                dropdown.appendChild(div);
+                return;
+            }
+            const colors = LAB_COLORS[parseInt(document.getElementById('addLabSelect').value)];
+            opts.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'search-select-option';
+                const isSelected = selectedComboTests.some(s => s.id === t.id);
+                if (isSelected) div.classList.add('selected');
+                div.innerHTML =
+                    `<span class="opt-check" style="${isSelected ? `background:${colors.text};border-color:${colors.border}` : ''}">${isSelected ? '✓' : ''}</span><span class="opt-general">${t.generalName}</span><span class="opt-lab">— ${t.labName || ''}</span>`;
+                div.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    toggleComboTest(t);
+                });
+                dropdown.appendChild(div);
+            });
+        }
+
+        function toggleComboTest(test) {
+            const idx = selectedComboTests.findIndex(s => s.id === test.id);
+            if (idx > -1) selectedComboTests.splice(idx, 1);
+            else {
+                if (selectedComboTests.some(s => s.id === test.id)) return;
+                selectedComboTests.push({ ...test });
+            }
+            renderComboSelectedTests();
+            renderComboTestDropdown(document.getElementById('comboTestSearch').value);
+        }
+
+        function renderComboSelectedTests() {
+            const container = document.getElementById('comboSelectedTests');
+            container.innerHTML = '';
+            if (!selectedComboTests.length) {
+                container.innerHTML = '<span style="color:#9ca3af; font-size:0.9rem;">No tests selected</span>';
+                return;
+            }
+            const colors = LAB_COLORS[parseInt(document.getElementById('addLabSelect').value)];
+            selectedComboTests.forEach((item, idx) => {
+                const chip = document.createElement('span');
+                chip.className = 'chip';
+                chip.style.borderColor = colors.border;
+                chip.style.background = colors.light;
+                chip.innerHTML =
+                    `${item.generalName} — ${item.labName || ''} <span class="remove" data-idx="${idx}" style="color:${colors.text}">✕</span>`;
+                chip.querySelector('.remove').addEventListener('click', (e) => {
+                    const i = parseInt(e.target.dataset.idx);
+                    selectedComboTests.splice(i, 1);
+                    renderComboSelectedTests();
+                    renderComboTestDropdown(document.getElementById('comboTestSearch').value);
+                });
+                container.appendChild(chip);
+            });
         }
 
         // ===== PACKAGE TEST SELECTOR =====
@@ -1472,7 +1787,7 @@
             const idx = selectedPkgTests.findIndex(s => s.id === test.id);
             if (idx > -1) selectedPkgTests.splice(idx, 1);
             else {
-                if (selectedPkgTests.some(s => s.generalName === test.generalName && s.labName === test.labName)) return;
+                if (selectedPkgTests.some(s => s.id === test.id)) return;
                 selectedPkgTests.push({ ...test });
             }
             renderPkgSelectedTests();
@@ -1507,28 +1822,39 @@
         // ===== FORM RESET =====
         function resetForms() {
             document.getElementById('testFormContainer').style.display = 'none';
+            document.getElementById('comboFormContainer').style.display = 'none';
             document.getElementById('packageFormContainer').style.display = 'none';
             document.getElementById('editSearchContainer').style.display = 'none';
             document.getElementById('editPackageContainer').style.display = 'none';
             document.getElementById('testEditBadge').style.display = 'none';
+            document.getElementById('comboEditBadge').style.display = 'none';
             document.getElementById('pkgEditBadge').style.display = 'none';
             document.getElementById('testEditId').value = '';
+            document.getElementById('comboEditId').value = '';
             document.getElementById('pkgEditId').value = '';
             document.getElementById('testGeneral').value = '';
             document.getElementById('testLabName').value = '';
             document.getElementById('testMrp').value = '';
             document.getElementById('testB2b').value = '';
+            document.getElementById('comboName').value = '';
+            document.getElementById('comboMrp').value = '';
+            document.getElementById('comboB2b').value = '';
             document.getElementById('pkgName').value = '';
             document.getElementById('pkgMrp').value = '';
             document.getElementById('pkgB2b').value = '';
             document.getElementById('testMsg').innerText = '';
+            document.getElementById('comboMsg').innerText = '';
             document.getElementById('pkgMsg').innerText = '';
             document.getElementById('editPkgMsg').innerText = '';
             document.getElementById('pkgTestSearch').value = '';
+            document.getElementById('comboTestSearch').value = '';
             document.getElementById('editPackageSelect').value = '';
             selectedPkgTests = [];
+            selectedComboTests = [];
             renderPkgSelectedTests();
             renderPkgTestDropdown('');
+            renderComboSelectedTests();
+            renderComboTestDropdown('');
         }
 
         // ===== SAVE TEST =====
@@ -1568,7 +1894,49 @@
             saveFirebaseData(() => { toast('Test saved successfully!', true);
                 resetForms();
                 renderList();
-                refreshPkgTestOptions(labKey); });
+                refreshPkgTestOptions(labKey);
+                refreshComboTestOptions(labKey); });
+        }
+
+        // ===== SAVE COMBO =====
+        function saveCombo() {
+            const labKey = parseInt(document.getElementById('addLabSelect').value);
+            const comboName = document.getElementById('comboName').value.trim();
+            const mrp = document.getElementById('comboMrp').value.trim() === '' ? '' : parseFloat(document.getElementById(
+                'comboMrp')
+                .value);
+            const b2b = document.getElementById('comboB2b').value.trim() === '' ? '' : parseFloat(document.getElementById(
+                'comboB2b')
+                .value);
+            if (!comboName) { document.getElementById('comboMsg').innerHTML =
+                    '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Combo Name is required.'; return; }
+            if (!selectedComboTests.length) { document.getElementById('comboMsg').innerHTML =
+                    '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Please select at least one test.';
+                return; }
+            const lab = allData[labKey];
+            if (!lab) return;
+            const editingId = document.getElementById('comboEditId').value;
+            const dup = (lab.combos || []).find(c => {
+                if (editingId && c.id === editingId) return false;
+                return normalize(c.comboName) === normalize(comboName);
+            });
+            if (dup) { document.getElementById('comboMsg').innerHTML =
+                    '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> A combo with this name already exists.';
+                return; }
+            const id = editingId || makeId(comboName);
+            const testIds = selectedComboTests.map(t => t.id);
+            const newCombo = { id, comboName, tests: testIds, mrp, b2b };
+            if (editingId) {
+                let idx = (lab.combos || []).findIndex(c => c.id === editingId);
+                if (idx > -1) lab.combos[idx] = newCombo;
+                else { toast('Error: combo not found'); return; }
+            } else {
+                if (!lab.combos) lab.combos = [];
+                lab.combos.push(newCombo);
+            }
+            saveFirebaseData(() => { toast('Combo saved successfully!', true);
+                resetForms();
+                renderList(); });
         }
 
         // ===== SAVE PACKAGE =====
@@ -1637,6 +2005,22 @@
 
             if (tabId === 'list') renderList();
             if (tabId === 'output') generateOutput();
+            if (tabId === 'newoutput') generateNewOutput();
+        }
+
+        // ===== POPULATE EDIT PACKAGE DROPDOWN =====
+        function populateEditPackageDropdown(labKey) {
+            const sel = document.getElementById('editPackageSelect');
+            sel.innerHTML = '<option value="">— Choose a package —</option>';
+            const lab = allData ? allData[labKey] : null;
+            if (!lab) return;
+            const pkgs = lab.packages || [];
+            pkgs.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id || '';
+                opt.textContent = p.packageName || '(unnamed)';
+                sel.appendChild(opt);
+            });
         }
 
         // ===== INIT =====
@@ -1659,8 +2043,8 @@
                         applyLabTheme(key);
                         if (id === 'addLabSelect') {
                             refreshPkgTestOptions(key);
+                            refreshComboTestOptions(key);
                             resetForms();
-                            // Also refresh the edit package dropdown
                             populateEditPackageDropdown(key);
                             const activeTab = document.querySelector('.tab-btn.active');
                             if (activeTab) {
@@ -1676,9 +2060,11 @@
                 });
                 applyLabTheme(1);
                 refreshPkgTestOptions(1);
+                refreshComboTestOptions(1);
                 populateEditPackageDropdown(1);
                 renderList();
                 generateOutput();
+                generateNewOutput();
 
                 // ===== EVENT BINDINGS =====
                 document.getElementById('showTestFormBtn').addEventListener('click', () => {
@@ -1693,6 +2079,20 @@
                         document.getElementById('testFormContainer').style.background =
                             `linear-gradient(135deg, white, ${colors.light})`;
                     }
+                });
+                document.getElementById('showComboFormBtn').addEventListener('click', () => {
+                    resetForms();
+                    document.getElementById('comboFormContainer').style.display = 'block';
+                    document.getElementById('comboEditBadge').style.display = 'none';
+                    document.getElementById('comboEditId').value = '';
+                    const key = parseInt(document.getElementById('addLabSelect').value);
+                    const colors = LAB_COLORS[key];
+                    if (colors) {
+                        document.getElementById('comboFormContainer').style.borderColor = colors.border;
+                        document.getElementById('comboFormContainer').style.background =
+                            `linear-gradient(135deg, white, ${colors.light})`;
+                    }
+                    refreshComboTestOptions(key);
                 });
                 document.getElementById('showPackageFormBtn').addEventListener('click', () => {
                     resetForms();
@@ -1721,8 +2121,6 @@
                             `linear-gradient(135deg, white, ${colors.light})`;
                     }
                 });
-
-                // NEW: Show Edit Package dropdown
                 document.getElementById('showEditPackageBtn').addEventListener('click', () => {
                     resetForms();
                     document.getElementById('editPackageContainer').style.display = 'block';
@@ -1737,7 +2135,6 @@
                     document.getElementById('editPkgMsg').innerText = '';
                 });
 
-                // Load package for edit
                 document.getElementById('loadPkgForEditBtn').addEventListener('click', function() {
                     const labKey = parseInt(document.getElementById('addLabSelect').value);
                     const pkgId = document.getElementById('editPackageSelect').value;
@@ -1754,7 +2151,6 @@
                             '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Package not found.';
                         return;
                     }
-                    // Populate package form
                     const colors2 = LAB_COLORS[labKey];
                     resetForms();
                     document.getElementById('packageFormContainer').style.display = 'block';
@@ -1781,29 +2177,45 @@
                     renderPkgTestDropdown('');
                     document.getElementById('editPkgMsg').innerHTML =
                         '<i class="fas fa-check-circle" style="color:#10b981;"></i> Package loaded for editing!';
-                    // Switch to Add New tab if not already
                     switchTab('add');
                 });
 
                 document.getElementById('cancelTestBtn').addEventListener('click', resetForms);
+                document.getElementById('cancelComboBtn').addEventListener('click', resetForms);
                 document.getElementById('cancelPkgBtn').addEventListener('click', resetForms);
                 document.getElementById('saveTestBtn').addEventListener('click', saveTest);
+                document.getElementById('saveComboBtn').addEventListener('click', saveCombo);
                 document.getElementById('savePackageBtn').addEventListener('click', savePackage);
 
-                // Package search selector
-                const searchInput = document.getElementById('pkgTestSearch');
-                const dropdown = document.getElementById('pkgTestDropdown');
-                searchInput.addEventListener('focus', () => dropdown.classList.add('show'));
-                searchInput.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('show'), 180));
-                searchInput.addEventListener('input', function() {
-                    renderPkgTestDropdown(this.value);
-                    dropdown.classList.add('show');
-                });
-                document.addEventListener('click', (e) => {
-                    if (!e.target.closest('.search-select-container')) dropdown.classList.remove('show');
+                // Combo search selector
+                const comboSearchInput = document.getElementById('comboTestSearch');
+                const comboDropdown = document.getElementById('comboTestDropdown');
+                comboSearchInput.addEventListener('focus', () => comboDropdown.classList.add('show'));
+                comboSearchInput.addEventListener('blur', () => setTimeout(() => comboDropdown.classList.remove('show'),
+                    180));
+                comboSearchInput.addEventListener('input', function() {
+                    renderComboTestDropdown(this.value);
+                    comboDropdown.classList.add('show');
                 });
 
-                // Edit search (tests + packages)
+                // Package search selector
+                const pkgSearchInput = document.getElementById('pkgTestSearch');
+                const pkgDropdown = document.getElementById('pkgTestDropdown');
+                pkgSearchInput.addEventListener('focus', () => pkgDropdown.classList.add('show'));
+                pkgSearchInput.addEventListener('blur', () => setTimeout(() => pkgDropdown.classList.remove('show'),
+                180));
+                pkgSearchInput.addEventListener('input', function() {
+                    renderPkgTestDropdown(this.value);
+                    pkgDropdown.classList.add('show');
+                });
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.search-select-container')) {
+                        pkgDropdown.classList.remove('show');
+                        comboDropdown.classList.remove('show');
+                    }
+                });
+
+                // Edit search (tests + combos + packages)
                 document.getElementById('editSearchInput').addEventListener('input', function() {
                     const labKey = parseInt(document.getElementById('addLabSelect').value);
                     const lab = allData?.[labKey];
@@ -1814,6 +2226,8 @@
                     container.innerHTML = '';
                     if (!q) return;
                     let found = false;
+
+                    // tests
                     (lab.tests || []).forEach(t => {
                         if ((t.generalName || '').toLowerCase().includes(q) || (t.labName || '')
                             .toLowerCase().includes(
@@ -1821,32 +2235,46 @@
                             found = true;
                             const div = document.createElement('div');
                             div.className = 'list-item';
-                            if (colors) {
-                                div.style.borderLeftColor = colors.border;
-                            }
+                            if (colors) div.style.borderLeftColor = colors.border;
                             div.innerHTML =
                                 `<div class="left"><span class="general">${t.generalName} <span style="font-weight:400;color:#6b7280;font-size:0.8rem;">(test)</span></span><span class="labname">${t.labName || ''}</span></div>
                           <div class="right-actions"><button class="btn btn-sm btn-primary editTestBtn" data-id="${t.id}" style="${colors ? `background:${colors.text}` : ''}"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger delTestBtn" data-id="${t.id}"><i class="fas fa-trash"></i></button></div>`;
                             container.appendChild(div);
                         }
                     });
+
+                    // combos
+                    (lab.combos || []).forEach(c => {
+                        if ((c.comboName || '').toLowerCase().includes(q)) {
+                            found = true;
+                            const div = document.createElement('div');
+                            div.className = 'list-item';
+                            if (colors) div.style.borderLeftColor = colors.border;
+                            div.innerHTML =
+                                `<div class="left"><span class="general">${c.comboName} <span style="font-weight:400;color:#6b7280;font-size:0.8rem;">(combo)</span></span><span class="labname">${c.tests?.length||0} tests</span></div>
+                          <div class="right-actions"><button class="btn btn-sm btn-primary editComboBtn" data-id="${c.id}" style="${colors ? `background:${colors.text}` : ''}"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger delComboBtn" data-id="${c.id}"><i class="fas fa-trash"></i></button></div>`;
+                            container.appendChild(div);
+                        }
+                    });
+
+                    // packages
                     (lab.packages || []).forEach(p => {
                         if ((p.packageName || '').toLowerCase().includes(q)) {
                             found = true;
                             const div = document.createElement('div');
                             div.className = 'list-item';
-                            if (colors) {
-                                div.style.borderLeftColor = colors.border;
-                            }
+                            if (colors) div.style.borderLeftColor = colors.border;
                             div.innerHTML =
                                 `<div class="left"><span class="general">${p.packageName} <span style="font-weight:400;color:#6b7280;font-size:0.8rem;">(package)</span></span><span class="labname">${p.tests?.length||0} tests</span></div>
                           <div class="right-actions"><button class="btn btn-sm btn-primary editPkgBtn" data-id="${p.id}" style="${colors ? `background:${colors.text}` : ''}"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-danger delPkgBtn" data-id="${p.id}"><i class="fas fa-trash"></i></button></div>`;
                             container.appendChild(div);
                         }
                     });
+
                     if (!found) container.innerHTML =
                         '<div style="padding:16px; color:#6b7280; text-align:center;">No matches found</div>';
 
+                    // Bind edit/delete for test results
                     container.querySelectorAll('.editTestBtn').forEach(b => b.addEventListener('click',
                     function() {
                         const id = this.dataset.id;
@@ -1877,6 +2305,75 @@
                             '<i class="fas fa-edit"></i> Editing test';
                         document.getElementById('editSearchContainer').style.display = 'none';
                     }));
+                    container.querySelectorAll('.delTestBtn').forEach(b => b.addEventListener('click',
+                    function() {
+                        if (!confirm('Delete this test?')) return;
+                        const id = this.dataset.id;
+                        const labKey = parseInt(document.getElementById('addLabSelect').value);
+                        const lab = allData[labKey];
+                        lab.tests = (lab.tests || []).filter(t => t.id !== id);
+                        saveFirebaseData(() => { toast('Test deleted');
+                            renderList();
+                            refreshPkgTestOptions(labKey);
+                            refreshComboTestOptions(labKey);
+                            document.getElementById('editSearchInput').dispatchEvent(new Event(
+                            'input')); });
+                    }));
+
+                    // Bind edit/delete for combo results
+                    container.querySelectorAll('.editComboBtn').forEach(b => b.addEventListener('click',
+                    function() {
+                        const id = this.dataset.id;
+                        const labKey = parseInt(document.getElementById('addLabSelect').value);
+                        const lab = allData[labKey];
+                        const combo = (lab.combos || []).find(c => c.id === id);
+                        if (!combo) return;
+                        const colors2 = LAB_COLORS[labKey];
+                        resetForms();
+                        document.getElementById('comboFormContainer').style.display = 'block';
+                        if (colors2) {
+                            document.getElementById('comboFormContainer').style.borderColor = colors2
+                                .border;
+                            document.getElementById('comboFormContainer').style.background =
+                                `linear-gradient(135deg, white, ${colors2.light})`;
+                            document.getElementById('comboEditBadge').style.background = colors2
+                            .light;
+                            document.getElementById('comboEditBadge').style.color = colors2.text;
+                        }
+                        document.getElementById('comboEditBadge').style.display = 'inline';
+                        document.getElementById('comboName').value = combo.comboName || '';
+                        document.getElementById('comboMrp').value = (combo.mrp !== undefined && combo
+                            .mrp !== '') ? combo.mrp : '';
+                        document.getElementById('comboB2b').value = (combo.b2b !== undefined && combo
+                            .b2b !== '') ? combo.b2b : '';
+                        document.getElementById('comboEditId').value = id;
+                        selectedComboTests = (combo.tests || []).map(testId => {
+                            const test = (lab.tests || []).find(t => t.id === testId);
+                            return { id: testId, generalName: test ? test.generalName : '',
+                                labName: test ? test.labName : '' };
+                        });
+                        renderComboSelectedTests();
+                        document.getElementById('comboMsg').innerHTML =
+                            '<i class="fas fa-edit"></i> Editing combo';
+                        document.getElementById('editSearchContainer').style.display = 'none';
+                        const lk = parseInt(document.getElementById('addLabSelect').value);
+                        refreshComboTestOptions(lk);
+                        renderComboTestDropdown('');
+                    }));
+                    container.querySelectorAll('.delComboBtn').forEach(b => b.addEventListener('click',
+                    function() {
+                        if (!confirm('Delete this combo?')) return;
+                        const id = this.dataset.id;
+                        const labKey = parseInt(document.getElementById('addLabSelect').value);
+                        const lab = allData[labKey];
+                        lab.combos = (lab.combos || []).filter(c => c.id !== id);
+                        saveFirebaseData(() => { toast('Combo deleted');
+                            renderList();
+                            document.getElementById('editSearchInput').dispatchEvent(new Event(
+                            'input')); });
+                    }));
+
+                    // Bind edit/delete for package results
                     container.querySelectorAll('.editPkgBtn').forEach(b => b.addEventListener('click',
                     function() {
                         const id = this.dataset.id;
@@ -1892,7 +2389,8 @@
                                 .border;
                             document.getElementById('packageFormContainer').style.background =
                                 `linear-gradient(135deg, white, ${colors2.light})`;
-                            document.getElementById('pkgEditBadge').style.background = colors2.light;
+                            document.getElementById('pkgEditBadge').style.background = colors2
+                            .light;
                             document.getElementById('pkgEditBadge').style.color = colors2.text;
                         }
                         document.getElementById('pkgEditBadge').style.display = 'inline';
@@ -1911,19 +2409,6 @@
                         const lk = parseInt(document.getElementById('addLabSelect').value);
                         refreshPkgTestOptions(lk);
                         renderPkgTestDropdown('');
-                    }));
-                    container.querySelectorAll('.delTestBtn').forEach(b => b.addEventListener('click',
-                    function() {
-                        if (!confirm('Delete this test?')) return;
-                        const id = this.dataset.id;
-                        const labKey = parseInt(document.getElementById('addLabSelect').value);
-                        const lab = allData[labKey];
-                        lab.tests = (lab.tests || []).filter(t => t.id !== id);
-                        saveFirebaseData(() => { toast('Test deleted');
-                            renderList();
-                            refreshPkgTestOptions(labKey);
-                            document.getElementById('editSearchInput').dispatchEvent(new Event(
-                            'input')); });
                     }));
                     container.querySelectorAll('.delPkgBtn').forEach(b => b.addEventListener('click',
                     function() {
@@ -1944,13 +2429,30 @@
                 document.getElementById('listFilterSelect').addEventListener('change', renderList);
                 document.getElementById('listSearch').addEventListener('input', renderList);
 
-                // Output
+                // Output (old format)
                 document.getElementById('generateOutputBtn').addEventListener('click', () => {
                     generateOutput();
                     toast('Output generated', true);
                 });
                 document.getElementById('copyOutputBtn').addEventListener('click', () => {
                     const code = document.getElementById('outputCode').innerText;
+                    if (!code || code.startsWith('//')) { toast('Nothing to copy'); return; }
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(code).then(() => toast('✓ Copied to Clipboard',
+                            true))
+                            .catch(() => { fallbackCopy(code); });
+                    } else {
+                        fallbackCopy(code);
+                    }
+                });
+
+                // New Output
+                document.getElementById('generateNewOutputBtn').addEventListener('click', () => {
+                    generateNewOutput();
+                    toast('New format output generated', true);
+                });
+                document.getElementById('copyNewOutputBtn').addEventListener('click', () => {
+                    const code = document.getElementById('newOutputCode').innerText;
                     if (!code || code.startsWith('//')) { toast('Nothing to copy'); return; }
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(code).then(() => toast('✓ Copied to Clipboard',
@@ -1996,21 +2498,7 @@
 
                 renderList();
                 generateOutput();
-            });
-        }
-
-        // ===== POPULATE EDIT PACKAGE DROPDOWN =====
-        function populateEditPackageDropdown(labKey) {
-            const sel = document.getElementById('editPackageSelect');
-            sel.innerHTML = '<option value="">— Choose a package —</option>';
-            const lab = allData ? allData[labKey] : null;
-            if (!lab) return;
-            const pkgs = lab.packages || [];
-            pkgs.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id || '';
-                opt.textContent = p.packageName || '(unnamed)';
-                sel.appendChild(opt);
+                generateNewOutput();
             });
         }
 
