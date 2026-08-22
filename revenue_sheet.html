@@ -340,35 +340,37 @@
             color: var(--text-dark);
         }
 
-        /* Summary Totals */
+        /* Summary Totals - larger and bold */
         .summary-totals {
             display: flex;
             flex-wrap: wrap;
-            gap: 16px 24px;
-            padding: 12px 16px;
+            gap: 20px 30px;
+            padding: 16px 20px;
             background: var(--bg-light);
             border-radius: var(--radius-sm);
             margin-bottom: 16px;
-            font-size: 13px;
             border: 1px solid #d1d9dd;
+            font-size: 16px;
+            font-weight: 700;
         }
 
         .summary-totals .total-item {
             display: flex;
             align-items: baseline;
-            gap: 4px;
+            gap: 6px;
             white-space: nowrap;
         }
 
         .summary-totals .total-item .label {
-            font-weight: 500;
+            font-weight: 600;
             color: var(--text-medium);
         }
 
         .summary-totals .total-item .value {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-dark);
             font-family: 'Courier New', monospace;
+            font-size: 16px;
         }
 
         .summary-totals .total-item .value.profit {
@@ -391,7 +393,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 12px;
-            min-width: 800px;
+            min-width: 900px;
         }
 
         thead {
@@ -436,6 +438,7 @@
         .col-patientName { min-width: 120px; max-width: 180px; }
         .col-center { min-width: 80px; max-width: 120px; }
         .col-careOfPerson { min-width: 100px; max-width: 160px; }
+        .col-labNames { min-width: 120px; max-width: 200px; }
         .col-totalMRP,
         .col-totalB2B,
         .col-finalPrice,
@@ -489,6 +492,33 @@
             box-shadow: var(--shadow-sm);
             padding: 2px 6px;
             border-radius: 3px;
+        }
+
+        /* Lab tags */
+        .lab-tag {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            margin: 1px 2px;
+        }
+
+        .lab-tag-1 {
+            background: #fce4ec;
+            color: #c62828;
+        }
+        .lab-tag-2 {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+        .lab-tag-3 {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+        .lab-tag-4 {
+            background: #fff3e0;
+            color: #e65100;
         }
 
         /* Pagination */
@@ -689,12 +719,12 @@
                 min-width: 180px;
             }
             .summary-totals {
-                font-size: 12px;
-                gap: 8px 16px;
-                padding: 8px 12px;
+                font-size: 14px;
+                gap: 12px 16px;
+                padding: 12px 14px;
             }
-            .summary-totals .total-item {
-                white-space: normal;
+            .summary-totals .total-item .value {
+                font-size: 14px;
             }
         }
     </style>
@@ -810,7 +840,7 @@
         const db = firebase.database();
 
         // ============================================================
-        //  LAB NAMES (kept for potential search, but not displayed)
+        //  LAB NAMES
         // ============================================================
         const LAB_NAMES = {
             1: 'Dr. Ajay Shah',
@@ -820,13 +850,14 @@
         };
 
         // ============================================================
-        //  COLUMN DEFINITIONS (only requested columns + new ones)
+        //  COLUMN DEFINITIONS
         // ============================================================
         const COLUMNS = [
             { key: 'visitDate', label: 'Visit Date', visible: true, widthClass: 'col-visitDate' },
             { key: 'patientName', label: 'Patient Name', visible: true, filterable: true, widthClass: 'col-patientName' },
             { key: 'center', label: 'Center', visible: true, filterable: true, widthClass: 'col-center' },
             { key: 'careOfPerson', label: 'Care of Person', visible: true, filterable: true, widthClass: 'col-careOfPerson' },
+            { key: 'labNames', label: 'Lab Name', visible: true, filterable: true, widthClass: 'col-labNames' },
             { key: 'totalMRP', label: 'Total MRP', visible: true, widthClass: 'col-totalMRP' },
             { key: 'totalB2B', label: 'Total B2B', visible: true, widthClass: 'col-totalB2B' },
             { key: 'finalPrice', label: 'Final Price', visible: true, widthClass: 'col-finalPrice' },
@@ -942,7 +973,7 @@
         }
 
         // ============================================================
-        //  GET LABS (kept for search; not displayed)
+        //  GET LABS
         // ============================================================
         function getLabsForEntry(entry) {
             if (!entry) return [];
@@ -984,7 +1015,7 @@
         }
 
         // ============================================================
-        //  GET COLUMN VALUE (including computed profits)
+        //  GET COLUMN VALUE
         // ============================================================
         function getColumnValue(patient, key) {
             switch (key) {
@@ -992,6 +1023,10 @@
                 case 'patientName': return patient.patientName || '';
                 case 'center': return patient.center || '';
                 case 'careOfPerson': return patient.careOfPerson || '';
+                case 'labNames': {
+                    const labs = getLabsForEntry(patient);
+                    return labs.map(id => LAB_NAMES[id] || 'Lab ' + id).join(', ');
+                }
                 case 'totalMRP': return patient.totalMRP || 0;
                 case 'totalB2B': return patient.totalB2B || 0;
                 case 'finalPrice': return patient.finalPrice || 0;
@@ -1095,7 +1130,6 @@
                     columnVisibility[key] = this.checked;
                     updateToggleAllState();
                     renderTable();
-                    // summary totals don't depend on column visibility
                 });
             });
         }
@@ -1146,8 +1180,7 @@
                     const labs = getLabsForEntry(p);
                     labs.forEach(labId => {
                         searchableValues.push(LAB_NAMES[labId] || 'Lab ' + labId);
-                        // Add all tests/packages for this lab (we don't have a direct function to extract all tests here, but we can try)
-                        // Use a simple extraction for search: we can stringify lab data
+                        // Add all tests/packages for this lab
                         const labData = p.labSelections ? p.labSelections[labId] : p[labId];
                         if (labData) {
                             const tests = labData.tests || [];
@@ -1184,7 +1217,7 @@
                 result = result.filter(p => (p.visitDate || '') <= dateTo);
             }
 
-            // Column filters (only for filterable columns)
+            // Column filters
             COLUMNS.forEach(col => {
                 if (col.filterable && columnFilters[col.key] && columnFilters[col.key] !== 'all') {
                     const filterValue = columnFilters[col.key];
@@ -1202,7 +1235,7 @@
             updatePagination();
             renderTable();
             updateStats();
-            updateSummaryTotals();  // new: update summary totals based on filteredPatients
+            updateSummaryTotals();
         }
 
         // ============================================================
@@ -1274,12 +1307,22 @@
                         let value = getColumnValue(patient, col.key);
                         let displayValue = '';
 
-                        if (col.key === 'visitDate' || col.key === 'patientName' || col.key === 'center' || col.key === 'careOfPerson') {
+                        if (col.key === 'labNames') {
+                            // Show lab tags with highlighting
+                            const labs = getLabsForEntry(patient);
+                            const labTags = labs.map(id => {
+                                const name = LAB_NAMES[id] || 'Lab ' + id;
+                                const highlighted = highlightText(name, searchTerm);
+                                return `<span class="lab-tag lab-tag-${id}">${highlighted}</span>`;
+                            }).join('');
+                            displayValue = labTags || '—';
+                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue}</td>`;
+                        } else if (col.key === 'visitDate' || col.key === 'patientName' || col.key === 'center' || col.key === 'careOfPerson') {
                             displayValue = highlightText(String(value), searchTerm);
-                            // Truncate for long text
                             if (col.key === 'patientName' || col.key === 'careOfPerson') {
                                 displayValue = `<span class="truncate" title="${escapeHtml(String(value))}">${displayValue || '—'}</span>`;
                             }
+                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue || '—'}</td>`;
                         } else if (col.key === 'totalMRP' || col.key === 'totalB2B' || col.key === 'finalPrice' ||
                                    col.key === 'cashReceived' || col.key === 'onlineReceived' || col.key === 'pendingPayment' ||
                                    col.key === 'goodwillCharges' || col.key === 'estimatedProfit' || col.key === 'actualProfit') {
@@ -1288,11 +1331,11 @@
                             const isProfit = (col.key === 'estimatedProfit' || col.key === 'actualProfit');
                             const profitClass = (isProfit && value < 0) ? 'loss' : (isProfit && value >= 0 ? 'profit' : '');
                             displayValue = `<span class="currency ${isPending ? 'text-error' : ''} ${profitClass}">${formatted}</span>`;
+                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue}</td>`;
                         } else {
                             displayValue = highlightText(String(value), searchTerm);
+                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue || '—'}</td>`;
                         }
-
-                        bodyHtml += `<td class="${col.widthClass || ''}">${displayValue || '—'}</td>`;
                     }
                 });
                 bodyHtml += '</tr>';
@@ -1309,7 +1352,13 @@
             allPatients.forEach(p => {
                 let val = getColumnValue(p, colKey);
                 if (val && String(val).trim()) {
-                    values.add(String(val).trim());
+                    if (colKey === 'labNames') {
+                        // For labNames, we need to split comma-separated values and add each
+                        const parts = String(val).split(',').map(s => s.trim()).filter(s => s);
+                        parts.forEach(p => values.add(p));
+                    } else {
+                        values.add(String(val).trim());
+                    }
                 }
             });
 
@@ -1336,7 +1385,7 @@
         }
 
         // ============================================================
-        //  UPDATE SUMMARY TOTALS (new)
+        //  UPDATE SUMMARY TOTALS
         // ============================================================
         function updateSummaryTotals() {
             const moneyKeys = [
