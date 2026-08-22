@@ -99,6 +99,33 @@ body {
   margin-left: 8px;
 }
 
+/* Refresh Button */
+#refreshBtnSidebar {
+  margin-top: 8px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(122, 178, 178, 0.6);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+#refreshBtnSidebar:hover {
+  background: #088395;
+  border-color: #EBF4F6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+
 /* Notification Button */
 #enableNotificationsBtn {
   margin-top: 12px;
@@ -451,6 +478,9 @@ body {
       <div>🔐 <b id="sidebarLoginId">—</b></div>
       <div>👤 <b id="sidebarUserName">—</b></div>
 
+      <!-- Refresh Button -->
+      <button id="refreshBtnSidebar">🔄 Refresh</button>
+
       <!-- Notification Button -->
       <button id="enableNotificationsBtn">🔔 Enable Notifications</button>
 
@@ -560,6 +590,7 @@ const menuToggle = document.getElementById("menuToggleBtn");
 const overlay = document.getElementById("mobileOverlay");
 const topbarLogo = document.getElementById("topbarLogo");
 const notifBtn = document.getElementById("enableNotificationsBtn");
+const refreshBtn = document.getElementById("refreshBtnSidebar");
 
 let currentUserData = null;
 let currentUserEmail = null;
@@ -780,6 +811,78 @@ async function preloadTestReportsInBackground() {
   }
 }
 
+/* ===== REFRESH DASHBOARD FUNCTION ===== */
+async function refreshDashboard() {
+  console.log("🔄 Refresh button clicked - Reloading dashboard...");
+  
+  // Show loading state on refresh button
+  if (refreshBtn) {
+    refreshBtn.textContent = "⏳ Refreshing...";
+    refreshBtn.disabled = true;
+  }
+  
+  try {
+    // Clear all section panes
+    sectionPanes.clear();
+    
+    // Clear the sections container
+    if (sectionsContainer) {
+      sectionsContainer.innerHTML = '';
+    }
+    
+    // Re-initialize sections container
+    initSectionsContainer();
+    
+    // Rebuild all section panes based on user permissions
+    const sectionButtons = Array.from(navMenu.querySelectorAll(".nav-item"));
+    let homePageSection = null;
+    
+    for (const btn of sectionButtons) {
+      const section = btn.getAttribute("data-section");
+      const file = btn.getAttribute("data-file");
+      const hasAccess = currentUserData.sections.includes(section);
+      
+      if (hasAccess) {
+        if (section === "Home Page") homePageSection = section;
+        btn.style.display = "flex";
+        // Create pane in background but not yet visible
+        ensureSectionPane(section, file).catch(e => console.log(`Error creating pane for ${section}`, e));
+      } else {
+        btn.style.display = "none";
+      }
+    }
+    
+    // Preload Test Reports in background
+    setTimeout(async () => {
+      await preloadTestReportsInBackground();
+    }, 500);
+    
+    // AFTER all panes are created, switch to current active section or Home Page
+    setTimeout(async () => {
+      if (currentActiveSection && currentUserData.sections.includes(currentActiveSection)) {
+        await switchToSection(currentActiveSection);
+      } else if (homePageSection && currentUserData.sections.includes(homePageSection)) {
+        await switchToSection(homePageSection);
+      } else {
+        // Fallback to first available section
+        const firstAvailable = currentUserData.sections[0];
+        if (firstAvailable) await switchToSection(firstAvailable);
+      }
+    }, 800);
+    
+    console.log("✅ Dashboard refreshed successfully!");
+    
+  } catch (error) {
+    console.error("❌ Refresh failed:", error);
+  } finally {
+    // Reset refresh button
+    if (refreshBtn) {
+      refreshBtn.textContent = "🔄 Refresh";
+      refreshBtn.disabled = false;
+    }
+  }
+}
+
 /* ===== INITIALIZE DASHBOARD - DEFAULT TO HOME PAGE ===== */
 async function resetAndInitDashboard(userData) {
   currentUserData = userData;
@@ -929,20 +1032,7 @@ function initOneSignal() {
             oneSignalInitialized = true;
             oneSignalInitializing = false;
 
-            /*
-             * IMPORTANT:
-             * Do NOT call:
-             *
-             * OneSignal.Notifications.permissionGranted()
-             *
-             * That method is not available in your loaded SDK.
-             */
-
-
-            // ------------------------------------------------
             // Permission change listener
-            // ------------------------------------------------
-
             OneSignal.Notifications.addEventListener(
                 "permissionChange",
                 function(permission) {
@@ -956,11 +1046,7 @@ function initOneSignal() {
                 }
             );
 
-
-            // ------------------------------------------------
             // Enable Notifications button
-            // ------------------------------------------------
-
             if (notifBtn) {
 
                 const newNotifBtn = notifBtn.cloneNode(true);
@@ -1005,25 +1091,20 @@ function initOneSignal() {
                                 }
                             }
 
-
                             console.log(
                                 "🔔 Requesting OneSignal notification permission..."
                             );
 
-
                             // Request browser permission
                             const granted =
                                 await OneSignal.Notifications.requestPermission();
-
 
                             console.log(
                                 "🔔 Permission result:",
                                 granted
                             );
 
-
                             updateNotifButtonState(granted);
-
 
                             if (granted) {
 
@@ -1073,13 +1154,23 @@ function initOneSignal() {
     });
 }
 
+/* ===== REFRESH BUTTON EVENT LISTENER ===== */
+if (refreshBtn) {
+  const newRefreshBtn = refreshBtn.cloneNode(true);
+  refreshBtn.parentNode.replaceChild(newRefreshBtn, refreshBtn);
+  newRefreshBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await refreshDashboard();
+  });
+}
+
 /* ============================================================
    ===== PWA RESUME / BACKGROUND RECOVERY SYSTEM =====
    ============================================================ */
 
 let pwaRecoveryRunning = false;
 let lastHiddenAt = Date.now();
-
 
 // ------------------------------------------------------------
 // When PWA goes into background
@@ -1098,7 +1189,6 @@ document.addEventListener("visibilitychange", () => {
         return;
     }
 
-
     // --------------------------------------------------------
     // PWA became visible again
     // --------------------------------------------------------
@@ -1114,20 +1204,17 @@ document.addEventListener("visibilitychange", () => {
             "seconds."
         );
 
-
         // Don't immediately rebuild everything for a
         // very short visibility change.
         if (hiddenDuration < 3000) {
             return;
         }
 
-
         recoverDashboardAfterResume();
 
     }
 
 });
-
 
 // ------------------------------------------------------------
 // Main recovery function
@@ -1142,14 +1229,11 @@ async function recoverDashboardAfterResume() {
         return;
     }
 
-
     pwaRecoveryRunning = true;
-
 
     console.log(
         "🔄 Starting PWA resume recovery..."
     );
-
 
     try {
 
@@ -1166,7 +1250,6 @@ async function recoverDashboardAfterResume() {
             return;
         }
 
-
         // ----------------------------------------------------
         // 2. Update PWA service worker
         // ----------------------------------------------------
@@ -1178,7 +1261,6 @@ async function recoverDashboardAfterResume() {
                 const registrations =
                     await navigator.serviceWorker
                         .getRegistrations();
-
 
                 for (
                     const registration
@@ -1215,14 +1297,12 @@ async function recoverDashboardAfterResume() {
 
         }
 
-
         // ----------------------------------------------------
         // 3. Verify Firebase authentication
         // ----------------------------------------------------
 
         const user =
             auth.currentUser;
-
 
         if (!user) {
 
@@ -1233,10 +1313,8 @@ async function recoverDashboardAfterResume() {
             return;
         }
 
-
         const userData =
             USERS[user.email];
-
 
         if (!userData) {
 
@@ -1246,7 +1324,6 @@ async function recoverDashboardAfterResume() {
 
             return;
         }
-
 
         // ----------------------------------------------------
         // 4. Check current iframe
@@ -1259,7 +1336,6 @@ async function recoverDashboardAfterResume() {
                     currentActiveSection
                 );
 
-
             if (
                 paneInfo &&
                 paneInfo.iframe
@@ -1270,7 +1346,6 @@ async function recoverDashboardAfterResume() {
                     currentActiveSection
                 );
 
-
                 try {
 
                     // Ping iframe.
@@ -1278,7 +1353,6 @@ async function recoverDashboardAfterResume() {
 
                     const iframeWindow =
                         paneInfo.iframe.contentWindow;
-
 
                     if (iframeWindow) {
 
@@ -1304,7 +1378,6 @@ async function recoverDashboardAfterResume() {
             }
 
         }
-
 
         // ----------------------------------------------------
         // 5. Notify all loaded section iframes
@@ -1343,7 +1416,6 @@ async function recoverDashboardAfterResume() {
             }
         );
 
-
         // ----------------------------------------------------
         // 6. Re-check OneSignal state
         //
@@ -1364,11 +1436,9 @@ async function recoverDashboardAfterResume() {
 
         }
 
-
         console.log(
             "✅ PWA resume recovery completed."
         );
-
 
     } catch (error) {
 
@@ -1445,7 +1515,6 @@ window.addEventListener(
                 persisted: event.persisted
             }
         );
-
 
         if (event.persisted) {
 
