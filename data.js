@@ -1104,6 +1104,34 @@ const LAB_DATA = {
         "labName": "Bile Acid",
         "mrp": 2000,
         "b2b": 1800
+      },
+      {
+        "id": "blood-gas-arterial",
+        "generalName": "Blood Gas (Arterial)",
+        "labName": "Blood Gas (Arterial)",
+        "mrp": 950,
+        "b2b": 665
+      },
+      {
+        "id": "blood-gas-venous",
+        "generalName": "Blood Gas (Venous)",
+        "labName": "Blood Gas (Venous)",
+        "mrp": 1000,
+        "b2b": 700
+      },
+      {
+        "id": "ttg-a",
+        "generalName": "TTG-A",
+        "labName": "Tissue Transglutaminase antibody IgA",
+        "mrp": 1400,
+        "b2b": 980
+      },
+      {
+        "id": "lepto-rt-pcr",
+        "generalName": "Lepto RT-PCR",
+        "labName": "Leptospira Qualitative by Real-time PCR short name",
+        "mrp": 2200,
+        "b2b": 1500
       }
     ],
     "packages": [
@@ -1536,6 +1564,237 @@ const LAB_DATA = {
         "labName": "",
         "mrp": "",
         "b2b": ""
+      },
+      {
+        "id": "cbc",
+        "generalName": "CBC",
+        "labName": "COMPLETE BLOOD COUNT",
+        "mrp": 280,
+        "b2b": 168
+      },
+      {
+        "id": "blood-group",
+        "generalName": "Blood Group",
+        "labName": "BLOOD GROUP",
+        "mrp": 150,
+        "b2b": 90
+      },
+      {
+        "id": "esr",
+        "generalName": "ESR",
+        "labName": "ERYTHROCYTE SEDIMENTATION RATE",
+        "mrp": 90,
+        "b2b": 54
+      },
+      {
+        "id": "fbs",
+        "generalName": "FBS",
+        "labName": "FASTING PLASMA GLUCOSE",
+        "mrp": 70,
+        "b2b": 46
+      },
+      {
+        "id": "pp",
+        "generalName": "PP",
+        "labName": "POST LUNCH GLUCOSE",
+        "mrp": 70,
+        "b2b": 46
+      },
+      {
+        "id": "rbs",
+        "generalName": "RBS",
+        "labName": "RANDOM GLUCOSE",
+        "mrp": 70,
+        "b2b": 46
+      },
+      {
+        "id": "insulin-fasting",
+        "generalName": "Insulin Fasting",
+        "labName": "INSULIN FASTING",
+        "mrp": 715,
+        "b2b": 501
+      },
+      {
+        "id": "insulin-pp",
+        "generalName": "Insulin PP",
+        "labName": "INSULIN PP",
+        "mrp": 715,
+        "b2b": 501
+      },
+      {
+        "id": "insulin-random",
+        "generalName": "Insulin Random",
+        "labName": "INSULIN RANDOM",
+        "mrp": 715,
+        "b2b": 501
+      },
+      {
+        "id": "hba1c",
+        "generalName": "HbA1C",
+        "labName": "HbA1c",
+        "mrp": 520,
+        "b2b": 338
+      },
+      {
+        "id": "hbeag",
+        "generalName": "HBeAg",
+        "labName": "HBeAg",
+        "mrp": 900,
+        "b2b": 612
+      },
+      {
+        "id": "bilirubin-total",
+        "generalName": "Bilirubin Total",
+        "labName": "BILIRUBIN",
+        "mrp": 200,
+        "b2b": 120
+      },
+      {
+        "id": "sgpt",
+        "generalName": "SGPT",
+        "labName": "SGPT",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "sgot",
+        "generalName": "SGOT",
+        "labName": "SGOT",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "ggt",
+        "generalName": "GGT",
+        "labName": "GGTP",
+        "mrp": 200,
+        "b2b": 126
+      },
+      {
+        "id": "creatinine",
+        "generalName": "Creatinine",
+        "labName": "CREATININE",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "urea",
+        "generalName": "Urea",
+        "labName": "UREA",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "uric-acid",
+        "generalName": "Uric Acid",
+        "labName": "URIC ACID",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "calcium",
+        "generalName": "Calcium",
+        "labName": "CALCIUM",
+        "mrp": 275,
+        "b2b": 176
+      },
+      {
+        "id": "lipid-profile",
+        "generalName": "Lipid Profile",
+        "labName": "LIPID PROFILE",
+        "mrp": 550,
+        "b2b": 352
+      },
+      {
+        "id": "total-cholesterol",
+        "generalName": "Total Cholesterol",
+        "labName": "TOTAL CHOLESTEROL",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "hdl-cholesterol",
+        "generalName": "HDL Cholesterol",
+        "labName": "HDL CHOLESTEROL",
+        "mrp": 180,
+        "b2b": 106
+      },
+      {
+        "id": "ldl-cholesterol",
+        "generalName": "LDL Cholesterol",
+        "labName": "LDL CHOLESTEROL",
+        "mrp": 320,
+        "b2b": 224
+      },
+      {
+        "id": "ldh",
+        "generalName": "LDH",
+        "labName": "LDH",
+        "mrp": 350,
+        "b2b": 263
+      },
+      {
+        "id": "ldh-fluid",
+        "generalName": "LDH Fluid",
+        "labName": "LDH, FLUID",
+        "mrp": 350,
+        "b2b": 263
+      },
+      {
+        "id": "iron-study",
+        "generalName": "Iron Study",
+        "labName": "IRON STUDY",
+        "mrp": 520,
+        "b2b": 333
+      },
+      {
+        "id": "vit-d3",
+        "generalName": "Vit D3",
+        "labName": "VITAMIN D3",
+        "mrp": 1500,
+        "b2b": 450
+      },
+      {
+        "id": "vit-b12",
+        "generalName": "Vit B12",
+        "labName": "VITAMIN B12",
+        "mrp": 950,
+        "b2b": 285
+      },
+      {
+        "id": "t3",
+        "generalName": "T3",
+        "labName": "TOTAL T3",
+        "mrp": 190,
+        "b2b": 95
+      },
+      {
+        "id": "t4",
+        "generalName": "T4",
+        "labName": "TOTAL T4",
+        "mrp": 190,
+        "b2b": 95
+      },
+      {
+        "id": "tsh",
+        "generalName": "TSH",
+        "labName": "THYROID STIMULATING HORMONE",
+        "mrp": 320,
+        "b2b": 128
+      },
+      {
+        "id": "ft3",
+        "generalName": "FT3",
+        "labName": "FREE T3",
+        "mrp": 240,
+        "b2b": 120
+      },
+      {
+        "id": "ft4",
+        "generalName": "FT4",
+        "labName": "FREE T4",
+        "mrp": 240,
+        "b2b": 120
       }
     ],
     "packages": []
