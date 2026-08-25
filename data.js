@@ -1132,6 +1132,20 @@ const LAB_DATA = {
         "labName": "Leptospira Qualitative by Real-time PCR short name",
         "mrp": 2200,
         "b2b": 1500
+      },
+      {
+        "id": "homa-ir",
+        "generalName": "Homa IR",
+        "labName": "Homa IR (Mass Unit)",
+        "mrp": 1200,
+        "b2b": 1080
+      },
+      {
+        "id": "asvisit200",
+        "generalName": "ASVISIT200",
+        "labName": "ASVISIT200",
+        "mrp": 200,
+        "b2b": 200
       }
     ],
     "packages": [
@@ -1538,6 +1552,118 @@ const LAB_DATA = {
         ],
         "mrp": 2100,
         "b2b": 1890
+      },
+      {
+        "id": "active-men-health-check",
+        "packageName": "Active Men Health Check",
+        "tests": [
+          {
+            "generalName": "Vit D3",
+            "labName": "25 OH Cholecalciferol (D2+D3)"
+          },
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "eGFR",
+            "labName": "Estimated Glomerular Filtration Rate (eGFR) with Creatinine"
+          },
+          {
+            "generalName": "Free TFT",
+            "labName": "Free Thyroid Profile"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (TIBC)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "Liver Function Test"
+          },
+          {
+            "generalName": "PSA (Male)",
+            "labName": "Prostate Specific Antigen level"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B - 12 Level"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "LIFECHECK-AS RENAL FUNCTION TEST"
+          },
+          {
+            "generalName": "Homa IR",
+            "labName": "Homa IR (Mass Unit)"
+          }
+        ],
+        "mrp": 3300,
+        "b2b": 2640
+      },
+      {
+        "id": "active-women-health-check",
+        "packageName": "Active Women Health Check",
+        "tests": [
+          {
+            "generalName": "Vit D3",
+            "labName": "25 OH Cholecalciferol (D2+D3)"
+          },
+          {
+            "generalName": "CA125 (Female)",
+            "labName": "CA-125 level"
+          },
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "eGFR",
+            "labName": "Estimated Glomerular Filtration Rate (eGFR) with Creatinine"
+          },
+          {
+            "generalName": "Free TFT",
+            "labName": "Free Thyroid Profile"
+          },
+          {
+            "generalName": "HbA1C",
+            "labName": "Glyco Hemoglobin (HbA1c)"
+          },
+          {
+            "generalName": "Homa IR",
+            "labName": "Homa IR (Mass Unit)"
+          },
+          {
+            "generalName": "Iron Study",
+            "labName": "Iron Studies (TIBC)"
+          },
+          {
+            "generalName": "Lipid Profile",
+            "labName": "Lipid Profile"
+          },
+          {
+            "generalName": "LFT",
+            "labName": "Liver Function Test"
+          },
+          {
+            "generalName": "RFT",
+            "labName": "LIFECHECK-AS RENAL FUNCTION TEST"
+          },
+          {
+            "generalName": "Vit B12",
+            "labName": "Vitamin B - 12 Level"
+          }
+        ],
+        "mrp": 3500,
+        "b2b": 2800
       }
     ]
   },
@@ -3656,7 +3782,6 @@ const LAB_DATA = {
     "packages": []
   }
 }
-
 // Phlebotomist suggestions
 const PHLEBOTOMIST_SUGGESTIONS = [
 "Soni",
