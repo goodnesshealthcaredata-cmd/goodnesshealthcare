@@ -3865,6 +3865,8 @@ const CARE_OF_PERSON_SUGGESTIONS = [
 "Sandeep Bijam",
 "Viru Gupta",
 "Kashish",
+"Yogesh Achrekar",
+"Kalpana Shah",
 "Dr. Shruti Gogate",
 "Dr. Snehal Sawant",
 "Dr. Satish Sawant",
