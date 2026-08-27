@@ -3103,7 +3103,7 @@ function updateReportMessage(formId) {
   
   const message = `Hello,
 
- of *${patientName}*.
+Please find the attached test report of *${patientName}*.
  
 Thank you for choosing *Goodness Healthcare*. We sincerely appreciate your trust in our services.
  
@@ -5740,7 +5740,7 @@ function buildViewModalContent(entry) {
 function copyViewMessage(patientName) {
   const message = `Hello,
 
- of *${patientName}*.
+Please find the attached test report of *${patientName}*.
  
 Thank you for choosing *Goodness Healthcare*. We sincerely appreciate your trust in our services.
  
@@ -6747,7 +6747,7 @@ function createReportDetailsHTML(formId) {
           </div>
           <div class="report-message" id="reportMessage-${formId}">Hello,
 
- of Patient.
+Please find the attached test report of Patient.
  
 Thank you for choosing Goodness Healthcare. We sincerely appreciate your trust in our services.
  
