@@ -1921,6 +1921,244 @@ const LAB_DATA = {
         "labName": "FREE T4",
         "mrp": 240,
         "b2b": 120
+      },
+      {
+        "id": "crp",
+        "generalName": "CRP",
+        "labName": "C- REACTIVE PROTEIN (QUANTITATIVE)",
+        "mrp": 500,
+        "b2b": 225
+      },
+      {
+        "id": "hscrp",
+        "generalName": "HSCRP",
+        "labName": "HIGH SENSITIVITY CRP",
+        "mrp": 700,
+        "b2b": 420
+      },
+      {
+        "id": "cpk-mb",
+        "generalName": "CPK-MB",
+        "labName": "CK-MB",
+        "mrp": 850,
+        "b2b": 536
+      },
+      {
+        "id": "cpk-total",
+        "generalName": "CPK-Total",
+        "labName": "CPK",
+        "mrp": 380,
+        "b2b": 236
+      },
+      {
+        "id": "trop-i",
+        "generalName": "Trop-I",
+        "labName": "TROPONIN I",
+        "mrp": 770,
+        "b2b": 539
+      },
+      {
+        "id": "trop-t",
+        "generalName": "Trop-T",
+        "labName": "TROPONIN T",
+        "mrp": 770,
+        "b2b": 539
+      },
+      {
+        "id": "d-dimer",
+        "generalName": "D-Dimer",
+        "labName": "D - DIMER",
+        "mrp": 1150,
+        "b2b": 736
+      },
+      {
+        "id": "pt-inr",
+        "generalName": "PT INR",
+        "labName": "PROTHROMBIN TIME",
+        "mrp": 300,
+        "b2b": 195
+      },
+      {
+        "id": "aptt",
+        "generalName": "ApTT",
+        "labName": "ACTIVATED PARTIAL THROMBOPLASTIN TIME",
+        "mrp": 400,
+        "b2b": 240
+      },
+      {
+        "id": "hiv",
+        "generalName": "HIV",
+        "labName": "HIV DUO (ECLIA/ELISA)",
+        "mrp": 400,
+        "b2b": 280
+      },
+      {
+        "id": "hcv",
+        "generalName": "HCV",
+        "labName": "H.C.V ANTIBODY STUDY (ECLIA/ELISA)",
+        "mrp": 750,
+        "b2b": 600
+      },
+      {
+        "id": "vdrl",
+        "generalName": "VDRL",
+        "labName": "V.D.R.L",
+        "mrp": 165,
+        "b2b": 106
+      },
+      {
+        "id": "urine-culture",
+        "generalName": "Urine Culture",
+        "labName": "URINE CULTURE AND SENSITIVITY REPORT",
+        "mrp": 800,
+        "b2b": 560
+      },
+      {
+        "id": "urine-routine",
+        "generalName": "Urine Routine",
+        "labName": "URINE ROUTINE",
+        "mrp": 110,
+        "b2b": 70
+      },
+      {
+        "id": "ra-factor",
+        "generalName": "RA Factor",
+        "labName": "RHEUMATOID FACTOR",
+        "mrp": 275,
+        "b2b": 176
+      },
+      {
+        "id": "mp",
+        "generalName": "MP",
+        "labName": "MALARIAL PARASITE",
+        "mrp": 180,
+        "b2b": 106
+      },
+      {
+        "id": "widal",
+        "generalName": "Widal",
+        "labName": "WIDAL TEST",
+        "mrp": 165,
+        "b2b": 106
+      },
+      {
+        "id": "dengue-ns1",
+        "generalName": "Dengue NS1",
+        "labName": "DENGUE NS 1 ANTIGEN TEST",
+        "mrp": 880,
+        "b2b": 563
+      },
+      {
+        "id": "dengue-igg",
+        "generalName": "Dengue IgG",
+        "labName": "DENGUE IgG",
+        "mrp": 880,
+        "b2b": 563
+      },
+      {
+        "id": "dengue-igm",
+        "generalName": "Dengue IgM",
+        "labName": "DENGUE IgM",
+        "mrp": 880,
+        "b2b": 563
+      },
+      {
+        "id": "mp-antigen",
+        "generalName": "MP-Antigen",
+        "labName": "MALARIAL ANTIGEN STUDY",
+        "mrp": 500,
+        "b2b": 315
+      },
+      {
+        "id": "beta-hcg",
+        "generalName": "Beta HCG",
+        "labName": "BETA HCG",
+        "mrp": 500,
+        "b2b": 355
+      },
+      {
+        "id": "homocysteine",
+        "generalName": "Homocysteine",
+        "labName": "HOMOCYSTEINE",
+        "mrp": 1200,
+        "b2b": 744
+      },
+      {
+        "id": "ca125-female",
+        "generalName": "CA125 (Female)",
+        "labName": "CA-125",
+        "mrp": 1050,
+        "b2b": 683
+      },
+      {
+        "id": "psa-male",
+        "generalName": "PSA (Male)",
+        "labName": "TOTAL PROSTATE SPECIFIC ANTIGEN",
+        "mrp": 700,
+        "b2b": 497
+      },
+      {
+        "id": "ige-level",
+        "generalName": "IgE Level",
+        "labName": "IGE",
+        "mrp": 770,
+        "b2b": 539
+      },
+      {
+        "id": "anti-ccp",
+        "generalName": "Anti CCP",
+        "labName": "CCP-ANTIBODY TO CYCLIC CITRULLINATED PEPTIDE",
+        "mrp": 1250,
+        "b2b": 813
+      },
+      {
+        "id": "ana",
+        "generalName": "ANA",
+        "labName": "ANTI-NUCLEAR ANTIBODY",
+        "mrp": 950,
+        "b2b": 599
+      },
+      {
+        "id": "total-protein",
+        "generalName": "Total Protein",
+        "labName": "TOTAL PROTEIN",
+        "mrp": 200,
+        "b2b": 120
+      },
+      {
+        "id": "covid-antibody",
+        "generalName": "Covid Antibody",
+        "labName": "COVID-19 ANTIBODIES(Nucleocapsid)",
+        "mrp": 500,
+        "b2b": 350
+      },
+      {
+        "id": "fnac",
+        "generalName": "FNAC",
+        "labName": "CYTOLOGY",
+        "mrp": 800,
+        "b2b": 560
+      },
+      {
+        "id": "cea",
+        "generalName": "CEA",
+        "labName": "CARCINO EMBRYONIC ANTIGEN",
+        "mrp": 850,
+        "b2b": 578
+      },
+      {
+        "id": "afp-level",
+        "generalName": "AFP Level",
+        "labName": "ALPHA FETO PROTEIN",
+        "mrp": 700,
+        "b2b": 462
+      },
+      {
+        "id": "lipase",
+        "generalName": "Lipase",
+        "labName": "LIPASE",
+        "mrp": 700,
+        "b2b": 490
       }
     ],
     "packages": []
@@ -3782,6 +4020,7 @@ const LAB_DATA = {
     "packages": []
   }
 }
+
 // Phlebotomist suggestions
 const PHLEBOTOMIST_SUGGESTIONS = [
 "Soni",
@@ -3865,8 +4104,6 @@ const CARE_OF_PERSON_SUGGESTIONS = [
 "Sandeep Bijam",
 "Viru Gupta",
 "Kashish",
-"Yogesh Achrekar",
-"Kalpana Shah",
 "Dr. Shruti Gogate",
 "Dr. Snehal Sawant",
 "Dr. Satish Sawant",
