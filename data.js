@@ -1160,6 +1160,48 @@ const LAB_DATA = {
         "labName": "TOTAL WBC COUNT",
         "mrp": 170,
         "b2b": 102
+      },
+      {
+        "id": "liver-renal-function-test",
+        "generalName": "Liver & Renal Function Test",
+        "labName": "LIVER & RENAL FUNCTION TEST",
+        "mrp": 1900,
+        "b2b": 650
+      },
+      {
+        "id": "dengue-ns1-fia",
+        "generalName": "Dengue Ns1 Fia",
+        "labName": "Dengue antigen NS1-FIA",
+        "mrp": 800,
+        "b2b": 350
+      },
+      {
+        "id": "dengue-rapid-antibody",
+        "generalName": "Dengue Rapid Antibody",
+        "labName": "Dengue antibody-Rapid",
+        "mrp": 800,
+        "b2b": 550
+      },
+      {
+        "id": "chikungunya-antibody-igm",
+        "generalName": "Chikungunya Antibody IgM",
+        "labName": "Chikungunya antibody IgM",
+        "mrp": 950,
+        "b2b": 665
+      },
+      {
+        "id": "mycobacterium-tuberculosis-dna-pcr",
+        "generalName": "Mycobacterium Tuberculosis DNA PCR",
+        "labName": "Mycobacterium Tuberculosis DNA PCR (GeneXpert)",
+        "mrp": 2450,
+        "b2b": 2000
+      },
+      {
+        "id": "advanced-cbc",
+        "generalName": "Advanced CBC",
+        "labName": "ADVANCED COMPLETE BLOOD COUNT",
+        "mrp": 600,
+        "b2b": 360
       }
     ],
     "packages": [
@@ -2143,8 +2185,8 @@ const LAB_DATA = {
         "id": "covid-antibody",
         "generalName": "Covid Antibody",
         "labName": "COVID-19 ANTIBODIES(Nucleocapsid)",
-        "mrp": 500,
-        "b2b": 350
+        "mrp": 800,
+        "b2b": 550
       },
       {
         "id": "fnac",
@@ -4139,6 +4181,8 @@ const LAB_DATA = {
     "packages": []
   }
 }
+
+
 // Phlebotomist suggestions
 const PHLEBOTOMIST_SUGGESTIONS = [
 "Soni",
