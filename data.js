@@ -1146,6 +1146,20 @@ const LAB_DATA = {
         "labName": "ASVISIT200",
         "mrp": 200,
         "b2b": 200
+      },
+      {
+        "id": "immature-platelet-fraction",
+        "generalName": "Immature Platelet Fraction",
+        "labName": "Immature Platelet Fraction",
+        "mrp": 350,
+        "b2b": 245
+      },
+      {
+        "id": "total-wbc-count",
+        "generalName": "TOTAL WBC COUNT",
+        "labName": "TOTAL WBC COUNT",
+        "mrp": 170,
+        "b2b": 102
       }
     ],
     "packages": [
@@ -2159,6 +2173,111 @@ const LAB_DATA = {
         "labName": "LIPASE",
         "mrp": 700,
         "b2b": 490
+      },
+      {
+        "id": "estradiol-level",
+        "generalName": "Estradiol Level",
+        "labName": "ESTRADIOL",
+        "mrp": 600,
+        "b2b": 414
+      },
+      {
+        "id": "lft",
+        "generalName": "LFT",
+        "labName": "LIVER FUNCTION TEST-1 (Without INR)",
+        "mrp": 900,
+        "b2b": 585
+      },
+      {
+        "id": "rft",
+        "generalName": "RFT",
+        "labName": "RENAL PROFILE",
+        "mrp": 1350,
+        "b2b": 878
+      },
+      {
+        "id": "electrolytes",
+        "generalName": "Electrolytes",
+        "labName": "ELECTROLYTES",
+        "mrp": 400,
+        "b2b": 240
+      },
+      {
+        "id": "total-tft",
+        "generalName": "Total TFT",
+        "labName": "TFT-1 (T3/T4/TSH)",
+        "mrp": 580,
+        "b2b": 232
+      },
+      {
+        "id": "free-tft",
+        "generalName": "Free TFT",
+        "labName": "TFT-2 (FT3/FT4/TSH)",
+        "mrp": 680,
+        "b2b": 272
+      },
+      {
+        "id": "pus-culture-aerobic",
+        "generalName": "PUS Culture (Aerobic)",
+        "labName": "PUS CULTURE AND SENSITIVITY REPORT",
+        "mrp": 800,
+        "b2b": 560
+      },
+      {
+        "id": "stool-calprotectin",
+        "generalName": "Stool Calprotectin",
+        "labName": "CALPROTECTIN",
+        "mrp": 3000,
+        "b2b": 1920
+      },
+      {
+        "id": "nt-pro-bnp",
+        "generalName": "NT-Pro BNP",
+        "labName": "NT-PROBNP, BLOOD",
+        "mrp": 2035,
+        "b2b": 1302
+      },
+      {
+        "id": "cortisol-8-am",
+        "generalName": "Cortisol 8 AM",
+        "labName": "CORTISOL 8.OO AM",
+        "mrp": 620,
+        "b2b": 434
+      },
+      {
+        "id": "mantoux-test",
+        "generalName": "Mantoux Test",
+        "labName": "MANTOUX TEST",
+        "mrp": 120,
+        "b2b": 71
+      },
+      {
+        "id": "reticulocyte-count",
+        "generalName": "Reticulocyte Count",
+        "labName": "RETICULOCYTE COUNT",
+        "mrp": 180,
+        "b2b": 108
+      },
+      {
+        "id": "coombs-test-direct",
+        "generalName": "Coombs Test Direct",
+        "labName": "DIRECT COOMBS TEST",
+        "mrp": 300,
+        "b2b": 177
+      },
+      {
+        "id": "microalbumin",
+        "generalName": "Microalbumin",
+        "labName": "MICROALBUMINURIA",
+        "mrp": 550,
+        "b2b": 352
+      },
+      {
+        "id": "testosterone-level",
+        "generalName": "Testosterone Level",
+        "labName": "TOTAL TESTOSTERONE",
+        "mrp": 600,
+        "b2b": 426
       }
     ],
     "packages": []
@@ -4020,7 +4139,6 @@ const LAB_DATA = {
     "packages": []
   }
 }
-
 // Phlebotomist suggestions
 const PHLEBOTOMIST_SUGGESTIONS = [
 "Soni",
@@ -4096,6 +4214,8 @@ const CARE_OF_PERSON_SUGGESTIONS = [
 "Ashok Sir",
 "Kunal",
 "Eva",
+"Yogesh",
+"Kalpana Shah",
 "Sanjivani",
 "Vaishali Dhumal",
 "Kalpana Sister",
