@@ -812,9 +812,9 @@ const LAB_DATA = {
         "b2b": 180
       },
       {
-        "id": "semen-analysis",
-        "generalName": "Semen Analysis",
-        "labName": "Semen Analysis",
+        "id": "*****-analysis",
+        "generalName": "***** Analysis",
+        "labName": "***** Analysis",
         "mrp": 1150,
         "b2b": 805
       },
@@ -4222,7 +4222,7 @@ const DOCTOR_SUGGESTIONS = [
 "Dr. Jagat Shah",
 "Dr. Pravin Arlekar",
 "Dr. Avinash Diwate",
-"Dr. Sejal.p Jain",
+"Dr. Sejal Jain",
 "Dr. Maxim D'mello",
 "Dr. Anushka Khot",
 "Dr. Aparna Arlekar",
@@ -4276,7 +4276,7 @@ const CARE_OF_PERSON_SUGGESTIONS = [
 "Dr. Jagat Shah",
 "Dr. Pravin Arlekar",
 "Dr. Avinash Diwate",
-"Dr. Sejal.p Jain",
+"Dr. Sejal Jain",
 "Dr. Maxim D'mello",
 "Dr. Anushka Khot",
 "Dr. Aparna Arlekar",
