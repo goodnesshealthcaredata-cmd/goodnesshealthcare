@@ -812,9 +812,9 @@ const LAB_DATA = {
         "b2b": 180
       },
       {
-        "id": "*****-analysis",
-        "generalName": "***** Analysis",
-        "labName": "***** Analysis",
+        "id": "semen-analysis",
+        "generalName": "Semen Analysis",
+        "labName": "Semen Analysis",
         "mrp": 1150,
         "b2b": 805
       },
@@ -1202,6 +1202,20 @@ const LAB_DATA = {
         "labName": "ADVANCED COMPLETE BLOOD COUNT",
         "mrp": 600,
         "b2b": 360
+      },
+      {
+        "id": "afb-stain",
+        "generalName": "AFB stain",
+        "labName": "AFB stain",
+        "mrp": 150,
+        "b2b": 105
+      },
+      {
+        "id": "afb-stain-3-days",
+        "generalName": "AFB stain (3 Days)",
+        "labName": "AFB stain for 3 Days",
+        "mrp": 400,
+        "b2b": 240
       }
     ],
     "packages": [
