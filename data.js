@@ -1216,6 +1216,13 @@ const LAB_DATA = {
         "labName": "AFB stain for 3 Days",
         "mrp": 400,
         "b2b": 240
+      },
+      {
+        "id": "insuline-pp",
+        "generalName": "Insuline PP",
+        "labName": "Insulin PP (2hrs),Serum",
+        "mrp": 800,
+        "b2b": 560
       }
     ],
     "packages": [
@@ -4195,7 +4202,6 @@ const LAB_DATA = {
     "packages": []
   }
 }
-
 
 // Phlebotomist suggestions
 const PHLEBOTOMIST_SUGGESTIONS = [
