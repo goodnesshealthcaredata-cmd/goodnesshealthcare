@@ -508,7 +508,7 @@ const LAB_DATA = {
         "generalName": "Urinary Protein Creatinine Ratio",
         "labName": "Urinary Protein Creatinine Ratio",
         "mrp": 420,
-        "b2b": 240
+        "b2b": 252
       },
       {
         "id": "lipase",
@@ -1223,6 +1223,69 @@ const LAB_DATA = {
         "labName": "Insulin PP (2hrs),Serum",
         "mrp": 800,
         "b2b": 560
+      },
+      {
+        "id": "h1n1-swine-flu",
+        "generalName": "H1N1 Swine Flu",
+        "labName": "H1N1 SWINE FLU",
+        "mrp": 3500,
+        "b2b": 2450
+      },
+      {
+        "id": "dengue-antigen-ns1-elisa",
+        "generalName": "Dengue Antigen NS1 Elisa",
+        "labName": "Dengue Antigen NS1 Elisa",
+        "mrp": 800,
+        "b2b": 350
+      },
+      {
+        "id": "influenza-antigen-h1n1",
+        "generalName": "Influenza Antigen (H1N1)",
+        "labName": "INFLUENZA ANTIGEN (H1N1)(SCREENING TEST)-AS",
+        "mrp": 2000,
+        "b2b": 1000
+      },
+      {
+        "id": "s-typhi-antibody-igg-igm",
+        "generalName": "S.Typhi antibody IgG & IgM",
+        "labName": "S.Typhi antibody IgG & IgM",
+        "mrp": 900,
+        "b2b": 720
+      },
+      {
+        "id": "g6pd-qualitative",
+        "generalName": "G6PD Qualitative",
+        "labName": "G6PD Qualitative",
+        "mrp": 650,
+        "b2b": 585
+      },
+      {
+        "id": "chikungunya-qualitative-by-real-time-pcr",
+        "generalName": "Chikungunya Qualitative by Real-time PCR",
+        "labName": "Chikungunya Qualitative by Real-time PCR",
+        "mrp": 2500,
+        "b2b": 2000
+      },
+      {
+        "id": "g6pd-quantitative",
+        "generalName": "G6PD Quantitative",
+        "labName": "G6PD Quantitative",
+        "mrp": 650,
+        "b2b": 250
+      },
+      {
+        "id": "anti-ds-dna-igg-as",
+        "generalName": "ANTI ds DNA IgG - AS",
+        "labName": "ANTI ds DNA IgG - AS",
+        "mrp": 1750,
+        "b2b": 1200
+      },
+      {
+        "id": "covid19-qualitative-by-real-time-pcr",
+        "generalName": "COVID19 Qualitative by Real time PCR",
+        "labName": "COVID19 Qualitative by Real time PCR",
+        "mrp": 500,
+        "b2b": 250
       }
     ],
     "packages": [
@@ -1741,6 +1804,50 @@ const LAB_DATA = {
         ],
         "mrp": 3500,
         "b2b": 2800
+      },
+      {
+        "id": "lifecheck-goodness-fever-profile",
+        "packageName": "Lifecheck Goodness Fever Profile",
+        "tests": [
+          {
+            "generalName": "CBC",
+            "labName": "CBC"
+          },
+          {
+            "generalName": "ESR",
+            "labName": "ESR"
+          },
+          {
+            "generalName": "MP",
+            "labName": "Malarial parasite ( smear )"
+          },
+          {
+            "generalName": "SGOT",
+            "labName": "SGOT (AST)"
+          },
+          {
+            "generalName": "SGPT",
+            "labName": "SGPT (ALT)"
+          },
+          {
+            "generalName": "CRP",
+            "labName": "C- Reactive Protein"
+          },
+          {
+            "generalName": "Dengue Ns1 Fia",
+            "labName": "Dengue antigen NS1-FIA"
+          },
+          {
+            "generalName": "Widal",
+            "labName": "WIDAL by tube method"
+          },
+          {
+            "generalName": "Urine Routine",
+            "labName": "Urine Examination"
+          }
+        ],
+        "mrp": 3000,
+        "b2b": 950
       }
     ]
   },
@@ -4202,7 +4309,6 @@ const LAB_DATA = {
     "packages": []
   }
 }
-
 // Phlebotomist suggestions
 const PHLEBOTOMIST_SUGGESTIONS = [
 "Soni",
