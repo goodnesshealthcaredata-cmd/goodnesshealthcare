@@ -1,1599 +1,2105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Patient Data Table View</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js">
-    </script>
-    <style>
-        :root {
-            --primary: #09637E;
-            --primary-dark: #064a5f;
-            --primary-light: #0a7a9b;
-            --secondary: #088395;
-            --secondary-light: #0a9db3;
-            --accent: #7AB2B2;
-            --accent-light: #9cc7c7;
-            --bg-light: #EBF4F6;
-            --bg-white: #ffffff;
-            --text-dark: #1a2e35;
-            --text-medium: #4a6a73;
-            --text-light: #7a9aa3;
-            --success: #10b981;
-            --error: #ef4444;
-            --warning: #f59e0b;
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-            --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.15);
-            --radius-sm: 0.5rem;
-            --radius-md: 0.75rem;
-            --radius-lg: 1rem;
-            --radius-xl: 1.25rem;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg-light);
-            padding: 20px;
-            color: var(--text-dark);
-        }
-
-        .app-container {
-            max-width: 100%;
-            background: var(--bg-white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            padding: 24px;
-            margin: 0 auto;
-        }
-
-        /* Header */
-        .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid var(--bg-light);
-        }
-
-        .app-header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .app-header h1 span {
-            background: var(--primary);
-            color: white;
-            font-size: 14px;
-            padding: 2px 12px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-secondary {
-            background: var(--bg-light);
-            color: var(--text-medium);
-        }
-        .btn-secondary:hover {
-            background: #d5e6ea;
-            transform: translateY(-1px);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        .btn-success:hover {
-            background: #059669;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-danger {
-            background: var(--error);
-            color: white;
-        }
-        .btn-danger:hover {
-            background: #dc2626;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-        .btn-warning:hover {
-            background: #d97706;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-        }
-        .btn-outline:hover {
-            background: var(--primary);
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-sm {
-            padding: 4px 10px;
-            font-size: 11px;
-        }
-
-        /* Stats Bar */
-        .stats-bar {
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-            padding: 12px 16px;
-            background: var(--bg-light);
-            border-radius: var(--radius-sm);
-            margin-bottom: 16px;
-        }
-
-        .stats-bar span {
-            font-size: 13px;
-            color: var(--text-medium);
-        }
-
-        .stats-bar strong {
-            color: var(--text-dark);
-            font-weight: 600;
-        }
-
-        /* Filters Row */
-        .filters-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 16px;
-            padding: 12px 16px;
-            background: var(--bg-light);
-            border-radius: var(--radius-sm);
-        }
-
-        .filters-row .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filters-row label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-medium);
-            white-space: nowrap;
-        }
-
-        .filters-row input,
-        .filters-row select {
-            padding: 4px 8px;
-            border: 1px solid #d1d9dd;
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            background: white;
-            transition: var(--transition);
-            min-width: 120px;
-        }
-
-        .filters-row input:focus,
-        .filters-row select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.1);
-        }
-
-        .filters-row input[type="date"] {
-            min-width: 140px;
-        }
-
-        .search-input-wrapper {
-            flex: 1;
-            min-width: 200px;
-            position: relative;
-        }
-
-        .search-input-wrapper input {
-            width: 100%;
-            padding: 6px 12px 6px 32px;
-            border: 1px solid #d1d9dd;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            background: white;
-            transition: var(--transition);
-        }
-
-        .search-input-wrapper input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(9, 99, 126, 0.1);
-        }
-
-        .search-input-wrapper .search-icon {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-light);
-            font-size: 14px;
-        }
-
-        /* Highlight */
-        .highlight-match {
-            background: #ffeb3b;
-            padding: 0 1px;
-            border-radius: 2px;
-            font-weight: 600;
-        }
-
-        /* Column Visibility Toggle */
-        .column-toggle-container {
-            position: relative;
-            display: inline-block;
-        }
-
-        .column-toggle-dropdown {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            border: 1px solid #d1d9dd;
-            border-radius: var(--radius-sm);
-            box-shadow: var(--shadow-lg);
-            padding: 12px 16px;
-            min-width: 220px;
-            max-height: 350px;
-            overflow-y: auto;
-            z-index: 100;
-            margin-top: 4px;
-        }
-
-        .column-toggle-dropdown.show {
-            display: block;
-        }
-
-        .column-toggle-dropdown .toggle-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 0;
-            font-size: 13px;
-            color: var(--text-medium);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .column-toggle-dropdown .toggle-item:hover {
-            color: var(--text-dark);
-        }
-
-        .column-toggle-dropdown .toggle-item input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--primary);
-            cursor: pointer;
-        }
-
-        .column-toggle-dropdown .toggle-all {
-            border-bottom: 1px solid var(--bg-light);
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        /* Table */
-        .table-wrapper {
-            overflow-x: auto;
-            border: 1px solid #d1d9dd;
-            border-radius: var(--radius-sm);
-            margin-bottom: 16px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            min-width: 1200px;
-        }
-
-        thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        th {
-            background: var(--bg-light);
-            padding: 8px 10px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-dark);
-            border: 1px solid #d1d9dd;
-            white-space: nowrap;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            min-width: 80px;
-        }
-
-        td {
-            padding: 6px 10px;
-            border: 1px solid #d1d9dd;
-            vertical-align: middle;
-            max-width: 200px;
-            word-wrap: break-word;
-            font-size: 12px;
-            color: var(--text-medium);
-        }
-
-        tr:hover td {
-            background: #f8fbfc;
-        }
-
-        /* Column Widths - Customizable */
-        .col-rowNum { min-width: 40px; max-width: 50px; }
-        .col-patientId { min-width: 100px; max-width: 150px; }
-        .col-visitDate { min-width: 90px; max-width: 110px; }
-        .col-patientName { min-width: 120px; max-width: 180px; }
-        .col-age { min-width: 40px; max-width: 60px; }
-        .col-gender { min-width: 60px; max-width: 80px; }
-        .col-doctorName { min-width: 100px; max-width: 160px; }
-        .col-careOfPerson { min-width: 100px; max-width: 160px; }
-        .col-address { min-width: 150px; max-width: 250px; }
-        .col-labNames { min-width: 120px; max-width: 200px; }
-        .col-lab1Tests { min-width: 250px; max-width: 400px; }
-        .col-lab2Tests { min-width: 250px; max-width: 400px; }
-        .col-lab3Tests { min-width: 250px; max-width: 400px; }
-        .col-lab4Tests { min-width: 250px; max-width: 400px; }
-        .col-center { min-width: 80px; max-width: 120px; }
-        .col-visitType { min-width: 90px; max-width: 120px; }
-        .col-visitTime { min-width: 70px; max-width: 90px; }
-        .col-ppTime { min-width: 70px; max-width: 90px; }
-        .col-ppPhlebotomist { min-width: 100px; max-width: 150px; }
-        .col-extraCollectionTime { min-width: 70px; max-width: 90px; }
-        .col-extraPhlebotomist { min-width: 100px; max-width: 150px; }
-        .col-totalMRP { min-width: 80px; max-width: 100px; }
-        .col-totalB2B { min-width: 80px; max-width: 100px; }
-        .col-finalPrice { min-width: 80px; max-width: 100px; }
-        .col-cashReceived { min-width: 80px; max-width: 100px; }
-        .col-onlineReceived { min-width: 80px; max-width: 100px; }
-        .col-pendingPayment { min-width: 80px; max-width: 100px; }
-        .col-goodwillCharges { min-width: 80px; max-width: 100px; }
-
-        .header-filter {
-            display: block;
-            width: 100%;
-            padding: 2px 4px;
-            border: 1px solid #d1d9dd;
-            border-radius: 3px;
-            font-size: 10px;
-            background: white;
-            margin-top: 2px;
-            max-width: 120px;
-        }
-
-        .header-filter:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .patient-id {
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            color: var(--text-light);
-        }
-
-        .lab-tag {
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 500;
-            margin: 1px 2px;
-        }
-
-        .lab-tag-1 {
-            background: #fce4ec;
-            color: #c62828;
-        }
-        .lab-tag-2 {
-            background: #e3f2fd;
-            color: #0d47a1;
-        }
-        .lab-tag-3 {
-            background: #e8f5e9;
-            color: #1b5e20;
-        }
-        .lab-tag-4 {
-            background: #fff3e0;
-            color: #e65100;
-        }
-
-        .currency {
-            font-weight: 500;
-            font-family: 'Courier New', monospace;
-        }
-
-        .truncate {
-            max-width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: block;
-        }
-
-        .truncate:hover {
-            white-space: normal;
-            overflow: visible;
-            background: white;
-            position: relative;
-            z-index: 5;
-            box-shadow: var(--shadow-sm);
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-
-        /* Pagination */
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            padding: 12px 0;
-            border-top: 1px solid var(--bg-light);
-        }
-
-        .pagination-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pagination-controls button {
-            padding: 4px 12px;
-            border: 1px solid #d1d9dd;
-            border-radius: var(--radius-sm);
-            background: white;
-            cursor: pointer;
-            font-size: 12px;
-            transition: var(--transition);
-            color: var(--text-medium);
-        }
-
-        .pagination-controls button:hover:not(:disabled) {
-            background: var(--bg-light);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .pagination-controls button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .pagination-controls button.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        .pagination-controls .page-info {
-            font-size: 13px;
-            color: var(--text-medium);
-            padding: 0 8px;
-        }
-
-        .per-page-select {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .per-page-select label {
-            font-size: 12px;
-            color: var(--text-medium);
-        }
-
-        .per-page-select select {
-            padding: 4px 8px;
-            border: 1px solid #d1d9dd;
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            background: white;
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-light);
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 36px;
-            height: 36px;
-            border: 3px solid var(--bg-light);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-light);
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            border-radius: var(--radius-sm);
-            color: white;
-            font-weight: 500;
-            z-index: 10000;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        .toast.success {
-            background: var(--success);
-        }
-        .toast.error {
-            background: var(--error);
-        }
-        .toast.info {
-            background: var(--primary);
-        }
-
-        /* Scrollbar */
-        .table-wrapper::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        .table-wrapper::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-
-        .table-wrapper::-webkit-scrollbar-thumb {
-            background: #c1c7cd;
-            border-radius: 3px;
-        }
-
-        .table-wrapper::-webkit-scrollbar-thumb:hover {
-            background: #a0a7ae;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .app-container {
-                padding: 12px;
-            }
-            .app-header h1 {
-                font-size: 18px;
-            }
-            .app-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .header-actions {
-                justify-content: center;
-            }
-            .filters-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .filters-row .filter-group {
-                flex-wrap: wrap;
-            }
-            .search-input-wrapper {
-                min-width: 100%;
-            }
-            .stats-bar {
-                font-size: 12px;
-                gap: 12px;
-                padding: 8px 12px;
-            }
-            .pagination-container {
-                flex-direction: column;
-                align-items: stretch;
-                text-align: center;
-            }
-            .pagination-controls {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-            .column-toggle-dropdown {
-                left: auto;
-                right: 0;
-                min-width: 180px;
-            }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Patient Data Table View</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+    :root{
+      --primary:#09637E;--primary-dark:#064a5f;--secondary:#088395;
+      --accent:#7AB2B2;--bg-light:#EBF4F6;--bg-white:#fff;
+      --text-dark:#1a2e35;--text-medium:#4a6a73;--text-light:#7a9aa3;
+      --success:#10b981;--error:#ef4444;--warning:#f59e0b;
+      --shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 24px rgba(0,0,0,.12);
+      --radius-sm:.5rem;--radius-md:.75rem;--radius-lg:1rem;
+      --transition:all .3s cubic-bezier(.4,0,.2,1);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--bg-light);padding:20px;color:var(--text-dark)}
+    .app-container{max-width:100%;background:var(--bg-white);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:24px;margin:0 auto}
+
+    .app-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--bg-light)}
+    .app-header h1{font-size:24px;font-weight:700;color:var(--text-dark);display:flex;align-items:center;gap:10px}
+    .app-header h1 span{background:var(--primary);color:#fff;font-size:14px;padding:2px 12px;border-radius:20px;font-weight:500}
+    .header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{padding:8px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+    .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+    .btn-secondary{background:var(--bg-light);color:var(--text-medium)}.btn-secondary:hover{background:#d5e6ea;transform:translateY(-1px)}
+    .btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#059669;transform:translateY(-1px);box-shadow:var(--shadow-md)}
+    .btn-danger{background:var(--error);color:#fff}.btn-danger:hover{background:#dc2626;transform:translateY(-1px);box-shadow:var(--shadow-md)}
+    .btn-warning{background:var(--warning);color:#fff}.btn-warning:hover{background:#d97706;transform:translateY(-1px);box-shadow:var(--shadow-md)}
+
+    .stats-bar{display:flex;gap:24px;flex-wrap:wrap;padding:12px 16px;background:var(--bg-light);border-radius:var(--radius-sm);margin-bottom:16px}
+    .stats-bar span{font-size:13px;color:var(--text-medium)}.stats-bar strong{color:var(--text-dark);font-weight:600}
+
+    .filters-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;padding:12px 16px;background:var(--bg-light);border-radius:var(--radius-sm)}
+    .filters-row .filter-group{display:flex;align-items:center;gap:6px}
+    .filters-row label{font-size:12px;font-weight:600;color:var(--text-medium);white-space:nowrap}
+    .filters-row input,.filters-row select{padding:4px 8px;border:1px solid #d1d9dd;border-radius:var(--radius-sm);font-size:12px;background:#fff;transition:var(--transition);min-width:120px}
+    .filters-row input:focus,.filters-row select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(9,99,126,.1)}
+    .search-input-wrapper{flex:1;min-width:200px;position:relative}
+    .search-input-wrapper input{width:100%;padding:6px 12px 6px 32px;border:1px solid #d1d9dd;border-radius:var(--radius-sm);font-size:13px;background:#fff}
+    .search-input-wrapper input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(9,99,126,.1)}
+    .search-input-wrapper .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:14px}
+    .highlight-match{background:#ffeb3b;padding:0 1px;border-radius:2px;font-weight:600}
+
+    .column-toggle-container{position:relative;display:inline-block}
+    .column-toggle-dropdown{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid #d1d9dd;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:12px 16px;min-width:220px;max-height:350px;overflow-y:auto;z-index:100;margin-top:4px}
+    .column-toggle-dropdown.show{display:block}
+    .column-toggle-dropdown .toggle-item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:var(--text-medium);cursor:pointer}
+    .column-toggle-dropdown .toggle-item input[type="checkbox"]{width:16px;height:16px;accent-color:var(--primary);cursor:pointer}
+    .column-toggle-dropdown .toggle-all{border-bottom:1px solid var(--bg-light);padding-bottom:8px;margin-bottom:8px;font-weight:600;color:var(--text-dark)}
+
+    .table-wrapper{overflow-x:auto;border:1px solid #d1d9dd;border-radius:var(--radius-sm);margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:12px;min-width:1200px}
+    thead{position:sticky;top:0;z-index:10}
+    th{background:var(--bg-light);padding:8px 10px;text-align:left;font-weight:600;color:var(--text-dark);border:1px solid #d1d9dd;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;z-index:10;min-width:80px}
+    td{padding:6px 10px;border:1px solid #d1d9dd;vertical-align:middle;max-width:200px;word-wrap:break-word;font-size:12px;color:var(--text-medium)}
+    tr:hover td{background:#f8fbfc}
+    .col-rowNum{min-width:40px;max-width:50px}.col-patientId{min-width:100px;max-width:150px}.col-visitDate{min-width:90px;max-width:110px}
+    .col-patientName{min-width:120px;max-width:180px}.col-age{min-width:40px;max-width:60px}.col-gender{min-width:60px;max-width:80px}
+    .col-doctorName{min-width:100px;max-width:160px}.col-careOfPerson{min-width:100px;max-width:160px}.col-address{min-width:150px;max-width:250px}
+    .col-labNames{min-width:120px;max-width:200px}.col-lab1Tests,.col-lab2Tests,.col-lab3Tests,.col-lab4Tests{min-width:250px;max-width:400px}
+    .col-center{min-width:80px;max-width:120px}.col-visitType{min-width:90px;max-width:120px}.col-visitTime,.col-ppTime{min-width:70px;max-width:90px}
+    .col-ppPhlebotomist,.col-extraPhlebotomist{min-width:100px;max-width:150px}.col-extraCollectionTime{min-width:70px;max-width:90px}
+    .col-totalMRP,.col-totalB2B,.col-finalPrice,.col-cashReceived,.col-onlineReceived,.col-pendingPayment,.col-goodwillCharges{min-width:80px;max-width:100px}
+
+    .header-filter{display:block;width:100%;padding:2px 4px;border:1px solid #d1d9dd;border-radius:3px;font-size:10px;background:#fff;margin-top:2px;max-width:120px}
+    .header-filter:focus{outline:none;border-color:var(--primary)}
+    .patient-id{font-family:'Courier New',monospace;font-size:10px;color:var(--text-light)}
+    .lab-tag{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:500;margin:1px 2px}
+    .lab-tag-1{background:#fce4ec;color:#c62828}.lab-tag-2{background:#e3f2fd;color:#0d47a1}
+    .lab-tag-3{background:#e8f5e9;color:#1b5e20}.lab-tag-4{background:#fff3e0;color:#e65100}
+    .currency{font-weight:500;font-family:'Courier New',monospace}
+    .truncate{max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+    .truncate:hover{white-space:normal;overflow:visible;background:#fff;position:relative;z-index:5;box-shadow:0 2px 4px rgba(0,0,0,.04);padding:2px 6px;border-radius:3px}
+
+    .pagination-container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 0;border-top:1px solid var(--bg-light)}
+    .pagination-controls{display:flex;align-items:center;gap:8px}
+    .pagination-controls button{padding:4px 12px;border:1px solid #d1d9dd;border-radius:var(--radius-sm);background:#fff;cursor:pointer;font-size:12px;transition:var(--transition);color:var(--text-medium)}
+    .pagination-controls button:hover:not(:disabled){background:var(--bg-light);border-color:var(--primary);color:var(--primary)}
+    .pagination-controls button:disabled{opacity:.5;cursor:not-allowed}
+    .pagination-controls .page-info{font-size:13px;color:var(--text-medium);padding:0 8px}
+    .per-page-select{display:flex;align-items:center;gap:6px}
+    .per-page-select label{font-size:12px;color:var(--text-medium)}
+    .per-page-select select{padding:4px 8px;border:1px solid #d1d9dd;border-radius:var(--radius-sm);font-size:12px;background:#fff}
+
+    .loading{text-align:center;padding:40px;color:var(--text-light)}
+    .loading-spinner{display:inline-block;width:36px;height:36px;border:3px solid var(--bg-light);border-top:3px solid var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:var(--radius-sm);color:#fff;font-weight:500;z-index:100000;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:var(--shadow-lg)}
+    .toast.show{opacity:1}.toast.success{background:var(--success)}.toast.error{background:var(--error)}.toast.info{background:var(--primary)}
+
+    .table-wrapper::-webkit-scrollbar{width:6px;height:6px}
+    .table-wrapper::-webkit-scrollbar-thumb{background:#c1c7cd;border-radius:3px}
+
+    /* Lab sheet modal */
+    .lab-dropdown-container{position:relative;display:inline-block}
+    .lab-dropdown{display:none;position:absolute;top:100%;right:0;background:#fff;border:1px solid #d1d9dd;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:8px;min-width:240px;z-index:100;margin-top:4px}
+    .lab-dropdown.show{display:block}
+    .lab-dropdown .lab-option{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-radius:var(--radius-sm);font-size:13px;font-weight:500;color:var(--text-medium);transition:var(--transition)}
+    .lab-dropdown .lab-option:hover{background:var(--bg-light);color:var(--primary)}
+    .sheet-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;padding:20px}
+    .sheet-modal-overlay.show{display:flex}
+    .sheet-modal{background:#fff;width:100%;height:100%;border-radius:var(--radius-lg);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg)}
+    .sheet-modal-header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--bg-light);gap:12px;flex-wrap:wrap}
+    .sheet-modal-header h2{font-size:18px;color:var(--text-dark)}
+    .sheet-modal-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 20px;background:var(--bg-light);border-bottom:1px solid #d1d9dd;font-size:12px;color:var(--text-medium)}
+    .sheet-grid-wrapper{flex:1;overflow:auto;position:relative;background:#fff}
+    .sheet-grid{border-collapse:separate;border-spacing:0;font-size:12px;table-layout:fixed}
+    .sheet-grid th,.sheet-grid td{border-right:1px solid #d1d9dd;border-bottom:1px solid #d1d9dd;padding:0;min-width:110px;height:28px}
+    .sheet-grid th{background:var(--bg-light);color:var(--text-dark);font-weight:600;text-align:center;position:sticky;top:0;z-index:2;padding:4px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+    .sheet-grid th.row-header{left:0;z-index:4;min-width:50px;width:50px}
+    .sheet-grid td.row-header{background:var(--bg-light);color:var(--text-medium);font-weight:600;text-align:center;position:sticky;left:0;z-index:1;min-width:50px;width:50px;padding:4px;font-size:11px}
+    .sheet-grid td input{width:100%;height:100%;border:none;padding:4px 8px;font-size:12px;font-family:inherit;background:transparent;color:var(--text-dark);box-sizing:border-box}
+    .sheet-grid td input:focus{outline:2px solid var(--primary);outline-offset:-2px;background:#f0f9fc;position:relative;z-index:3}
+    .sheet-grid td.cell-active{background:#fff9e6}
+    .sheet-grid th.col-active{background:#fff2c9}
+    .sheet-grid td.row-active{background:#e8f4f8}
+    .sheet-status{padding:8px 20px;font-size:12px;color:var(--text-medium);border-top:1px solid var(--bg-light);background:#fafcfd}
+
+    /* PIVOT TABLES */
+    .pivot-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;padding:10px}
+    .pivot-modal-overlay.show{display:flex}
+    .pivot-modal{background:#eef3f5;width:100%;height:100%;border-radius:var(--radius-lg);display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg)}
+    .pivot-header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#fff;border-bottom:1px solid #d1d9dd;gap:12px;flex-wrap:wrap}
+    .pivot-header h2{font-size:18px;color:var(--text-dark);display:flex;align-items:center;gap:8px}
+    .pivot-header .pivot-hint{font-size:12px;color:var(--text-light);font-weight:400}
+
+    .pivot-source-bar{display:flex;gap:14px;align-items:center;padding:10px 20px;background:#f7fbfc;border-bottom:1px solid #d1d9dd;flex-wrap:wrap}
+    .pivot-source-item{display:flex;align-items:center;gap:6px}
+    .pivot-source-item label{font-size:12px;font-weight:700;color:var(--text-medium);text-transform:uppercase;letter-spacing:.4px}
+    .pivot-source-item select{padding:6px 10px;border:1px solid #d1d9dd;border-radius:6px;font-size:12px;background:#fff;min-width:180px;color:var(--text-dark);font-weight:500;cursor:pointer}
+    .pivot-source-item select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(9,99,126,.1)}
+    .pivot-vs{font-weight:800;color:var(--primary);font-size:12px;padding:0 6px;letter-spacing:1px}
+    .pivot-source-hint{font-size:11px;color:var(--text-light);font-style:italic;margin-left:auto}
+
+    .pivot-body{flex:1;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px;align-items:start}
+
+    /* FIXED internal heights for perfect vertical alignment */
+    .pivot-panel-header{
+      padding:10px 14px;background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);
+      color:#fff;font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:center;
+      min-height:42px;border-top-left-radius:var(--radius-md);border-top-right-radius:var(--radius-md);
+    }
+    .pivot-panel-header .pivot-record-count{font-size:11px;font-weight:500;background:rgba(255,255,255,.22);padding:2px 8px;border-radius:10px}
+    .pivot-panel-body{background:#fff;border:1px solid #d7e0e3;border-top:none;border-bottom-left-radius:var(--radius-md);border-bottom-right-radius:var(--radius-md);padding:10px;display:flex;flex-direction:column;gap:8px}
+
+    .pivot-section-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--text-light);height:14px;line-height:14px}
+    .pivot-fields{display:flex;flex-wrap:wrap;gap:4px;height:130px;overflow-y:auto;border:1px solid #d1d9dd;border-radius:4px;padding:6px;background:#fafcfd}
+    .pivot-field{background:#e0eef3;color:#09637E;padding:3px 8px;border-radius:12px;font-size:11px;cursor:grab;user-select:none;white-space:nowrap;border:1px solid transparent;transition:.15s}
+    .pivot-field:hover{background:#c9e2ea;border-color:var(--primary)}
+    .pivot-field:active{cursor:grabbing}
+
+    .pivot-zones{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;height:230px}
+    .pivot-zone{border:2px dashed #b6c8cd;border-radius:4px;padding:6px;font-size:11px;background:#fafcfd;transition:.15s;display:flex;flex-direction:column;gap:4px;min-height:0;overflow-y:auto}
+    .pivot-zone.dragover{background:#d6eef6;border-color:var(--primary);border-style:solid;box-shadow:inset 0 0 0 2px rgba(9,99,126,.15)}
+    .pivot-zone-label{font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-medium)}
+    .pivot-zone-chips{display:flex;flex-wrap:wrap;gap:3px;min-height:20px;align-items:center}
+    .pivot-zone-chips:empty::after{content:'Drop fields here';color:#b7c6cb;font-size:10px;font-style:italic}
+
+    .pivot-chip{display:inline-flex;align-items:center;gap:4px;background:var(--primary);color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;cursor:grab;user-select:none;white-space:nowrap;max-width:100%;overflow:hidden}
+    .pivot-chip:hover{background:var(--primary-dark)}
+    .pivot-chip:active{cursor:grabbing}
+    .pivot-chip .chip-label{overflow:hidden;text-overflow:ellipsis;max-width:90px}
+    .pivot-chip .chip-remove{cursor:pointer;opacity:.85;font-size:12px;line-height:1;padding:0 3px;border-radius:50%}
+    .pivot-chip .chip-remove:hover{opacity:1;background:rgba(0,0,0,.2)}
+    .pivot-chip select{border:none;background:rgba(255,255,255,.22);color:#fff;font-size:9px;border-radius:4px;padding:1px 2px;cursor:pointer;max-width:84px}
+    .pivot-chip select option{color:#000;background:#fff}
+    .pivot-chip .chip-filter-btn{background:rgba(255,255,255,.24);border:none;color:#fff;font-size:9px;padding:1px 7px;border-radius:4px;cursor:pointer;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pivot-chip .chip-filter-btn:hover{background:rgba(255,255,255,.42)}
+
+    .pivot-options{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--text-medium);height:32px;overflow:hidden}
+    .pivot-options label{font-weight:600}
+    .pivot-options select{padding:3px 6px;border:1px solid #d1d9dd;border-radius:4px;font-size:11px;background:#fff;max-width:160px}
+
+    .pivot-result{overflow:auto;max-height:400px;border:1px solid #d1d9dd;border-radius:4px;background:#fff}
+    .pivot-empty{text-align:center;padding:20px;font-size:12px;color:var(--text-light)}
+
+    .pivot-table{width:auto;min-width:100%;border-collapse:collapse;font-size:11px}
+    .pivot-table th,.pivot-table td{border:1px solid #e0e6e9;padding:4px 8px;text-align:right;white-space:nowrap;font-size:11px}
+    .pivot-table th{background:#eef5f7;color:var(--text-dark);position:sticky;top:0;z-index:3;font-weight:600;text-align:center;font-size:10px;padding:5px 8px}
+    .pivot-table th small{font-weight:400;color:var(--text-light);font-size:9px}
+    .pivot-table td.row-label,.pivot-table th.row-label{text-align:left;background:#f7fbfc;font-weight:600;color:var(--text-dark);position:sticky;left:0;z-index:2}
+    .pivot-table th.row-label{z-index:5}
+    .pivot-table .total-col{background:#f2f9fb;font-weight:600}
+    .pivot-table tr.grand-total td{background:#eaf5f8;font-weight:700;border-top:2px solid var(--primary)}
+    .pivot-table tr.subtotal-row td{background:#eef7fa;font-weight:600;color:var(--primary-dark);border-top:1px solid #b8d4dc;border-bottom:1px solid #b8d4dc}
+    .pivot-table tr.gap-row td{height:10px;padding:0;border:none;background:#f5fafb}
+    .pivot-table tbody tr:hover td:not(.row-label):not(.subtotal-row){background:#f6fcfe}
+
+    /* Filter popup */
+    .pivot-filter-popup{display:none;position:fixed;z-index:100001;background:#fff;border:1px solid #d1d9dd;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:10px;min-width:240px;max-height:340px;overflow-y:auto;font-size:12px}
+    .pivot-filter-popup.show{display:block}
+    .pivot-filter-popup .ms-actions{display:flex;gap:6px;padding-bottom:8px;border-bottom:1px solid #eef3f5;margin-bottom:8px}
+    .pivot-filter-popup .ms-actions button{flex:1;padding:4px 8px;border:1px solid #d1d9dd;background:#f7fbfc;border-radius:4px;cursor:pointer;font-size:11px}
+    .pivot-filter-popup .ms-actions button:hover{background:var(--bg-light)}
+    .pivot-filter-popup label.ms-item{display:flex;align-items:center;gap:6px;padding:3px 4px;cursor:pointer;font-size:12px;border-radius:4px}
+    .pivot-filter-popup label.ms-item:hover{background:#f7fbfc}
+    .pivot-filter-popup .dr-row{display:flex;flex-direction:column;gap:6px;padding:4px 0}
+    .pivot-filter-popup .dr-row label{display:flex;flex-direction:column;font-size:11px;color:var(--text-medium);font-weight:600;gap:3px}
+    .pivot-filter-popup .dr-row input[type="date"]{padding:4px 6px;border:1px solid #d1d9dd;border-radius:4px;font-size:12px}
+    .pivot-filter-popup .dr-actions{display:flex;gap:6px;margin-top:6px}
+    .pivot-filter-popup .dr-actions button{flex:1;padding:5px 8px;border:1px solid #d1d9dd;background:var(--primary);color:#fff;border-radius:4px;cursor:pointer;font-size:11px;font-weight:500}
+    .pivot-filter-popup .dr-actions button.secondary{background:#f7fbfc;color:var(--text-medium)}
+
+    @media (max-width:1000px){.pivot-body{grid-template-columns:1fr;gap:14px}}
+    @media (max-width:820px){
+      body{padding:10px}.app-container{padding:12px}.app-header h1{font-size:18px}
+      .app-header{flex-direction:column;align-items:stretch}.header-actions{justify-content:center}
+      .filters-row{flex-direction:column;align-items:stretch}.filters-row .filter-group{flex-wrap:wrap}
+      .search-input-wrapper{min-width:100%}.stats-bar{font-size:12px;gap:12px;padding:8px 12px}
+      .pagination-container{flex-direction:column;align-items:stretch;text-align:center}
+      .pagination-controls{justify-content:center;flex-wrap:wrap}
+      .column-toggle-dropdown{left:auto;right:0;min-width:180px}
+      .sheet-modal-overlay{padding:6px}.pivot-modal-overlay{padding:4px}
+      .pivot-source-bar{padding:8px 12px}.pivot-source-item select{min-width:140px}
+    }
+</style>
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- Header -->
-        <div class="app-header">
-            <h1>
-                📋 Patient Data
-                <span id="recordBadge">0</span>
-            </h1>
-            <div class="header-actions">
-                <button class="btn btn-secondary" id="refreshBtn">⟳ Refresh</button>
-                <div class="column-toggle-container">
-                    <button class="btn btn-primary" id="toggleColumnsBtn">📊 Columns</button>
-                    <div class="column-toggle-dropdown" id="columnToggleDropdown">
-                        <div class="toggle-item toggle-all">
-                            <input type="checkbox" id="toggleAllColumns" checked />
-                            <label for="toggleAllColumns"><strong>Select All</strong></label>
-                        </div>
-                        <div id="columnToggleList"></div>
-                    </div>
-                </div>
-                <button class="btn btn-success" id="exportBtn">📥 Export CSV</button>
-                <button class="btn btn-warning" id="clearFiltersBtn">✕ Clear Filters</button>
-            </div>
+<div class="app-container">
+  <div class="app-header">
+    <h1>📋 Patient Data <span id="recordBadge">0</span></h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="refreshBtn">⟳ Refresh</button>
+      <div class="lab-dropdown-container">
+        <button class="btn btn-primary" id="labDataBtn">🧪 Lab Data</button>
+        <div class="lab-dropdown" id="labDropdown">
+          <div class="lab-option" data-lab="dr-ajay-shah">🔬 Dr. Ajay Shah</div>
+          <div class="lab-option" data-lab="general-diagnostics">🔬 General Diagnostics</div>
         </div>
-
-        <!-- Stats -->
-        <div class="stats-bar">
-            <span>Total Records: <strong id="totalRecords">0</strong></span>
-            <span>Filtered: <strong id="filteredRecords">0</strong></span>
-            <span>Showing: <strong id="showingRecords">0</strong></span>
+      </div>
+      <button class="btn btn-primary" id="pivotTablesBtn">📊 Pivot Tables</button>
+      <div class="column-toggle-container">
+        <button class="btn btn-primary" id="toggleColumnsBtn">📊 Columns</button>
+        <div class="column-toggle-dropdown" id="columnToggleDropdown">
+          <div class="toggle-item toggle-all">
+            <input type="checkbox" id="toggleAllColumns" checked />
+            <label for="toggleAllColumns"><strong>Select All</strong></label>
+          </div>
+          <div id="columnToggleList"></div>
         </div>
-
-        <!-- Filters -->
-        <div class="filters-row" id="filtersRow">
-            <div class="search-input-wrapper">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="globalSearch" placeholder="Search across all columns..." />
-            </div>
-            <div class="filter-group">
-                <label>From:</label>
-                <input type="date" id="filterFromDate" />
-            </div>
-            <div class="filter-group">
-                <label>To:</label>
-                <input type="date" id="filterToDate" />
-            </div>
-        </div>
-
-        <!-- Loading -->
-        <div id="loadingIndicator" class="loading">
-            <div class="loading-spinner"></div>
-            <p style="margin-top:12px;">Loading patient data...</p>
-        </div>
-
-        <!-- Table -->
-        <div class="table-wrapper" id="tableWrapper" style="display:none;">
-            <table id="dataTable">
-                <thead id="tableHead">
-                </thead>
-                <tbody id="tableBody">
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="pagination-container" id="paginationContainer">
-            <div class="per-page-select">
-                <label>Entries per page:</label>
-                <select id="perPageSelect">
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="75">75</option>
-                    <option value="100">100</option>
-                </select>
-            </div>
-            <div class="pagination-controls" id="paginationControls">
-                <button id="prevPageBtn">◀ Prev</button>
-                <span class="page-info" id="pageInfo">Page 1 of 1</span>
-                <button id="nextPageBtn">Next ▶</button>
-            </div>
-        </div>
+      </div>
+      <button class="btn btn-success" id="exportBtn">📥 Export CSV</button>
+      <button class="btn btn-warning" id="clearFiltersBtn">✕ Clear Filters</button>
     </div>
+  </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
+  <div class="stats-bar">
+    <span>Total Records: <strong id="totalRecords">0</strong></span>
+    <span>Filtered: <strong id="filteredRecords">0</strong></span>
+    <span>Showing: <strong id="showingRecords">0</strong></span>
+  </div>
 
-    <script>
-        // ============================================================
-        //  FIREBASE CONFIGURATION
-        // ============================================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBYvXfJIVRQSFgXp50sGegSN5U8xq88C3g",
-            authDomain: "goodness-data.firebaseapp.com",
-            databaseURL: "https://goodness-data-default-rtdb.firebaseio.com",
-            projectId: "goodness-data",
-            storageBucket: "goodness-data.firebasestorage.app",
-            messagingSenderId: "1034454680105",
-            appId: "1:1034454680105:web:74727c22489373383b9238",
-            measurementId: "G-TD30ZYVDCG"
-        };
+  <div class="filters-row" id="filtersRow">
+    <div class="search-input-wrapper">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="globalSearch" placeholder="Search across all columns..." />
+    </div>
+    <div class="filter-group"><label>From:</label><input type="date" id="filterFromDate" /></div>
+    <div class="filter-group"><label>To:</label><input type="date" id="filterToDate" /></div>
+  </div>
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+  <div id="loadingIndicator" class="loading">
+    <div class="loading-spinner"></div>
+    <p style="margin-top:12px;">Loading patient data...</p>
+  </div>
 
-        // ============================================================
-        //  LAB NAMES
-        // ============================================================
-        const LAB_NAMES = {
-            1: 'Dr. Ajay Shah',
-            2: 'Dr. Jariwala',
-            3: 'General Diagnostics',
-            4: 'Trucheck Diagnostics'
-        };
+  <div class="table-wrapper" id="tableWrapper" style="display:none;">
+    <table id="dataTable"><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>
+  </div>
 
-        // ============================================================
-        //  COLUMN DEFINITIONS with width classes
-        // ============================================================
-        const COLUMNS = [
-            { key: 'rowNum', label: '#', visible: true, widthClass: 'col-rowNum' },
-            { key: 'patientId', label: 'Patient ID', visible: true, widthClass: 'col-patientId' },
-            { key: 'visitDate', label: 'Visit Date', visible: true, widthClass: 'col-visitDate' },
-            { key: 'patientName', label: 'Patient Name', visible: true, filterable: true, widthClass: 'col-patientName' },
-            { key: 'age', label: 'Age', visible: true, widthClass: 'col-age' },
-            { key: 'gender', label: 'Gender', visible: true, widthClass: 'col-gender' },
-            { key: 'doctorName', label: 'Dr. Name', visible: true, filterable: true, widthClass: 'col-doctorName' },
-            { key: 'careOfPerson', label: 'Care of Person', visible: true, filterable: true, widthClass: 'col-careOfPerson' },
-            { key: 'address', label: 'Address', visible: true, widthClass: 'col-address' },
-            { key: 'labNames', label: 'Lab Name', visible: true, filterable: true, widthClass: 'col-labNames' },
-            { key: 'lab1Tests', label: 'Dr. Ajay Shah', visible: true, widthClass: 'col-lab1Tests' },
-            { key: 'lab2Tests', label: 'Dr. Jariwala', visible: true, widthClass: 'col-lab2Tests' },
-            { key: 'lab3Tests', label: 'General Diagnostics', visible: true, widthClass: 'col-lab3Tests' },
-            { key: 'lab4Tests', label: 'Trucheck Diagnostics', visible: true, widthClass: 'col-lab4Tests' },
-            { key: 'center', label: 'Center', visible: true, filterable: true, widthClass: 'col-center' },
-            { key: 'visitType', label: 'Visit Type', visible: true, filterable: true, widthClass: 'col-visitType' },
-            { key: 'visitTime', label: 'Visit Time', visible: true, widthClass: 'col-visitTime' },
-            { key: 'ppTime', label: 'PP Time', visible: true, widthClass: 'col-ppTime' },
-            { key: 'ppPhlebotomist', label: 'PP Phlebotomist', visible: true, filterable: true, widthClass: 'col-ppPhlebotomist' },
-            { key: 'extraCollectionTime', label: 'Extra Collection', visible: true, widthClass: 'col-extraCollectionTime' },
-            { key: 'extraPhlebotomist', label: 'Collecting Person', visible: true, filterable: true, widthClass: 'col-extraPhlebotomist' },
-            { key: 'totalMRP', label: 'Total MRP', visible: true, widthClass: 'col-totalMRP' },
-            { key: 'totalB2B', label: 'Total B2B', visible: true, widthClass: 'col-totalB2B' },
-            { key: 'finalPrice', label: 'Final Price', visible: true, widthClass: 'col-finalPrice' },
-            { key: 'cashReceived', label: 'Cash Received', visible: true, widthClass: 'col-cashReceived' },
-            { key: 'onlineReceived', label: 'Online Received', visible: true, widthClass: 'col-onlineReceived' },
-            { key: 'pendingPayment', label: 'Pending Payment', visible: true, widthClass: 'col-pendingPayment' },
-            { key: 'goodwillCharges', label: 'Goodwill Charges', visible: true, widthClass: 'col-goodwillCharges' }
-        ];
+  <div class="pagination-container" id="paginationContainer">
+    <div class="per-page-select">
+      <label>Entries per page:</label>
+      <select id="perPageSelect">
+        <option value="25">25</option><option value="50">50</option>
+        <option value="75">75</option><option value="100">100</option>
+      </select>
+    </div>
+    <div class="pagination-controls" id="paginationControls">
+      <button id="prevPageBtn">◀ Prev</button>
+      <span class="page-info" id="pageInfo">Page 1 of 1</span>
+      <button id="nextPageBtn">Next ▶</button>
+    </div>
+  </div>
+</div>
 
-        // ============================================================
-        //  STATE
-        // ============================================================
-        let allPatients = [];
-        let filteredPatients = [];
-        let displayedPatients = [];
-        let isLoading = true;
-        let searchTerm = '';
+<!-- LAB DATA SHEET MODAL -->
+<div class="sheet-modal-overlay" id="sheetModalOverlay">
+  <div class="sheet-modal">
+    <div class="sheet-modal-header">
+      <h2 id="sheetModalTitle">Lab Data Sheet</h2>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="sheetAddRowBtn">+ Row</button>
+        <button class="btn btn-secondary" id="sheetAddColBtn">+ Column</button>
+        <button class="btn btn-danger" id="sheetDelRowBtn">🗑 Delete Row</button>
+        <button class="btn btn-danger" id="sheetDelColBtn">🗑 Delete Column</button>
+        <button class="btn btn-secondary" id="sheetReloadBtn">⟳ Reload</button>
+        <button class="btn btn-warning" id="sheetClearBtn">🗑 Clear</button>
+        <button class="btn btn-success" id="sheetSaveBtn">💾 Save</button>
+        <button class="btn btn-danger" id="sheetCloseBtn">✕ Close</button>
+      </div>
+    </div>
+    <div class="sheet-modal-toolbar">
+      💡 Tip: Copy a block of cells from Excel / Google Sheets, then click any cell and press <b>Ctrl + V</b>. To delete, click a cell first, then use <b>Delete Row</b> / <b>Delete Column</b>.
+    </div>
+    <div class="sheet-grid-wrapper" id="sheetGridContainer"></div>
+    <div class="sheet-status" id="sheetStatus">Rows: 0 | Cols: 0 | Filled: 0</div>
+  </div>
+</div>
 
-        // Pagination
-        let currentPage = 1;
-        let perPage = 25;
+<!-- PIVOT TABLES MODAL -->
+<div class="pivot-modal-overlay" id="pivotModalOverlay">
+  <div class="pivot-modal">
+    <div class="pivot-header">
+      <h2>📊 Pivot Tables <span class="pivot-hint">Drag fields → Rows / Columns / Values / Filters (or click a field to auto-add)</span></h2>
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="pivotRefreshAllBtn">⟳ Refresh All</button>
+        <button class="btn btn-danger" id="pivotCloseBtn">✕ Close</button>
+      </div>
+    </div>
+    <div class="pivot-source-bar">
+      <div class="pivot-source-item">
+        <label>Left:</label>
+        <select id="pivotSourceLeft">
+          <option value="my">📋 My Data</option>
+          <option value="lab1">🔬 Dr. Ajay Shah</option>
+          <option value="lab2">🔬 General Diagnostics</option>
+        </select>
+      </div>
+      <span class="pivot-vs">VS</span>
+      <div class="pivot-source-item">
+        <label>Right:</label>
+        <select id="pivotSourceRight">
+          <option value="my">📋 My Data</option>
+          <option value="lab1">🔬 Dr. Ajay Shah</option>
+          <option value="lab2">🔬 General Diagnostics</option>
+        </select>
+      </div>
+      <span class="pivot-source-hint">Compare any two sources side by side</span>
+    </div>
+    <div class="pivot-body" id="pivotBody"></div>
+  </div>
+</div>
 
-        // Column visibility
-        let columnVisibility = {};
-        COLUMNS.forEach(c => columnVisibility[c.key] = c.visible);
+<div class="toast" id="toast"></div>
+<div id="pivotFilterPopup" class="pivot-filter-popup"></div>
 
-        // Column filters
-        let columnFilters = {};
-        COLUMNS.forEach(c => {
-            if (c.filterable) columnFilters[c.key] = 'all';
-        });
-
-        let dateFrom = '';
-        let dateTo = '';
-
-        // ============================================================
-        //  DOM REFS
-        // ============================================================
-        const tableHead = document.getElementById('tableHead');
-        const tableBody = document.getElementById('tableBody');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const tableWrapper = document.getElementById('tableWrapper');
-        const refreshBtn = document.getElementById('refreshBtn');
-        const exportBtn = document.getElementById('exportBtn');
-        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-        const toggleColumnsBtn = document.getElementById('toggleColumnsBtn');
-        const columnToggleDropdown = document.getElementById('columnToggleDropdown');
-        const columnToggleList = document.getElementById('columnToggleList');
-        const toggleAllColumns = document.getElementById('toggleAllColumns');
-        const globalSearch = document.getElementById('globalSearch');
-        const filterFromDate = document.getElementById('filterFromDate');
-        const filterToDate = document.getElementById('filterToDate');
-        const totalRecords = document.getElementById('totalRecords');
-        const filteredRecords = document.getElementById('filteredRecords');
-        const showingRecords = document.getElementById('showingRecords');
-        const recordBadge = document.getElementById('recordBadge');
-        const perPageSelect = document.getElementById('perPageSelect');
-        const prevPageBtn = document.getElementById('prevPageBtn');
-        const nextPageBtn = document.getElementById('nextPageBtn');
-        const pageInfo = document.getElementById('pageInfo');
-        const toastEl = document.getElementById('toast');
-
-        // ============================================================
-        //  TOAST
-        // ============================================================
-        function toast(msg, type = 'success') {
-            toastEl.textContent = msg;
-            toastEl.className = 'toast show ' + type;
-            clearTimeout(toastEl._timeout);
-            toastEl._timeout = setTimeout(() => toastEl.classList.remove('show'), 3000);
-        }
-
-        // ============================================================
-        //  ESCAPE HTML
-        // ============================================================
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // ============================================================
-        //  HIGHLIGHT TEXT - NEW
-        // ============================================================
-        function highlightText(text, searchTerm) {
-    if (text === null || text === undefined) return '';
-
-    text = String(text);
-
-    if (!searchTerm || searchTerm.trim() === '') {
-        return escapeHtml(text);
-    }
-
-    const term = String(searchTerm).trim();
-
-    if (!term) {
-        return escapeHtml(text);
-    }
-
-    const lowerText = text.toLowerCase();
-    const lowerTerm = term.toLowerCase();
-
-    if (!lowerText.includes(lowerTerm)) {
-        return escapeHtml(text);
-    }
-
-    let result = '';
-    let lastIndex = 0;
-    let index = lowerText.indexOf(lowerTerm);
-
-    while (index !== -1) {
-        result += escapeHtml(
-            text.substring(lastIndex, index)
-        );
-
-        result += `<span class="highlight-match">${
-            escapeHtml(
-                text.substring(index, index + term.length)
-            )
-        }</span>`;
-
-        lastIndex = index + term.length;
-        index = lowerText.indexOf(lowerTerm, lastIndex);
-    }
-
-    result += escapeHtml(text.substring(lastIndex));
-
-    return result;
-}
-
-        // ============================================================
-        //  GET LABS
-        // ============================================================
-        function getLabsForEntry(entry) {
-            if (!entry) return [];
-            const labs = [];
-
-            if (entry.labs && Array.isArray(entry.labs)) {
-                entry.labs.forEach(lab => {
-                    const numLab = Number(lab);
-                    if (!isNaN(numLab) && numLab >= 1 && numLab <= 4 && !labs.includes(numLab)) {
-                        labs.push(numLab);
-                    }
-                });
-                if (labs.length > 0) return labs;
-            }
-
-            if (entry.labSelections && typeof entry.labSelections === 'object') {
-                for (let labId = 1; labId <= 4; labId++) {
-                    const labData = entry.labSelections[labId];
-                    if (labData && typeof labData === 'object') {
-                        const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
-                        const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
-                        if (hasTests || hasPackages) {
-                            labs.push(labId);
-                        }
-                    }
-                }
-                if (labs.length > 0) return labs;
-            }
-
-            for (let labId = 1; labId <= 4; labId++) {
-                const key = labId.toString();
-                if (entry[key] && typeof entry[key] === 'object') {
-                    const labData = entry[key];
-                    const hasTests = Array.isArray(labData.tests) && labData.tests.length > 0;
-                    const hasPackages = Array.isArray(labData.packages) && labData.packages.length > 0;
-                    if (hasTests || hasPackages) {
-                        labs.push(labId);
-                    }
-                }
-            }
-
-            return [...new Set(labs)];
-        }
-
-        // ============================================================
-        //  GET LAB TEST NAMES
-        // ============================================================
-        function getLabTestNames(entry, labId) {
-            if (!entry) return '';
-
-            const testNames = [];
-            const packages = [];
-
-            if (entry.labSelections && entry.labSelections[labId]) {
-                const labData = entry.labSelections[labId];
-                if (labData.tests && Array.isArray(labData.tests)) {
-                    labData.tests.forEach(test => {
-                        testNames.push(test.generalName || test.name || 'Test');
-                    });
-                }
-                if (labData.packages && Array.isArray(labData.packages)) {
-                    labData.packages.forEach(pkg => {
-                        packages.push(pkg.packageName || 'Package');
-                        if (pkg.tests && Array.isArray(pkg.tests)) {
-                            pkg.tests.forEach(test => {
-                                if (test.selected !== false) {
-                                    testNames.push(test.generalName || test.name || 'Test');
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-
-            if (testNames.length === 0 && packages.length === 0) {
-                const key = labId.toString();
-                if (entry[key] && typeof entry[key] === 'object') {
-                    const labData = entry[key];
-                    if (labData.tests && Array.isArray(labData.tests)) {
-                        labData.tests.forEach(test => {
-                            testNames.push(test.generalName || test.name || 'Test');
-                        });
-                    }
-                    if (labData.packages && Array.isArray(labData.packages)) {
-                        labData.packages.forEach(pkg => {
-                            packages.push(pkg.packageName || 'Package');
-                            if (pkg.tests && Array.isArray(pkg.tests)) {
-                                pkg.tests.forEach(test => {
-                                    if (test.selected !== false) {
-                                        testNames.push(test.generalName || test.name || 'Test');
-                                    }
-                                });
-                            }
-                        });
-                    }
-                }
-            }
-
-            const allItems = [...packages, ...testNames];
-            return allItems.length > 0 ? allItems.join(', ') : '';
-        }
-
-        // ============================================================
-        //  FORMAT CURRENCY
-        // ============================================================
-        function formatCurrency(value) {
-            if (value === undefined || value === null || isNaN(value)) return '₹0';
-            return '₹' + Number(value).toLocaleString('en-IN', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2
-            });
-        }
-
-        // ============================================================
-        //  LOAD DATA
-        // ============================================================
-        async function loadData() {
-            isLoading = true;
-            loadingIndicator.style.display = 'block';
-            tableWrapper.style.display = 'none';
-
-            try {
-                const snap = await db.ref('patients').once('value');
-                const data = snap.val();
-
-                allPatients = [];
-
-                if (data) {
-                    const keys = Object.keys(data);
-                    for (const key of keys) {
-                        const patient = data[key];
-                        patient._firebaseKey = key;
-                        allPatients.push(patient);
-                    }
-
-                    allPatients.sort((a, b) => {
-                        const dateA = a.visitDate || '';
-                        const dateB = b.visitDate || '';
-                        return dateB.localeCompare(dateA);
-                    });
-                }
-
-                console.log('[Table] Loaded', allPatients.length, 'patients');
-                totalRecords.textContent = allPatients.length;
-
-                buildColumnToggleList();
-
-                applyFilters();
-                toast('Data loaded successfully!', 'success');
-
-            } catch (err) {
-                console.error('Error loading data:', err);
-                toast('Error loading data: ' + err.message, 'error');
-            } finally {
-                isLoading = false;
-                loadingIndicator.style.display = 'none';
-                tableWrapper.style.display = 'block';
-            }
-        }
-
-        // ============================================================
-        //  BUILD COLUMN TOGGLE LIST
-        // ============================================================
-        function buildColumnToggleList() {
-            let html = '';
-            COLUMNS.forEach(col => {
-                html += `
-                    <div class="toggle-item">
-                        <input type="checkbox" id="col_${col.key}" ${columnVisibility[col.key] ? 'checked' : ''} />
-                        <label for="col_${col.key}">${col.label}</label>
-                    </div>
-                `;
-            });
-            columnToggleList.innerHTML = html;
-
-            columnToggleList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const key = this.id.replace('col_', '');
-                    columnVisibility[key] = this.checked;
-                    updateToggleAllState();
-                    renderTable();
-                });
-            });
-        }
-
-        function updateToggleAllState() {
-            const allChecked = COLUMNS.every(col => columnVisibility[col.key]);
-            toggleAllColumns.checked = allChecked;
-        }
-
-        // ============================================================
-        //  APPLY FILTERS
-        // ============================================================
-        function applyFilters() {
-            let result = [...allPatients];
-
-            // ============================================================
-// GLOBAL SEARCH - SEARCH ALL PATIENT DATA
+<script>
 // ============================================================
-if (searchTerm && searchTerm.trim() !== '') {
-    const term = searchTerm.toLowerCase().trim();
+//  FIREBASE
+// ============================================================
+const firebaseConfig={
+  apiKey:"AIzaSyBYvXfJIVRQSFgXp50sGegSN5U8xq88C3g",
+  authDomain:"goodness-data.firebaseapp.com",
+  databaseURL:"https://goodness-data-default-rtdb.firebaseio.com",
+  projectId:"goodness-data",
+  storageBucket:"goodness-data.firebasestorage.app",
+  messagingSenderId:"1034454680105",
+  appId:"1:1034454680105:web:74727c22489373383b9238",
+  measurementId:"G-TD30ZYVDCG"
+};
+const app=firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
 
-    result = result.filter(p => {
+const LAB_FIREBASE_CONFIG={
+  apiKey:"AIzaSyBuI_aA2nGETWHCC7nz6tGL8y1PXiu9AUw",
+  authDomain:"lab-data-bfa31.firebaseapp.com",
+  databaseURL:"https://lab-data-bfa31-default-rtdb.firebaseio.com",
+  projectId:"lab-data-bfa31",
+  storageBucket:"lab-data-bfa31.firebasestorage.app",
+  messagingSenderId:"307668458234",
+  appId:"1:307668458234:web:e93257db39840da7bf4743"
+};
+let labDb=null;
+try{
+  let labApp;
+  const existing=(firebase.apps||[]).find(a=>a.name==='labDataApp');
+  labApp=existing?existing:firebase.initializeApp(LAB_FIREBASE_CONFIG,'labDataApp');
+  labDb=labApp.database();
+}catch(e){console.error('Lab init',e)}
 
-        // Collect all normal patient fields
-        const searchableValues = [
-            p._firebaseKey,
-            p.patientName,
-            p.visitDate,
-            p.age,
-            p.gender,
-            p.doctorName,
-            p.careOfPerson,
-            p.address,
-            p.center,
-            p.visitType,
-            p.visitTime,
-            p.ppTime,
-            p.phlebotomist,
-            p.ppPhlebotomist,
-            p.extraCollectionTime,
-            p.extraCollectionPhlebotomist,
-            p.totalMRP,
-            p.totalB2B,
-            p.finalPrice,
-            p.cashReceived,
-            p.onlineReceived,
-            p.pendingPayment,
-            p.goodwillCharges
-        ];
+const LAB_SHEETS={
+  'dr-ajay-shah':{name:'Dr. Ajay Shah'},
+  'general-diagnostics':{name:'General Diagnostics'}
+};
+const LAB_DEFAULT_ROWS=30,LAB_DEFAULT_COLS=12;
+const LAB_NAMES={1:'Dr. Ajay Shah',2:'Dr. Jariwala',3:'General Diagnostics',4:'Trucheck Diagnostics'};
 
-        // Add lab names
-        const labs = getLabsForEntry(p);
+const COLUMNS=[
+  {key:'rowNum',label:'#',visible:true,widthClass:'col-rowNum'},
+  {key:'patientId',label:'Patient ID',visible:true,widthClass:'col-patientId'},
+  {key:'visitDate',label:'Visit Date',visible:true,widthClass:'col-visitDate'},
+  {key:'patientName',label:'Patient Name',visible:true,filterable:true,widthClass:'col-patientName'},
+  {key:'age',label:'Age',visible:true,widthClass:'col-age'},
+  {key:'gender',label:'Gender',visible:true,widthClass:'col-gender'},
+  {key:'doctorName',label:'Dr. Name',visible:true,filterable:true,widthClass:'col-doctorName'},
+  {key:'careOfPerson',label:'Care of Person',visible:true,filterable:true,widthClass:'col-careOfPerson'},
+  {key:'address',label:'Address',visible:true,widthClass:'col-address'},
+  {key:'labNames',label:'Lab Name',visible:true,filterable:true,widthClass:'col-labNames'},
+  {key:'lab1Tests',label:'Dr. Ajay Shah',visible:true,widthClass:'col-lab1Tests'},
+  {key:'lab2Tests',label:'Dr. Jariwala',visible:true,widthClass:'col-lab2Tests'},
+  {key:'lab3Tests',label:'General Diagnostics',visible:true,widthClass:'col-lab3Tests'},
+  {key:'lab4Tests',label:'Trucheck Diagnostics',visible:true,widthClass:'col-lab4Tests'},
+  {key:'center',label:'Center',visible:true,filterable:true,widthClass:'col-center'},
+  {key:'visitType',label:'Visit Type',visible:true,filterable:true,widthClass:'col-visitType'},
+  {key:'visitTime',label:'Visit Time',visible:true,widthClass:'col-visitTime'},
+  {key:'ppTime',label:'PP Time',visible:true,widthClass:'col-ppTime'},
+  {key:'ppPhlebotomist',label:'PP Phlebotomist',visible:true,filterable:true,widthClass:'col-ppPhlebotomist'},
+  {key:'extraCollectionTime',label:'Extra Collection',visible:true,widthClass:'col-extraCollectionTime'},
+  {key:'extraPhlebotomist',label:'Collecting Person',visible:true,filterable:true,widthClass:'col-extraPhlebotomist'},
+  {key:'totalMRP',label:'Total MRP',visible:true,widthClass:'col-totalMRP'},
+  {key:'totalB2B',label:'Total B2B',visible:true,widthClass:'col-totalB2B'},
+  {key:'finalPrice',label:'Final Price',visible:true,widthClass:'col-finalPrice'},
+  {key:'cashReceived',label:'Cash Received',visible:true,widthClass:'col-cashReceived'},
+  {key:'onlineReceived',label:'Online Received',visible:true,widthClass:'col-onlineReceived'},
+  {key:'pendingPayment',label:'Pending Payment',visible:true,widthClass:'col-pendingPayment'},
+  {key:'goodwillCharges',label:'Goodwill Charges',visible:true,widthClass:'col-goodwillCharges'}
+];
 
-        labs.forEach(labId => {
-            searchableValues.push(
-                LAB_NAMES[labId] || 'Lab ' + labId
-            );
+// ============================================================
+//  STATE
+// ============================================================
+let allPatients=[],filteredPatients=[],displayedPatients=[];
+let searchTerm='',currentPage=1,perPage=25;
+let columnVisibility={};COLUMNS.forEach(c=>columnVisibility[c.key]=c.visible);
+let columnFilters={};COLUMNS.forEach(c=>{if(c.filterable)columnFilters[c.key]='all'});
+let dateFrom='',dateTo='';
+let currentLabKey=null;
+let sheetState={rows:0,cols:0,data:[]};
+let sheetActiveCell={r:0,c:0};
 
-            // Add all tests/packages for this lab
-            searchableValues.push(
-                getLabTestNames(p, labId)
-            );
-        });
+const pivotPanels={};
+let pivotSourceLeft='lab1',pivotSourceRight='lab2';
 
-        // Convert everything to one searchable string
-        const searchableText = searchableValues
-            .filter(value => value !== null && value !== undefined)
-            .map(value => String(value))
-            .join(' ')
-            .toLowerCase();
+// DOM
+const $=id=>document.getElementById(id);
+const tableHead=$('tableHead'),tableBody=$('tableBody');
+const loadingIndicator=$('loadingIndicator'),tableWrapper=$('tableWrapper');
+const refreshBtn=$('refreshBtn'),exportBtn=$('exportBtn'),clearFiltersBtn=$('clearFiltersBtn');
+const toggleColumnsBtn=$('toggleColumnsBtn'),columnToggleDropdown=$('columnToggleDropdown');
+const columnToggleList=$('columnToggleList'),toggleAllColumns=$('toggleAllColumns');
+const globalSearch=$('globalSearch'),filterFromDate=$('filterFromDate'),filterToDate=$('filterToDate');
+const totalRecords=$('totalRecords'),filteredRecords=$('filteredRecords'),showingRecords=$('showingRecords');
+const recordBadge=$('recordBadge'),perPageSelect=$('perPageSelect');
+const prevPageBtn=$('prevPageBtn'),nextPageBtn=$('nextPageBtn'),pageInfo=$('pageInfo');
+const toastEl=$('toast');
+const labDataBtn=$('labDataBtn'),labDropdown=$('labDropdown');
+const sheetModalOverlay=$('sheetModalOverlay'),sheetModalTitle=$('sheetModalTitle');
+const sheetGridContainer=$('sheetGridContainer'),sheetStatus=$('sheetStatus');
+const sheetAddRowBtn=$('sheetAddRowBtn'),sheetAddColBtn=$('sheetAddColBtn');
+const sheetDelRowBtn=$('sheetDelRowBtn'),sheetDelColBtn=$('sheetDelColBtn');
+const sheetReloadBtn=$('sheetReloadBtn'),sheetClearBtn=$('sheetClearBtn');
+const sheetSaveBtn=$('sheetSaveBtn'),sheetCloseBtn=$('sheetCloseBtn');
+const pivotTablesBtn=$('pivotTablesBtn'),pivotModalOverlay=$('pivotModalOverlay');
+const pivotBody=$('pivotBody'),pivotCloseBtn=$('pivotCloseBtn');
+const pivotRefreshAllBtn=$('pivotRefreshAllBtn');
+const pivotSourceLeftSel=$('pivotSourceLeft'),pivotSourceRightSel=$('pivotSourceRight');
+const pivotFilterPopup=$('pivotFilterPopup');
 
-        return searchableText.includes(term);
-    });
+// ============================================================
+//  HELPERS
+// ============================================================
+function toast(msg,type='success'){
+  toastEl.textContent=msg;
+  toastEl.className='toast show '+type;
+  clearTimeout(toastEl._timeout);
+  toastEl._timeout=setTimeout(()=>toastEl.classList.remove('show'),3000);
+}
+function escapeHtml(t){if(t===null||t===undefined)return '';const d=document.createElement('div');d.textContent=String(t);return d.innerHTML}
+function escapeAttr(t){return String(t===null||t===undefined?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function highlightText(text,term){
+  if(text===null||text===undefined)return '';
+  text=String(text);
+  if(!term||term.trim()==='')return escapeHtml(text);
+  const t=String(term).trim(),lt=text.toLowerCase(),lterm=t.toLowerCase();
+  if(!lt.includes(lterm))return escapeHtml(text);
+  let out='',last=0,idx=lt.indexOf(lterm);
+  while(idx!==-1){
+    out+=escapeHtml(text.substring(last,idx));
+    out+='<span class="highlight-match">'+escapeHtml(text.substring(idx,idx+t.length))+'</span>';
+    last=idx+t.length;idx=lt.indexOf(lterm,last);
+  }
+  out+=escapeHtml(text.substring(last));
+  return out;
 }
 
-            // Date range
-            if (dateFrom) {
-                result = result.filter(p => (p.visitDate || '') >= dateFrom);
-            }
-            if (dateTo) {
-                result = result.filter(p => (p.visitDate || '') <= dateTo);
-            }
+// ---- Date helpers ----
+function parseDateFlexible(val){
+  if(val===null||val===undefined||val==='')return null;
+  const s=String(val).trim();
+  let m;
+  if((m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){
+    let d=+m[1],mo=+m[2],y=+m[3];
+    if(y<100)y+=2000;
+    const dt=new Date(y,mo-1,d);
+    if(!isNaN(dt.getTime()))return dt;
+  }
+  if((m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/))){
+    const dt=new Date(+m[1],+m[2]-1,+m[3]);
+    if(!isNaN(dt.getTime()))return dt;
+  }
+  const dt=new Date(s);
+  return isNaN(dt.getTime())?null:dt;
+}
+function formatDateDDMMYYYY(val){
+  const d=parseDateFlexible(val);
+  if(!d)return String(val??'');
+  const dd=String(d.getDate()).padStart(2,'0');
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  return dd+'-'+mm+'-'+d.getFullYear();
+}
+// Detect if a string looks like a date
+function looksLikeDate(s){
+  if(!s)return false;
+  return /^\d{1,4}[-\/.]\d{1,2}[-\/.]\d{1,4}([ T]|$)/.test(String(s).trim());
+}
+// Normalize a single value: if date-like → DD-MM-YYYY, else trimmed string
+function normalizeFieldValue(val){
+  if(val===null||val===undefined)return '';
+  const s=String(val).trim();
+  if(!s)return s;
+  if(looksLikeDate(s)){
+    const d=parseDateFlexible(s);
+    if(d)return formatDateDDMMYYYY(s);
+  }
+  return s;
+}
+// Split by comma, then normalize each piece.
+// Preserves numeric thousands separators like "1,000".
+function splitAndNormalize(val){
+  if(val===null||val===undefined||val==='')return [''];
+  const s=String(val).trim();
+  if(!s)return [''];
+  // Numbers like 1,234.56 → keep as is
+  if(/^-?\d{1,3}(,\d{3})*(\.\d+)?$/.test(s))return [normalizeFieldValue(s)];
+  let parts;
+  if(s.includes(',')){
+    parts=s.split(',').map(v=>v.trim()).filter(v=>v!=='');
+    if(!parts.length)parts=[''];
+  } else parts=[s];
+  return parts.map(normalizeFieldValue);
+}
+// Cartesian product of arrays
+function cartesian(arrays){
+  if(!arrays.length)return [[]];
+  return arrays.reduce((acc,arr)=>{
+    const out=[];
+    for(const a of acc)for(const v of arr)out.push([...a,v]);
+    return out;
+  },[[]]);
+}
 
-            // Column filters
-            COLUMNS.forEach(col => {
-                if (col.filterable && columnFilters[col.key] && columnFilters[col.key] !== 'all') {
-                    const filterValue = columnFilters[col.key];
-                    result = result.filter(p => {
-                        let value = getColumnValue(p, col.key);
-                        if (col.key === 'labNames') {
-                            const labs = getLabsForEntry(p);
-                            const labNames = labs.map(id => LAB_NAMES[id] || 'Lab ' + id);
-                            return labNames.some(name => name === filterValue);
-                        }
-                        return value === filterValue;
-                    });
-                }
-            });
+// ---- Lab helpers (for main table) ----
+function getLabsForEntry(entry){
+  if(!entry)return [];
+  const labs=[];
+  if(entry.labs&&Array.isArray(entry.labs)){
+    entry.labs.forEach(l=>{const n=Number(l);if(!isNaN(n)&&n>=1&&n<=4&&!labs.includes(n))labs.push(n)});
+    if(labs.length)return labs;
+  }
+  if(entry.labSelections&&typeof entry.labSelections==='object'){
+    for(let i=1;i<=4;i++){
+      const d=entry.labSelections[i];
+      if(d&&typeof d==='object'){
+        if((Array.isArray(d.tests)&&d.tests.length)||(Array.isArray(d.packages)&&d.packages.length))labs.push(i);
+      }
+    }
+    if(labs.length)return labs;
+  }
+  for(let i=1;i<=4;i++){
+    const k=i.toString();
+    if(entry[k]&&typeof entry[k]==='object'){
+      const d=entry[k];
+      if((Array.isArray(d.tests)&&d.tests.length)||(Array.isArray(d.packages)&&d.packages.length))labs.push(i);
+    }
+  }
+  return [...new Set(labs)];
+}
+function getLabTestNames(entry,labId){
+  if(!entry)return '';
+  const tests=[],pkgs=[];
+  const collect=(d)=>{
+    if(!d||typeof d!=='object')return;
+    if(Array.isArray(d.tests))d.tests.forEach(t=>tests.push(t.generalName||t.name||'Test'));
+    if(Array.isArray(d.packages))d.packages.forEach(p=>{
+      pkgs.push(p.packageName||'Package');
+      if(Array.isArray(p.tests))p.tests.forEach(t=>{if(t.selected!==false)tests.push(t.generalName||t.name||'Test')});
+    });
+  };
+  if(entry.labSelections&&entry.labSelections[labId])collect(entry.labSelections[labId]);
+  if(!tests.length&&!pkgs.length){
+    const k=labId.toString();
+    if(entry[k])collect(entry[k]);
+  }
+  const all=[...pkgs,...tests];
+  return all.length?all.join(', '):'';
+}
+function formatCurrency(v){
+  if(v===undefined||v===null||isNaN(v))return '₹0';
+  return '₹'+Number(v).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
 
-            filteredPatients = result;
-            filteredRecords.textContent = filteredPatients.length;
+// ============================================================
+//  LOAD PATIENT DATA
+// ============================================================
+async function loadData(){
+  loadingIndicator.style.display='block';
+  tableWrapper.style.display='none';
+  try{
+    const snap=await db.ref('patients').once('value');
+    const data=snap.val();
+    allPatients=[];
+    if(data){
+      Object.keys(data).forEach(k=>{
+        const p=data[k];p._firebaseKey=k;allPatients.push(p);
+      });
+      allPatients.sort((a,b)=>(b.visitDate||'').localeCompare(a.visitDate||''));
+    }
+    totalRecords.textContent=allPatients.length;
+    buildColumnToggleList();
+    applyFilters();
+    toast('Data loaded successfully!','success');
+  }catch(err){toast('Error loading data: '+err.message,'error')}
+  finally{
+    loadingIndicator.style.display='none';
+    tableWrapper.style.display='block';
+  }
+}
 
-            currentPage = 1;
-            updatePagination();
-            renderTable();
-            updateStats();
+function buildColumnToggleList(){
+  let html='';
+  COLUMNS.forEach(col=>{
+    html+='<div class="toggle-item"><input type="checkbox" id="col_'+col.key+'" '+(columnVisibility[col.key]?'checked':'')+' /><label for="col_'+col.key+'">'+col.label+'</label></div>';
+  });
+  columnToggleList.innerHTML=html;
+  columnToggleList.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change',function(){
+      columnVisibility[this.id.replace('col_','')]=this.checked;
+      toggleAllColumns.checked=COLUMNS.every(c=>columnVisibility[c.key]);
+      renderTable();
+    });
+  });
+}
+
+function applyFilters(){
+  let result=[...allPatients];
+  if(searchTerm&&searchTerm.trim()!==''){
+    const term=searchTerm.toLowerCase().trim();
+    result=result.filter(p=>{
+      const sv=[p._firebaseKey,p.patientName,p.visitDate,p.age,p.gender,p.doctorName,p.careOfPerson,p.address,p.center,p.visitType,p.visitTime,p.ppTime,p.phlebotomist,p.ppPhlebotomist,p.extraCollectionTime,p.extraCollectionPhlebotomist,p.totalMRP,p.totalB2B,p.finalPrice,p.cashReceived,p.onlineReceived,p.pendingPayment,p.goodwillCharges];
+      getLabsForEntry(p).forEach(l=>{sv.push(LAB_NAMES[l]||'Lab '+l);sv.push(getLabTestNames(p,l))});
+      return sv.filter(x=>x!==null&&x!==undefined).map(String).join(' ').toLowerCase().includes(term);
+    });
+  }
+  if(dateFrom)result=result.filter(p=>(p.visitDate||'')>=dateFrom);
+  if(dateTo)result=result.filter(p=>(p.visitDate||'')<=dateTo);
+  COLUMNS.forEach(col=>{
+    if(col.filterable&&columnFilters[col.key]&&columnFilters[col.key]!=='all'){
+      const fv=columnFilters[col.key];
+      result=result.filter(p=>{
+        if(col.key==='labNames')return getLabsForEntry(p).map(id=>LAB_NAMES[id]||'Lab '+id).some(n=>n===fv);
+        return getColumnValue(p,col.key)===fv;
+      });
+    }
+  });
+  filteredPatients=result;
+  filteredRecords.textContent=filteredPatients.length;
+  currentPage=1;
+  updatePagination();renderTable();updateStats();
+}
+
+function getColumnValue(p,key){
+  switch(key){
+    case 'rowNum':return '';
+    case 'patientId':return p._firebaseKey||'';
+    case 'visitDate':return p.visitDate||'';
+    case 'patientName':return p.patientName||'';
+    case 'age':return p.age||'';
+    case 'gender':return p.gender||'';
+    case 'doctorName':return p.doctorName||'';
+    case 'careOfPerson':return p.careOfPerson||'';
+    case 'address':return p.address||'';
+    case 'labNames':return getLabsForEntry(p).map(id=>LAB_NAMES[id]||'Lab '+id).join(', ');
+    case 'lab1Tests':return getLabTestNames(p,1);
+    case 'lab2Tests':return getLabTestNames(p,2);
+    case 'lab3Tests':return getLabTestNames(p,3);
+    case 'lab4Tests':return getLabTestNames(p,4);
+    case 'center':return p.center||'';
+    case 'visitType':return p.visitType||'';
+    case 'visitTime':return p.visitTime||'';
+    case 'ppTime':return p.ppTime||'';
+    case 'ppPhlebotomist':return p.ppPhlebotomist||'';
+    case 'extraCollectionTime':return p.extraCollectionTime||'';
+    case 'extraPhlebotomist':return p.extraCollectionPhlebotomist||'';
+    case 'totalMRP':return p.totalMRP||0;
+    case 'totalB2B':return p.totalB2B||0;
+    case 'finalPrice':return p.finalPrice||0;
+    case 'cashReceived':return p.cashReceived||0;
+    case 'onlineReceived':return p.onlineReceived||0;
+    case 'pendingPayment':return p.pendingPayment||0;
+    case 'goodwillCharges':return p.goodwillCharges||0;
+    default:return '';
+  }
+}
+
+function updatePagination(){
+  const tp=Math.ceil(filteredPatients.length/perPage)||1;
+  if(currentPage>tp)currentPage=tp;
+  const s=(currentPage-1)*perPage;
+  const e=Math.min(s+perPage,filteredPatients.length);
+  displayedPatients=filteredPatients.slice(s,e);
+  pageInfo.textContent='Page '+currentPage+' of '+tp;
+  prevPageBtn.disabled=currentPage<=1;
+  nextPageBtn.disabled=currentPage>=tp;
+  showingRecords.textContent=displayedPatients.length;
+  recordBadge.textContent=filteredPatients.length;
+}
+
+function renderTable(){
+  let hh='<tr>';
+  COLUMNS.forEach(col=>{
+    if(columnVisibility[col.key]){
+      hh+='<th class="'+(col.widthClass||'')+'">'+col.label+(col.filterable?buildFilterDropdown(col.key):'')+'</th>';
+    }
+  });
+  hh+='</tr>';
+  tableHead.innerHTML=hh;
+  COLUMNS.forEach(col=>{
+    if(col.filterable){
+      const el=document.getElementById('filter_'+col.key);
+      if(el)el.addEventListener('change',function(){columnFilters[col.key]=this.value;applyFilters()});
+    }
+  });
+  if(!displayedPatients.length){
+    tableBody.innerHTML='<tr><td colspan="'+COLUMNS.filter(c=>columnVisibility[c.key]).length+'" style="text-align:center;padding:40px;color:var(--text-light);">No patient records found.</td></tr>';
+    return;
+  }
+  let bh='';
+  displayedPatients.forEach((p,idx)=>{
+    const rn=(currentPage-1)*perPage+idx+1;
+    const labs=getLabsForEntry(p);
+    bh+='<tr>';
+    COLUMNS.forEach(col=>{
+      if(!columnVisibility[col.key])return;
+      const value=getColumnValue(p,col.key);
+      if(col.key==='labNames'){
+        const tags=labs.map(id=>'<span class="lab-tag lab-tag-'+id+'">'+highlightText(LAB_NAMES[id]||'Lab '+id,searchTerm)+'</span>').join('');
+        bh+='<td class="'+(col.widthClass||'')+'">'+(tags||'—')+'</td>';
+      }else if(col.key==='rowNum'){
+        bh+='<td class="'+(col.widthClass||'')+'">'+rn+'</td>';
+      }else if(col.key==='patientId'){
+        bh+='<td class="'+(col.widthClass||'')+' patient-id">'+(highlightText(String(value),searchTerm)||'—')+'</td>';
+      }else if(col.key==='address'){
+        bh+='<td class="'+(col.widthClass||'')+'"><span class="truncate" title="'+escapeHtml(String(value))+'">'+(highlightText(String(value),searchTerm)||'—')+'</span></td>';
+      }else if(['totalMRP','totalB2B','finalPrice','cashReceived','onlineReceived','pendingPayment','goodwillCharges'].includes(col.key)){
+        const fmt=formatCurrency(value);
+        const isP=col.key==='pendingPayment'&&value>0;
+        bh+='<td class="'+(col.widthClass||'')+' currency" style="'+(isP?'color:var(--error);font-weight:600;':'')+'">'+fmt+'</td>';
+      }else{
+        bh+='<td class="'+(col.widthClass||'')+'">'+(highlightText(String(value),searchTerm)||'—')+'</td>';
+      }
+    });
+    bh+='</tr>';
+  });
+  tableBody.innerHTML=bh;
+}
+
+function buildFilterDropdown(colKey){
+  const vals=new Set();
+  allPatients.forEach(p=>{
+    const val=getColumnValue(p,colKey);
+    if(val&&String(val).trim()){
+      if(colKey==='labNames')getLabsForEntry(p).forEach(id=>vals.add(LAB_NAMES[id]||'Lab '+id));
+      else vals.add(String(val).trim());
+    }
+  });
+  const sorted=Array.from(vals).sort();
+  const cur=columnFilters[colKey]||'all';
+  let html='<select class="header-filter" id="filter_'+colKey+'"><option value="all">All</option>';
+  sorted.forEach(v=>{html+='<option value="'+escapeHtml(v)+'" '+(v===cur?'selected':'')+'>'+escapeHtml(v)+'</option>'});
+  return html+'</select>';
+}
+
+function updateStats(){
+  filteredRecords.textContent=filteredPatients.length;
+  showingRecords.textContent=displayedPatients.length;
+  recordBadge.textContent=filteredPatients.length;
+}
+
+function exportCSV(){
+  if(!filteredPatients.length){toast('No data to export.','error');return}
+  const cols=COLUMNS.filter(c=>columnVisibility[c.key]);
+  let csv=cols.map(c=>c.label).join(',')+'\n';
+  filteredPatients.forEach(p=>{
+    csv+=cols.map(col=>{
+      let v=getColumnValue(p,col.key);
+      if(col.key==='labNames')v=getLabsForEntry(p).map(id=>LAB_NAMES[id]||'Lab '+id).join(', ');
+      if(typeof v==='string')v=v.replace(/,/g,';').replace(/\n/g,' ');
+      return String(v);
+    }).join(',')+'\n';
+  });
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);
+  link.download='patient_data_'+new Date().toISOString().split('T')[0]+'.csv';
+  link.click();URL.revokeObjectURL(link.href);
+  toast('CSV exported successfully!','success');
+}
+
+function clearAllFilters(){
+  globalSearch.value='';searchTerm='';
+  filterFromDate.value='';filterToDate.value='';
+  dateFrom='';dateTo='';
+  COLUMNS.forEach(c=>{
+    if(c.filterable){
+      columnFilters[c.key]='all';
+      const el=document.getElementById('filter_'+c.key);
+      if(el)el.value='all';
+    }
+  });
+  applyFilters();
+  toast('All filters cleared!','info');
+}
+
+// ============================================================
+//  LAB SHEET
+// ============================================================
+function colLetter(i){let s='',n=i;do{s=String.fromCharCode(65+(n%26))+s;n=Math.floor(n/26)-1}while(n>=0);return s}
+
+function initEmptySheet(){
+  sheetState.rows=LAB_DEFAULT_ROWS;
+  sheetState.cols=LAB_DEFAULT_COLS;
+  sheetState.data=Array.from({length:LAB_DEFAULT_ROWS},()=>new Array(LAB_DEFAULT_COLS).fill(''));
+}
+
+function renderSheetGrid(){
+  const{rows,cols,data}=sheetState;
+  let html='<table class="sheet-grid"><thead><tr><th class="row-header">#</th>';
+  for(let c=0;c<cols;c++){
+    const isActive=c===sheetActiveCell.c;
+    html+='<th'+(isActive?' class="col-active"':'')+'>'+colLetter(c)+'</th>';
+  }
+  html+='</tr></thead><tbody>';
+  for(let r=0;r<rows;r++){
+    const rowActive=r===sheetActiveCell.r;
+    html+='<tr><td class="row-header'+(rowActive?' row-active':'')+'">'+(r+1)+'</td>';
+    for(let c=0;c<cols;c++){
+      const v=(data[r]&&data[r][c]!==undefined)?data[r][c]:'';
+      const isActive=r===sheetActiveCell.r&&c===sheetActiveCell.c;
+      html+='<td'+(isActive?' class="cell-active"':'')+'><input type="text" data-r="'+r+'" data-c="'+c+'" value="'+escapeAttr(v)+'" spellcheck="false" autocomplete="off" /></td>';
+    }
+    html+='</tr>';
+  }
+  sheetGridContainer.innerHTML=html+'</tbody></table>';
+  updateSheetStatus();
+}
+
+function updateSheetStatus(){
+  let filled=0;
+  sheetState.data.forEach(row=>{if(Array.isArray(row))row.forEach(v=>{if(v!==''&&v!==null&&v!==undefined)filled++})});
+  sheetStatus.textContent='Rows: '+sheetState.rows+' | Cols: '+sheetState.cols+' | Filled cells: '+filled;
+}
+
+function refreshSheetValues(){
+  sheetGridContainer.querySelectorAll('input').forEach(inp=>{
+    const r=parseInt(inp.dataset.r,10),c=parseInt(inp.dataset.c,10);
+    const v=(sheetState.data[r]&&sheetState.data[r][c]!==undefined)?sheetState.data[r][c]:'';
+    if(inp.value!==v)inp.value=v;
+  });
+  updateSheetStatus();
+}
+
+function ensureSheetSize(minR,minC){
+  let changed=false;
+  if(minC>sheetState.cols){
+    const extra=minC-sheetState.cols;
+    sheetState.data.forEach(row=>{for(let i=0;i<extra;i++)row.push('')});
+    sheetState.cols=minC;changed=true;
+  }
+  if(minR>sheetState.rows){
+    for(let r=sheetState.rows;r<minR;r++)sheetState.data.push(new Array(sheetState.cols).fill(''));
+    sheetState.rows=minR;changed=true;
+  }
+  if(changed)renderSheetGrid();
+}
+
+function onSheetPaste(e){
+  const t=e.target;if(!t||t.tagName!=='INPUT')return;
+  const cb=e.clipboardData||window.clipboardData;if(!cb)return;
+  const text=cb.getData('text/plain')||cb.getData('text');if(!text)return;
+  e.preventDefault();
+  const sR=parseInt(t.dataset.r,10),sC=parseInt(t.dataset.c,10);
+  const lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  if(lines.length&&lines[lines.length-1]==='')lines.pop();
+  let maxC=0;
+  lines.forEach(l=>{const cells=l.split('\t');if(cells.length>maxC)maxC=cells.length});
+  ensureSheetSize(sR+lines.length,sC+maxC);
+  lines.forEach((l,i)=>{
+    l.split('\t').forEach((v,j)=>{
+      const r=sR+i,c=sC+j;
+      if(r<sheetState.rows&&c<sheetState.cols){
+        if(!sheetState.data[r])sheetState.data[r]=[];
+        sheetState.data[r][c]=v;
+      }
+    });
+  });
+  refreshSheetValues();
+  const f=sheetGridContainer.querySelector('input[data-r="'+sR+'"][data-c="'+sC+'"]');
+  if(f)f.focus();
+  toast('Pasted '+lines.length+' row(s) × '+maxC+' col(s)','success');
+}
+
+function onSheetInput(e){
+  const t=e.target;if(!t||t.tagName!=='INPUT')return;
+  const r=parseInt(t.dataset.r,10),c=parseInt(t.dataset.c,10);
+  if(!sheetState.data[r])sheetState.data[r]=[];
+  sheetState.data[r][c]=t.value;
+  updateSheetStatus();
+}
+
+function onSheetKeydown(e){
+  const t=e.target;if(!t||t.tagName!=='INPUT')return;
+  const r=parseInt(t.dataset.r,10),c=parseInt(t.dataset.c,10);
+  let nR=r,nC=c;
+  if(e.key==='Enter'||e.key==='ArrowDown')nR=r+1;
+  else if(e.key==='ArrowUp')nR=r-1;
+  else if(e.key==='Tab'){
+    e.preventDefault();
+    if(e.shiftKey){nC=c-1;if(nC<0){nC=sheetState.cols-1;nR=r-1}}
+    else{nC=c+1;if(nC>=sheetState.cols){nC=0;nR=r+1}}
+  }else return;
+  e.preventDefault();
+  if(nR<0||nR>=sheetState.rows||nC<0||nC>=sheetState.cols)return;
+  const n=sheetGridContainer.querySelector('input[data-r="'+nR+'"][data-c="'+nC+'"]');
+  if(n){n.focus();n.select()}
+}
+
+// Delete row/col
+function deleteSheetRow(){
+  if(sheetState.rows<=1){toast('Cannot delete the last row','error');return}
+  const r=sheetActiveCell.r;
+  if(r<0||r>=sheetState.rows)return;
+  if(!confirm('Delete row '+(r+1)+'? (Unsaved change — click Save to persist.)'))return;
+  sheetState.data.splice(r,1);
+  sheetState.rows=sheetState.data.length;
+  if(sheetActiveCell.r>=sheetState.rows)sheetActiveCell.r=sheetState.rows-1;
+  renderSheetGrid();
+  toast('Row '+(r+1)+' deleted','info');
+}
+function deleteSheetCol(){
+  if(sheetState.cols<=1){toast('Cannot delete the last column','error');return}
+  const c=sheetActiveCell.c;
+  if(c<0||c>=sheetState.cols)return;
+  if(!confirm('Delete column '+colLetter(c)+'? (Unsaved change — click Save to persist.)'))return;
+  sheetState.data.forEach(row=>{if(Array.isArray(row))row.splice(c,1)});
+  sheetState.cols=sheetState.cols-1;
+  if(sheetActiveCell.c>=sheetState.cols)sheetActiveCell.c=sheetState.cols-1;
+  renderSheetGrid();
+  toast('Column '+colLetter(c)+' deleted','info');
+}
+
+async function saveLabSheet(){
+  if(!currentLabKey||!labDb){toast('Lab Firebase not available.','error');return}
+  const orig=sheetSaveBtn.innerHTML;
+  sheetSaveBtn.innerHTML='⏳ Saving...';sheetSaveBtn.disabled=true;
+  try{
+    const clean=sheetState.data.map(row=>{
+      const r=new Array(sheetState.cols).fill('');
+      for(let i=0;i<sheetState.cols;i++)r[i]=(row&&row[i]!==undefined&&row[i]!==null)?String(row[i]):'';
+      return r;
+    });
+    await labDb.ref('labSheets/'+currentLabKey).set({
+      name:LAB_SHEETS[currentLabKey].name,
+      rows:sheetState.rows,cols:sheetState.cols,
+      data:clean,updatedAt:Date.now()
+    });
+    toast('Sheet saved to Firebase!','success');
+  }catch(err){toast('Save failed: '+err.message,'error')}
+  finally{sheetSaveBtn.innerHTML=orig;sheetSaveBtn.disabled=false}
+}
+
+async function loadLabSheetFromFirebase(labKey){
+  if(!labDb)throw new Error('Lab Firebase not initialized');
+  const snap=await labDb.ref('labSheets/'+labKey).once('value');
+  const val=snap.val();
+  if(val&&val.data){
+    let raw=val.data;
+    if(!Array.isArray(raw))raw=Object.keys(raw).sort((a,b)=>+a-+b).map(k=>raw[k]);
+    const sR=val.rows||raw.length;
+    let sC=val.cols||0;
+    if(!sC){
+      raw.forEach(row=>{const l=Array.isArray(row)?row.length:(row?Object.keys(row).length:0);if(l>sC)sC=l});
+      if(!sC)sC=LAB_DEFAULT_COLS;
+    }
+    const norm=[];
+    for(let r=0;r<sR;r++){
+      let row=raw[r];
+      if(!row){norm.push(new Array(sC).fill(''));continue}
+      if(!Array.isArray(row)){
+        const arr=[];
+        Object.keys(row).sort((a,b)=>+a-+b).forEach(k=>arr[+k]=row[k]);
+        row=arr;
+      }
+      const nr=new Array(sC).fill('');
+      for(let c=0;c<sC;c++)nr[c]=(row[c]!==undefined&&row[c]!==null)?String(row[c]):'';
+      norm.push(nr);
+    }
+    while(norm.length<LAB_DEFAULT_ROWS)norm.push(new Array(sC).fill(''));
+    sheetState.rows=Math.max(sR,LAB_DEFAULT_ROWS);
+    sheetState.cols=Math.max(sC,LAB_DEFAULT_COLS);
+    norm.forEach(r=>{while(r.length<sheetState.cols)r.push('')});
+    while(norm.length<sheetState.rows)norm.push(new Array(sheetState.cols).fill(''));
+    sheetState.data=norm;
+  }else initEmptySheet();
+}
+
+async function openLabSheet(labKey){
+  if(!LAB_SHEETS[labKey])return;
+  currentLabKey=labKey;
+  sheetModalTitle.textContent='🧪 '+LAB_SHEETS[labKey].name+' — Data Sheet';
+  sheetModalOverlay.classList.add('show');
+  sheetGridContainer.innerHTML='<div class="loading"><div class="loading-spinner"></div></div>';
+  try{await loadLabSheetFromFirebase(labKey)}
+  catch(err){toast('Load failed: '+err.message,'error');initEmptySheet()}
+  sheetActiveCell={r:0,c:0};
+  renderSheetGrid();
+}
+function closeLabSheet(){sheetModalOverlay.classList.remove('show');currentLabKey=null}
+
+// ============================================================
+//  PIVOT TABLES (v3)
+// ============================================================
+const PIVOT_AGG_LABELS={
+  sum:'Sum',count:'Count',countNum:'Count Numbers',avg:'Average',
+  min:'Min',max:'Max',median:'Median',stddev:'Std Dev',
+  product:'Product',distinct:'Distinct Count'
+};
+const aggLabel=a=>PIVOT_AGG_LABELS[a]||a;
+const PIVOT_SOURCE_LABELS={
+  'my':'📋 My Data',
+  'lab1':'🔬 Dr. Ajay Shah',
+  'lab2':'🔬 General Diagnostics'
+};
+
+async function loadPivotSource(key){
+  if(key==='my')return buildMyPivotData();
+  if(key==='lab1')return await fetchLabPivotData('dr-ajay-shah');
+  if(key==='lab2')return await fetchLabPivotData('general-diagnostics');
+  return {headers:[],rows:[]};
+}
+
+function aggregateRecords(records,field,agg){
+  if(!records||!records.length){
+    return (agg==='count'||agg==='countNum'||agg==='distinct')?0:'';
+  }
+  if(agg==='count')return records.length;
+  const nums=[];
+  for(const r of records){
+    const raw=r[field];
+    if(raw===null||raw===undefined||raw==='')continue;
+    const n=typeof raw==='number'?raw:parseFloat(String(raw).replace(/[^0-9.\-]/g,''));
+    if(!isNaN(n))nums.push(n);
+  }
+  if(agg==='countNum')return nums.length;
+  if(agg==='distinct'){
+    const s=new Set();
+    for(const r of records)s.add(String(r[field]??''));
+    return s.size;
+  }
+  if(!nums.length)return '';
+  switch(agg){
+    case 'sum':return nums.reduce((a,b)=>a+b,0);
+    case 'avg':return nums.reduce((a,b)=>a+b,0)/nums.length;
+    case 'min':return Math.min.apply(null,nums);
+    case 'max':return Math.max.apply(null,nums);
+    case 'product':return nums.reduce((a,b)=>a*b,1);
+    case 'median':{
+      const s=[...nums].sort((a,b)=>a-b),m=Math.floor(s.length/2);
+      return s.length%2?s[m]:(s[m-1]+s[m])/2;
+    }
+    case 'stddev':{
+      const m=nums.reduce((a,b)=>a+b,0)/nums.length;
+      return Math.sqrt(nums.reduce((a,b)=>a+(b-m)*(b-m),0)/nums.length);
+    }
+    default:return '';
+  }
+}
+
+// ---------- Pivot engine (with comma-split + date normalization) ----------
+function computePivot(rows,zones){
+  let data=rows;
+
+  // Apply filters
+  for(const f of zones.filters){
+    if(f.type==='dateRange'){
+      if(f.dateFrom){
+        const from=parseDateFlexible(f.dateFrom);
+        if(from)data=data.filter(r=>{const d=parseDateFlexible(r[f.field]);return d&&d>=from});
+      }
+      if(f.dateTo){
+        const to=parseDateFlexible(f.dateTo);
+        if(to){
+          to.setHours(23,59,59,999);
+          data=data.filter(r=>{const d=parseDateFlexible(r[f.field]);return d&&d<=to});
         }
+      }
+    }else if(Array.isArray(f.values)){
+      if(f.values.length===0){data=[]}
+      else{
+        const set=new Set(f.values.map(String));
+        data=data.filter(r=>set.has(normalizeFieldValue(r[f.field])));
+      }
+    }
+  }
 
-        // ============================================================
-        //  GET COLUMN VALUE
-        // ============================================================
-        function getColumnValue(patient, key) {
-            switch (key) {
-                case 'rowNum': return '';
-                case 'patientId': return patient._firebaseKey || '';
-                case 'visitDate': return patient.visitDate || '';
-                case 'patientName': return patient.patientName || '';
-                case 'age': return patient.age || '';
-                case 'gender': return patient.gender || '';
-                case 'doctorName': return patient.doctorName || '';
-                case 'careOfPerson': return patient.careOfPerson || '';
-                case 'address': return patient.address || '';
-                case 'labNames':
-                    const labs = getLabsForEntry(patient);
-                    return labs.map(id => LAB_NAMES[id] || 'Lab ' + id).join(', ');
-                case 'lab1Tests': return getLabTestNames(patient, 1);
-                case 'lab2Tests': return getLabTestNames(patient, 2);
-                case 'lab3Tests': return getLabTestNames(patient, 3);
-                case 'lab4Tests': return getLabTestNames(patient, 4);
-                case 'center': return patient.center || '';
-                case 'visitType': return patient.visitType || '';
-                case 'visitTime': return patient.visitTime || '';
-                case 'ppTime': return patient.ppTime || '';
-                case 'ppPhlebotomist': return patient.ppPhlebotomist || '';
-                case 'extraCollectionTime': return patient.extraCollectionTime || '';
-                case 'extraPhlebotomist': return patient.extraCollectionPhlebotomist || '';
-                case 'totalMRP': return patient.totalMRP || 0;
-                case 'totalB2B': return patient.totalB2B || 0;
-                case 'finalPrice': return patient.finalPrice || 0;
-                case 'cashReceived': return patient.cashReceived || 0;
-                case 'onlineReceived': return patient.onlineReceived || 0;
-                case 'pendingPayment': return patient.pendingPayment || 0;
-                case 'goodwillCharges': return patient.goodwillCharges || 0;
-                default: return '';
-            }
+  const rowFields=zones.rows.map(r=>r.field);
+  const colFields=zones.cols.map(c=>c.field);
+  const vals=zones.values;
+
+  if(!vals.length){
+    return{empty:true,rowFields,colFields,vals,colHeaders:[],outRows:[],grandRow:null,subtotals:null};
+  }
+
+  const rowKeyMap=new Map(),colKeyMap=new Map(),buckets=new Map();
+
+  // Build keys with comma-split + normalization.
+  // Each source record may fan-out into multiple key pairs.
+  for(const rec of data){
+    const rArrays=rowFields.map(f=>splitAndNormalize(rec[f]));
+    const cArrays=colFields.map(f=>splitAndNormalize(rec[f]));
+    const rCombos=cartesian(rArrays);
+    const cCombos=cartesian(cArrays);
+    for(const rVals of rCombos){
+      const rkey=rVals.join('\u0001');
+      if(!rowKeyMap.has(rkey))rowKeyMap.set(rkey,rVals);
+      for(const cVals of cCombos){
+        const ckey=cVals.join('\u0001');
+        if(!colKeyMap.has(ckey))colKeyMap.set(ckey,cVals);
+        const k=rkey+'\u0002'+ckey;
+        let arr=buckets.get(k);
+        if(!arr){arr=[];buckets.set(k,arr)}
+        arr.push(rec);
+      }
+    }
+  }
+
+  // Sort keys (dates via parseDateFlexible, else natural compare)
+  const cmpVals=(map)=>(a,b)=>{
+    const va=map.get(a)||[],vb=map.get(b)||[];
+    for(let i=0;i<Math.max(va.length,vb.length);i++){
+      const sx=String(va[i]??'').trim(),sy=String(vb[i]??'').trim();
+      const da=parseDateFlexible(sx),db2=parseDateFlexible(sy);
+      if(da&&db2){
+        if(da.getTime()!==db2.getTime())return da-db2;
+        continue;
+      }
+      const nx=parseFloat(sx),ny=parseFloat(sy);
+      if(sx!==''&&sy!==''&&!isNaN(nx)&&!isNaN(ny)){
+        if(nx!==ny)return nx-ny;
+      }else{
+        const c=sx.localeCompare(sy,undefined,{numeric:true});
+        if(c)return c;
+      }
+    }
+    return 0;
+  };
+  const rowKeys=Array.from(rowKeyMap.keys()).sort(cmpVals(rowKeyMap));
+  const colKeys=Array.from(colKeyMap.keys()).sort(cmpVals(colKeyMap));
+
+  const colHeaders=[];
+  if(!colFields.length){
+    vals.forEach((v,vi)=>colHeaders.push({cVals:[],ckey:'',valIdx:vi}));
+  }else{
+    for(const ck of colKeys){
+      const cVals=colKeyMap.get(ck);
+      vals.forEach((v,vi)=>colHeaders.push({cVals,ckey:ck,valIdx:vi}));
+    }
+  }
+
+  const outRows=[];
+  for(const rk of rowKeys){
+    const rVals=rowKeyMap.get(rk);
+    const cells=colHeaders.map(ch=>{
+      const recs=buckets.get(rk+'\u0002'+ch.ckey)||[];
+      return aggregateRecords(recs,vals[ch.valIdx].field,vals[ch.valIdx].agg);
+    });
+    const totals=vals.map(v=>{
+      const all=[];
+      const keys=colKeys.length?colKeys:[''];
+      for(const ck of keys){
+        const recs=buckets.get(rk+'\u0002'+ck);
+        if(recs)all.push(...recs);
+      }
+      return aggregateRecords(all,v.field,v.agg);
+    });
+    outRows.push({rVals,cells,totals});
+  }
+
+  let grandRow=null;
+  if(outRows.length>1){
+    const cells=colHeaders.map(ch=>{
+      const all=[];
+      for(const rk of rowKeys){
+        const recs=buckets.get(rk+'\u0002'+ch.ckey);
+        if(recs)all.push(...recs);
+      }
+      return aggregateRecords(all,vals[ch.valIdx].field,vals[ch.valIdx].agg);
+    });
+    const totals=vals.map(v=>aggregateRecords(data,v.field,v.agg));
+    grandRow={cells,totals};
+  }
+
+  // Subtotals per first-level group (>= 2 row fields)
+  let subtotals=null;
+  if(rowFields.length>=2&&outRows.length>0){
+    subtotals=new Map();
+    const groups=new Map();
+    for(const rk of rowKeys){
+      const firstVal=String((rowKeyMap.get(rk)||[])[0]??'');
+      if(!groups.has(firstVal))groups.set(firstVal,[]);
+      groups.get(firstVal).push(rk);
+    }
+    for(const[firstVal,groupRKs]of groups){
+      const cells=colHeaders.map(ch=>{
+        const all=[];
+        for(const rk of groupRKs){
+          const recs=buckets.get(rk+'\u0002'+ch.ckey);
+          if(recs)all.push(...recs);
         }
-
-        // ============================================================
-        //  UPDATE PAGINATION
-        // ============================================================
-        function updatePagination() {
-            const totalPages = Math.ceil(filteredPatients.length / perPage) || 1;
-            if (currentPage > totalPages) currentPage = totalPages;
-
-            const start = (currentPage - 1) * perPage;
-            const end = Math.min(start + perPage, filteredPatients.length);
-            displayedPatients = filteredPatients.slice(start, end);
-
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-            prevPageBtn.disabled = currentPage <= 1;
-            nextPageBtn.disabled = currentPage >= totalPages;
-
-            showingRecords.textContent = displayedPatients.length;
-            recordBadge.textContent = filteredPatients.length;
+        return aggregateRecords(all,vals[ch.valIdx].field,vals[ch.valIdx].agg);
+      });
+      const totals=vals.map(v=>{
+        const all=[];
+        for(const rk of groupRKs){
+          const keys=colKeys.length?colKeys:[''];
+          for(const ck of keys){
+            const recs=buckets.get(rk+'\u0002'+ck);
+            if(recs)all.push(...recs);
+          }
         }
+        return aggregateRecords(all,v.field,v.agg);
+      });
+      subtotals.set(firstVal,{cells,totals});
+    }
+  }
 
-        // ============================================================
-        //  RENDER TABLE WITH HIGHLIGHTING
-        // ============================================================
-        function renderTable() {
-            // Build header
-            let headerHtml = '<tr>';
-            COLUMNS.forEach(col => {
-                if (columnVisibility[col.key]) {
-                    headerHtml += `<th class="${col.widthClass || ''}">
-                        ${col.label}
-                        ${col.filterable ? buildFilterDropdown(col.key) : ''}
-                    </th>`;
-                }
-            });
-            headerHtml += '</tr>';
-            tableHead.innerHTML = headerHtml;
+  return{empty:false,rowFields,colFields,vals,colHeaders,outRows,grandRow,subtotals};
+}
 
-            // Re-bind filter events
-            COLUMNS.forEach(col => {
-                if (col.filterable) {
-                    const filterEl = document.getElementById(`filter_${col.key}`);
-                    if (filterEl) {
-                        filterEl.addEventListener('change', function() {
-                            columnFilters[col.key] = this.value;
-                            applyFilters();
-                        });
-                    }
-                }
-            });
+function formatNum(n){
+  if(n===null||n===undefined||n==='')return '';
+  if(typeof n!=='number')return String(n);
+  if(Number.isInteger(n))return n.toLocaleString('en-IN');
+  return n.toLocaleString('en-IN',{maximumFractionDigits:2});
+}
 
-            // Build body with highlighting
-            if (displayedPatients.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="${COLUMNS.filter(c => columnVisibility[c.key]).length}" style="text-align:center;padding:40px;color:var(--text-light);">
-                            No patient records found.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+function buildMyPivotData(){
+  const headers=[
+    'Patient ID','Patient Name','Visit Date','Age','Gender',
+    'Doctor Name','Care of Person','Address','Center',
+    'Visit Type','Visit Time','PP Time','PP Phlebotomist',
+    'Extra Collection Time','Collecting Person',
+    'Total MRP','Total B2B','Final Price',
+    'Cash Received','Online Received','Pending Payment','Goodwill Charges',
+    'Lab Names','Dr. Ajay Shah Tests','Dr. Jariwala Tests',
+    'General Diagnostics Tests','Trucheck Tests'
+  ];
+  const rows=allPatients.map(p=>{
+    const labs=getLabsForEntry(p);
+    return{
+      'Patient ID':p._firebaseKey||'',
+      'Patient Name':p.patientName||'',
+      'Visit Date':formatDateDDMMYYYY(p.visitDate||''),
+      'Age':p.age||'',
+      'Gender':p.gender||'',
+      'Doctor Name':p.doctorName||'',
+      'Care of Person':p.careOfPerson||'',
+      'Address':p.address||'',
+      'Center':p.center||'',
+      'Visit Type':p.visitType||'',
+      'Visit Time':p.visitTime||'',
+      'PP Time':p.ppTime||'',
+      'PP Phlebotomist':p.ppPhlebotomist||'',
+      'Extra Collection Time':p.extraCollectionTime||'',
+      'Collecting Person':p.extraCollectionPhlebotomist||'',
+      'Total MRP':Number(p.totalMRP)||0,
+      'Total B2B':Number(p.totalB2B)||0,
+      'Final Price':Number(p.finalPrice)||0,
+      'Cash Received':Number(p.cashReceived)||0,
+      'Online Received':Number(p.onlineReceived)||0,
+      'Pending Payment':Number(p.pendingPayment)||0,
+      'Goodwill Charges':Number(p.goodwillCharges)||0,
+      'Lab Names':labs.map(id=>LAB_NAMES[id]||'Lab '+id).join(', '),
+      'Dr. Ajay Shah Tests':getLabTestNames(p,1),
+      'Dr. Jariwala Tests':getLabTestNames(p,2),
+      'General Diagnostics Tests':getLabTestNames(p,3),
+      'Trucheck Tests':getLabTestNames(p,4)
+    };
+  });
+  return{headers,rows};
+}
 
-            let bodyHtml = '';
-            displayedPatients.forEach((patient, idx) => {
-                const rowNum = (currentPage - 1) * perPage + idx + 1;
-                const labs = getLabsForEntry(patient);
+async function fetchLabPivotData(labKey){
+  if(!labDb)return{headers:[],rows:[]};
+  const snap=await labDb.ref('labSheets/'+labKey).once('value');
+  const val=snap.val();
+  if(!val||!val.data)return{headers:[],rows:[]};
+  let raw=val.data;
+  if(!Array.isArray(raw))raw=Object.keys(raw).sort((a,b)=>+a-+b).map(k=>raw[k]);
+  const norm=raw.map(r=>{
+    if(Array.isArray(r))return r;
+    if(r&&typeof r==='object'){
+      const arr=[];
+      Object.keys(r).sort((a,b)=>+a-+b).forEach(k=>arr[+k]=r[k]);
+      return arr;
+    }
+    return[];
+  });
+  let hIdx=-1;
+  for(let i=0;i<norm.length;i++){
+    if((norm[i]||[]).some(c=>String(c||'').trim()!=='')){hIdx=i;break}
+  }
+  if(hIdx===-1)return{headers:[],rows:[]};
+  const rawH=norm[hIdx]||[];
+  const headers=rawH.map((h,i)=>String(h||'').trim()||('Column '+(i+1)));
+  const rows=[];
+  for(let i=hIdx+1;i<norm.length;i++){
+    const r=norm[i]||[];
+    if(!r.some(c=>String(c||'').trim()!==''))continue;
+    const obj={};
+    headers.forEach((h,j)=>{
+      let v=(r[j]!==undefined&&r[j]!==null)?r[j]:'';
+      // Auto-normalize dates found in any cell
+      if(typeof v==='string'&&looksLikeDate(v))v=formatDateDDMMYYYY(v);
+      obj[h]=v;
+    });
+    rows.push(obj);
+  }
+  return{headers,rows};
+}
 
-                bodyHtml += '<tr>';
-                COLUMNS.forEach(col => {
-                    if (columnVisibility[col.key]) {
-                        let value = getColumnValue(patient, col.key);
-                        let displayValue = '';
+function autoPivotTemplate(data,headers){
+  const z={filters:[],cols:[],rows:[],values:[]};
+  if(!headers.length||!data.length)return z;
+  const rowField=headers.find(h=>/visit date|^date$/i.test(h))||headers.find(h=>/doctor|patient|name/i.test(h))||headers[0];
+  z.rows.push({field:rowField});
+  const nameField=headers.find(h=>/patient name|^name$/i.test(h));
+  if(nameField&&nameField!==rowField)z.rows.push({field:nameField});
+  const sample=data.slice(0,30);
+  let numField=null;
+  for(const h of headers){
+    if(h===rowField)continue;
+    let hits=0;
+    for(const r of sample){
+      const v=r[h];
+      if(v!==''&&v!==null&&v!==undefined){
+        const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+        if(!isNaN(n)&&/[0-9]/.test(String(v)))hits++;
+      }
+    }
+    if(hits>=Math.max(2,Math.floor(sample.length*0.6))){numField=h;break}
+  }
+  if(headers.includes('Total B2B'))numField='Total B2B';
+  if(numField)z.values.push({field:numField,agg:'sum'});
+  if(nameField)z.values.unshift({field:nameField,agg:'count'});
+  else z.values.push({field:rowField,agg:'count'});
+  return z;
+}
 
-                        if (col.key === 'labNames') {
-                            // Show lab tags with highlighting
-                            const labTags = labs.map(id => {
-                                const name = LAB_NAMES[id] || 'Lab ' + id;
-                                const highlighted = highlightText(name, searchTerm);
-                                return `<span class="lab-tag lab-tag-${id}">${highlighted}</span>`;
-                            }).join('');
-                            displayValue = labTags || '—';
-                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue}</td>`;
-                        } else if (col.key === 'rowNum') {
-                            bodyHtml += `<td class="${col.widthClass || ''}">${rowNum}</td>`;
-                        } else if (col.key === 'patientId') {
-                            displayValue = highlightText(String(value), searchTerm);
-                            bodyHtml += `<td class="${col.widthClass || ''} patient-id">${displayValue || '—'}</td>`;
-                        } else if (col.key === 'address') {
-                            displayValue = highlightText(String(value), searchTerm);
-                            bodyHtml += `<td class="${col.widthClass || ''}"><span class="truncate" title="${escapeHtml(String(value))}">${displayValue || '—'}</span></td>`;
-                        } else if (['totalMRP', 'totalB2B', 'finalPrice', 'cashReceived', 'onlineReceived', 'pendingPayment', 'goodwillCharges'].includes(col.key)) {
-                            const formatted = formatCurrency(value);
-                            const isPending = col.key === 'pendingPayment' && value > 0;
-                            bodyHtml += `<td class="${col.widthClass || ''} currency" style="${isPending ? 'color:var(--error);font-weight:600;' : ''}">${formatted}</td>`;
-                        } else {
-                            displayValue = highlightText(String(value), searchTerm);
-                            bodyHtml += `<td class="${col.widthClass || ''}">${displayValue || '—'}</td>`;
-                        }
-                    }
-                });
-                bodyHtml += '</tr>';
-            });
+function createPivotPanel(key,label,data,headers){
+  return{
+    key,label,data,headers,
+    zones:autoPivotTemplate(data,headers),
+    sortBy:'rows',sortDir:'asc',
+    lastPivot:null,el:null
+  };
+}
 
-            tableBody.innerHTML = bodyHtml;
+function buildPanelDOM(panel){
+  const wrap=document.createElement('div');
+  wrap.className='pivot-panel';
+  wrap.dataset.panelKey=panel.key;
+  wrap.innerHTML=`
+    <div class="pivot-panel-header">
+      <span>${escapeHtml(panel.label)}</span>
+      <span class="pivot-record-count">0 rows</span>
+    </div>
+    <div class="pivot-panel-body">
+      <div class="pivot-section-label">Fields — drag to a zone, or click to auto-add</div>
+      <div class="pivot-fields" data-panel="${panel.key}"></div>
+      <div class="pivot-zones">
+        <div class="pivot-zone" data-zone="filters" data-panel="${panel.key}">
+          <div class="pivot-zone-label">Filters</div>
+          <div class="pivot-zone-chips"></div>
+        </div>
+        <div class="pivot-zone" data-zone="cols" data-panel="${panel.key}">
+          <div class="pivot-zone-label">Columns</div>
+          <div class="pivot-zone-chips"></div>
+        </div>
+        <div class="pivot-zone" data-zone="rows" data-panel="${panel.key}">
+          <div class="pivot-zone-label">Rows</div>
+          <div class="pivot-zone-chips"></div>
+        </div>
+        <div class="pivot-zone" data-zone="values" data-panel="${panel.key}">
+          <div class="pivot-zone-label">Values</div>
+          <div class="pivot-zone-chips"></div>
+        </div>
+      </div>
+      <div class="pivot-options">
+        <label>Sort:</label>
+        <select class="pivot-sort-by"></select>
+        <select class="pivot-sort-dir">
+          <option value="asc">Asc (A→Z)</option>
+          <option value="desc">Desc (Z→A)</option>
+        </select>
+      </div>
+      <div class="pivot-result" data-panel="${panel.key}"></div>
+    </div>
+  `;
+  wrap.querySelectorAll('.pivot-zone').forEach(z=>attachZoneDropHandlers(z,panel));
+  wrap.querySelector('.pivot-sort-by').addEventListener('change',e=>{panel.sortBy=e.target.value;renderPivotPanel(panel)});
+  wrap.querySelector('.pivot-sort-dir').addEventListener('change',e=>{panel.sortDir=e.target.value;renderPivotPanel(panel)});
+  return wrap;
+}
+
+function attachZoneDropHandlers(zoneEl,panel){
+  zoneEl.addEventListener('dragover',e=>{
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    zoneEl.classList.add('dragover');
+  });
+  zoneEl.addEventListener('dragleave',e=>{
+    if(!zoneEl.contains(e.relatedTarget))zoneEl.classList.remove('dragover');
+  });
+  zoneEl.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();zoneEl.classList.remove('dragover');
+    let payload=null;
+    try{
+      const raw=e.dataTransfer.getData('text/plain')||e.dataTransfer.getData('application/json');
+      if(raw)payload=JSON.parse(raw);
+    }catch(err){return}
+    if(!payload)return;
+    const zoneName=zoneEl.dataset.zone;
+    const chipEl=e.target.closest('.pivot-chip');
+    let insertAt;
+    if(chipEl&&chipEl.parentElement&&chipEl.parentElement.classList.contains('pivot-zone-chips')){
+      insertAt=parseInt(chipEl.dataset.index,10);
+    }
+    if(payload.kind==='field'){
+      if(insertAt!==undefined&&!isNaN(insertAt)){
+        const newItem=makeZoneItem(panel,zoneName,payload.field);
+        panel.zones[zoneName].splice(insertAt,0,newItem);
+      }else{
+        addFieldToZone(panel,zoneName,payload.field);
+      }
+    }else if(payload.kind==='chip'){
+      moveChip(panel,payload.from,payload.index,zoneName,insertAt);
+    }
+    renderPivotPanel(panel);
+  });
+}
+
+function makeZoneItem(panel,zoneName,field){
+  if(zoneName==='values')return{field,agg:'sum'};
+  if(zoneName==='filters'){
+    if(isDateField(panel,field))return{field,type:'dateRange',dateFrom:'',dateTo:''};
+    return{field,type:'values',values:null};
+  }
+  return{field};
+}
+
+function renderPanelFields(panel){
+  const container=panel.el.querySelector('.pivot-fields');
+  if(!container)return;
+  container.innerHTML='';
+  if(!panel.headers.length){
+    const s=document.createElement('span');
+    s.style.cssText='color:#999;font-size:11px;';
+    s.textContent='No data available. Save a lab sheet or click ⟳ Refresh All.';
+    container.appendChild(s);
+    return;
+  }
+  panel.headers.forEach(h=>{
+    const span=document.createElement('span');
+    span.className='pivot-field';
+    span.textContent=h;
+    span.title=h+' — drag into a zone, or click to auto-add';
+    span.setAttribute('draggable','true');
+    let dragging=false;
+    span.addEventListener('dragstart',e=>{
+      dragging=true;
+      const payload={kind:'field',field:h};
+      const s=JSON.stringify(payload);
+      e.dataTransfer.effectAllowed='copyMove';
+      try{e.dataTransfer.setData('text/plain',s)}catch(er){}
+      try{e.dataTransfer.setData('application/json',s)}catch(er){}
+      span.style.opacity='0.5';
+    });
+    span.addEventListener('dragend',()=>{
+      span.style.opacity='';
+      setTimeout(()=>{dragging=false},100);
+    });
+    span.addEventListener('click',()=>{
+      if(dragging)return;
+      const numeric=isNumericField(panel,h);
+      const zone=numeric?'values':'rows';
+      addFieldToZone(panel,zone,h);
+      renderPivotPanel(panel);
+      toast('Added "'+h+'" to '+zone,'info');
+    });
+    container.appendChild(span);
+  });
+}
+
+function isNumericField(panel,field){
+  const sample=panel.data.slice(0,30);
+  if(!sample.length)return false;
+  let num=0,tot=0;
+  for(const r of sample){
+    const v=r[field];
+    if(v===''||v===null||v===undefined)continue;
+    tot++;
+    const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+    if(!isNaN(n)&&/[0-9]/.test(String(v)))num++;
+  }
+  return tot>0&&(num/tot)>=0.6;
+}
+
+function isDateField(panel,field){
+  const sample=panel.data.slice(0,30);
+  if(!sample.length)return false;
+  let d=0,tot=0;
+  for(const r of sample){
+    const v=r[field];
+    if(v===''||v===null||v===undefined)continue;
+    tot++;
+    if(parseDateFlexible(v))d++;
+  }
+  return tot>0&&(d/tot)>=0.7;
+}
+
+function renderPanelZones(panel){
+  ['filters','cols','rows','values'].forEach(zoneName=>{
+    const zoneEl=panel.el.querySelector('.pivot-zone[data-zone="'+zoneName+'"]');
+    if(!zoneEl)return;
+    const chipsEl=zoneEl.querySelector('.pivot-zone-chips');
+    const items=panel.zones[zoneName]||[];
+    chipsEl.innerHTML='';
+    items.forEach((item,idx)=>{
+      const chip=document.createElement('span');
+      chip.className='pivot-chip';
+      chip.setAttribute('draggable','true');
+      chip.dataset.zone=zoneName;
+      chip.dataset.index=idx;
+
+      const lbl=document.createElement('span');
+      lbl.className='chip-label';
+      lbl.textContent=item.field;
+      lbl.title=item.field;
+      chip.appendChild(lbl);
+
+      if(zoneName==='values'){
+        const sel=document.createElement('select');
+        Object.keys(PIVOT_AGG_LABELS).forEach(k=>{
+          const o=document.createElement('option');
+          o.value=k;o.textContent=PIVOT_AGG_LABELS[k];
+          if(item.agg===k)o.selected=true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener('change',e=>{item.agg=e.target.value;renderPivotPanel(panel)});
+        sel.addEventListener('mousedown',e=>e.stopPropagation());
+        sel.addEventListener('dragstart',e=>e.stopPropagation());
+        chip.appendChild(sel);
+      }else if(zoneName==='filters'){
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='chip-filter-btn';
+        if(item.type==='dateRange'){
+          const has=item.dateFrom||item.dateTo;
+          btn.textContent=has?'📅 Range':'📅 All dates';
+        }else{
+          const n=item.values===null||item.values===undefined?-1:item.values.length;
+          btn.textContent=n<0?'All ▾':(n===0?'None ▾':n+' sel ▾');
         }
+        btn.addEventListener('click',e=>{e.stopPropagation();openFilterPopup(panel,zoneName,idx,btn)});
+        btn.addEventListener('mousedown',e=>e.stopPropagation());
+        btn.addEventListener('dragstart',e=>e.stopPropagation());
+        chip.appendChild(btn);
+      }
 
-        // ============================================================
-        //  BUILD FILTER DROPDOWN
-        // ============================================================
-        function buildFilterDropdown(colKey) {
-            const values = new Set();
-            allPatients.forEach(p => {
-                let val = getColumnValue(p, colKey);
-                if (val && String(val).trim()) {
-                    if (colKey === 'labNames') {
-                        const labs = getLabsForEntry(p);
-                        labs.forEach(id => {
-                            values.add(LAB_NAMES[id] || 'Lab ' + id);
-                        });
-                    } else {
-                        values.add(String(val).trim());
-                    }
-                }
-            });
+      const rm=document.createElement('span');
+      rm.className='chip-remove';
+      rm.textContent='×';
+      rm.title='Remove';
+      rm.addEventListener('click',e=>{
+        e.stopPropagation();
+        panel.zones[zoneName].splice(idx,1);
+        renderPivotPanel(panel);
+      });
+      chip.appendChild(rm);
 
-            const sortedValues = Array.from(values).sort();
-            const currentValue = columnFilters[colKey] || 'all';
+      let cd=false;
+      chip.addEventListener('dragstart',e=>{
+        if(e.target.tagName==='SELECT'||e.target.tagName==='BUTTON'){e.preventDefault();return}
+        cd=true;
+        const payload={kind:'chip',from:zoneName,index:idx};
+        const s=JSON.stringify(payload);
+        e.dataTransfer.effectAllowed='move';
+        try{e.dataTransfer.setData('text/plain',s)}catch(er){}
+        try{e.dataTransfer.setData('application/json',s)}catch(er){}
+        chip.style.opacity='0.5';
+      });
+      chip.addEventListener('dragend',()=>{
+        chip.style.opacity='';
+        setTimeout(()=>{cd=false},100);
+      });
+      chipsEl.appendChild(chip);
+    });
+  });
+}
 
-            let html = `<select class="header-filter" id="filter_${colKey}">
-                <option value="all">All</option>`;
-            sortedValues.forEach(v => {
-                const selected = v === currentValue ? 'selected' : '';
-                html += `<option value="${escapeHtml(v)}" ${selected}>${escapeHtml(v)}</option>`;
-            });
-            html += '</select>';
-            return html;
+function getDistinctValues(panel,field){
+  const s=new Set();
+  panel.data.forEach(r=>{
+    const v=normalizeFieldValue(r[field]);
+    if(v!==null&&v!==undefined&&String(v).trim()!=='')s.add(String(v));
+  });
+  return Array.from(s).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})).slice(0,500);
+}
+
+function addFieldToZone(panel,zoneName,field){
+  if(!panel.zones[zoneName])panel.zones[zoneName]=[];
+  if(panel.zones[zoneName].some(it=>it.field===field))return;
+  panel.zones[zoneName].push(makeZoneItem(panel,zoneName,field));
+}
+
+function moveChip(panel,fromZone,fromIndex,toZone,toIndex){
+  if(!panel.zones[fromZone])return;
+  const item=panel.zones[fromZone][fromIndex];
+  if(!item)return;
+  panel.zones[fromZone].splice(fromIndex,1);
+  if(fromZone===toZone&&toIndex!==undefined&&toIndex>fromIndex)toIndex-=1;
+  if(!panel.zones[toZone])panel.zones[toZone]=[];
+  const newItem=makeZoneItem(panel,toZone,item.field);
+  if(toZone==='values'&&item.agg)newItem.agg=item.agg;
+  if(toZone==='filters'&&item.type==='dateRange'){
+    newItem.type='dateRange';newItem.dateFrom=item.dateFrom;newItem.dateTo=item.dateTo;
+  }else if(toZone==='filters'&&item.type==='values'){
+    newItem.values=item.values;
+  }
+  if(toIndex===undefined||toIndex===null||toIndex<0)panel.zones[toZone].push(newItem);
+  else panel.zones[toZone].splice(toIndex,0,newItem);
+}
+
+// -------- Filter popup --------
+let currentFilterContext=null;
+function openFilterPopup(panel,zoneName,index,anchorEl){
+  const item=panel.zones[zoneName][index];
+  if(!item)return;
+  currentFilterContext={panel,zoneName,index};
+
+  if(item.type==='dateRange'){
+    pivotFilterPopup.innerHTML=`
+      <div style="font-weight:600;font-size:12px;margin-bottom:8px;color:var(--text-dark);">📅 Filter: ${escapeHtml(item.field)}</div>
+      <div class="dr-row">
+        <label>From (Start):<input type="date" class="dr-from" value="${escapeAttr(item.dateFrom||'')}"></label>
+        <label>To (End):<input type="date" class="dr-to" value="${escapeAttr(item.dateTo||'')}"></label>
+      </div>
+      <div class="dr-actions">
+        <button class="dr-apply">Apply</button>
+        <button class="dr-clear secondary">Clear</button>
+      </div>
+    `;
+    pivotFilterPopup.querySelector('.dr-apply').addEventListener('click',()=>{
+      item.dateFrom=pivotFilterPopup.querySelector('.dr-from').value;
+      item.dateTo=pivotFilterPopup.querySelector('.dr-to').value;
+      closeFilterPopup();
+      renderPivotPanel(panel);
+    });
+    pivotFilterPopup.querySelector('.dr-clear').addEventListener('click',()=>{
+      item.dateFrom='';item.dateTo='';
+      closeFilterPopup();
+      renderPivotPanel(panel);
+    });
+  }else{
+    const distinct=getDistinctValues(panel,item.field);
+    const sel=Array.isArray(item.values)?new Set(item.values):null;
+    const allSel=sel===null;
+    let html=`<div style="font-weight:600;font-size:12px;margin-bottom:8px;color:var(--text-dark);">☑️ Filter: ${escapeHtml(item.field)}</div>`;
+    html+=`<div class="ms-actions">
+      <button type="button" class="ms-all">All</button>
+      <button type="button" class="ms-none">None</button>
+    </div>`;
+    if(!distinct.length){
+      html+='<div style="color:#999;font-size:11px;padding:6px;">No values</div>';
+    }else{
+      distinct.forEach(v=>{
+        const checked=allSel||sel.has(v)?'checked':'';
+        html+=`<label class="ms-item"><input type="checkbox" value="${escapeAttr(v)}" ${checked}> ${escapeHtml(v)}</label>`;
+      });
+    }
+    pivotFilterPopup.innerHTML=html;
+    const checkboxes=pivotFilterPopup.querySelectorAll('input[type="checkbox"]');
+    function commit(){
+      const v=[];
+      checkboxes.forEach(cb=>{if(cb.checked)v.push(cb.value)});
+      if(checkboxes.length===0){item.values=null;return}
+      if(v.length===checkboxes.length)item.values=null;
+      else item.values=v;
+    }
+    pivotFilterPopup.querySelector('.ms-all').addEventListener('click',()=>{
+      checkboxes.forEach(cb=>cb.checked=true);
+      item.values=null;
+      closeFilterPopup();
+      renderPivotPanel(panel);
+    });
+    pivotFilterPopup.querySelector('.ms-none').addEventListener('click',()=>{
+      checkboxes.forEach(cb=>cb.checked=false);
+      item.values=[];
+      closeFilterPopup();
+      renderPivotPanel(panel);
+    });
+    checkboxes.forEach(cb=>cb.addEventListener('change',()=>{commit();renderPivotPanel(panel)}));
+  }
+
+  pivotFilterPopup.classList.add('show');
+  const rect=anchorEl.getBoundingClientRect();
+  const pw=pivotFilterPopup.offsetWidth,ph=pivotFilterPopup.offsetHeight;
+  let left=rect.left;
+  let top=rect.bottom+4;
+  if(left+pw>window.innerWidth-10)left=window.innerWidth-pw-10;
+  if(top+ph>window.innerHeight-10)top=rect.top-ph-4;
+  pivotFilterPopup.style.left=left+'px';
+  pivotFilterPopup.style.top=top+'px';
+}
+function closeFilterPopup(){pivotFilterPopup.classList.remove('show');currentFilterContext=null}
+
+document.addEventListener('click',e=>{
+  if(pivotFilterPopup.classList.contains('show')&&
+     !pivotFilterPopup.contains(e.target)&&
+     !e.target.closest('.chip-filter-btn')){
+    closeFilterPopup();
+  }
+});
+
+// -------- Sort options --------
+function renderPanelSortOptions(panel,pivot){
+  const sel=panel.el.querySelector('.pivot-sort-by');
+  if(!sel)return;
+  let html='<option value="rows">Row Labels</option>';
+  if(!pivot.empty){
+    pivot.colHeaders.forEach((ch,i)=>{
+      const label=(ch.cVals.length?ch.cVals.join(' / ')+' — ':'')+
+        pivot.vals[ch.valIdx].field+' ('+aggLabel(pivot.vals[ch.valIdx].agg)+')';
+      const sel2=String(panel.sortBy)===String(i)?'selected':'';
+      html+='<option value="'+i+'" '+sel2+'>'+escapeHtml(label)+'</option>';
+    });
+  }
+  sel.innerHTML=html;
+}
+
+// -------- Render result table --------
+function renderPanelResult(panel,pivot){
+  const container=panel.el.querySelector('.pivot-result');
+  if(!container)return;
+  if(pivot.empty){
+    container.innerHTML='<div class="pivot-empty">Drag at least one field into <b>Values</b> to build a pivot table.</div>';
+    return;
+  }
+
+  const{rowFields,vals,colHeaders,outRows,grandRow,subtotals}=pivot;
+  const rowFieldCount=Math.max(1,rowFields.length);
+  const showTotals=colHeaders.length>0&&vals.length>0;
+
+  let rows=outRows;
+  if(panel.sortBy==='rows'){
+    const dir=panel.sortDir==='desc'?-1:1;
+    rows=[...outRows].sort((a,b)=>{
+      for(let i=0;i<Math.max(a.rVals.length,b.rVals.length);i++){
+        const av=String(a.rVals[i]??'').trim();
+        const bv=String(b.rVals[i]??'').trim();
+        const da=parseDateFlexible(av),db=parseDateFlexible(bv);
+        if(da&&db){
+          if(da.getTime()!==db.getTime())return dir*(da-db);
+          continue;
         }
-
-        // ============================================================
-        //  UPDATE STATS
-        // ============================================================
-        function updateStats() {
-            filteredRecords.textContent = filteredPatients.length;
-            showingRecords.textContent = displayedPatients.length;
-            recordBadge.textContent = filteredPatients.length;
+        const an=parseFloat(av),bn=parseFloat(bv);
+        if(av!==''&&bv!==''&&!isNaN(an)&&!isNaN(bn)){
+          if(an!==bn)return dir*(an-bn);
+        }else{
+          const c=av.localeCompare(bv,undefined,{numeric:true});
+          if(c)return dir*c;
         }
+      }
+      return 0;
+    });
+  }else{
+    const idx=Number(panel.sortBy);
+    if(!isNaN(idx)&&idx>=0&&idx<colHeaders.length){
+      const dir=panel.sortDir==='desc'?-1:1;
+      rows=[...outRows].sort((a,b)=>{
+        const av=a.cells[idx],bv=b.cells[idx];
+        const an=typeof av==='number'?av:parseFloat(av);
+        const bn=typeof bv==='number'?bv:parseFloat(bv);
+        if(!isNaN(an)&&!isNaN(bn))return dir*(an-bn);
+        return dir*String(av).localeCompare(String(bv));
+      });
+    }
+  }
 
-        // ============================================================
-        //  EXPORT CSV
-        // ============================================================
-        function exportCSV() {
-            if (filteredPatients.length === 0) {
-                toast('No data to export.', 'error');
-                return;
-            }
+  const hasColGroups=colHeaders.some(ch=>ch.cVals.length>0);
+  const totalCols=rowFieldCount+colHeaders.length+(showTotals?vals.length:0);
+  let html='<table class="pivot-table">';
 
-            const visibleCols = COLUMNS.filter(c => columnVisibility[c.key]);
+  if(hasColGroups){
+    html+='<tr>';
+    html+=`<th class="row-label" colspan="${rowFieldCount}">Row Labels</th>`;
+    let i=0;
+    while(i<colHeaders.length){
+      const ckey=colHeaders[i].ckey;
+      let j=i;
+      while(j<colHeaders.length&&colHeaders[j].ckey===ckey)j++;
+      const rawLabel=colHeaders[i].cVals.length?colHeaders[i].cVals.join(' / '):'(All)';
+      html+=`<th colspan="${j-i}">${escapeHtml(rawLabel)}</th>`;
+      i=j;
+    }
+    if(showTotals)html+=`<th class="total-col" colspan="${vals.length}">Grand Total</th>`;
+    html+='</tr>';
+  }
 
-            let headers = visibleCols.map(c => c.label);
-            let csv = headers.join(',') + '\n';
+  html+='<tr>';
+  if(rowFields.length===0)html+='<th class="row-label">(All)</th>';
+  else rowFields.forEach(f=>{html+=`<th class="row-label">${escapeHtml(f)}</th>`});
+  colHeaders.forEach(ch=>{
+    const v=vals[ch.valIdx];
+    html+=`<th>${escapeHtml(v.field)}<br><small>${escapeHtml(aggLabel(v.agg))}</small></th>`;
+  });
+  if(showTotals)vals.forEach(v=>{html+=`<th class="total-col">${escapeHtml(v.field)}<br><small>${escapeHtml(aggLabel(v.agg))}</small></th>`});
+  html+='</tr>';
 
-            filteredPatients.forEach(patient => {
-                const row = visibleCols.map(col => {
-                    let value = getColumnValue(patient, col.key);
-                    if (col.key === 'labNames') {
-                        const labs = getLabsForEntry(patient);
-                        value = labs.map(id => LAB_NAMES[id] || 'Lab ' + id).join(', ');
-                    }
-                    if (typeof value === 'string') {
-                        value = value.replace(/,/g, ';').replace(/\n/g, ' ');
-                    }
-                    return String(value);
-                });
-                csv += row.join(',') + '\n';
-            });
+  if(!rows.length){
+    html+=`<tr><td colspan="${totalCols}" style="text-align:center;padding:20px;color:#999;">No data</td></tr>`;
+  }
 
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `patient_data_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-            URL.revokeObjectURL(link.href);
+  const renderDataRow=(r)=>{
+    let h='<tr>';
+    if(r.rVals.length===0)h+='<td class="row-label">(All)</td>';
+    else r.rVals.forEach(v=>{h+=`<td class="row-label">${escapeHtml(String(v??''))||'(blank)'}</td>`});
+    r.cells.forEach(c=>{h+=`<td>${formatNum(c)}</td>`});
+    if(showTotals)r.totals.forEach(t=>{h+=`<td class="total-col">${formatNum(t)}</td>`});
+    return h+'</tr>';
+  };
 
-            toast('CSV exported successfully!', 'success');
-        }
+  const useSubtotals=subtotals&&rowFields.length>=2;
 
-        // ============================================================
-        //  CLEAR FILTERS
-        // ============================================================
-        function clearAllFilters() {
-            globalSearch.value = '';
-            searchTerm = '';
-            filterFromDate.value = '';
-            filterToDate.value = '';
-            dateFrom = '';
-            dateTo = '';
+  if(useSubtotals){
+    const groups=new Map();
+    rows.forEach(r=>{
+      const key=String(r.rVals[0]??'');
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push(r);
+    });
+    for(const[groupKey,groupRows]of groups){
+      groupRows.forEach(r=>{html+=renderDataRow(r)});
+      const st=subtotals.get(groupKey);
+      if(st){
+        html+='<tr class="subtotal-row">';
+        const label=groupKey||'(blank)';
+        html+=`<td class="row-label" colspan="${rowFieldCount}">Subtotal: ${escapeHtml(label)}</td>`;
+        st.cells.forEach(c=>{html+=`<td>${formatNum(c)}</td>`});
+        if(showTotals)st.totals.forEach(t=>{html+=`<td class="total-col">${formatNum(t)}</td>`});
+        html+='</tr>';
+      }
+      html+=`<tr class="gap-row"><td colspan="${totalCols}"></td></tr>`;
+    }
+  }else{
+    rows.forEach(r=>{html+=renderDataRow(r)});
+  }
 
-            COLUMNS.forEach(col => {
-                if (col.filterable) {
-                    columnFilters[col.key] = 'all';
-                    const filterEl = document.getElementById(`filter_${col.key}`);
-                    if (filterEl) filterEl.value = 'all';
-                }
-            });
+  if(grandRow){
+    html+='<tr class="grand-total">';
+    html+=`<td class="row-label" colspan="${rowFieldCount}">Grand Total</td>`;
+    grandRow.cells.forEach(c=>{html+=`<td>${formatNum(c)}</td>`});
+    if(showTotals)grandRow.totals.forEach(t=>{html+=`<td class="total-col">${formatNum(t)}</td>`});
+    html+='</tr>';
+  }
 
-            applyFilters();
-            toast('All filters cleared!', 'info');
-        }
+  html+='</table>';
+  container.innerHTML=html;
+}
 
-        // ============================================================
-        //  EVENT LISTENERS
-        // ============================================================
-        // Global search - update search term and re-render
-        globalSearch.addEventListener('input', function() {
-            searchTerm = this.value;
-            applyFilters();
+function renderPivotPanel(panel){
+  if(!panel.el)return;
+  renderPanelFields(panel);
+  renderPanelZones(panel);
+  const pivot=computePivot(panel.data,panel.zones);
+  panel.lastPivot=pivot;
+  renderPanelSortOptions(panel,pivot);
+  renderPanelResult(panel,pivot);
+  const rc=panel.el.querySelector('.pivot-record-count');
+  if(rc)rc.textContent=panel.data.length+' rows';
+}
+
+async function buildPivotWorkspace(forceReload){
+  pivotBody.innerHTML='<div class="loading" style="grid-column:1/-1;"><div class="loading-spinner"></div><p style="margin-top:12px;">Loading pivot data...</p></div>';
+
+  let leftData,rightData;
+  try{leftData=await loadPivotSource(pivotSourceLeft)}catch(e){leftData={headers:[],rows:[]}}
+  try{rightData=await loadPivotSource(pivotSourceRight)}catch(e){rightData={headers:[],rows:[]}}
+
+  const defs=[
+    {key:pivotSourceLeft,label:PIVOT_SOURCE_LABELS[pivotSourceLeft]+'  (Left)',data:leftData},
+    {key:pivotSourceRight,label:PIVOT_SOURCE_LABELS[pivotSourceRight]+'  (Right)',data:rightData}
+  ];
+
+  pivotBody.innerHTML='';
+  defs.forEach(def=>{
+    let panel=pivotPanels[def.key];
+    const prevZones=panel?JSON.parse(JSON.stringify(panel.zones)):null;
+    if(!panel){
+      panel=createPivotPanel(def.key,def.label,def.data.rows,def.data.headers);
+      pivotPanels[def.key]=panel;
+    }else{
+      panel.data=def.data.rows;
+      panel.headers=def.data.headers;
+      panel.label=def.label;
+      if(prevZones){
+        const hs=new Set(def.data.headers);
+        ['rows','cols','values','filters'].forEach(z=>{
+          prevZones[z]=(prevZones[z]||[]).filter(it=>hs.has(it.field));
         });
+        panel.zones=prevZones;
+      }else{
+        panel.zones=autoPivotTemplate(def.data.rows,def.data.headers);
+      }
+    }
+    panel.el=buildPanelDOM(panel);
+    pivotBody.appendChild(panel.el);
+    renderPivotPanel(panel);
+  });
 
-        // Date filters
-        filterFromDate.addEventListener('change', function() {
-            dateFrom = this.value;
-            applyFilters();
-        });
+  if(forceReload)toast('Pivot data refreshed','success');
+}
 
-        filterToDate.addEventListener('change', function() {
-            dateTo = this.value;
-            applyFilters();
-        });
+function syncSourceSelectors(){
+  pivotSourceLeftSel.value=pivotSourceLeft;
+  pivotSourceRightSel.value=pivotSourceRight;
+  Array.from(pivotSourceLeftSel.options).forEach(o=>o.disabled=(o.value===pivotSourceRight));
+  Array.from(pivotSourceRightSel.options).forEach(o=>o.disabled=(o.value===pivotSourceLeft));
+}
 
-        // Refresh
-        refreshBtn.addEventListener('click', async function() {
-            const originalText = this.innerHTML;
-            this.innerHTML = '⏳ Loading...';
-            this.disabled = true;
-            await loadData();
-            this.innerHTML = originalText;
-            this.disabled = false;
-        });
+pivotSourceLeftSel.addEventListener('change',async()=>{
+  pivotSourceLeft=pivotSourceLeftSel.value;
+  if(pivotSourceLeft===pivotSourceRight){
+    const all=['my','lab1','lab2'];
+    pivotSourceRight=all.find(k=>k!==pivotSourceLeft)||'my';
+    pivotSourceRightSel.value=pivotSourceRight;
+  }
+  syncSourceSelectors();
+  await buildPivotWorkspace(false);
+});
+pivotSourceRightSel.addEventListener('change',async()=>{
+  pivotSourceRight=pivotSourceRightSel.value;
+  if(pivotSourceLeft===pivotSourceRight){
+    const all=['my','lab1','lab2'];
+    pivotSourceLeft=all.find(k=>k!==pivotSourceRight)||'my';
+    pivotSourceLeftSel.value=pivotSourceLeft;
+  }
+  syncSourceSelectors();
+  await buildPivotWorkspace(false);
+});
 
-        // Export
-        exportBtn.addEventListener('click', exportCSV);
+async function openPivotModal(){
+  pivotModalOverlay.classList.add('show');
+  syncSourceSelectors();
+  await buildPivotWorkspace(false);
+}
+function closePivotModal(){
+  pivotModalOverlay.classList.remove('show');
+  closeFilterPopup();
+}
+pivotTablesBtn.addEventListener('click',openPivotModal);
+pivotCloseBtn.addEventListener('click',closePivotModal);
+pivotRefreshAllBtn.addEventListener('click',async()=>{
+  const orig=pivotRefreshAllBtn.innerHTML;
+  pivotRefreshAllBtn.innerHTML='⏳ Loading...';pivotRefreshAllBtn.disabled=true;
+  try{await loadData();await buildPivotWorkspace(true)}
+  finally{pivotRefreshAllBtn.innerHTML=orig;pivotRefreshAllBtn.disabled=false}
+});
 
-        // Clear filters
-        clearFiltersBtn.addEventListener('click', clearAllFilters);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&pivotModalOverlay.classList.contains('show')){
+    const tag=(e.target&&e.target.tagName)||'';
+    if(tag==='SELECT'||tag==='INPUT')return;
+    closePivotModal();
+  }
+});
 
-        // Column toggle
-        toggleColumnsBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            columnToggleDropdown.classList.toggle('show');
-        });
+// ============================================================
+//  MAIN TABLE EVENT LISTENERS
+// ============================================================
+globalSearch.addEventListener('input',function(){searchTerm=this.value;applyFilters()});
+filterFromDate.addEventListener('change',function(){dateFrom=this.value;applyFilters()});
+filterToDate.addEventListener('change',function(){dateTo=this.value;applyFilters()});
+refreshBtn.addEventListener('click',async function(){
+  const t=this.innerHTML;this.innerHTML='⏳ Loading...';this.disabled=true;
+  await loadData();this.innerHTML=t;this.disabled=false;
+});
+exportBtn.addEventListener('click',exportCSV);
+clearFiltersBtn.addEventListener('click',clearAllFilters);
+toggleColumnsBtn.addEventListener('click',function(e){e.stopPropagation();columnToggleDropdown.classList.toggle('show')});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.column-toggle-container'))columnToggleDropdown.classList.remove('show');
+});
+toggleAllColumns.addEventListener('change',function(){
+  const c=this.checked;
+  COLUMNS.forEach(col=>{
+    columnVisibility[col.key]=c;
+    const cb=document.getElementById('col_'+col.key);
+    if(cb)cb.checked=c;
+  });
+  renderTable();
+});
+perPageSelect.addEventListener('change',function(){
+  perPage=parseInt(this.value);currentPage=1;
+  updatePagination();renderTable();updateStats();
+});
+prevPageBtn.addEventListener('click',function(){
+  if(currentPage>1){currentPage--;updatePagination();renderTable();updateStats()}
+});
+nextPageBtn.addEventListener('click',function(){
+  const tp=Math.ceil(filteredPatients.length/perPage);
+  if(currentPage<tp){currentPage++;updatePagination();renderTable();updateStats()}
+});
 
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.column-toggle-container')) {
-                columnToggleDropdown.classList.remove('show');
-            }
-        });
+// Lab sheet buttons
+sheetAddRowBtn.addEventListener('click',()=>ensureSheetSize(sheetState.rows+1,sheetState.cols));
+sheetAddColBtn.addEventListener('click',()=>ensureSheetSize(sheetState.rows,sheetState.cols+1));
+sheetDelRowBtn.addEventListener('click',deleteSheetRow);
+sheetDelColBtn.addEventListener('click',deleteSheetCol);
+sheetReloadBtn.addEventListener('click',async()=>{
+  if(!currentLabKey||!confirm('Reload? Unsaved changes lost.'))return;
+  sheetGridContainer.innerHTML='<div class="loading"><div class="loading-spinner"></div></div>';
+  try{await loadLabSheetFromFirebase(currentLabKey);renderSheetGrid();toast('Reloaded','info')}
+  catch(e){toast('Failed: '+e.message,'error');renderSheetGrid()}
+});
+sheetClearBtn.addEventListener('click',()=>{
+  if(!confirm('Clear ALL cells?'))return;
+  initEmptySheet();renderSheetGrid();toast('Cleared (not saved)','info');
+});
+sheetSaveBtn.addEventListener('click',saveLabSheet);
+sheetCloseBtn.addEventListener('click',closeLabSheet);
+sheetModalOverlay.addEventListener('click',e=>{if(e.target===sheetModalOverlay)closeLabSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&sheetModalOverlay.classList.contains('show'))closeLabSheet()});
+sheetGridContainer.addEventListener('paste',onSheetPaste);
+sheetGridContainer.addEventListener('input',onSheetInput);
+sheetGridContainer.addEventListener('keydown',onSheetKeydown);
 
-        toggleAllColumns.addEventListener('change', function() {
-            const checked = this.checked;
-            COLUMNS.forEach(col => {
-                columnVisibility[col.key] = checked;
-                const cb = document.getElementById(`col_${col.key}`);
-                if (cb) cb.checked = checked;
-            });
-            renderTable();
-        });
+// Track active cell (for delete row/col)
+sheetGridContainer.addEventListener('focusin',e=>{
+  if(e.target.tagName==='INPUT'){
+    const r=parseInt(e.target.dataset.r,10)||0;
+    const c=parseInt(e.target.dataset.c,10)||0;
+    if(r!==sheetActiveCell.r||c!==sheetActiveCell.c){
+      sheetActiveCell={r,c};
+      // Re-render just the highlight without full grid (to keep focus)
+      sheetGridContainer.querySelectorAll('.cell-active,.col-active,.row-active').forEach(el=>{
+        el.classList.remove('cell-active','col-active','row-active');
+      });
+      const td=e.target.closest('td');
+      if(td)td.classList.add('cell-active');
+      // Highlight header of this col
+      const colHeaders=sheetGridContainer.querySelectorAll('thead th');
+      if(colHeaders[c+1])colHeaders[c+1].classList.add('col-active');
+      // Highlight row header
+      const rowHeaders=sheetGridContainer.querySelectorAll('tbody tr');
+      if(rowHeaders[r]){
+        const rh=rowHeaders[r].querySelector('td.row-header');
+        if(rh)rh.classList.add('row-active');
+      }
+    }
+  }
+});
 
-        // Pagination
-        perPageSelect.addEventListener('change', function() {
-            perPage = parseInt(this.value);
-            currentPage = 1;
-            updatePagination();
-            renderTable();
-            updateStats();
-        });
+labDataBtn.addEventListener('click',e=>{e.stopPropagation();labDropdown.classList.toggle('show')});
+document.addEventListener('click',e=>{if(!e.target.closest('.lab-dropdown-container'))labDropdown.classList.remove('show')});
+labDropdown.querySelectorAll('.lab-option').forEach(opt=>{
+  opt.addEventListener('click',function(){
+    const k=this.dataset.lab;
+    labDropdown.classList.remove('show');
+    openLabSheet(k);
+  });
+});
 
-        prevPageBtn.addEventListener('click', function() {
-            if (currentPage > 1) {
-                currentPage--;
-                updatePagination();
-                renderTable();
-                updateStats();
-            }
-        });
-
-        nextPageBtn.addEventListener('click', function() {
-            const totalPages = Math.ceil(filteredPatients.length / perPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                updatePagination();
-                renderTable();
-                updateStats();
-            }
-        });
-
-        // ============================================================
-        //  INIT
-        // ============================================================
-        loadData();
-    </script>
+// INIT
+loadData();
+</script>
 </body>
 </html>
