@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Poster Downloader</title>
+
+<!-- ============================================================
+     PREMIUM GOOGLE FONTS
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cormorant+Garamond:wght@600;700&family=Dancing+Script:wght@600;700&family=Great+Vibes&family=Inter:wght@400;600;700;800&family=Lora:wght@500;600;700&family=Merriweather:wght@400;700;900&family=Montserrat:wght@400;600;700;800&family=Oswald:wght@400;600;700&family=Playfair+Display:wght@500;600;700;800&family=Poppins:wght@400;600;700;800&family=Raleway:wght@400;600;700;800&family=Roboto+Slab:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     THEME
+     ============================================================ */
+  :root{
+    --primary:#09637E;--primary-dark:#064a5f;--secondary:#088395;
+    --accent:#7AB2B2;--bg-light:#EBF4F6;--bg-white:#fff;
+    --text-dark:#1a2e35;--text-medium:#4a6a73;--text-light:#7a9aa3;
+    --success:#10b981;--error:#ef4444;--warning:#f59e0b;
+    --shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 8px 24px rgba(0,0,0,.12);
+    --radius-sm:.5rem;--radius-md:.75rem;--radius-lg:1rem;
+    --transition:all .3s cubic-bezier(.4,0,.2,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  /* Make sure the [hidden] attribute always works, even on flex/grid elements */
+  [hidden]{display:none !important}
+
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    background:var(--bg-light);padding:20px;color:var(--text-dark);
+    -webkit-font-smoothing:antialiased;line-height:1.45;
+  }
+  .app-container{
+    max-width:1280px;border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-lg);padding:24px;margin:0 auto;
+    background:linear-gradient(160deg,#f6fafb 0%,#e6f2f5 100%);
+    transition:background .35s ease;
+  }
+
+  /* ---- View-specific gradients ---- */
+  /* ROOT (All Folders) — teal / aqua mood */
+  .app-container.view-root{
+    background:
+      radial-gradient(ellipse 700px 500px at 15% 5%, rgba(122,178,178,.32), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 90% 90%, rgba(9,99,126,.20), transparent 60%),
+      linear-gradient(160deg, #eef7f9 0%, #d4e9ed 100%);
+  }
+  /* FOLDER (inside a folder OR editor) — warm amber / peach mood */
+  .app-container.view-folder{
+    background:
+      radial-gradient(ellipse 700px 500px at 15% 5%, rgba(251,191,36,.30), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 90% 90%, rgba(249,115,22,.22), transparent 60%),
+      linear-gradient(160deg, #fff9ee 0%, #fbe3c0 100%);
+  }
+
+  /* ============================================================
+     HEADER
+     ============================================================ */
+  .app-header{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+    gap:16px;margin-bottom:22px;padding-bottom:16px;border-bottom:2px solid rgba(0,0,0,.06);
+  }
+  .app-header h1{font-size:24px;font-weight:700;color:var(--text-dark);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .app-header h1 span{background:var(--primary);color:#fff;font-size:13px;padding:3px 12px;border-radius:20px;font-weight:500}
+  .header-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .header-actions small{font-size:12px;color:var(--text-medium)}
+
+  /* ============================================================
+     BUTTONS
+     ============================================================ */
+  .btn{
+    padding:8px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;
+    cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;
+    justify-content:center;gap:6px;white-space:nowrap;font-family:inherit;
+  }
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+  .btn-secondary{background:var(--bg-light);color:var(--text-medium)}
+  .btn-secondary:hover{background:#d5e6ea;transform:translateY(-1px)}
+  .btn-block{width:100%}
+  .btn-lg{padding:13px 18px;font-size:15px;border-radius:var(--radius-md)}
+  .btn:active{transform:scale(.985)}
+  .btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+  /* ============================================================
+     BREADCRUMB + SEARCH
+     ============================================================ */
+  .breadcrumb{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    margin-bottom:14px;font-size:13px;color:var(--text-medium);
+  }
+  .breadcrumb button{
+    background:rgba(255,255,255,.75);border:none;color:var(--primary);
+    font-size:13px;font-weight:600;padding:6px 12px;border-radius:20px;
+    cursor:pointer;transition:var(--transition);font-family:inherit;
+    display:inline-flex;align-items:center;gap:6px;
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  }
+  .breadcrumb button:hover{background:var(--primary);color:#fff}
+  .crumb-sep{color:var(--text-light);font-weight:600}
+  .crumb-current{
+    color:var(--text-dark);font-weight:700;
+    padding:6px 4px;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+
+  .search-bar{
+    position:relative;display:flex;align-items:center;gap:10px;
+    background:rgba(255,255,255,.85);border:2px solid transparent;border-radius:var(--radius-md);
+    padding:0 14px;margin-bottom:20px;transition:var(--transition);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .search-bar:focus-within{background:#fff;border-color:var(--accent);box-shadow:var(--shadow-md)}
+  .search-bar .search-icon{font-size:15px;opacity:.6}
+  .search-bar input{
+    flex:1;border:0;outline:0;background:transparent;padding:13px 0;
+    font-size:15px;font-family:inherit;color:var(--text-dark);
+  }
+  .search-bar input::placeholder{color:var(--text-light)}
+  .clear-btn{
+    border:0;background:var(--accent);color:#fff;width:24px;height:24px;border-radius:50%;
+    cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;
+    transition:var(--transition);flex:0 0 auto;
+  }
+  .clear-btn:hover{background:var(--secondary)}
+
+  /* ============================================================
+     GRID (folders + posters)
+     ============================================================ */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  @media(min-width:640px){ .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px} }
+
+  .card{
+    display:flex;flex-direction:column;background:var(--bg-white);
+    border:2px solid rgba(255,255,255,.5);border-radius:var(--radius-md);
+    overflow:hidden;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;
+    transition:var(--transition);box-shadow:var(--shadow-md);
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--accent)}
+  .card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+  .thumb{
+    position:relative;width:100%;aspect-ratio:3/4;background:var(--bg-light);
+    overflow:hidden;display:flex;align-items:center;justify-content:center;
+  }
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:var(--transition)}
+  .card:hover .thumb img{transform:scale(1.04)}
+  .thumb .fallback{
+    display:none;flex-direction:column;align-items:center;gap:6px;
+    color:var(--text-light);font-size:12px;text-align:center;padding:8px;
+  }
+  .thumb .fallback span{font-size:26px}
+  .thumb.error img{display:none}
+  .thumb.error .fallback{display:flex}
+
+  /* Folder card */
+  .folder-thumb{background:var(--primary)}
+  .folder-overlay{
+    position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(9,99,126,0) 35%,rgba(6,74,95,.92) 100%);
+  }
+  .folder-badge{
+    position:absolute;left:12px;right:12px;bottom:12px;
+    display:flex;align-items:center;gap:8px;
+    color:#fff;font-size:12px;font-weight:600;pointer-events:none;
+  }
+  .folder-icon{font-size:18px;line-height:1}
+  .folder-count{
+    margin-left:auto;background:rgba(255,255,255,.24);
+    padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  }
+
+  .card-title{
+    padding:11px 13px;font-size:14px;font-weight:600;line-height:1.3;color:var(--text-dark);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+
+  .empty{
+    text-align:center;padding:56px 16px;color:var(--text-medium);
+    background:rgba(255,255,255,.72);border-radius:var(--radius-lg);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .empty .empty-icon{font-size:34px;margin-bottom:8px;opacity:.7}
+  .empty p{margin:0 0 4px;font-weight:700;color:var(--text-dark);font-size:17px}
+  .empty span{font-size:14px}
+
+  /* ============================================================
+     EDITOR
+     ============================================================ */
+  .editor-top{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid rgba(0,0,0,.06);
+  }
+  .editor-title{
+    font-size:18px;font-weight:700;color:var(--text-dark);flex:1;min-width:150px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  .editor-layout{display:grid;gap:20px}
+
+  /* Desktop: controls LEFT, preview RIGHT */
+  @media(min-width:960px){
+    .editor-layout{grid-template-columns:370px minmax(0,1fr);align-items:start;gap:26px}
+    .preview-pane{grid-column:2;grid-row:1}
+    .controls{grid-column:1;grid-row:1}
+  }
+
+  .preview-pane{
+    background:rgba(255,255,255,.92);border-radius:var(--radius-lg);padding:16px;
+    box-shadow:var(--shadow-md);
+  }
+  @media(min-width:960px){ .preview-pane{position:sticky;top:20px} }
+
+  .canvas-wrap{
+    display:flex;align-items:center;justify-content:center;min-height:200px;
+    background:var(--bg-light);border-radius:var(--radius-md);padding:10px;overflow:hidden;
+  }
+  #previewCanvas{
+    display:block;width:auto;height:auto;max-width:100%;max-height:62vh;
+    border-radius:var(--radius-sm);box-shadow:var(--shadow-md);background:#fff;
+  }
+  @media(min-width:960px){ #previewCanvas{max-height:74vh} }
+
+  .status{margin-top:10px;font-size:13px;color:var(--text-medium);text-align:center}
+  .status.error{color:var(--error)}
+  .status.warn{color:var(--warning)}
+  .status.ok{color:var(--success)}
+  .hint{margin-top:8px;font-size:12px;color:var(--text-medium);text-align:center}
+
+  /* ---- Controls column ---- */
+  .controls{display:flex;flex-direction:column;gap:14px}
+
+  /* ---- Tab bar (mobile only) ---- */
+  .tab-bar{
+    display:none;
+    background:rgba(255,255,255,.85);
+    padding:5px;
+    border-radius:var(--radius-md);
+    gap:5px;
+    box-shadow:var(--shadow-md);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .tab-bar button{
+    padding:11px 6px;
+    border:none;
+    background:transparent;
+    color:var(--text-medium);
+    font-size:12px;
+    font-weight:600;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    font-family:inherit;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    transition:var(--transition);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    min-width:0;
+  }
+  .tab-bar button.active{
+    background:var(--primary);
+    color:#fff;
+    box-shadow:var(--shadow-md);
+  }
+  .tab-bar button:not(.active):hover{background:var(--bg-light)}
+
+  /* ---- Panels ---- */
+  .panel{
+    background:rgba(255,255,255,.94);border-radius:var(--radius-lg);padding:16px;
+    box-shadow:var(--shadow-md);
+  }
+  .panel h3{
+    font-size:14px;font-weight:700;color:var(--text-dark);
+    display:flex;align-items:center;gap:8px;margin-bottom:14px;
+  }
+  .badge{
+    font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+    background:var(--bg-light);color:var(--primary);padding:3px 8px;border-radius:20px;
+  }
+
+  /* Base (desktop): all panels visible */
+  .tab-panel{display:block}
+
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field > label{
+    display:block;font-size:12px;font-weight:600;color:var(--text-medium);
+    margin-bottom:6px;letter-spacing:.2px;
+  }
+
+  input[type=text],input[type=tel],select{
+    width:100%;padding:11px 12px;border:2px solid var(--bg-light);
+    border-radius:var(--radius-sm);background:var(--bg-white);color:var(--text-dark);
+    font-size:14px;font-family:inherit;transition:var(--transition);
+  }
+  input[type=text]:focus,input[type=tel]:focus,select:focus{
+    outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(122,178,178,.25);
+  }
+  select{
+    appearance:none;-webkit-appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6a73' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;
+  }
+  optgroup{font-weight:700;color:var(--text-dark);font-size:13px}
+  option{font-weight:400;color:var(--text-dark);padding:6px}
+
+  /* ---- Colour picker ---- */
+  .color-row{display:flex;align-items:center;gap:10px}
+  input[type=color]{
+    width:52px;height:42px;padding:3px;border:2px solid var(--bg-light);
+    border-radius:var(--radius-sm);background:var(--bg-white);cursor:pointer;
+    transition:var(--transition);flex:0 0 auto;
+  }
+  input[type=color]:hover{border-color:var(--accent)}
+  input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+  input[type=color]::-webkit-color-swatch{border:none;border-radius:5px}
+  input[type=color]::-moz-color-swatch{border:none;border-radius:5px}
+  .color-hex{
+    font-family:'Courier New',monospace;font-size:12px;font-weight:700;
+    color:var(--text-medium);background:var(--bg-light);
+    padding:8px 10px;border-radius:var(--radius-sm);letter-spacing:.4px;
+    text-transform:uppercase;flex:1;text-align:center;
+  }
+
+  /* ---- Swatches ---- */
+  .swatches{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(26px, 1fr));
+    gap:7px;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--bg-light);
+  }
+  .swatch{
+    aspect-ratio:1/1;width:100%;border-radius:7px;
+    border:2px solid rgba(0,0,0,.10);
+    cursor:pointer;transition:var(--transition);padding:0;
+    position:relative;
+  }
+  .swatch:hover{transform:scale(1.15);border-color:var(--primary);z-index:2}
+  .swatch.active{
+    border-color:var(--primary);
+    box-shadow:0 0 0 2px #fff, 0 0 0 4px var(--primary);
+    z-index:2;
+  }
+
+  /* ---- Range slider ---- */
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;
+    background:var(--bg-light);outline:none;cursor:pointer;margin-top:4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--primary);border:3px solid #fff;box-shadow:var(--shadow-md);cursor:pointer;
+    transition:var(--transition);
+  }
+  input[type=range]::-webkit-slider-thumb:hover{background:var(--primary-dark)}
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;background:var(--primary);
+    border:3px solid #fff;box-shadow:var(--shadow-md);cursor:pointer;
+  }
+  .range-head{display:flex;justify-content:space-between;align-items:center}
+  .range-val{font-size:12px;font-weight:700;color:var(--primary)}
+
+  /* ---- D-pad ---- */
+  .dpad{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
+    max-width:200px;margin:0 auto;
+  }
+  .dpad button{
+    aspect-ratio:1/1;border:2px solid var(--bg-light);background:var(--bg-light);
+    border-radius:var(--radius-sm);font-size:15px;cursor:pointer;
+    color:var(--primary);font-weight:700;transition:var(--transition);
+    display:flex;align-items:center;justify-content:center;font-family:inherit;
+  }
+  .dpad button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .dpad button:active{transform:scale(.92)}
+  .dpad .center-btn{font-size:10px;font-weight:600;color:var(--text-medium);line-height:1.1}
+
+  /* ---- Contact chip ---- */
+  .contact-chip{
+    margin-top:12px;font-size:13px;background:var(--bg-light);border-radius:var(--radius-sm);
+    padding:10px 12px;color:var(--text-dark);word-break:break-word;border-left:4px solid var(--accent);
+  }
+  .contact-chip.empty-chip{color:var(--text-light);border-left-color:var(--bg-light)}
+
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+
+  .divider{
+    display:flex;align-items:center;gap:10px;
+    margin:16px 0 14px;font-size:11px;font-weight:700;
+    color:var(--text-light);letter-spacing:.8px;text-transform:uppercase;
+  }
+  .divider::before,.divider::after{
+    content:'';flex:1;height:1px;background:var(--bg-light);
+  }
+
+  .note{margin-top:10px;font-size:11.5px;color:var(--text-light);line-height:1.45}
+
+  .site-foot{text-align:center;font-size:12px;color:var(--text-medium);padding:22px 14px 6px}
+
+  /* ============================================================
+     MOBILE  (< 960px)  — tabs
+     ============================================================ */
+  @media(max-width:959px){
+    .tab-bar{display:grid;grid-template-columns:repeat(3,1fr)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+  }
+
+  /* Small screens */
+  @media(max-width:480px){
+    body{padding:10px}
+    .app-container{padding:16px;border-radius:var(--radius-md)}
+    .app-header h1{font-size:20px}
+    #previewCanvas{max-height:48vh}
+    .swatches{grid-template-columns:repeat(auto-fill, minmax(24px, 1fr))}
+    .tab-bar button{font-size:11px;padding:10px 4px}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container" id="appContainer">
+
+  <!-- ================= HEADER ================= -->
+  <header class="app-header">
+    <h1>🎨 Poster Downloader <span id="posterCount">0 folders</span></h1>
+    <div class="header-actions">
+      <small id="viewLabel">All Folders</small>
+    </div>
+  </header>
+
+  <!-- ================= GALLERY VIEW ================= -->
+  <section id="galleryView">
+    <div id="breadcrumb" class="breadcrumb" hidden>
+      <button id="crumbRoot" type="button">📁 All Folders</button>
+      <span class="crumb-sep">›</span>
+      <span id="crumbCurrent" class="crumb-current">Folder</span>
+    </div>
+
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" type="text" placeholder="Search folders by title…" autocomplete="off" aria-label="Search">
+      <button id="clearSearch" class="clear-btn" type="button" hidden aria-label="Clear search">✕</button>
+    </div>
+
+    <div id="posterGrid" class="grid"></div>
+
+    <div id="noResults" class="empty" hidden>
+      <div class="empty-icon">🔍</div>
+      <p id="noResultsTitle">No folders found</p>
+      <span id="noResultsHint">Try a different search term.</span>
+    </div>
+  </section>
+
+  <!-- ================= EDITOR VIEW ================= -->
+  <section id="editorView" hidden>
+
+    <div class="editor-top">
+      <button id="backBtn" class="btn btn-secondary" type="button">← Back</button>
+      <h2 id="editorTitle" class="editor-title">Poster</h2>
+    </div>
+
+    <div class="editor-layout">
+
+      <!-- ===== LIVE PREVIEW ===== -->
+      <div class="preview-pane">
+        <div class="canvas-wrap">
+          <canvas id="previewCanvas" aria-label="Poster preview"></canvas>
+        </div>
+        <div id="previewStatus" class="status"></div>
+        <p class="hint">Preview updates live — the downloaded PNG includes these contact details.</p>
+      </div>
+
+      <!-- ===== CONTROLS ===== -->
+      <aside class="controls">
+
+        <!-- Mobile-only tab bar -->
+        <div class="tab-bar" id="tabBar" role="tablist">
+          <button type="button" role="tab" data-tab="contact" class="active" aria-selected="true">👤 Contact</button>
+          <button type="button" role="tab" data-tab="style" aria-selected="false">🎨 Style</button>
+          <button type="button" role="tab" data-tab="position" aria-selected="false">📐 Size &amp; Pos</button>
+        </div>
+
+        <!-- TAB 1: CONTACT DETAILS -->
+        <div class="panel tab-panel active" data-panel="contact" role="tabpanel">
+          <h3>👤 Contact Details</h3>
+
+          <div class="field">
+            <label for="contactSelect">Select contact person</label>
+            <select id="contactSelect"></select>
+          </div>
+          <div id="contactPreview" class="contact-chip empty-chip">No contact details added yet.</div>
+
+          <div class="divider">or add one-time contact</div>
+
+          <div class="field">
+            <label for="newName">Contact person name</label>
+            <input id="newName" type="text" placeholder="e.g. Amit Verma" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="newPhone">Contact number</label>
+            <input id="newPhone" type="tel" placeholder="e.g. +91 90000 00000" autocomplete="off">
+          </div>
+          <div class="row">
+            <button id="applyNew" class="btn btn-primary" type="button">Apply to Poster</button>
+            <button id="clearNew" class="btn btn-secondary" type="button">Clear</button>
+          </div>
+          <p class="note">Used only for this editing session — not saved to the predefined list.</p>
+        </div>
+
+        <!-- TAB 2: TEXT STYLE -->
+        <div class="panel tab-panel" data-panel="style" role="tabpanel">
+          <h3>🎨 Text Style</h3>
+
+          <div class="field">
+            <label for="textColor">Text colour — pick any colour</label>
+            <div class="color-row">
+              <input type="color" id="textColor" value="#ffffff" aria-label="Custom text colour">
+              <span class="color-hex" id="colorHex">#FFFFFF</span>
+            </div>
+            <div class="swatches" id="swatchList" aria-label="Colour swatches"></div>
+          </div>
+
+          <div class="field" style="margin-top:16px">
+            <label for="fontSelect">Font family</label>
+            <select id="fontSelect">
+              <optgroup label="✨ Premium Fonts">
+                <option value="'Poppins', sans-serif">Poppins</option>
+                <option value="'Montserrat', sans-serif">Montserrat</option>
+                <option value="'Inter', sans-serif">Inter</option>
+                <option value="'Raleway', sans-serif">Raleway</option>
+                <option value="'Oswald', sans-serif">Oswald</option>
+                <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+                <option value="'Anton', sans-serif">Anton</option>
+                <option value="'Playfair Display', serif">Playfair Display</option>
+                <option value="'Lora', serif">Lora</option>
+                <option value="'Merriweather', serif">Merriweather</option>
+                <option value="'Cormorant Garamond', serif">Cormorant Garamond</option>
+                <option value="'Roboto Slab', serif">Roboto Slab</option>
+                <option value="'Dancing Script', cursive">Dancing Script</option>
+                <option value="'Great Vibes', cursive">Great Vibes</option>
+              </optgroup>
+              <optgroup label="🖥️ System Fonts">
+                <option value="Arial, Helvetica, sans-serif">Arial / Helvetica</option>
+                <option value="'Segoe UI', Tahoma, Geneva, sans-serif">Segoe UI</option>
+                <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+                <option value="Georgia, 'Times New Roman', serif">Georgia</option>
+                <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                <option value="'Courier New', Courier, monospace">Courier New</option>
+                <option value="Impact, Charcoal, sans-serif">Impact</option>
+                <option value="'Comic Sans MS', 'Segoe Script', cursive">Comic Sans MS</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <!-- TAB 3: SIZE & POSITION -->
+        <div class="panel tab-panel" data-panel="position" role="tabpanel">
+          <h3>📐 Size &amp; Position</h3>
+
+          <div class="field">
+            <div class="range-head">
+              <label for="sizeRange" style="margin:0">Font size</label>
+              <span class="range-val" id="sizeValue">100%</span>
+            </div>
+            <input type="range" id="sizeRange" min="40" max="280" step="5" value="100" aria-label="Font size">
+          </div>
+
+          <div class="field">
+            <label style="text-align:center">Position — click arrows or use keyboard arrow keys</label>
+            <div class="dpad">
+              <span></span>
+              <button type="button" data-move="up" aria-label="Move up">▲</button>
+              <span></span>
+              <button type="button" data-move="left" aria-label="Move left">◀</button>
+              <button type="button" class="center-btn" data-move="reset" aria-label="Reset position">RESET</button>
+              <button type="button" data-move="right" aria-label="Move right">▶</button>
+              <span></span>
+              <button type="button" data-move="down" aria-label="Move down">▼</button>
+              <span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Always-visible action buttons -->
+        <button id="resetStyle" class="btn btn-secondary btn-block" type="button">↺ Reset Style &amp; Position</button>
+        <button id="downloadBtn" class="btn btn-primary btn-block btn-lg" type="button">⬇ Download Poster (PNG)</button>
+        <div id="downloadMsg" class="status"></div>
+
+      </aside>
+    </div>
+  </section>
+
+  <footer class="site-foot">Poster Downloader · All editing happens in your browser</footer>
+</div>
+
+<script>
+/* ================================================================
+   1) POSTER FOLDERS  —  ADD YOUR FOLDERS + POSTERS HERE
+   ----------------------------------------------------------------
+   {
+     title: 'Folder Name',
+     posters: [
+       { title: 'Poster Title', url: 'https://site.com/image.jpg' },
+       ...
+     ]
+   }
+   ================================================================ */
+
+/* --- Demo poster generator (self-contained SVG posters).
+       Delete this function once you add your own URLs. --- */
+function makeDemoPoster(title, subtitle, c1, c2){
+  const w = 900, h = 1200;
+  const svg =
+`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${c1}"/>
+      <stop offset="100%" stop-color="${c2}"/>
+    </linearGradient>
+  </defs>
+  <rect width="${w}" height="${h}" fill="url(#bg)"/>
+  <circle cx="760" cy="180" r="230" fill="#ffffff" opacity="0.10"/>
+  <circle cx="140" cy="1060" r="270" fill="#ffffff" opacity="0.08"/>
+  <circle cx="450" cy="620" r="330" fill="#ffffff" opacity="0.06"/>
+  <rect x="55" y="55" width="${w-110}" height="${h-110}" rx="26"
+        fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+  <text x="50%" y="41%" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+        font-size="70" font-weight="bold" fill="#ffffff" letter-spacing="2">${title}</text>
+  <text x="50%" y="50%" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+        font-size="34" fill="#ffffff" opacity="0.9">${subtitle}</text>
+  <rect x="330" y="56%" width="240" height="5" rx="3" fill="#ffffff" opacity="0.7"/>
+</svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+const POSTER_FOLDERS = [
+  {
+    title: 'General Posters',
+    posters: [
+      { title: 'Mens Total Health Elite Package' ,  url:'https://lh3.googleusercontent.com/d/1FN6XzrkyepT35Pc1zz1n5FIjwhVb9SvC' },
+      { title: 'Womens Total Health Elite Package',  url: 'https://lh3.googleusercontent.com/d/1SKrQUt-1gZz1vsJj9porK9GyZZ99dntF' },
+      { title: 'Total Health Checkup Package',     url: 'https://lh3.googleusercontent.com/d/1wYPktJQXc6XsCbTNGtkGesUeo0wdFUJF' },
+  ]
+  },
+  {
+    title: 'Navratri Posters',
+    posters: [
+      { title: 'New Menu Launch',  url: makeDemoPoster('NEW MENU LAUNCH',  'Taste the difference',        '#0abde3', '#006ba6') },
+      { title: 'Weekend Combo',    url: makeDemoPoster('WEEKEND COMBO',    'Two for the price of one',    '#e67e22', '#c0392b') }
+    ]
+  }
+  
+];
+
+
+/* ================================================================
+   2) PREDEFINED CONTACT PERSONS  —  ADD YOUR CONTACTS HERE
+   ----------------------------------------------------------------
+   { name: "Person Name", phone: "+91 98765 43210" },
+   ================================================================ */
+const CONTACTS = [
+  { name: 'Yogesh Achrekar', phone: '+91 88504 48457' },
+  { name: 'Yojana Achrekar', phone: '+91 99309 51721' },
+  { name: 'Kaushal Achrekar', phone: '+91 86574 20405' },
+  { name: 'Yukta Kadam',  phone: '+91 83693 40880' },
+  { name: 'Pravin More', phone: '+91 98691 36166' },
+  { name: 'Soni', phone: '+91 98672 28361' },
+  { name: 'Sumit Yelaye', phone: '+91 87675 62970' },
+  { name: 'Vaishali Dhumal', phone: '+91 93213 18311' },
+  { name: 'Sandeep Bijam',   phone: '+91 98677 89654' },
+  { name: 'Yogita', phone: '+91  89285 04909' },
+  { name: 'Priya Purabiya', phone: '+91 88504 62212' },
+  { name: 'Anish', phone: '+91 96998 84420' },
+  { name: 'Kavita', phone: '+91 85918 61932' },
+  { name: 'Kalpana Jadhav', phone: '+91 78210 51203' },
+  { name: 'Dr. Hemlatta Patel', phone: '+91 90290 22527' },
+  { name: 'Dr. Senal Jain', phone: '+91 77381 84930' },
+  
+];
+
+
+/* ================================================================
+   3) COLOUR SWATCHES
+   ================================================================ */
+const SWATCH_COLORS = [
+  { hex: '#ffffff', name: 'White'      },
+  { hex: '#f8fafc', name: 'Off White'  },
+  { hex: '#fef3c7', name: 'Cream'      },
+  { hex: '#000000', name: 'Black'      },
+  { hex: '#1a2e35', name: 'Dark Ink'   },
+  { hex: '#4a6a73', name: 'Slate'      },
+  { hex: '#09637E', name: 'Primary'    },
+  { hex: '#088395', name: 'Secondary'  },
+  { hex: '#7AB2B2', name: 'Accent'     },
+  { hex: '#14b8a6', name: 'Teal'       },
+  { hex: '#06b6d4', name: 'Cyan'       },
+  { hex: '#0ea5e9', name: 'Sky'        },
+  { hex: '#3b82f6', name: 'Blue'       },
+  { hex: '#1e40af', name: 'Navy'       },
+  { hex: '#6366f1', name: 'Indigo'     },
+  { hex: '#8b5cf6', name: 'Purple'     },
+  { hex: '#a855f7', name: 'Violet'     },
+  { hex: '#d946ef', name: 'Fuchsia'    },
+  { hex: '#ec4899', name: 'Pink'       },
+  { hex: '#f43f5e', name: 'Rose'       },
+  { hex: '#ef4444', name: 'Red'        },
+  { hex: '#dc2626', name: 'Crimson'    },
+  { hex: '#b91c1c', name: 'Deep Red'   },
+  { hex: '#f97316', name: 'Orange'     },
+  { hex: '#f59e0b', name: 'Amber'      },
+  { hex: '#fbbf24', name: 'Gold'       },
+  { hex: '#eab308', name: 'Yellow'     },
+  { hex: '#84cc16', name: 'Lime'       },
+  { hex: '#10b981', name: 'Green'      },
+  { hex: '#059669', name: 'Emerald'    },
+  { hex: '#78350f', name: 'Brown'      },
+  { hex: '#6b7280', name: 'Gray'       },
+  { hex: '#334155', name: 'Charcoal'   },
+  { hex: '#0f766e', name: 'Deep Teal'  }
+];
+
+
+/* ================================================================
+   4) APP CODE
+   ================================================================ */
+
+/* ---------- Element references ---------- */
+const appContainer  = document.getElementById('appContainer');
+const viewLabel     = document.getElementById('viewLabel');
+
+const galleryView   = document.getElementById('galleryView');
+const editorView    = document.getElementById('editorView');
+const posterGrid    = document.getElementById('posterGrid');
+const noResults     = document.getElementById('noResults');
+const noResultsTitle= document.getElementById('noResultsTitle');
+const noResultsHint = document.getElementById('noResultsHint');
+const searchInput   = document.getElementById('searchInput');
+const clearSearch   = document.getElementById('clearSearch');
+const posterCount   = document.getElementById('posterCount');
+const breadcrumb    = document.getElementById('breadcrumb');
+const crumbRoot     = document.getElementById('crumbRoot');
+const crumbCurrent  = document.getElementById('crumbCurrent');
+
+const backBtn       = document.getElementById('backBtn');
+const editorTitle   = document.getElementById('editorTitle');
+const previewCanvas = document.getElementById('previewCanvas');
+const previewStatus = document.getElementById('previewStatus');
+
+const tabBar        = document.getElementById('tabBar');
+const allTabPanels  = document.querySelectorAll('.tab-panel');
+
+const contactSelect = document.getElementById('contactSelect');
+const contactPreview= document.getElementById('contactPreview');
+const newName       = document.getElementById('newName');
+const newPhone      = document.getElementById('newPhone');
+const applyNew      = document.getElementById('applyNew');
+const clearNew      = document.getElementById('clearNew');
+
+const textColor     = document.getElementById('textColor');
+const colorHex      = document.getElementById('colorHex');
+const swatchList    = document.getElementById('swatchList');
+const fontSelect    = document.getElementById('fontSelect');
+const sizeRange     = document.getElementById('sizeRange');
+const sizeValue     = document.getElementById('sizeValue');
+const resetStyle    = document.getElementById('resetStyle');
+
+const downloadBtn   = document.getElementById('downloadBtn');
+const downloadMsg   = document.getElementById('downloadMsg');
+
+/* ---------- App state ---------- */
+let currentFolderIndex = -1;      // -1 = root (folders view)
+let currentPoster      = null;    // { title, url }
+let currentImage       = null;    // loaded HTMLImageElement
+let currentContact     = null;    // { name, phone } | null
+
+/* Text style */
+const DEFAULT_STYLE = {
+  color:   '#ffffff',
+  font:    "'Poppins', sans-serif",
+  scale:   1,
+  offsetX: 0,
+  offsetY: 0
+};
+const textStyle = { ...DEFAULT_STYLE };
+
+/* Premium fonts to preload for canvas */
+const PRELOAD_FONTS = [
+  'Poppins','Montserrat','Inter','Raleway','Oswald','Bebas Neue','Anton',
+  'Playfair Display','Lora','Merriweather','Cormorant Garamond','Roboto Slab',
+  'Dancing Script','Great Vibes'
+];
+
+/* ================================================================
+   VIEW MODE  (gradient background switching)
+   ================================================================ */
+function setViewMode(mode){
+  appContainer.classList.remove('view-root', 'view-folder');
+  appContainer.classList.add('view-' + mode);
+  viewLabel.textContent = (mode === 'root') ? 'All Folders' : 'Inside Folder';
+}
+
+/* ================================================================
+   TAB SYSTEM  (mobile only; CSS hides the tab bar on desktop)
+   ================================================================ */
+function setActiveTab(name){
+  tabBar.querySelectorAll('button[data-tab]').forEach(b => {
+    const on = b.dataset.tab === name;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  allTabPanels.forEach(p => {
+    p.classList.toggle('active', p.dataset.panel === name);
+  });
+}
+
+tabBar.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tab]');
+  if (!btn) return;
+  setActiveTab(btn.dataset.tab);
+});
+
+/* ================================================================
+   IMAGE LOADING
+   ================================================================ */
+const imageCache = new Map();
+
+function loadImage(url){
+  if (imageCache.has(url)) return imageCache.get(url);
+
+  const promise = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => resolve(img);
+    img.onerror = () => {
+      const img2 = new Image();
+      img2.onload  = () => { img2._noCors = true; resolve(img2); };
+      img2.onerror = () => reject(new Error('Image failed to load'));
+      img2.src = url;
+    };
+    img.src = url;
+  });
+
+  imageCache.set(url, promise);
+  return promise;
+}
+
+/* ================================================================
+   GALLERY  —  Folders + posters, search, breadcrumb
+   ================================================================ */
+function updateHeaderCount(){
+  if (currentFolderIndex === -1){
+    const n = POSTER_FOLDERS.length;
+    posterCount.textContent = n + (n === 1 ? ' folder' : ' folders');
+  } else {
+    const p = POSTER_FOLDERS[currentFolderIndex].posters;
+    const n = p.length;
+    posterCount.textContent = n + (n === 1 ? ' poster' : ' posters');
+  }
+}
+
+function updateBreadcrumb(){
+  if (currentFolderIndex === -1){
+    // Root view: no breadcrumb at all — this was the confusing part before
+    breadcrumb.hidden = true;
+    searchInput.placeholder = 'Search folders by title…';
+    setViewMode('root');
+  } else {
+    breadcrumb.hidden = false;
+    crumbCurrent.textContent = POSTER_FOLDERS[currentFolderIndex].title;
+    searchInput.placeholder = 'Search posters in this folder…';
+    setViewMode('folder');
+  }
+}
+
+function renderGallery(query){
+  const q = (query || '').trim().toLowerCase();
+
+  updateHeaderCount();
+  updateBreadcrumb();
+
+  posterGrid.innerHTML = '';
+
+  if (currentFolderIndex === -1){
+    /* ---- Root: folder cards ---- */
+    const folders = POSTER_FOLDERS.filter(f => !q || (f.title || '').toLowerCase().includes(q));
+
+    if (!folders.length){
+      posterGrid.hidden = true;
+      noResultsTitle.textContent = 'No folders found';
+      noResultsHint.textContent  = 'Try a different search term.';
+      noResults.hidden = false;
+      return;
+    }
+    posterGrid.hidden = false;
+    noResults.hidden  = true;
+
+    folders.forEach(folder => {
+      const idx = POSTER_FOLDERS.indexOf(folder);
+      posterGrid.appendChild(buildFolderCard(folder, idx));
+    });
+
+  } else {
+    /* ---- Inside folder: poster cards ---- */
+    const folder = POSTER_FOLDERS[currentFolderIndex];
+    const posters = folder.posters.filter(p => !q || (p.title || '').toLowerCase().includes(q));
+
+    if (!posters.length){
+      posterGrid.hidden = true;
+      noResultsTitle.textContent = 'No posters found';
+      noResultsHint.textContent  = 'This folder has no matching posters.';
+      noResults.hidden = false;
+      return;
+    }
+    posterGrid.hidden = false;
+    noResults.hidden  = true;
+
+    posters.forEach(poster => {
+      posterGrid.appendChild(buildPosterCard(poster));
+    });
+  }
+}
+
+function buildFolderCard(folder, index){
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'card folder-card';
+
+  const thumb = document.createElement('div');
+  thumb.className = 'thumb folder-thumb';
+
+  const coverUrl = (folder.posters[0] && folder.posters[0].url) || '';
+  if (coverUrl){
+    const img = document.createElement('img');
+    img.alt = folder.title;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = coverUrl;
+    img.addEventListener('error', () => {
+      thumb.innerHTML = '';
+      const fb = document.createElement('div');
+      fb.className = 'fallback';
+      fb.style.display = 'flex';
+      fb.innerHTML = '<span style="font-size:38px">📁</span><small>' + folder.title + '</small>';
+      thumb.appendChild(fb);
+    });
+    thumb.appendChild(img);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'folder-overlay';
+
+  const badge = document.createElement('div');
+  badge.className = 'folder-badge';
+  const icon = document.createElement('span');
+  icon.className = 'folder-icon';
+  icon.textContent = '📁';
+  const count = document.createElement('span');
+  count.className = 'folder-count';
+  const n = folder.posters.length;
+  count.textContent = n + (n === 1 ? ' poster' : ' posters');
+  badge.appendChild(icon);
+  badge.appendChild(count);
+
+  thumb.appendChild(overlay);
+  thumb.appendChild(badge);
+
+  const title = document.createElement('div');
+  title.className = 'card-title';
+  title.textContent = folder.title;
+
+  card.appendChild(thumb);
+  card.appendChild(title);
+  card.addEventListener('click', () => openFolder(index));
+
+  return card;
+}
+
+function buildPosterCard(poster){
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'card';
+
+  const thumb = document.createElement('div');
+  thumb.className = 'thumb';
+
+  const img = document.createElement('img');
+  img.alt = poster.title;
+  img.loading = 'lazy';
+  img.decoding = 'async';
+  img.src = poster.url;
+  img.addEventListener('error', () => thumb.classList.add('error'));
+
+  const fallback = document.createElement('div');
+  fallback.className = 'fallback';
+  fallback.innerHTML = '<span>⚠️</span><small>Image not available</small>';
+
+  thumb.appendChild(img);
+  thumb.appendChild(fallback);
+
+  const title = document.createElement('div');
+  title.className = 'card-title';
+  title.textContent = poster.title;
+
+  card.appendChild(thumb);
+  card.appendChild(title);
+  card.addEventListener('click', () => openEditor(poster));
+
+  return card;
+}
+
+/* ---- Navigation ---- */
+function openFolder(index){
+  currentFolderIndex = index;
+  searchInput.value = '';
+  clearSearch.hidden = true;
+  renderGallery('');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function goToRoot(){
+  currentFolderIndex = -1;
+  searchInput.value = '';
+  clearSearch.hidden = true;
+  renderGallery('');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+crumbRoot.addEventListener('click', goToRoot);
+
+/* Live search */
+searchInput.addEventListener('input', () => {
+  clearSearch.hidden = !searchInput.value;
+  renderGallery(searchInput.value);
+});
+clearSearch.addEventListener('click', () => {
+  searchInput.value = '';
+  clearSearch.hidden = true;
+  searchInput.focus();
+  renderGallery('');
+});
+
+/* ================================================================
+   EDITOR — OPEN / CLOSE
+   ================================================================ */
+async function openEditor(poster){
+  currentPoster  = poster;
+  currentImage   = null;
+  currentContact = null;
+
+  newName.value = '';
+  newPhone.value = '';
+  contactSelect.value = '';
+  downloadMsg.textContent = '';
+  downloadMsg.className = 'status';
+  updateContactChip();
+
+  // Reset mobile tabs to "Contact"
+  setActiveTab('contact');
+
+  galleryView.hidden = true;
+  editorView.hidden  = false;
+  editorTitle.textContent = poster.title;
+
+  // Keep folder gradient while editing
+  setViewMode('folder');
+
+  const ctx = previewCanvas.getContext('2d');
+  previewCanvas.width = 1; previewCanvas.height = 1;
+  ctx.clearRect(0, 0, 1, 1);
+  setStatus('Loading poster…');
+
+  window.scrollTo({ top: 0, behavior: 'auto' });
+
+  try{
+    const img = await loadImage(poster.url);
+    currentImage = img;
+    setStatus('');
+    updatePreview();
+  }catch(err){
+    setStatus('⚠️ Could not load this poster image. Please check the URL.', 'error');
+  }
+}
+
+backBtn.addEventListener('click', () => {
+  editorView.hidden  = true;
+  galleryView.hidden = false;
+  currentPoster = null;
+  currentImage  = null;
+  renderGallery('');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+});
+
+function setStatus(text, cls){
+  previewStatus.textContent = text || '';
+  previewStatus.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+/* ================================================================
+   CONTACT SELECT DROPDOWN
+   ================================================================ */
+function buildContactSelect(){
+  contactSelect.innerHTML = '';
+
+  const ph = document.createElement('option');
+  ph.value = '';
+  ph.textContent = '— Select a contact person —';
+  contactSelect.appendChild(ph);
+
+  CONTACTS.forEach((c, i) => {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = c.name + ' — ' + c.phone;
+    contactSelect.appendChild(o);
+  });
+
+  const custom = document.createElement('option');
+  custom.value = '__custom__';
+  custom.textContent = '✏️ Custom (one-time use)';
+  contactSelect.appendChild(custom);
+}
+buildContactSelect();
+
+contactSelect.addEventListener('change', () => {
+  const v = contactSelect.value;
+
+  if (v === '__custom__'){
+    currentContact = { name: newName.value, phone: newPhone.value };
+    newName.focus();
+  } else if (v === ''){
+    currentContact = null;
+  } else {
+    currentContact = { ...CONTACTS[Number(v)] };
+  }
+
+  updatePreview();
+  updateContactChip();
+});
+
+/* ================================================================
+   ONE-TIME (CUSTOM) CONTACT
+   ================================================================ */
+function handleCustomInput(){
+  if (contactSelect.value !== '__custom__') contactSelect.value = '__custom__';
+  currentContact = { name: newName.value, phone: newPhone.value };
+  updatePreview();
+  updateContactChip();
+}
+newName.addEventListener('input', handleCustomInput);
+newPhone.addEventListener('input', handleCustomInput);
+
+applyNew.addEventListener('click', () => {
+  if (!newName.value.trim() && !newPhone.value.trim()){
+    downloadMsg.textContent = 'Please enter a name or a contact number first.';
+    downloadMsg.className = 'status warn';
+    newName.focus();
+    return;
+  }
+  handleCustomInput();
+  downloadMsg.textContent = 'Contact details applied to the poster.';
+  downloadMsg.className = 'status ok';
+});
+
+clearNew.addEventListener('click', () => {
+  newName.value = '';
+  newPhone.value = '';
+  if (contactSelect.value === '__custom__'){
+    contactSelect.value = '';
+    currentContact = null;
+    updatePreview();
+    updateContactChip();
+  }
+  downloadMsg.textContent = '';
+});
+
+function updateContactChip(){
+  const name  = currentContact ? (currentContact.name  || '').trim() : '';
+  const phone = currentContact ? (currentContact.phone || '').trim() : '';
+
+  if (!name && !phone){
+    contactPreview.textContent = 'No contact details added yet.';
+    contactPreview.className = 'contact-chip empty-chip';
+    return;
+  }
+  contactPreview.textContent = '✓ ' + [name, phone].filter(Boolean).join('  ·  ');
+  contactPreview.className = 'contact-chip';
+}
+
+/* ================================================================
+   COLOUR SWATCHES
+   ================================================================ */
+function buildSwatches(){
+  swatchList.innerHTML = '';
+  SWATCH_COLORS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'swatch';
+    btn.dataset.color = c.hex;
+    btn.style.background = c.hex;
+    btn.title = c.name + '  ' + c.hex.toUpperCase();
+    btn.setAttribute('aria-label', c.name);
+    btn.addEventListener('click', () => setTextColor(c.hex));
+    swatchList.appendChild(btn);
+  });
+  markActiveSwatch(textStyle.color);
+}
+
+function markActiveSwatch(hex){
+  const target = (hex || '').toLowerCase();
+  swatchList.querySelectorAll('.swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.color.toLowerCase() === target);
+  });
+}
+buildSwatches();
+
+/* ================================================================
+   TEXT STYLE CONTROLS
+   ================================================================ */
+function setTextColor(hex){
+  textStyle.color = hex;
+  textColor.value = hex;
+  colorHex.textContent = hex.toUpperCase();
+  markActiveSwatch(hex);
+  updatePreview();
+}
+
+textColor.addEventListener('input', () => setTextColor(textColor.value));
+
+fontSelect.addEventListener('change', () => {
+  textStyle.font = fontSelect.value;
+  const family = fontSelect.value;
+  if (document.fonts && document.fonts.load){
+    Promise.all([
+      document.fonts.load('700 24px ' + family).catch(() => {}),
+      document.fonts.load('600 24px ' + family).catch(() => {})
+    ]).then(() => updatePreview());
+  } else {
+    updatePreview();
+  }
+});
+
+sizeRange.addEventListener('input', () => {
+  textStyle.scale = Number(sizeRange.value) / 100;
+  sizeValue.textContent = sizeRange.value + '%';
+  updatePreview();
+});
+
+/* Arrow pad */
+document.querySelectorAll('.dpad button').forEach(btn => {
+  btn.addEventListener('click', () => moveText(btn.dataset.move));
+});
+
+function moveText(dir, step){
+  step = step || 1;
+  if (dir === 'up')    textStyle.offsetY -= step;
+  if (dir === 'down')  textStyle.offsetY += step;
+  if (dir === 'left')  textStyle.offsetX -= step;
+  if (dir === 'right') textStyle.offsetX += step;
+  if (dir === 'reset'){ textStyle.offsetX = 0; textStyle.offsetY = 0; }
+  clampOffsets();
+  updatePreview();
+}
+
+function clampOffsets(){
+  textStyle.offsetX = Math.max(-50, Math.min(50, textStyle.offsetX));
+  textStyle.offsetY = Math.max(-50, Math.min(50, textStyle.offsetY));
+}
+
+/* Keyboard arrow keys */
+document.addEventListener('keydown', e => {
+  if (editorView.hidden) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+
+  const step = e.shiftKey ? 5 : 1;
+  let dir = null;
+  if (e.key === 'ArrowUp')    dir = 'up';
+  if (e.key === 'ArrowDown')  dir = 'down';
+  if (e.key === 'ArrowLeft')  dir = 'left';
+  if (e.key === 'ArrowRight') dir = 'right';
+  if (!dir) return;
+
+  e.preventDefault();
+  moveText(dir, step);
+});
+
+/* Reset */
+resetStyle.addEventListener('click', () => {
+  Object.assign(textStyle, DEFAULT_STYLE);
+  textColor.value = DEFAULT_STYLE.color;
+  colorHex.textContent = DEFAULT_STYLE.color.toUpperCase();
+  markActiveSwatch(DEFAULT_STYLE.color);
+  fontSelect.value = DEFAULT_STYLE.font;
+  sizeRange.value = '100';
+  sizeValue.textContent = '100%';
+  updatePreview();
+});
+
+colorHex.textContent = DEFAULT_STYLE.color.toUpperCase();
+
+/* ================================================================
+   CANVAS RENDERING
+   ================================================================ */
+function updatePreview(){
+  if (!currentImage) return;
+  drawEditedPoster(previewCanvas, currentImage, currentContact, textStyle);
+}
+
+function drawEditedPoster(canvas, img, contact, st){
+  const w = img.naturalWidth  || img.width;
+  const h = img.naturalHeight || img.height;
+
+  canvas.width  = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const name  = contact && contact.name  ? String(contact.name).trim()  : '';
+  const phone = contact && contact.phone ? String(contact.phone).trim() : '';
+  if (!name && !phone) return;
+
+  drawContactText(ctx, w, h, name, phone, st);
+}
+
+function fitFontSize(ctx, text, maxWidth, startSize, weight, family){
+  let size = Math.round(startSize);
+  const min = 8;
+  while (size > min){
+    ctx.font = weight + ' ' + size + 'px ' + family;
+    if (ctx.measureText(text).width <= maxWidth) return size;
+    size -= 1;
+  }
+  ctx.font = weight + ' ' + min + 'px ' + family;
+  return min;
+}
+
+/* Draws ONLY the text — no background, no shadow */
+function drawContactText(ctx, w, h, name, phone, st){
+  const pad          = Math.max(8, Math.round(w * 0.04));
+  const maxTextWidth = w - pad * 2;
+  const baseSize     = Math.max(10, Math.round(w * 0.048 * st.scale));
+
+  const combined = name && phone ? name + '   •   ' + phone : (name || phone);
+
+  let lines = [];
+  ctx.font = '700 ' + baseSize + 'px ' + st.font;
+
+  if (ctx.measureText(combined).width <= maxTextWidth){
+    lines = [{ text: combined, size: baseSize, weight: 700 }];
+  } else {
+    if (name)  lines.push({ text: name,  size: fitFontSize(ctx, name,  maxTextWidth, baseSize, 700, st.font), weight: 700 });
+    if (phone) lines.push({ text: phone, size: fitFontSize(ctx, phone, maxTextWidth, Math.round(baseSize * 0.9), 600, st.font), weight: 600 });
+  }
+
+  const gap     = lines.length > 1 ? Math.round(baseSize * 0.22) : 0;
+  const heights = lines.map(l => Math.round(l.size * 1.22));
+  const blockH  = heights.reduce((a, b) => a + b, 0) + gap * (lines.length - 1);
+
+  const anchorX = w / 2 + (st.offsetX / 100) * w;
+  const anchorY = (h - pad * 0.9) + (st.offsetY / 100) * h;
+
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle    = st.color;
+  ctx.shadowColor  = 'transparent';
+  ctx.shadowBlur   = 0;
+  ctx.shadowOffsetY= 0;
+
+  let y = anchorY - blockH;
+  lines.forEach((line, i) => {
+    const lh = heights[i];
+    ctx.font = line.weight + ' ' + line.size + 'px ' + st.font;
+    ctx.fillText(line.text, anchorX, y + lh / 2);
+    y += lh + gap;
+  });
+}
+
+/* ================================================================
+   DOWNLOAD
+   ================================================================ */
+downloadBtn.addEventListener('click', () => {
+  downloadMsg.textContent = '';
+  downloadMsg.className = 'status';
+
+  if (!currentImage){
+    downloadMsg.textContent = '⚠️ No poster loaded to download.';
+    downloadMsg.className = 'status error';
+    return;
+  }
+
+  drawEditedPoster(previewCanvas, currentImage, currentContact, textStyle);
+
+  const ctx = previewCanvas.getContext('2d');
+  try{
+    ctx.getImageData(0, 0, 1, 1);
+  }catch(err){
+    downloadMsg.innerHTML = '⚠️ This image is hosted on a server that blocks canvas editing (CORS). ' +
+      'Please upload the poster to a CORS-enabled host (or your own website), or use a local file.';
+    downloadMsg.className = 'status error';
+    return;
+  }
+
+  canvasToBlob(previewCanvas, blob => {
+    if (!blob){
+      downloadMsg.textContent = '⚠️ Sorry, the image could not be generated. Please try again.';
+      downloadMsg.className = 'status error';
+      return;
+    }
+
+    const baseName = (currentPoster && currentPoster.title ? currentPoster.title : 'poster')
+      .replace(/[^a-z0-9]+/gi, '-')
+      .replace(/^-+|-+$/g, '')
+      .toLowerCase() || 'poster';
+
+    const fileName = baseName + '-with-contact.png';
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+    downloadMsg.textContent = '✅ Downloaded: ' + fileName;
+    downloadMsg.className = 'status ok';
+  });
+});
+
+function canvasToBlob(canvas, cb){
+  if (canvas.toBlob){
+    canvas.toBlob(cb, 'image/png');
+    return;
+  }
+  try{
+    const dataURL = canvas.toDataURL('image/png');
+    const byteString = atob(dataURL.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    cb(new Blob([ab], { type: 'image/png' }));
+  }catch(err){
+    cb(null);
+  }
+}
+
+/* ================================================================
+   PRELOAD PREMIUM FONTS
+   ================================================================ */
+function preloadPremiumFonts(){
+  if (!document.fonts || !document.fonts.load) return;
+  PRELOAD_FONTS.forEach(family => {
+    document.fonts.load('700 24px "' + family + '"').catch(() => {});
+    document.fonts.load('600 24px "' + family + '"').catch(() => {});
+    document.fonts.load('400 24px "' + family + '"').catch(() => {});
+  });
+  if (document.fonts.ready){
+    document.fonts.ready.then(() => {
+      if (currentImage) updatePreview();
+    });
+  }
+}
+preloadPremiumFonts();
+
+/* ================================================================
+   INIT
+   ================================================================ */
+setViewMode('root');
+renderGallery('');
+</script>
+</body>
+</html>
