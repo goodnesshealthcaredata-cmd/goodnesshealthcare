@@ -1286,6 +1286,27 @@ const LAB_DATA = {
         "labName": "COVID19 Qualitative by Real time PCR",
         "mrp": 500,
         "b2b": 250
+      },
+      {
+        "id": "tropical-fever-panel-qualitative-by-real-time-pcr-fever-8",
+        "generalName": "Tropical Fever Panel Qualitative by Real-Time PCR(FEVER-8)",
+        "labName": "Tropical Fever Panel Qualitative by Real-Time PCR(FEVER-8)",
+        "mrp": 5000,
+        "b2b": 4000
+      },
+      {
+        "id": "hcv-antibody-total",
+        "generalName": "HCV antibody Total",
+        "labName": "HCV antibody Total",
+        "mrp": 900,
+        "b2b": 385
+      },
+      {
+        "id": "free-testosterone",
+        "generalName": "Free Testosterone",
+        "labName": "Free Testosterone",
+        "mrp": 1550,
+        "b2b": 750
       }
     ],
     "packages": [
